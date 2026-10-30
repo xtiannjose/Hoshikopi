@@ -62,7 +62,7 @@ Goal: an empty but real app with the database, auth skeleton, design tokens and 
 - [ ] **0.3 Database.** Docker Postgres (section 6 of setup); Prisma schema for every table in `docs/04-DATA-MODEL.md`; first migration with the CHECK constraints; seed data; test database guard.
 - [ ] **0.4 Modules and money.** `src/modules/*` folders with `index.ts`; `lib/money.ts` (centavos, formatting `PHP 165`); `lib/clock.ts` (Manila time, freezable in tests); tests first.
 - [ ] **0.5 Auth skeleton.** Better Auth with email link (link printed to the terminal until Resend), Staff roles, `requireStaff`, `audit()`; seeded Manager and Barista can sign in to an empty `/manage`.
-- [ ] **0.6 Layout and tokens.** Fonts, colour tokens, header with Cart button, footer with the Concept Notice, light and dark themes, security headers.
+- [ ] **0.6 Layout and tokens.** Fonts, colour tokens, header with Cart button, footer with the Concept Notice (linking to `/concept`), the neighbourhood and email but no phone or social links, Day and Night palettes switched by Manila time with an Auto, Day, Night switch (ADR 0010), security headers; the static `/concept` page (INFO-10); the site-wide share image (INFO-09).
 
 **Exit criteria:** `npm run qa:full` green; a seeded Manager signs in and sees `/manage`; the home page shows the header, footer and Concept Notice at 375 and 1280 px with zero axe violations.
 
@@ -70,10 +70,10 @@ Goal: an empty but real app with the database, auth skeleton, design tokens and 
 
 Goal: a beautiful, fast menu and cafe page that a Manager can edit.
 
-- [ ] **1.1 Design direction.** Two quick prototypes of Home and a Menu Item page (`prototype`, `design-taste-frontend`), with the same very modern look, content and photos, following the owner's reference sites (`docs/05-DESIGN-SYSTEM.md` section 1.1). Sample A: native elements and CSS only. Sample B: library parts from the iOne research (`C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`: Kokonut, beUI, Animate UI Radix, Motion), on Home and Stars only; forms stay native. Each shown at 375 and 1280 px with its first-load JavaScript size and mobile Lighthouse score. The owner picks; ADR; design system updated; the other sample is deleted.
-- [ ] **1.2 Photos and assets.** Photo decision (ADR); `docs/ASSETS.md`; stand-in photos for the seeded menu, each with alt text.
-- [ ] **1.3 Menu pages.** `/menu` by Category, `/menu/item/[slug]` with Option Groups shown (not yet orderable), badges, Sold Out and Hidden (MENU-01 to MENU-04); prerendered with the `menu` cache tag.
-- [ ] **1.4 Cafe page and home.** Opening Hours with Special Hours, "open now", map link, about; home with the printed-menu section and featured Menu Items (`docs/05-DESIGN-SYSTEM.md` section 6); CafeOrCoffeeShop structured data (INFO-01 to INFO-03).
+- [ ] **1.1 Design direction.** Two quick prototypes of Home and a Menu Item page (`prototype`, `design-taste-frontend`), built on the chosen wireframe (Night's layout, Day and Night palettes by time, ADR 0010) with the same content and photos (`docs/05-DESIGN-SYSTEM.md` section 1.2). Sample A: native elements and CSS only. Sample B: library parts from the iOne research (`C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`: Kokonut, beUI, Animate UI Radix, Motion), on Home and Stars only; forms stay native. Each shown at 375 and 1280 px with its first-load JavaScript size and mobile Lighthouse score. The owner picks; ADR; design system updated; the other sample is deleted.
+- [ ] **1.2 Photos and assets.** Menu photo decision (ADR); `docs/ASSETS.md`; stand-in photos for the seeded menu, each with alt text; 4 to 6 AI-generated room photos of one consistent room, captioned "Concept image" (PRD section 2).
+- [ ] **1.3 Menu pages.** `/menu` by Category, `/menu/item/[slug]` with Option Groups shown (not yet orderable), badges including Barista Pick, Sold Out and Hidden (MENU-01 to MENU-04); the pickup and Dine-in line (INFO-06); Menu Item share cards (INFO-09); prerendered with the `menu` cache tag.
+- [ ] **1.4 Cafe page and home.** `/cafe`: Opening Hours with Special Hours, "open now", map link, directions, the space, Amenities, visit FAQ, story (INFO-01, INFO-04 to INFO-07); home in the order of `docs/05-DESIGN-SYSTEM.md` section 6: hero with Order ahead and Plan your visit, Barista picks this week, the printed-menu section, the space, visit block (INFO-08); `/manage/cafe` for the cafe's details and Amenities (STAFF-09); CafeOrCoffeeShop structured data (INFO-02, INFO-03).
 - [ ] **1.5 Manager: menu.** `/manage/menu`: Categories, Menu Items, Option Groups, Options, prices, photos (local files for now), Hidden, Sold Out; every save revalidates the `menu` tag (STAFF-03, STAFF-04).
 
 **Exit criteria:** a Manager changes a price and marks an item Sold Out, and the public menu shows both within seconds; mobile Lighthouse 90+ on `/menu`; zero axe violations.
@@ -86,7 +86,7 @@ Goal: a Guest orders and pays at pickup; a Barista runs the Order to Picked Up.
 - [ ] **2.2 Cart.** Option picker becomes orderable; Cart with merge, edit and remove; Guest cookie; server pricing; Sold Out Lines flagged (ORD-01, ORD-02, ORD-06).
 - [ ] **2.3 Order Status machine.** `ordering` module: transitions table, `transition()`, `order_events`, Order Codes; every transition tested (section 7 of the architecture).
 - [ ] **2.4 Checkout and placement.** Pickup Time picker (ASAP and Scheduled), contact details, Pay at Pickup; `placeOrder` with the window lock; closed and paused refusals; the 15-drink cap and the Guest limit for Pay at Pickup (ORD-03 to ORD-05, ORD-07, ORD-12, PAY-02).
-- [ ] **2.5 Order status page.** `/orders/[id]` with the access token; polling; customer cancel before Accepted (ORD-08, ORD-09).
+- [ ] **2.5 Order status page.** `/orders/[id]` with the access token; polling; customer cancel before Accepted; the pickup and Dine-in line (ORD-08, ORD-09, INFO-06).
 - [ ] **2.6 Emails.** Resend (or terminal output): Order placed, Ready for pickup (ORD-10).
 - [ ] **2.7 Bar Screen.** `/bar` with columns, polling, sound, one-tap steps, mark paid at the counter (STAFF-02); daily cron route and sweep-on-read for expiry.
 
@@ -119,7 +119,7 @@ Goal: regulars sign in, collect Stars and redeem a free drink.
 
 Goal: the MVP is complete, fast, accessible and online as a demo.
 
-- [ ] **5.1 Events and Posts.** Public pages, Manager editors with Markdown preview, home sections, Event structured data (EVT-01, NEWS-01, NEWS-02, STAFF-06).
+- [ ] **5.1 Events and Posts.** Public pages, Manager editors with Markdown preview, home sections, Event structured data, Event and Post share cards (EVT-01, NEWS-01, NEWS-02, STAFF-06, INFO-09).
 - [ ] **5.2 Accessibility and speed pass.** Keyboard-only walkthrough, screen reader spot checks, Lighthouse budgets (`docs/05-DESIGN-SYSTEM.md` section 11), image weights.
 - [ ] **5.3 Security pass.** Headers and CSP, rate limits, Staff TOTP, a review of webhook and checkout code (`security-review` skill).
 - [ ] **5.4 Demo deploy.** Neon database, Vercel project, Blob for photos, `PAYMENT_PROVIDER` and email settings for the demo; deploy from this computer (decision in section 4).
@@ -130,10 +130,11 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 
 - [ ] **6.1 Favourites and reorder** (ORD-11).
 - [ ] **6.2 Event sign-up with a cap** (EVT-02).
-- [ ] **6.3 Promos** (time-boxed price changes on Menu Items).
+- [ ] **6.3 Promos and seasonal Menu Items** (time-boxed price changes on Menu Items; `available_until`, MENU-06).
 - [ ] **6.4 Installable app and "order ready" notifications** (PWA, web push).
 - [ ] **6.5 Filipino language** for customer pages.
 - [ ] **6.6 Reports and Birthday Treat** (STAFF-08, LOY-04); menu search and dietary filters (MENU-05).
+- [ ] **6.7 Recurring Events and Inquiries** (EVT-03, INFO-11); ORD-12 then points to the Inquiry form.
 
 **Exit criteria:** each V1 item works end to end with tests; budgets from Phase 5 still hold.
 

@@ -32,12 +32,12 @@ No other services. Search, analytics and error tracking are added only when a ph
 | Module | Owns | Public interface (examples) |
 | --- | --- | --- |
 | `menu` | Categories, Menu Items, Option Groups, Options, Sold Out, Hidden | `getMenu()`, `getMenuItem(slug)`, `priceLine(itemId, optionIds)`, `setSoldOut(...)` |
-| `cafe` | Opening Hours, Special Hours, Capacity, Ordering Paused | `isOpen(at)`, `pickupWindows(day)`, `setOrderingPaused(...)` |
+| `cafe` | Opening Hours, Special Hours, Capacity, Ordering Paused, the cafe's details and Amenities; Inquiries (V1) | `isOpen(at)`, `pickupWindows(day)`, `setOrderingPaused(...)`, `getCafeDetails()` |
 | `cart` | Carts and Lines | `getCart(owner)`, `addLine(...)`, `updateLine(...)`, `priceCart(cart)` |
 | `ordering` | Orders, Order Lines, Order Codes, Order Status, Pickup Window use | `placeOrder(input)`, `transition(orderId, to, actor)`, `getOrderForCustomer(id, token)` |
 | `payments` | Payments, provider events, Refunds | `startPayment(order)`, `handleWebhook(req)`, `refund(orderId, actor)` |
 | `loyalty` | Star ledger, Rewards, Redemptions | `balance(memberId)`, `earnForOrder(order)`, `reserveRedemption(...)`, `release(...)` |
-| `content` | Events and Posts | `upcomingEvents()`, `getPost(slug)`, `saveEvent(...)` |
+| `content` | Events and Posts; Recurring Events (V1) | `upcomingEvents()`, `getPost(slug)`, `saveEvent(...)` |
 | `identity` | Members, Staff roles, sessions, audit log (wraps Better Auth) | `requireMember()`, `requireStaff("barista" \| "manager")`, `audit(actor, action, target)` |
 | `notify` | Email templates and sending | `sendOrderPlaced(order)`, `sendOrderReady(order)` |
 
@@ -50,20 +50,24 @@ Rules:
 
 | Route | Who | Rendering |
 | --- | --- | --- |
-| `/` | Everyone | Prerendered: hero, today's hours, featured Menu Items, next Event, latest Post |
+| `/` | Everyone | Prerendered: hero with a room photo, today's hours, Order ahead and Plan your visit; Barista Picks; printed menu; the space; next Event; latest Post; visit block (PRD INFO-08) |
 | `/menu`, `/menu/[category]`, `/menu/item/[slug]` | Everyone | Prerendered; tagged `menu` |
-| `/cafe` | Everyone | Prerendered; tagged `hours`; the "open now" badge is a tiny client island that reads the clock |
+| `/cafe` | Everyone | Prerendered; tagged `hours`: the space, Amenities, visit FAQ, story, directions. The "open now" badge is a tiny client island that reads the clock. Edits to the cafe's details also revalidate `hours` |
+| `/concept` | Everyone | Static: About this concept (PRD INFO-10) |
+| `/cafe/inquire` (V1) | Everyone | Dynamic form; rate limited (PRD INFO-11) |
 | `/events`, `/events/[slug]`, `/news`, `/news/[slug]` | Everyone | Prerendered; tagged `content` |
 | `/cart`, `/checkout` | Everyone | Dynamic (per Customer) |
 | `/orders/[id]` | The Customer (Order token in the link) or the Member | Dynamic; polls for status |
 | `/account`, `/account/stars`, `/account/orders` | Members | Dynamic |
 | `/bar` | Baristas, Managers | Dynamic; polls (section 11) |
-| `/manage/*` (menu, hours, capacity, events, posts, orders, staff) | Managers | Dynamic |
+| `/manage/*` (menu, hours, capacity, cafe details, events, posts, orders, staff; inquiries in V1) | Managers | Dynamic |
 | `/api/webhooks/paymongo` | PayMongo | Route handler; verifies signature |
 | `/api/cron/daily` | Vercel Cron | Route handler; secret header |
 | `/api/auth/*` | Better Auth | Route handler |
 
 Cache Components (Next.js 16): public data loads through `"use cache"` functions with `cacheTag("menu")`, `cacheTag("hours")` or `cacheTag("content")`. Every Staff change calls `revalidateTag` for its tag, so the menu shows a Sold Out mark within seconds while pages stay static. Read the guides in `node_modules/next/dist/docs/` before using a Next API; rules learned on the iOne website and Hoshimono carry over (dynamic routes list their params in `generateStaticParams`; no `Date.now()`, `new Date()` or `Math.random()` while rendering, except inside cached functions or client islands).
+
+Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night palette is picked in the browser before first paint by a small inline script in the root layout (Manila hour plus any saved choice), so the server output is the same at every hour and stays cacheable.
 
 ## 5. Cart and pricing
 
@@ -144,7 +148,7 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 
 - **Better Auth** ([ADR 0005](adr/0005-better-auth-members-and-staff.md)): Members sign in with an email link (sent through Resend) or Google. Staff are users with a `role` of `barista` or `manager`, created by a Manager invite; Staff sign in with the email link and must turn on a second factor (TOTP) before using `/manage`.
 - `requireMember()` and `requireStaff(role)` guard pages, Server Actions and route handlers; every Staff write goes through `audit()`.
-- Rate limits (Postgres-backed, as in Hoshimono): sign-in emails per address and IP, checkout per Cart and IP, webhook calls per IP.
+- Rate limits (Postgres-backed, as in Hoshimono): sign-in emails per address and IP, checkout per Cart and IP, webhook calls per IP, Inquiries per IP (V1).
 - Security headers: a strict Content-Security-Policy (PayMongo's checkout is a redirect, so no third-party scripts on our pages), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
 - Every input is parsed with zod at the edge (Server Action or route handler).
 - Privacy (Data Privacy Act): a privacy notice, marketing email only with a separate opt-in, Member data export and deletion (orders are kept, de-identified, for the cafe's records).
@@ -153,6 +157,8 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 
 - Events and Posts live in the database with a Markdown body, written in `/manage` with a plain editor and preview; rendered with `react-markdown` (no raw HTML).
 - Photos upload to Vercel Blob through a signed upload; `next/image` serves them in AVIF or WebP. Stand-in photos are listed with their source and licence in `docs/ASSETS.md` (created in Phase 1).
+- Room photos are static files in the repo, not uploads: the room rarely changes. Each is labelled "Concept image" (PRD section 2). The space paragraph, directions and story are Markdown on `cafe_settings`, rendered like Posts.
+- Share cards (PRD INFO-09): Menu Item, Event and Post pages share their own photo and alt text; every other page shares one static branded image. Read the metadata guide in `node_modules/next/dist/docs/` before building them.
 
 ## 15. Testing
 

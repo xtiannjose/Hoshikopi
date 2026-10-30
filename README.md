@@ -28,7 +28,7 @@ Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS 4,
 | [docs/06-SETUP.md](docs/06-SETUP.md) | Prerequisites, accounts, scaffold, env vars, database, commands, Google Drive copy | Setting up or moving to a new computer |
 | [docs/07-ROADMAP.md](docs/07-ROADMAP.md) | Phases 0 to 7, batches with checkboxes, exit criteria, decisions due, definition of done | Picking the next piece of work |
 | [docs/08-TOOLING.md](docs/08-TOOLING.md) | Which skill fits which job, agents, ports, libraries, machine facts, prompts | Choosing how to work |
-| [docs/adr/](docs/adr/) | Decisions and why (0001 to 0009) | Before changing a decision |
+| [docs/adr/](docs/adr/) | Decisions and why (0001 to 0010) | Before changing a decision |
 
 ## Getting started
 

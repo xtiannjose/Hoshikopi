@@ -23,8 +23,8 @@ orders 1──* order_lines (snapshots)        orders 1──* order_events (app
    │──> pickup_window_usage (counts per 15-minute window)
    └──> users (Member, optional)  1──* star_entries (ledger)
 
-opening_hours, special_hours, capacity_rules, cafe_settings (cafe)
-events, posts (content)        users, sessions, accounts, verifications, two_factors (Better Auth)
+opening_hours, special_hours, capacity_rules, cafe_settings, inquiries (V1) (cafe)
+events, posts, recurring_events (V1) (content)        users, sessions, accounts, verifications, two_factors (Better Auth)
 audit_log, rate_limits (identity)
 ```
 
@@ -35,7 +35,7 @@ audit_log, rate_limits (identity)
 | Table | Columns | Notes |
 | --- | --- | --- |
 | `categories` | `id`, `slug` unique, `name`, `sort` int, `is_hidden` bool | Coffee, Non-coffee, Tea, Pastries, All-day food, Beans and merch |
-| `menu_items` | `id`, `category_id` FK, `slug` unique, `name`, `description`, `base_cents` int ≥ 0, `is_drink` bool, `badges` text[] (`new`, `best_seller`, `vegan`, `contains_nuts`, `no_caffeine`), `photo_url`, `photo_alt`, `sold_out_on` date null, `is_hidden` bool, `sort` int | `sold_out_on = service_day` means Sold Out today; it clears itself the next day |
+| `menu_items` | `id`, `category_id` FK, `slug` unique, `name`, `description`, `base_cents` int ≥ 0, `is_drink` bool, `badges` text[] (`new`, `best_seller`, `barista_pick`, `vegan`, `contains_nuts`, `no_caffeine`), `photo_url`, `photo_alt`, `sold_out_on` date null, `is_hidden` bool, `sort` int | `sold_out_on = service_day` means Sold Out today; it clears itself the next day. Home's "Barista picks this week" shows `barista_pick` Menu Items by `sort`. V1 adds `available_until` date null: Hidden after that day (MENU-06) |
 | `option_groups` | `id`, `name` (Size, Milk, Sugar Level, Ice Level, Extra Shots, Add-ons), `min_select` int ≥ 0, `max_select` int ≥ `min_select`, `sort` | Shared by many Menu Items |
 | `menu_item_option_groups` | `menu_item_id` FK, `option_group_id` FK, `sort`; PK both | Which groups a Menu Item offers |
 | `options` | `id`, `option_group_id` FK, `name`, `delta_cents` int ≥ 0, `is_default` bool, `sold_out_on` date null, `sort` | At most one default per single-choice group |
@@ -47,7 +47,8 @@ audit_log, rate_limits (identity)
 | `opening_hours` | `weekday` smallint 0 to 6 (PK), `opens_at` time, `last_order_at` time, `closes_at` time, `is_closed` bool | Manila time |
 | `special_hours` | `day` date (PK), `is_closed` bool, `opens_at`, `last_order_at`, `closes_at` (null when closed), `note` | Overrides one day |
 | `capacity_rules` | `weekday` (PK), `drinks_per_window` int, `food_per_window` int | Per 15-minute Pickup Window |
-| `cafe_settings` | `id` = 1, `ordering_paused_until` timestamptz null, `pause_message`, `prep_base_minutes` numeric, `prep_per_drink_minutes` numeric, `order_code_prefix` text | Singleton row |
+| `cafe_settings` | `id` = 1, `ordering_paused_until` timestamptz null, `pause_message`, `prep_base_minutes` numeric, `prep_per_drink_minutes` numeric, `order_code_prefix` text; details: `area` text ("Kapitolyo, Pasig"), `map_lat` and `map_lng` numeric(8,5), `directions_md`, `contact_email`, `space_md`, `story_md`; Amenities: `wifi`, `power_outlets`, `pets_allowed`, `smoking_allowed`, `restroom`, `step_free_entrance`, `accessible_restroom` (bool null each), `laptop_note`, `pets_note`, `parking_note` (text null each) | Singleton row. No street, house number or phone (PRD section 2). A null Amenity is unknown and left off the page |
+| `inquiries` (V1) | `id`, `kind` enum (`private_event`, `large_order`), `name`, `email`, `wanted_on` date null, `guests` int null, `message` text ≤ 1000, `status` enum (`new`, `answered`, `closed`) | INFO-11; rate limited per IP |
 
 ### Cart (module `cart`)
 
@@ -86,6 +87,7 @@ audit_log, rate_limits (identity)
 | --- | --- | --- |
 | `events` | `id`, `slug` unique, `title`, `starts_at`, `ends_at`, `summary`, `body_md`, `photo_url`, `photo_alt`, `price_cents` null, `signup_url` null, `is_published` | Sign-up with a cap comes in V1 (EVT-02) |
 | `posts` | `id`, `slug` unique, `title`, `excerpt` ≤ 180, `body_md`, `cover_url`, `cover_alt`, `published_at` null, `author_id` FK | Unpublished while `published_at` is null |
+| `recurring_events` (V1) | `id`, `title`, `weekday` smallint 0 to 6, `starts_at` time, `ends_at` time, `note` null, `sort`, `is_published` | EVT-03; Manila time; no sign-up and no structured data |
 
 ### Identity (module `identity`)
 
@@ -123,7 +125,9 @@ All names, prices and photos are invented for the concept (Concept Notice). Exam
 
 Option Groups: Size (Regular +0, Large +30), Milk (Whole +0, Oat +35, Almond +35), Sugar Level (0%, 25%, 50%, 75%, 100%), Ice Level (Less, Normal, Extra), Extra Shots (0 to 2, +35 each), Add-ons (Sea-salt cream +30, Sago +20).
 
-Also seeded: Opening Hours 7:00 to 21:00 (last order 20:30) every day, Capacity 12 drinks and 8 food Lines per window, two Events, three Posts, and in dev and test only: one Manager, one Barista and one Member account.
+Barista Pick badge on Hoshi Latte, Tablea Tsokolate and Ube Pandesal.
+
+Also seeded: Opening Hours 7:00 to 21:00 (last order 20:30) every day, Capacity 12 drinks and 8 food Lines per window, the cafe's details and Amenities (invented, `area` Kapitolyo, Pasig, map pin on a public spot), two Events, three Posts, and in dev and test only: one Manager, one Barista and one Member account.
 
 ## 6. Migration policy
 

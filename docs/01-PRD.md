@@ -4,7 +4,7 @@ Status: draft v0.1, 2026-10-30. Owner: project lead. Update this document before
 
 ## 1. Summary
 
-Hoshikopi is a concept cafe in Metro Manila and the website that runs it. Customers browse the menu, customize drinks, order ahead and pick up at the counter, pay online (GCash, Maya, Card) or at pickup, collect Stars toward free drinks, and follow the cafe's Events and Posts. Baristas run live Orders from a Bar Screen; the Manager edits the menu, hours and content without a developer.
+Hoshikopi is a concept cafe in Metro Manila and the website that runs it. The site sells both the menu and the place: Customers see the room and plan a visit, browse the menu, customize drinks, order ahead and pick up at the counter, pay online (GCash, Maya, Card) or at pickup, collect Stars toward free drinks, and follow the cafe's Events and Posts. Baristas run live Orders from a Bar Screen; the Manager edits the menu, hours and content without a developer.
 
 It is a portfolio project: the cafe, its address and its people are invented and labelled as such (the Concept Notice), and online payments run in Test Mode only. Everything else is built as if the cafe were real, so the site could become a real cafe's site without a rebuild.
 
@@ -25,11 +25,14 @@ Change a row here and every other document should follow. "Invented" rows are sh
 | --- | --- | --- |
 | What it is | A concept cafe for a portfolio; no real business | confirmed 2026-10-30 |
 | Market | Metro Manila, Philippines | confirmed 2026-10-30 |
-| Cafe location | One invented cafe, for example "Hoshikopi, Kapitolyo, Pasig", with an invented address and map pin | invented |
+| Cafe location | One invented cafe in Kapitolyo, Pasig. The site shows the neighbourhood only, with no street or house number, and the map pin sits on a public spot, so the address can never lead anyone to a real home (research C-54) | invented |
+| Contact details | No phone number is shown; questions and large Orders go by email, to an address the owner controls. No social links until the owner runs real accounts (research C-54) | confirmed 2026-10-30 |
+| Room photos | AI-generated photos of one consistent room, labelled "Concept image" (research C-43). Menu photos are still decided in batch 1.2 | confirmed 2026-10-30 |
+| Look | The Night wireframe's layout; the Day palette from 6:00 AM and the Night palette from 6:00 PM, Manila time; visitors can pin one (ADR 0010) | confirmed 2026-10-30 |
 | Locale and time | `en-PH`, Filipino-English voice; Manila time (`Asia/Manila`) | confirm (Phase 0) |
 | Currency | PHP, prices include VAT, shown as `PHP 165` (no centavos on the menu) | confirm (Phase 1) |
 | Opening Hours | 7:00 to 21:00 daily; orders accepted until 20:30 | invented |
-| Fulfilment | Pickup only, at the counter | confirmed 2026-10-30 |
+| Fulfilment | Online Orders are pickup only, at the counter. The cafe also takes walk-in Dine-in, with no table bookings (research C-45) | confirmed 2026-10-30 |
 | Payment Methods | GCash, Maya, Card through PayMongo in Test Mode; Pay at Pickup | confirm (Phase 3) |
 | Loyalty | 1 Star per drink; 9 Stars for a free drink; a Birthday Treat once a year | confirm (Phase 4) |
 | Menu size | About 40 Menu Items in 6 Categories, with invented names, prices and stand-in photos | invented |
@@ -52,8 +55,8 @@ Change a row here and every other document should follow. "Invented" rows are sh
 
 | Release | Contents |
 | --- | --- |
-| **MVP (Phases 0 to 5)** | Menu with Categories, photos and Option Groups; cafe info (hours, Special Hours, map, about); Cart and checkout for As Soon As Possible or Scheduled Pickup with Capacity; Payment Methods GCash, Maya, Card (Test Mode) and Pay at Pickup; Order status page with live updates; Bar Screen; Manager pages for menu, Options, Sold Out, hours, Capacity, Ordering Paused, Refunds; Member accounts (email link, Google); Stars, Star Card and Rewards; Events and Posts; order emails; Concept Notice |
-| **V1 (Phase 6)** | Favourites and one-tap reorder; Event sign-up with a cap; time-boxed Promos; installable app (PWA) with "your order is ready" notifications; Filipino language; reports for the Manager (sales by day, top Menu Items) |
+| **MVP (Phases 0 to 5)** | Menu with Categories, photos and Option Groups; cafe info (hours, Special Hours, map, the space in photos, Amenities, visit FAQ, story); Home that opens with the room and both "Order ahead" and "Plan your visit"; share cards; an About this concept page; Cart and checkout for As Soon As Possible or Scheduled Pickup with Capacity; Payment Methods GCash, Maya, Card (Test Mode) and Pay at Pickup; Order status page with live updates; Bar Screen; Manager pages for menu, Options, Sold Out, hours, Capacity, Ordering Paused, Refunds; Member accounts (email link, Google); Stars, Star Card and Rewards; Events and Posts; order emails; Concept Notice |
+| **V1 (Phase 6)** | Favourites and one-tap reorder; Event sign-up with a cap; Recurring Events; Inquiries for private events and large Orders; time-boxed Promos and seasonal Menu Items; installable app (PWA) with "your order is ready" notifications; Filipino language; reports for the Manager (sales by day, top Menu Items) |
 | **Later** | More than one cafe; delivery through partners; gift cards; tiers in loyalty; table QR ordering; a real launch with a real business (see section 9) |
 
 ## 5. Functional requirements
@@ -64,14 +67,23 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
-| MENU-01 | The menu lists visible Menu Items by Category with name, photo, short description, Base Price and badges (new, best seller, contains nuts, vegan) | M |
+| MENU-01 | The menu lists visible Menu Items by Category with name, photo, short description, Base Price and badges (new, best seller, Barista Pick, contains nuts, vegan) | M |
 | MENU-02 | A Menu Item page shows its Option Groups with required and optional choices, Price Deltas, and the running price | M |
 | MENU-03 | Sold Out Menu Items and Options stay visible, greyed, with "Sold out today"; they cannot be added | M |
 | MENU-04 | The menu works without signing in and is fast on a phone (prerendered; prices and Sold Out update within a minute of a change) | M |
 | MENU-05 | Search and dietary filters (vegan, no caffeine, nut-free) | S |
-| INFO-01 | Cafe page: Opening Hours, today's hours with Special Hours applied, "open now" state, address, map link, contact, about the cafe | M |
-| INFO-02 | Structured data for the cafe (CafeOrCoffeeShop with hours and address) and for Events | M |
-| INFO-03 | Concept Notice on every page footer and at checkout | M |
+| MENU-06 | Seasonal Menu Items: an optional last day after which the Menu Item is Hidden by itself, built with Promos. Until then the Manager hides them by hand (research C-47) | S |
+| INFO-01 | Cafe page: Opening Hours, today's hours with Special Hours applied, "open now" state, the neighbourhood, map link, how to get there, email | M |
+| INFO-02 | Structured data for the cafe (CafeOrCoffeeShop with hours, address, Amenities as `amenityFeature`, `smokingAllowed`, `acceptsReservations` false, a room `photo`, `hasMap`) and for Events | M |
+| INFO-03 | Concept Notice on every page footer and at checkout, linking to the About this concept page | M |
+| INFO-04 | The space: 4 to 6 photos of the room on the cafe page and one on Home, with a short paragraph of concrete facts (seats, light, how it feels by day and by night) (research C-43) | M |
+| INFO-05 | Amenities on the cafe page: Wi-Fi, power outlets with a laptop note, pets, smoking, restroom, step-free entrance and accessible restroom, parking with the nearest car park. An Amenity with no value is left out, never guessed. A short visit FAQ answers from the same facts (research C-44, C-51) | M |
+| INFO-06 | One line joins pickup and Dine-in on the cafe page, the menu and the Order page: order here for pickup, or walk in and stay (research C-45) | M |
+| INFO-07 | Story on the cafe page: origin, a founder note, where the coffee comes from (regions, never a real roaster), the team by first name and role or not at all; every invented person is labelled (research C-48) | M |
+| INFO-08 | Home opens with a room photo, today's hours and two actions, Order ahead and Plan your visit; three Barista Picks under "Barista picks this week"; a visit block (neighbourhood, today's hours, directions) within the first two phone screens (research C-42, C-46) | M |
+| INFO-09 | Share cards on every public page: Menu Item, Event and Post pages share their own photo with alt text; every other page shares one branded image (research C-49) | M |
+| INFO-10 | An About this concept page: what is invented (address, people, prices, photos), what is real (the code, Test Mode payments), and later the case study (research C-55) | M |
+| INFO-11 | Inquiry form for private events and large Orders (name, email, date, guests, message), saved for the Manager, who gets an email; Concept Notice on the form (research C-53) | S |
 
 ### 5.2 Cart and checkout
 
@@ -88,7 +100,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | ORD-09 | A Customer can cancel an Order until it is Accepted; a paid Order is Refunded in full | M |
 | ORD-10 | Order confirmation and "ready for pickup" emails | M |
 | ORD-11 | Favourites and one-tap reorder of a past Order | S |
-| ORD-12 | An Order holds at most 15 drinks; larger orders are asked to call the cafe (research C-14) | M |
+| ORD-12 | An Order holds at most 15 drinks; larger orders are asked to email the cafe, and to send an Inquiry once INFO-11 exists (research C-14, C-53) | M |
 
 ### 5.3 Payments
 
@@ -120,6 +132,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | --- | --- | --- |
 | EVT-01 | Events page: upcoming Events with date, time, description, photo, price if any; past Events archived | M |
 | EVT-02 | Event sign-up with a cap and a confirmation email | S |
+| EVT-03 | Recurring Events: a weekly list ("Open mic, Thursdays 7 PM") on the cafe page and the Events page, kept apart from dated Events (research C-52) | S |
 | NEWS-01 | Posts page and Post pages with a cover photo, written by the Manager in a simple editor | M |
 | NEWS-02 | Home shows the next Event and the latest Post | M |
 
@@ -135,6 +148,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | STAFF-06 | Managers write Events and Posts | M |
 | STAFF-07 | Managers issue Refunds and see a day's Orders and totals | M |
 | STAFF-08 | Reports: sales by day, top Menu Items, Stars issued and redeemed | S |
+| STAFF-09 | Managers edit the cafe's details: neighbourhood, map pin, directions, email, Amenities, the space paragraph and the story | M |
 
 ## 6. What makes Hoshikopi different
 
@@ -171,9 +185,9 @@ Portfolio targets, measured in the Phase 7 review:
 
 | Topic | Risk or question | Plan |
 | --- | --- | --- |
-| Photos | Menu photos need rights: stock, own shots or AI-generated? | Decide in Phase 1 (ADR); label stand-ins |
+| Photos | Menu photos need rights: stock, own shots or AI-generated? Room photos are settled (section 2) | Decide menu photos in Phase 1 (ADR); label stand-ins |
 | PayMongo account | Test keys need a PayMongo account | The `fake` provider runs everything until then (PAY-06) |
 | Realtime | Bar Screen and status page need near-live updates on serverless hosting | Polling every few seconds first; revisit Server-Sent Events if needed (`docs/03-ARCHITECTURE.md`) |
 | Email sender | Order emails need a sending service and a domain | Resend with its test sender until a domain exists |
-| Design direction | "Star coffee" could tip into a theme park | Two quick prototypes in Phase 1, pick one (`docs/05-DESIGN-SYSTEM.md`) |
+| Design direction | "Star coffee" could tip into a theme park | Direction chosen (ADR 0010); batch 1.1 still builds two quick prototypes of it, native and with library parts (`docs/05-DESIGN-SYSTEM.md`) |
 | Becoming real | A real cafe would need a business, BIR receipts, Internet Transactions Act duties, live PayMongo keys, real photos | Out of scope; listed so nothing in the build blocks it |

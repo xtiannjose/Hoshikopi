@@ -4,7 +4,7 @@ Status: draft v0.1, 2026-10-30. The look and feel of Hoshikopi. Batch 1.1 builds
 
 ## 1. Design read
 
-**"Star coffee": a neighbourhood cafe that stays open into the evening.** Warm cream and espresso by day, a deep night-sky ink for the hero, footer and Bar Screen, and one small gold star used with restraint: the logo mark, the Star Card, the "ready" moment. It should feel like a real Kapitolyo cafe with a point of view, not a template and not a theme park. Photos carry the warmth; the interface stays calm and quick to scan on a phone.
+**"Star coffee": a neighbourhood cafe that stays open into the evening.** Warm cream and espresso by day and deep night-sky ink by night, switching with the cafe's clock (section 3), and one small gold star used with restraint: the logo mark, the Star Card, the "ready" moment. It should feel like a real Kapitolyo cafe with a point of view, not a template and not a theme park. Photos carry the warmth; the interface stays calm and quick to scan on a phone.
 
 **Owner's brief (2026-10-30): very modern and aesthetic.** It should look like a design-led cafe people screenshot and share, not a small-business template: confident type, generous space, large photography, polished details. "Star coffee" stays; it is expressed in a modern way.
 
@@ -43,10 +43,10 @@ Each has Home at 1280 and 390 px and an interactive Hoshi Latte page at 390 px, 
 
 | Direction | Link | What it is |
 | --- | --- | --- |
-| Day (the original concept, fallback) | https://claude.ai/artifact/2NM1a1FXU6wKkuxcTGMrag | Section 1.1 as written: cream paper, italic serif, printed menu, typewriter prices. Close to Flora; kept as the safe option. |
-| Night (experimental) | https://claude.ai/artifact/Q8W4V38NB5JdyH3m8sFJC7 | Hoshikopi's own layout on night ink (light mode as a switch), with Day's type (section 4: italic serif headings, Plus Jakarta Sans, Courier Prime), pickup times in the hero, a menu the Customer switches between a full list (default) and photo cards by Category, the Star Card as a nine-star constellation that draws a cup, and Day's upcoming Event with a Latest post column, both with photos. |
+| Day | https://claude.ai/artifact/2NM1a1FXU6wKkuxcTGMrag | The chosen layout (next row) in the Day palette, 6 AM to 6 PM: cream paper with grain, espresso text, kopi buttons, latte cards, kopi line art. The earlier Flora-style Day layout is in this canvas's version history. |
+| Night | https://claude.ai/artifact/Q8W4V38NB5JdyH3m8sFJC7 | The chosen layout in the Night palette, 6 PM to 6 AM. Both canvases hold the same boards and a Theme setting (Day, Night, or Auto by Manila time). The layout: Hoshikopi's own, with Day's type (section 4: italic serif headings, Plus Jakarta Sans, Courier Prime), pickup times in the hero, Barista picks this week right after it, Day's hand-drawn dividers in slate, a menu the Customer switches (with a List and Photos switch drawn as two stars on a dashed thread) between a full list (default) and photo cards by Category, the Star Card as a nine-star constellation that draws a cup, and Day's upcoming Event with a Latest post column, both with photos. |
 
-The owner picks a direction before batch 1.1; the two batch 1.1 samples then follow it. If Night wins, sections 3 and 7 are rewritten to match.
+**Owner's decision (2026-10-30):** Night's layout and content, with Day's colours and paper grain by day and Night's colours by night ([ADR 0010](adr/0010-theme-follows-manila-time.md)). Section 3 holds both palettes; the batch 1.1 samples build this.
 
 ## 2. Principles
 
@@ -59,26 +59,28 @@ The owner picks a direction before batch 1.1; the two batch 1.1 samples then fol
 
 ## 3. Colour tokens
 
-Values are starting points for the Phase 1 prototypes; they must pass the contrast checks in section 10.
+Values are starting points for the Phase 1 prototypes; they must pass the contrast checks in section 10. Two palettes share every token: **Day** (cream paper, kopi brown, paper grain) and **Night** (night ink, moonlight). The Day column comes from the Day wireframe, the Night column from the main wireframe.
 
-| Token | Light (day) | Use |
-| --- | --- | --- |
-| `--background` | cream `#FBF6EE` | Page background |
-| `--foreground` | espresso `#2B1D14` | Body text |
-| `--muted` | latte `#EFE5D6` | Cards, inputs, Sold Out wash |
-| `--muted-foreground` | roast `#6E5A4B` | Secondary text (AA on `--background` and `--muted`) |
-| `--primary` | kopi `#5A3420` | Primary buttons, links |
-| `--primary-foreground` | cream `#FBF6EE` | Text on primary |
-| `--night` | ink `#141B2E` | Hero, footer, Bar Screen background |
-| `--night-foreground` | moonlight `#EEF0F7` | Text on night |
-| `--star` | gold `#E8B74A` | Logo star, Star Card fill, Ready badge on night; never for text on cream |
-| `--border` | `#E2D6C4` | Hairlines, input borders |
-| `--ring` | `#2F6FD6` | Focus ring (visible on cream and on night) |
-| `--success` | `#2E7D4F` | Paid, Picked Up |
-| `--warning` | `#B26A00` | Preparing, Ordering Paused |
-| `--destructive` | `#B3261E` | Cancel, errors |
+| Token | Day | Night | Use |
+| --- | --- | --- | --- |
+| `--background` | cream `#FBF6EE` | ink `#141B2E` | Page background; Day adds the paper grain |
+| `--foreground` | espresso `#2B1D14` | moonlight `#EEF0F7` | Body text |
+| `--muted` | latte `#EFE5D6` | `#1C2540` | Cards, inputs, Sold Out wash, the Star Card panel |
+| `--muted-foreground` | roast `#6E5A4B` | `#B9BFD3` | Secondary text (AA on `--background` and `--muted`) |
+| `--primary` | kopi `#5A3420` | moonlight `#EEF0F7` | Primary buttons, selected Options, the lit pickup line |
+| `--primary-foreground` | cream `#FBF6EE` | ink `#141B2E` | Text on primary |
+| `--border` | `#E2D6C4` | `#334068` | Hairlines |
+| `--input` | `#9C8670` | `#5D6A94` | Control borders, dashed lines, hand-drawn dividers (3:1 on the background) |
+| `--star` | gold `#E8B74A` | gold `#E8B74A` | Logo star, Star Card stars; never for text on cream |
+| `--star-edge` | kopi `#5A3420` | none | Thin outline that keeps gold stars visible on cream |
+| `--lit` | kopi `#5A3420` | gold `#E8B74A` | Lit lines of the Star Card constellation |
+| `--night`, `--night-foreground` | ink, moonlight | ink, moonlight | Bar Screen, in both palettes |
+| `--ring` | `#2F6FD6` | `#2F6FD6` | Focus ring (visible on cream and on ink) |
+| `--success` | `#2E7D4F` | `#6FCF97` | Paid, Picked Up, "Open now" |
+| `--warning` | `#B26A00` | `#F0A35E` | Preparing, Ordering Paused |
+| `--destructive` | `#B3261E` | `#FF8A80` | Cancel, errors |
 
-A dark theme maps `--background` to `--night` and lifts surfaces with lighter inks; it follows `prefers-color-scheme` and a toggle saved per browser. The Bar Screen always uses the night palette.
+**Which palette shows** ([ADR 0010](adr/0010-theme-follows-manila-time.md)): Day from 6:00 AM to 5:59 PM Manila time, Night from 6:00 PM to 5:59 AM, for every visitor wherever they are; the site follows the cafe's sky. A switch in the header (Auto, Day, Night) pins one, saved per browser; Auto is the default. The device's light or dark setting is not used. The Bar Screen always uses the night palette.
 
 ## 4. Typography
 
@@ -101,6 +103,11 @@ Self-hosted through `next/font`, `display: swap`: two variable families, plus th
 
 | Component | Notes |
 | --- | --- |
+| Home order | Hero (a room photo, "Open now, closes 9 PM", Order ahead as the primary action and Plan your visit, which jumps to the visit block), Barista picks this week, printed menu, the space, next Event and latest Post, visit block (PRD INFO-08) |
+| Barista picks | "Barista picks this week": three Menu Items with the `barista_pick` badge, one large and two small, each with photo, name, price, one line and Add to order |
+| Visit block | The neighbourhood, today's hours, a directions link and the email; no phone, no street number (PRD section 2) |
+| Amenity list | On `/cafe`: Phosphor icon, label, short note ("Wi-Fi: yes, ask at the bar"); an unknown Amenity is left out |
+| Visit FAQ | On `/cafe`: five or six native `details` elements whose answers come from the Amenities and Dine-in rules; no FAQ structured data |
 | Home menu section | The Flora-style printed menu (section 1.1): Categories side by side, Menu Item names left, prices right in the mono, Price Deltas listed under a Category, one photo beside the list; each name links to its Menu Item page; Sold Out items show "Sold out today" |
 | Menu Item card | Used on `/menu`. Photo (4:3), name, one-line description, price, badges; Sold Out greys the photo and replaces the price with "Sold out today" |
 | Option picker | Each Option Group is a `fieldset` with a `legend`; single choice uses styled native radios as large chips; multi choice uses checkboxes; the Price Delta sits on the chip ("Oat +35"); the running price updates in a live region |
@@ -111,7 +118,7 @@ Self-hosted through `next/font`, `display: swap`: two variable families, plus th
 | Order status timeline | Placed, Paid, Accepted, Preparing, Ready, Picked Up; the current step is announced politely; Ready uses the gold star |
 | Star Card | Nine circles; filled ones show a gold star; a Reward appears when all nine are filled |
 | Event card, Post card | Date block, photo, title, one line; Events show "Free" or a price |
-| Concept Notice | A slim footer line and a short note on checkout: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration." |
+| Concept Notice | A slim footer line and a short note on checkout: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration." It links to `/concept` |
 | Bar Screen card | See section 9 |
 
 Library components come through the shadcn CLI only when a native element cannot do the job; each one must earn its place on a page. Batch 1.1 Sample B tries decorative parts from the iOne research (`C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`); forms and the Cart drawer stay native in both samples.
@@ -126,9 +133,11 @@ Library components come through the shadcn CLI only when a native element cannot
 ## 8. Imagery, icons, copy
 
 - Photos: warm natural light, close crops of cups and pastries, people's hands rather than faces. Every stand-in photo has a row in `docs/ASSETS.md` with its source and licence (stock, own shots or AI-generated, decided in Phase 1).
+- Room photos: AI-generated, one consistent room (the counter, window seats, evening light), empty or with hands only, each captioned "Concept image".
 - Alt text describes the item as a menu would ("Iced Spanish latte with a layer of milk over espresso").
 - Icons: Phosphor, one weight (regular), 20 or 24 px.
 - Copy: short sentences, "you" and "we", prices as `PHP 165`, times as `9:15 AM`, dates as `Sat, Nov 8`.
+- Pickup and Dine-in in one line, on `/cafe`, the menu and the Order page: "Order here for pickup at the counter. Staying? Walk in and find a seat."
 
 ## 9. Bar Screen
 
@@ -149,7 +158,7 @@ Built for a tablet behind the counter, used by Jomar with wet hands and a queue 
 - Option Groups are fieldsets with legends; errors are tied to fields and announced.
 - Price changes, Cart updates and Order Status changes use polite live regions.
 - Works at 200% text size and 320 px width without horizontal scrolling.
-- Respects `prefers-reduced-motion` and `prefers-color-scheme`.
+- Respects `prefers-reduced-motion`. Both palettes pass every check here, and the theme switch is a labelled control reachable by keyboard.
 - axe runs in every Playwright page test, at phone and desktop width.
 
 ## 11. Performance budget
@@ -162,5 +171,5 @@ Built for a tablet behind the counter, used by Jomar with wet hands and a queue 
 
 ## 12. Tailwind v4 mapping (Phase 0)
 
-- Tokens live in `src/app/globals.css` under `@theme` (`--color-background`, `--color-primary`, `--color-night`, `--color-star`, `--font-display`, `--font-sans`, `--radius-card`), with the dark theme redefining them under a `.dark` class and `prefers-color-scheme`.
+- Tokens live in `src/app/globals.css` under `@theme` (`--color-background`, `--color-primary`, `--color-night`, `--color-star`, `--font-display`, `--font-sans`, `--radius-card`), with the Night palette redefining them under `[data-theme="night"]` on `<html>`, set before first paint (section 3, ADR 0010).
 - Use token classes (`bg-background`, `text-muted-foreground`, `bg-night`) everywhere; no raw hex values in components.
