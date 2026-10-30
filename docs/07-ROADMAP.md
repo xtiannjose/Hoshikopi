@@ -1,0 +1,156 @@
+# Roadmap and build plan
+
+Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has small batches (one branch each) and exit criteria that must be observably true before the next phase starts. Scope is `docs/01-PRD.md`; requirement IDs (MENU-01, ORD-03...) link the two. Weeks are estimates for one developer working part time; dates move, the order does not.
+
+## 0. Where we are (updated 2026-10-30)
+
+- **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and the first ADRs are written.
+- **Next: Phase 0, batch 0.1** (scaffold).
+- **Copy:** the project lives on this computer and as a git bundle on Google Drive (`docs/06-SETUP.md` section 8). No GitHub for now.
+
+## 1. Timeline at a glance
+
+| Phase | What | Estimate | Releases |
+| --- | --- | --- | --- |
+| 0 | Foundation | 1 week | |
+| 1 | Menu and cafe info | 1.5 weeks | |
+| 2 | Cart, checkout, Pay at Pickup, Bar Screen | 2 weeks | |
+| 3 | Online payments (Test Mode) | 1 week | |
+| 4 | Members and Stars | 1 week | |
+| 5 | Events, news, polish and demo deploy | 1.5 weeks | **MVP** |
+| 6 | V1 features | 2 weeks | **V1** |
+| 7 | Portfolio review and case study | 0.5 week | |
+
+## 2. Tech stack and where it is used
+
+| Layer | Choice | Phase | Decision |
+| --- | --- | --- | --- |
+| App | Next.js 16 (App Router, Cache Components), React 19, TypeScript | 0 | [ADR 0001](adr/0001-modular-monolith-nextjs.md) |
+| Styling | Tailwind CSS 4, tokens in `globals.css`, shadcn only when native elements fall short | 0 | `docs/05-DESIGN-SYSTEM.md` |
+| Data | PostgreSQL with Prisma; Docker locally, Neon (Singapore) when hosted | 0, 5 | [ADR 0004](adr/0004-postgres-prisma-neon.md) |
+| Auth | Better Auth: email link, Google; Staff roles and TOTP | 0, 4 | [ADR 0005](adr/0005-better-auth-members-and-staff.md) |
+| Payments | `PaymentProvider` interface; `fake` and PayMongo (Test Mode only) | 3 | [ADR 0003](adr/0003-payments-paymongo-test-mode.md) |
+| Email | Resend (terminal output until a key exists) | 2 | Roadmap batch 2.6 |
+| Hosting | Vercel Hobby (deployed from this computer while GitHub is out of use), Vercel Blob for photos | 5 | Decided in batch 5.4 |
+| Tests | Vitest (real test database), Playwright with axe, Lighthouse | 0 | `docs/03-ARCHITECTURE.md` section 15 |
+
+## 3. How every batch is worked
+
+1. Read the phase below and `CLAUDE.md`; pick the first unchecked batch; create its branch (`feature/<phase>.<batch>-<name>`).
+2. Build. Money, Capacity, Stars and Order Status rules go test-first with the `tdd` skill.
+3. `npm run qa` must pass; add `npm run test:e2e` for anything visible. Look at the change in the browser at 375, 768 and 1280 px.
+4. Tick the batch here, update any document the change affected, add an ADR if a decision was made.
+5. Commit only when the user asks (Conventional Commits). Merge into `main` with `git merge --no-ff` and refresh the Google Drive bundle only when the user asks.
+
+## 4. Decisions due along the way
+
+| When | Decision | Recorded in |
+| --- | --- | --- |
+| Batch 1.1 | Design direction: pick one of two prototypes | New ADR; `docs/05-DESIGN-SYSTEM.md` updated |
+| Batch 1.2 | Menu photos: stock, own photos or AI-generated, and their labelling | New ADR; `docs/ASSETS.md` |
+| Batch 2.1 | Capacity and Prep Time defaults (drinks and food per window, minutes per drink) | Seed data and `docs/04-DATA-MODEL.md` |
+| Batch 3.1 | PayMongo account: create one for test keys, or stay on `fake` for the MVP | ADR 0003 updated |
+| Batch 4.1 | Star rules confirmed (1 per drink, 9 for a Reward) | PRD section 2 |
+| Batch 5.4 | Hosting the demo: Vercel from this computer, or wait for a git host | New ADR |
+
+## 5. Phase 0: Foundation (1 week)
+
+Goal: an empty but real app with the database, auth skeleton, design tokens and quality gates in place.
+
+- [ ] **0.1 Scaffold.** Next.js into this folder (`docs/06-SETUP.md` section 3); remove defaults; `AGENTS.md` block kept; `.env.example`; `npm run dev` works.
+- [ ] **0.2 Quality gates.** ESLint (with the module-boundary import rule), Prettier, TypeScript strict, Vitest, Playwright with axe, the `qa`, `qa:full` and `test:e2e` scripts; one passing test of each kind.
+- [ ] **0.3 Database.** Docker Postgres (section 6 of setup); Prisma schema for every table in `docs/04-DATA-MODEL.md`; first migration with the CHECK constraints; seed data; test database guard.
+- [ ] **0.4 Modules and money.** `src/modules/*` folders with `index.ts`; `lib/money.ts` (centavos, formatting `PHP 165`); `lib/clock.ts` (Manila time, freezable in tests); tests first.
+- [ ] **0.5 Auth skeleton.** Better Auth with email link (link printed to the terminal until Resend), Staff roles, `requireStaff`, `audit()`; seeded Manager and Barista can sign in to an empty `/manage`.
+- [ ] **0.6 Layout and tokens.** Fonts, colour tokens, header with Cart button, footer with the Concept Notice, light and dark themes, security headers.
+
+**Exit criteria:** `npm run qa:full` green; a seeded Manager signs in and sees `/manage`; the home page shows the header, footer and Concept Notice at 375 and 1280 px with zero axe violations.
+
+## 6. Phase 1: Menu and cafe info (1.5 weeks)
+
+Goal: a beautiful, fast menu and cafe page that a Manager can edit.
+
+- [ ] **1.1 Design direction.** Two quick prototypes of Home and a Menu Item page (`prototype`, `design-taste-frontend`); the owner picks; ADR; design system updated.
+- [ ] **1.2 Photos and assets.** Photo decision (ADR); `docs/ASSETS.md`; stand-in photos for the seeded menu, each with alt text.
+- [ ] **1.3 Menu pages.** `/menu` by Category, `/menu/item/[slug]` with Option Groups shown (not yet orderable), badges, Sold Out and Hidden (MENU-01 to MENU-04); prerendered with the `menu` cache tag.
+- [ ] **1.4 Cafe page and home.** Opening Hours with Special Hours, "open now", map link, about; home with featured Menu Items; CafeOrCoffeeShop structured data (INFO-01 to INFO-03).
+- [ ] **1.5 Manager: menu.** `/manage/menu`: Categories, Menu Items, Option Groups, Options, prices, photos (local files for now), Hidden, Sold Out; every save revalidates the `menu` tag (STAFF-03, STAFF-04).
+
+**Exit criteria:** a Manager changes a price and marks an item Sold Out, and the public menu shows both within seconds; mobile Lighthouse 90+ on `/menu`; zero axe violations.
+
+## 7. Phase 2: Cart, checkout, Pay at Pickup, Bar Screen (2 weeks)
+
+Goal: a Guest orders and pays at pickup; a Barista runs the Order to Picked Up.
+
+- [ ] **2.1 Hours, Capacity, Prep Time.** `cafe` module: `isOpen`, Pickup Windows, Capacity per weekday, Ordering Paused, Prep Time formula; Manager pages for hours, Special Hours, Capacity and pause (STAFF-05); tests first.
+- [ ] **2.2 Cart.** Option picker becomes orderable; Cart with merge, edit and remove; Guest cookie; server pricing; Sold Out Lines flagged (ORD-01, ORD-02, ORD-06).
+- [ ] **2.3 Order Status machine.** `ordering` module: transitions table, `transition()`, `order_events`, Order Codes; every transition tested (section 7 of the architecture).
+- [ ] **2.4 Checkout and placement.** Pickup Time picker (ASAP and Scheduled), contact details, Pay at Pickup; `placeOrder` with the window lock; closed and paused refusals; the 15-drink cap and the Guest limit for Pay at Pickup (ORD-03 to ORD-05, ORD-07, ORD-12, PAY-02).
+- [ ] **2.5 Order status page.** `/orders/[id]` with the access token; polling; customer cancel before Accepted (ORD-08, ORD-09).
+- [ ] **2.6 Emails.** Resend (or terminal output): Order placed, Ready for pickup (ORD-10).
+- [ ] **2.7 Bar Screen.** `/bar` with columns, polling, sound, one-tap steps, mark paid at the counter (STAFF-02); daily cron route and sweep-on-read for expiry.
+
+**Exit criteria:** in a Playwright run, a Guest orders two customized drinks for a Scheduled Pickup, a Barista moves the Order to Picked Up on `/bar`, and the status page follows every step within 5 seconds; a full Pickup Window is never offered.
+
+## 8. Phase 3: Online payments in Test Mode (1 week)
+
+Goal: GCash, Maya and Card work end to end without any real money.
+
+- [ ] **3.1 Provider interface and `fake`.** `PaymentProvider`, the `fake` adapter with `/dev/pay/[id]` and signed webhooks; production refusal (PAY-06).
+- [ ] **3.2 Webhooks.** Signature check, `payment_events` dedupe, Order to `paid`; the return page reads the Order (PAY-03).
+- [ ] **3.3 Expiry.** Unpaid online Orders Expire after 15 minutes and release their window (PAY-04).
+- [ ] **3.4 PayMongo adapter.** Hosted checkout for GCash, Maya and Card with test keys only; the live-key guard (PAY-01). Skipped if the account decision says `fake` only.
+- [ ] **3.5 Refunds.** Manager full refund, email, Order to `refunded` (PAY-05, STAFF-07).
+
+**Exit criteria:** with the `fake` provider (and PayMongo test cards if 3.4 ran), an online Order reaches `paid` only through a verified webhook, a replayed webhook changes nothing, an abandoned payment Expires and frees its window, and a refund completes.
+
+## 9. Phase 4: Members and Stars (1 week)
+
+Goal: regulars sign in, collect Stars and redeem a free drink.
+
+- [ ] **4.1 Member accounts.** Email link and Google sign-in; Guest Cart merges on sign-in; order history (ACC-01, ACC-02).
+- [ ] **4.2 Star ledger.** `loyalty` module: earn on Picked Up, reverse on Refund, adjust by Manager; balance as a sum (LOY-01, LOY-05); tests first.
+- [ ] **4.3 Star Card and Rewards.** `/account/stars`; redeem 9 Stars at checkout; release on Cancel or Expire (LOY-02, LOY-03).
+- [ ] **4.4 Privacy.** Privacy notice page, marketing opt-in, data export and account deletion (ACC-03).
+
+**Exit criteria:** a Member orders three drinks, the Order is Picked Up, the Star Card shows three more Stars; with nine Stars the Member redeems a free drink, cancels, and gets the Stars back.
+
+## 10. Phase 5: Events, news, polish and demo deploy (1.5 weeks)
+
+Goal: the MVP is complete, fast, accessible and online as a demo.
+
+- [ ] **5.1 Events and Posts.** Public pages, Manager editors with Markdown preview, home sections, Event structured data (EVT-01, NEWS-01, NEWS-02, STAFF-06).
+- [ ] **5.2 Accessibility and speed pass.** Keyboard-only walkthrough, screen reader spot checks, Lighthouse budgets (`docs/05-DESIGN-SYSTEM.md` section 11), image weights.
+- [ ] **5.3 Security pass.** Headers and CSP, rate limits, Staff TOTP, a review of webhook and checkout code (`security-review` skill).
+- [ ] **5.4 Demo deploy.** Neon database, Vercel project, Blob for photos, `PAYMENT_PROVIDER` and email settings for the demo; deploy from this computer (decision in section 4).
+
+**Exit criteria:** every MVP requirement in the PRD is met and ticked; the demo URL works for the two-minute demo script (PRD section 8); `qa:full` green.
+
+## 11. Phase 6: V1 features (2 weeks)
+
+- [ ] **6.1 Favourites and reorder** (ORD-11).
+- [ ] **6.2 Event sign-up with a cap** (EVT-02).
+- [ ] **6.3 Promos** (time-boxed price changes on Menu Items).
+- [ ] **6.4 Installable app and "order ready" notifications** (PWA, web push).
+- [ ] **6.5 Filipino language** for customer pages.
+- [ ] **6.6 Reports and Birthday Treat** (STAFF-08, LOY-04); menu search and dietary filters (MENU-05).
+
+**Exit criteria:** each V1 item works end to end with tests; budgets from Phase 5 still hold.
+
+## 12. Phase 7: Portfolio review and case study (0.5 week)
+
+- [ ] **7.1 Measure.** The success metrics in PRD section 8, written up with numbers.
+- [ ] **7.2 Case study.** `docs/CASE-STUDY.md`: the problem, the decisions (ADRs), screenshots, what I would do next.
+- [ ] **7.3 Final review.** Code review, accessibility statement, README screenshots, demo script rehearsed.
+
+## 13. After V1 (not scheduled)
+
+More than one cafe; delivery partners; gift cards; loyalty tiers; table QR ordering; real launch requirements (business registration, BIR receipts, Internet Transactions Act duties, live payment keys, real photos and staff).
+
+## 14. Definition of done (every batch)
+
+1. The requirement IDs it covers work end to end in the browser.
+2. Rules for money, Capacity, Stars and Order Status have tests that fail without the code.
+3. `npm run qa` green (and `qa:full` for anything visible); zero axe violations on touched pages.
+4. Words match `GLOSSARY.md`; no em dashes in UI copy; invented details carry the Concept Notice.
+5. Docs updated: this roadmap ticked, any changed document edited, an ADR for any decision.
