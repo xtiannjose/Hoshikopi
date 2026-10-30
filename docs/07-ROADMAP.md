@@ -46,7 +46,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 | When | Decision | Recorded in |
 | --- | --- | --- |
-| Batch 1.1 | Design direction: pick one of two prototypes | New ADR; `docs/05-DESIGN-SYSTEM.md` updated |
+| Batch 1.1 | Design direction: Sample A (native and CSS) or Sample B (library parts) | New ADR; `docs/05-DESIGN-SYSTEM.md` updated |
 | Batch 1.2 | Menu photos: stock, own photos or AI-generated, and their labelling | New ADR; `docs/ASSETS.md` |
 | Batch 2.1 | Capacity and Prep Time defaults (drinks and food per window, minutes per drink) | Seed data and `docs/04-DATA-MODEL.md` |
 | Batch 3.1 | PayMongo account: create one for test keys, or stay on `fake` for the MVP | ADR 0003 updated |
@@ -70,10 +70,10 @@ Goal: an empty but real app with the database, auth skeleton, design tokens and 
 
 Goal: a beautiful, fast menu and cafe page that a Manager can edit.
 
-- [ ] **1.1 Design direction.** Two quick prototypes of Home and a Menu Item page (`prototype`, `design-taste-frontend`); the owner picks; ADR; design system updated.
+- [ ] **1.1 Design direction.** Two quick prototypes of Home and a Menu Item page (`prototype`, `design-taste-frontend`), with the same very modern look, content and photos, following the owner's reference sites (`docs/05-DESIGN-SYSTEM.md` section 1.1). Sample A: native elements and CSS only. Sample B: library parts from the iOne research (`C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`: Kokonut, beUI, Animate UI Radix, Motion), on Home and Stars only; forms stay native. Each shown at 375 and 1280 px with its first-load JavaScript size and mobile Lighthouse score. The owner picks; ADR; design system updated; the other sample is deleted.
 - [ ] **1.2 Photos and assets.** Photo decision (ADR); `docs/ASSETS.md`; stand-in photos for the seeded menu, each with alt text.
 - [ ] **1.3 Menu pages.** `/menu` by Category, `/menu/item/[slug]` with Option Groups shown (not yet orderable), badges, Sold Out and Hidden (MENU-01 to MENU-04); prerendered with the `menu` cache tag.
-- [ ] **1.4 Cafe page and home.** Opening Hours with Special Hours, "open now", map link, about; home with featured Menu Items; CafeOrCoffeeShop structured data (INFO-01 to INFO-03).
+- [ ] **1.4 Cafe page and home.** Opening Hours with Special Hours, "open now", map link, about; home with the printed-menu section and featured Menu Items (`docs/05-DESIGN-SYSTEM.md` section 6); CafeOrCoffeeShop structured data (INFO-01 to INFO-03).
 - [ ] **1.5 Manager: menu.** `/manage/menu`: Categories, Menu Items, Option Groups, Options, prices, photos (local files for now), Hidden, Sold Out; every save revalidates the `menu` tag (STAFF-03, STAFF-04).
 
 **Exit criteria:** a Manager changes a price and marks an item Sold Out, and the public menu shows both within seconds; mobile Lighthouse 90+ on `/menu`; zero axe violations.

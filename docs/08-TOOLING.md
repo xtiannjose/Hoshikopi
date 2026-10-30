@@ -51,6 +51,7 @@ Stop every server you start. On Windows a server started through `npx` can outli
 | `vitest`, `@playwright/test`, `@axe-core/playwright` | Tests | 0 |
 | `react-markdown` | Events and Posts | 1 or 5 |
 | `resend` | Emails | 2 |
+| `motion`, shadcn registry parts (Kokonut, beUI, Animate UI) | Sample B in batch 1.1; kept only if its ADR picks Sample B | 1 |
 
 Add a library only when the platform and installed packages cannot do the job, and say why in the batch or an ADR. No PayMongo SDK: its REST API is called with `fetch`.
 
@@ -65,6 +66,7 @@ Add a library only when the platform and installed packages cannot do the job, a
 ## 6. References
 
 - Sibling projects with the same stack and habits: Hoshimono (`C:\Users\cjose\Documents\Projects\Personal\Hoshimono`, online supermarket) and the iOne Resources website (`C:\Users\cjose\IONE-WEBSITE`). Reuse their patterns (module results, centavos, rate limits, security headers, quality tools) rather than reinventing them; never edit them from this project.
+- Before adding any UI library, read `C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`: install recipes, licences and pitfalls for Kokonut, beUI, Animate UI, coss and Motion, tested on this stack. iOne later replaced most of them with native elements and CSS.
 
 ## 7. Prompts that work
 

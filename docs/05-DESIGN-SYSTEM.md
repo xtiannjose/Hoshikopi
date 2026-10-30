@@ -1,12 +1,52 @@
 # Design System
 
-Status: draft v0.1, 2026-10-30. The look and feel of Hoshikopi. Phase 1 builds two quick prototypes of the direction below (the `prototype` and `design-taste-frontend` skills), the owner picks one, and an ADR records it; this document is then updated to match.
+Status: draft v0.1, 2026-10-30. The look and feel of Hoshikopi. Batch 1.1 builds two quick prototypes of the direction below with the same look and content (the `prototype` and `design-taste-frontend` skills): Sample A with native elements and CSS only, Sample B with library parts (`docs/07-ROADMAP.md` batch 1.1). The owner picks one, an ADR records it, and this document is then updated to match.
 
 ## 1. Design read
 
 **"Star coffee": a neighbourhood cafe that stays open into the evening.** Warm cream and espresso by day, a deep night-sky ink for the hero, footer and Bar Screen, and one small gold star used with restraint: the logo mark, the Star Card, the "ready" moment. It should feel like a real Kapitolyo cafe with a point of view, not a template and not a theme park. Photos carry the warmth; the interface stays calm and quick to scan on a phone.
 
-Reference mood: handwritten chalkboard menus, paper stamp cards, kraft cups, a window seat at dusk.
+**Owner's brief (2026-10-30): very modern and aesthetic.** It should look like a design-led cafe people screenshot and share, not a small-business template: confident type, generous space, large photography, polished details. "Star coffee" stays; it is expressed in a modern way.
+
+Reference mood: paper stamp cards, a window seat at dusk, a well-designed cafe you would photograph.
+
+### 1.1 Reference sites (shortlist, owner to pick before batch 1.1)
+
+Checked live on 2026-10-30. We borrow layout ideas and feel only, never names, copy, photos or code.
+
+| Vibe | Sites | What to borrow |
+| --- | --- | --- |
+| Quiet minimal | arabica.coffee, bluebottlecoffee.com, seycoffee.com, kurasu.kyoto, glitchcoffee.com | Full-width photos, small spaced capitals, lots of empty space |
+| Warm editorial | ceremonycoffee.com, florawellnesscafe.com (Awwwards Honorable Mention 2026) | Serif headlines over warm photos, cream paper feel, "Order ahead" up front |
+| Bold and playful | cafebinocle.com (Awwwards HM 2026), gourouindianfood.fr (Awwwards HM 2026), partnerscoffee.com, tandemcoffee.com, elephantgrounds.com | Huge type, bright colour blocks, illustration, sticker-like badges |
+| Dark and dramatic | onyxcoffeelab.com, escape.cafe (Awwwards Site of the Day 2024), newmixcoffee.com (Awwwards HM 2026) | Night backgrounds, one strong accent colour, cinematic photos; fits the night-sky ink |
+
+**Owner's pick (2026-10-30): Flora Café, florawellnesscafe.com.** It reads as a cafe, not a bean shop, and the menu is right there on the home page. What to borrow (looked at on the live site at 1280 and 390 px):
+
+- **Paper and one accent.** A grainy cream paper background, with one deep red (about `#B63530`) for the announcement bar, small label buttons and line drawings. Nothing else is coloured. (Hoshikopi keeps its own accent; see the decisions below.)
+- **Type with three voices.** Italic serif for headings and menu categories ("Explore Our Menu", "Coffee"), small uppercase sans for item names, and a typewriter mono for prices, notes and buttons.
+- **A printed-menu section on Home.** Categories side by side, names left, prices right, add-ons with their price ("Coconut whip +$0.75"), short notes under an item, one photo beside the list. This maps directly to Categories, Menu Items, Options and Price Deltas.
+- **Film-style photos.** Big, candid, slightly grainy shots of the counter, people and cups, edge to edge.
+- **Hand-drawn line art.** Small one-colour drawings (a cup, a vase) and wobbly hand-drawn divider lines between sections.
+- **Events and Posts in the same voice.** "Upcoming event", a dated line, an italic title, one label button.
+
+Owner's decisions on Flora (2026-10-30):
+- **Accent: Hoshikopi's gold star and night ink, not Flora's red.** Where Flora puts red on cream (label buttons, line drawings, dividers), we use night ink or kopi brown; gold stays for star moments (principle 2, and gold is never text on cream).
+- **Fonts: try a typewriter mono as a third family** (section 4); batch 1.1 shows it in both samples.
+- **Menu: both.** Home gets a printed-menu section; `/menu` keeps photo cards (section 6).
+
+We redraw everything ourselves: no Flora photos, drawings, copy or logo.
+
+### 1.2 Wireframes (claude.ai canvases, 2026-10-30)
+
+Each has Home at 1280 and 390 px and an interactive Hoshi Latte page at 390 px, with labelled photo slots.
+
+| Direction | Link | What it is |
+| --- | --- | --- |
+| Day (the original concept, fallback) | https://claude.ai/artifact/2NM1a1FXU6wKkuxcTGMrag | Section 1.1 as written: cream paper, italic serif, printed menu, typewriter prices. Close to Flora; kept as the safe option. |
+| Night (experimental) | https://claude.ai/artifact/Q8W4V38NB5JdyH3m8sFJC7 | Hoshikopi's own layout on night ink (light mode as a switch), with Day's type (section 4: italic serif headings, Plus Jakarta Sans, Courier Prime), pickup times in the hero, a menu the Customer switches between a full list (default) and photo cards by Category, the Star Card as a nine-star constellation that draws a cup, and Day's upcoming Event with a Latest post column, both with photos. |
+
+The owner picks a direction before batch 1.1; the two batch 1.1 samples then follow it. If Night wins, sections 3 and 7 are rewritten to match.
 
 ## 2. Principles
 
@@ -47,8 +87,9 @@ A dark theme maps `--background` to `--night` and lifts surfaces with lighter in
 | Display and headings | Fraunces (variable, soft optical sizes) | Warm serif with character for the menu and hero; open font licence |
 | Text and UI | Plus Jakarta Sans (variable) | Clear at small sizes; made by an Indonesian foundry, a nod to kopi; open font licence |
 | Order Codes and prices in tables | Plus Jakarta Sans with tabular figures | `font-variant-numeric: tabular-nums` |
+| Typewriter accents (to try in batch 1.1) | Courier Prime, regular only | Prices in the printed-menu section, short notes under items, dates, small label buttons (the Flora feel, section 1.1); never body text; open font licence |
 
-Self-hosted through `next/font`, two families, variable axes only, `display: swap`. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for Posts.
+Self-hosted through `next/font`, `display: swap`: two variable families, plus the mono at one weight if batch 1.1 keeps it. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for Posts.
 
 ## 5. Shape, space, elevation
 
@@ -60,7 +101,8 @@ Self-hosted through `next/font`, two families, variable axes only, `display: swa
 
 | Component | Notes |
 | --- | --- |
-| Menu Item card | Photo (4:3), name, one-line description, price, badges; Sold Out greys the photo and replaces the price with "Sold out today" |
+| Home menu section | The Flora-style printed menu (section 1.1): Categories side by side, Menu Item names left, prices right in the mono, Price Deltas listed under a Category, one photo beside the list; each name links to its Menu Item page; Sold Out items show "Sold out today" |
+| Menu Item card | Used on `/menu`. Photo (4:3), name, one-line description, price, badges; Sold Out greys the photo and replaces the price with "Sold out today" |
 | Option picker | Each Option Group is a `fieldset` with a `legend`; single choice uses styled native radios as large chips; multi choice uses checkboxes; the Price Delta sits on the chip ("Oat +35"); the running price updates in a live region |
 | Quantity stepper | Two 44 px buttons around the number; long-press free |
 | Cart button and drawer | A floating pill with the count and total; the drawer is a native `dialog` |
@@ -72,11 +114,11 @@ Self-hosted through `next/font`, two families, variable axes only, `display: swa
 | Concept Notice | A slim footer line and a short note on checkout: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration." |
 | Bar Screen card | See section 9 |
 
-Library components come through the shadcn CLI only when a native element cannot do the job; each one must earn its place on a page.
+Library components come through the shadcn CLI only when a native element cannot do the job; each one must earn its place on a page. Batch 1.1 Sample B tries decorative parts from the iOne research (`C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`); forms and the Cart drawer stay native in both samples.
 
 ## 7. Motion
 
-- CSS first: transitions, `@starting-style` for entering elements, View Transitions for the menu-to-item navigation where supported. No animation library unless a later ADR adds one.
+- CSS first: transitions, `@starting-style` for entering elements, View Transitions for the menu-to-item navigation where supported. No animation library unless a later ADR adds one; batch 1.1 Sample B tries Motion (`motion`) and its ADR decides.
 - Durations 150 to 250 ms for UI, up to 600 ms for the Star Card fill; ease-out curves.
 - The only "delight" moments: a Star filling in after pickup, and the Ready step on the status page. Both are skipped with reduced motion.
 - Nothing animates while the Customer is choosing Options or paying.
