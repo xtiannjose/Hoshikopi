@@ -219,3 +219,17 @@ export async function menuSlugs(): Promise<{
     items: menu.flatMap((category) => category.items.map((item) => item.slug)),
   };
 }
+
+/** Options that cost extra, for "Make it yours" under the printed menu. */
+export async function getPricedOptions(): Promise<
+  { name: string; deltaCents: number }[]
+> {
+  "use cache";
+  cacheTag("menu");
+  cacheLife("hours");
+  return db.option.findMany({
+    where: { deltaCents: { gt: 0 } },
+    orderBy: [{ optionGroup: { sort: "asc" } }, { sort: "asc" }],
+    select: { name: true, deltaCents: true },
+  });
+}

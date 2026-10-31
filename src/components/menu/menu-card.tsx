@@ -12,7 +12,7 @@ export function MenuCard({
   headingLevel = 3,
 }: {
   item: MenuItemCard;
-  headingLevel?: 2 | 3;
+  headingLevel?: 2 | 3 | 4;
 }) {
   const Heading = `h${headingLevel}` as const;
   return (

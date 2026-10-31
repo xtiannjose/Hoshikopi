@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ArrowLeftIcon, InfoIcon } from "@phosphor-icons/react/ssr";
 
 import { Badges } from "@/components/menu/badges";
@@ -30,16 +31,34 @@ export async function generateMetadata({
 const KITCHEN_NOTE =
   "Our kitchen also handles milk, egg, wheat, soy and tree nuts.";
 
-export default async function MenuItemPage({
+// params are read inside Suspense so a path outside generateStaticParams
+// (or one revalidated later) can serve the shell first (Partial Prefetching).
+export default function MenuItemPage({
   params,
 }: PageProps<"/menu/item/[slug]">) {
-  const item = await getMenuItem((await params).slug);
-  if (!item) notFound();
   return (
     <main
       id="main"
       className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 pt-4 md:grid-cols-2 md:gap-12 md:px-8"
     >
+      <Suspense
+        fallback={
+          <div className="bg-muted rounded-card aspect-4/3 md:col-start-1" />
+        }
+      >
+        <MenuItemDetails params={params} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function MenuItemDetails({
+  params,
+}: Pick<PageProps<"/menu/item/[slug]">, "params">) {
+  const item = await getMenuItem((await params).slug);
+  if (!item) notFound();
+  return (
+    <>
       <div>
         <Link
           href={`/menu/${item.categorySlug}`}
@@ -91,6 +110,6 @@ export default async function MenuItemPage({
           />
         )}
       </div>
-    </main>
+    </>
   );
 }
