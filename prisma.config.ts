@@ -12,6 +12,9 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   // Migrations use the direct connection. Optional so that `prisma generate`
-  // works without a database.
-  datasource: { url: process.env.DIRECT_URL ?? "" },
+  // works without a database. On Vercel, Neon's integration names it
+  // DATABASE_URL_UNPOOLED.
+  datasource: {
+    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL_UNPOOLED ?? "",
+  },
 });
