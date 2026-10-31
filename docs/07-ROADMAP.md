@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists). **Next: Phase 5, batch 5.1** (Events and Posts).
+- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists); batch 5.1 done. **Next: Phase 5, batch 5.2** (accessibility and speed pass).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -121,7 +121,7 @@ Goal: regulars sign in, collect Stars and redeem a free drink.
 
 Goal: the MVP is complete, fast, accessible and online as a demo.
 
-- [ ] **5.1 Events and Posts.** Public pages, Manager editors with Markdown preview, home sections, Event structured data, Event and Post share cards (EVT-01, NEWS-01, NEWS-02, STAFF-06, INFO-09).
+- [x] **5.1 Events and Posts.** Public pages, Manager editors with Markdown preview, home sections, Event structured data, Event and Post share cards (EVT-01, NEWS-01, NEWS-02, STAFF-06, INFO-09). Done 2026-10-31: `content` module (plain reads for tests, `"use cache"` wrappers under the `content` tag, saves in Manila time with audit); `/events` with past Events in a `details`, `/events/[slug]` with Event structured data, `/news` and `/news/[slug]`; share cards with the title and date or excerpt; Home gains the example Star Card, the next Event and the latest Post; `/manage/events` and `/manage/posts` with a live Markdown preview (no raw HTML). Photo upload for Events and Posts waits for Blob storage (batch 5.4).
 - [ ] **5.2 Accessibility and speed pass.** Keyboard-only walkthrough, screen reader spot checks, Lighthouse budgets (`docs/05-DESIGN-SYSTEM.md` section 11), image weights.
 - [ ] **5.3 Security pass.** Headers and CSP, rate limits, Staff TOTP, a review of webhook and checkout code (`security-review` skill).
 - [ ] **5.4 Demo deploy.** Neon database, Vercel project, Blob for photos, `PAYMENT_PROVIDER` and email settings for the demo; deploy from GitHub (decision in section 4).

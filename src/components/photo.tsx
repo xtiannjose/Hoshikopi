@@ -4,6 +4,8 @@ import {
   BreadIcon,
   CoffeeIcon,
   LeafIcon,
+  MicrophoneStageIcon,
+  NewspaperIcon,
   OrangeSliceIcon,
   PackageIcon,
   StorefrontIcon,
@@ -17,6 +19,8 @@ const ICONS = {
   "all-day-food": BowlFoodIcon,
   "beans-and-merch": PackageIcon,
   room: StorefrontIcon,
+  event: MicrophoneStageIcon,
+  post: NewspaperIcon,
 } as const;
 
 export type PhotoKind = keyof typeof ICONS;
