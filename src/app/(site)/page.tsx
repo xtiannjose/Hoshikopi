@@ -1,19 +1,34 @@
-import Link from "next/link";
+import { BaristaPicks } from "@/components/home/barista-picks";
+import { Divider } from "@/components/home/divider";
+import { Hero } from "@/components/home/hero";
+import { PrintedMenu } from "@/components/home/printed-menu";
+import { VisitBlock } from "@/components/home/visit-block";
+import { getCafeDetails, getHours, ROOM_PHOTOS } from "@/modules/cafe";
+import { getMenu, getPricedOptions } from "@/modules/menu";
 
-// A holding page until Home is built in batch 1.4.
-export default function Home() {
+// Home in the order of docs/05-DESIGN-SYSTEM.md section 6 (INFO-08). The
+// Star Card, next Event and latest Post join in batches 4.3 and 5.1.
+export default async function Home() {
+  const [cafe, hours, menu, priced] = await Promise.all([
+    getCafeDetails(),
+    getHours(),
+    getMenu(),
+    getPricedOptions(),
+  ]);
+  const picks = menu
+    .flatMap((category) => category.items)
+    .filter((item) => item.badges.includes("Barista Pick"));
+  const [windowDusk, , , tables] = ROOM_PHOTOS;
   return (
     <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
-      <h1 className="font-display max-w-3xl pt-10 pb-1 text-5xl leading-[1.1] italic md:text-7xl">
-        Your kopi, ready before you get here.
-      </h1>
-      <p className="text-muted-foreground mt-6 max-w-[42ch] text-lg">
-        Order ahead on your way in, pick up at the counter and earn a Star with
-        every drink. The menu opens soon.
-      </p>
-      <p className="mt-8">
-        <Link href="/concept">What is Hoshikopi?</Link>
-      </p>
+      <Hero cafe={cafe} hours={hours} photo={windowDusk} />
+      <Divider />
+      <BaristaPicks picks={picks} />
+      <div className="mt-24">
+        <PrintedMenu menu={menu} priced={priced} />
+      </div>
+      <Divider />
+      <VisitBlock cafe={cafe} hours={hours} photo={tables} />
     </main>
   );
 }

@@ -49,7 +49,7 @@ Stop every server you start. On Windows a server started through `npx` can outli
 | `zod` | Parsing every input at the edge | 0 |
 | `@phosphor-icons/react` | Icons | 0 |
 | `vitest`, `@playwright/test`, `@axe-core/playwright` | Tests | 0 |
-| `react-markdown` | Events and Posts | 1 or 5 |
+| `react-markdown` | The cafe's space, directions and story; Events and Posts | 1 |
 | `resend` | Emails | 2 |
 | `motion`, shadcn registry parts (Kokonut, beUI, Animate UI) | Sample B in batch 1.1; kept only if its ADR picks Sample B | 1 |
 

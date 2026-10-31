@@ -3,6 +3,7 @@
 export {
   getMenu,
   getMenuItem,
+  getPricedOptions,
   menuSlugs,
   type MenuCategory,
   type MenuItemCard,

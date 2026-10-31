@@ -7,7 +7,7 @@ export function MenuSection({
   headingLevel = 2,
 }: {
   category: MenuCategory;
-  headingLevel?: 1 | 2;
+  headingLevel?: 1 | 2 | 3;
 }) {
   const Heading = `h${headingLevel}` as const;
   return (
@@ -23,7 +23,7 @@ export function MenuSection({
           <MenuCard
             key={item.slug}
             item={item}
-            headingLevel={headingLevel === 1 ? 2 : 3}
+            headingLevel={(headingLevel + 1) as 2 | 3 | 4}
           />
         ))}
       </div>

@@ -1,3 +1,3 @@
 // loyalty module: the Star ledger, Rewards, Redemptions.
 // Other modules import only this file (docs/03-ARCHITECTURE.md section 3).
-export {};
+export { STARS_PER_REWARD } from "./internal/rules";

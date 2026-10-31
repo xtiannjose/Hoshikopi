@@ -2,6 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { expect, type Page } from "@playwright/test";
+import { Client } from "pg";
 
 const MAIL = path.join(process.cwd(), "data", "mail");
 
@@ -17,10 +18,28 @@ async function linkFor(nonce: string): Promise<string | null> {
 }
 
 /**
+ * Specs sign the same Staff in many times per run; the 3-links-per-email
+ * limit is for people, so clear it in the e2e database first.
+ */
+async function clearLinkLimits(email: string) {
+  const db = new Client({ connectionString: process.env.E2E_DATABASE_URL });
+  await db.connect();
+  try {
+    await db.query("DELETE FROM rate_limits WHERE key = $1 OR key LIKE $2", [
+      `link:${email}`,
+      "link-ip:%",
+    ]);
+  } finally {
+    await db.end();
+  }
+}
+
+/**
  * Signs in through the real email-link flow. A nonce in the return path
  * tells this test's link apart from links other tests asked for at once.
  */
 export async function signIn(page: Page, email: string, next = "/account") {
+  await clearLinkLimits(email);
   const nonce = Math.random().toString(36).slice(2);
   const target = `${next}${next.includes("?") ? "&" : "?"}t=${nonce}`;
   await page.goto(`/sign-in?next=${encodeURIComponent(target)}`);

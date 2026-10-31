@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 
-import { requireStaff } from "@/modules/identity";
+import { requireStaff, type Staff } from "@/modules/identity";
 
 import { signOutAction } from "./actions";
 
 export const metadata: Metadata = { title: "Manage", robots: { index: false } };
 
 const ROLE = { barista: "Barista", manager: "Manager", customer: "Customer" };
+
+// What each role may open; pages also check for themselves.
+const AREAS: { href: string; label: string; roles: Staff["role"][] }[] = [
+  { href: "/manage/cafe", label: "Cafe details", roles: ["manager"] },
+];
 
 export default function ManagePage() {
   return (
@@ -22,11 +28,25 @@ export default function ManagePage() {
 
 async function Who() {
   const staff = await requireStaff("barista");
+  const areas = AREAS.filter((area) => area.roles.includes(staff.role));
   return (
-    <div className="mt-4 grid justify-items-start gap-4">
+    <div className="mt-4 grid justify-items-start gap-6">
       <p>
         Signed in as {staff.name} ({ROLE[staff.role]}).
       </p>
+      {areas.length > 0 && (
+        <nav aria-label="Manage">
+          <ul className="grid gap-2">
+            {areas.map((area) => (
+              <li key={area.href}>
+                <Link href={area.href} className="text-lg">
+                  {area.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
       <form action={signOutAction}>
         <button
           type="submit"
