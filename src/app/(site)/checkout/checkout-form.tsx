@@ -104,7 +104,7 @@ export function CheckoutForm({
         </legend>
         <Field
           name="customerName"
-          defaultValue={member?.name}
+          defaultValue={state.values?.customerName ?? member?.name}
           label="Name"
           autoComplete="given-name"
           error={error("customerName")}
@@ -114,7 +114,7 @@ export function CheckoutForm({
         </p>
         <Field
           name="customerEmail"
-          defaultValue={member?.email}
+          defaultValue={state.values?.customerEmail ?? member?.email}
           label="Email"
           type="email"
           autoComplete="email"
@@ -122,6 +122,7 @@ export function CheckoutForm({
         />
         <Field
           name="customerPhone"
+          defaultValue={state.values?.customerPhone}
           label="Mobile number"
           type="tel"
           autoComplete="tel"

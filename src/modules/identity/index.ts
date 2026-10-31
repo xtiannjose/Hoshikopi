@@ -11,6 +11,7 @@ export { audit } from "./internal/audit";
 export { googleEnabled } from "./internal/auth";
 export {
   currentMember,
+  memberByEmail,
   requireMember,
   requireStaff,
   signOut,

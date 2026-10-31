@@ -68,6 +68,8 @@ test("checkout asks for an email or a mobile number", async ({ page }) => {
   await expect(
     page.getByText("Give us an email or a mobile number for your Order.")
   ).toBeVisible();
+  // What was typed stays after the refusal.
+  await expect(page.getByLabel("Name")).toHaveValue("Migs");
 });
 
 test("a Guest can't pay at pickup for more than 4 drinks (PAY-02)", async ({

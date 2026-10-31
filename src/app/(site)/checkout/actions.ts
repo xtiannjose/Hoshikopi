@@ -20,6 +20,12 @@ const METHODS: PaymentMethod[] = ["gcash", "maya", "card", "pay_at_pickup"];
 export type CheckoutState = {
   message?: string;
   errors?: Partial<Record<string, string>>;
+  /** What was typed, kept after a refusal (React resets the form). */
+  values?: {
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+  };
 };
 
 function messageFor(result: Exclude<PlaceOrderResult, { ok: true }>): string {
@@ -84,5 +90,10 @@ export async function placeOrderAction(
   return {
     message: messageFor(result),
     errors: result.reason === "invalid" ? result.errors : undefined,
+    values: {
+      customerName: String(form.get("customerName") ?? ""),
+      customerEmail: String(form.get("customerEmail") ?? ""),
+      customerPhone: String(form.get("customerPhone") ?? ""),
+    },
   };
 }

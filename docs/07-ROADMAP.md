@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 3 done (3.4 skipped until a PayMongo account exists); batch 4.1 done. **Next: Phase 4, batch 4.2** (Star ledger).
+- **Build:** Phases 0 to 3 done (3.4 skipped until a PayMongo account exists); batches 4.1 and 4.2 done. **Next: Phase 4, batch 4.3** (Star Card and Rewards).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -111,7 +111,7 @@ Goal: GCash, Maya and Card work end to end without any real money.
 Goal: regulars sign in, collect Stars and redeem a free drink.
 
 - [x] **4.1 Member accounts.** Email link and Google sign-in; Guest Cart merges on sign-in; order history (ACC-01, ACC-02). Done 2026-10-31: a first email-link sign-in makes the Member; `currentCartOwner` is the Member once signed in and folds in any Guest Cart left in the browser (`mergeGuestCart`, tested); checkout is prefilled and Members Pay at Pickup without the 4-drink limit; `/account` lists past Orders; Guests are offered an account after ordering; Google sign-in shows only when `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set (untested until keys exist). One-tap reorder is V1 (ORD-11).
-- [ ] **4.2 Star ledger.** `loyalty` module: earn on Picked Up, reverse on Refund, adjust by Manager; balance as a sum (LOY-01, LOY-05); tests first.
+- [x] **4.2 Star ledger.** `loyalty` module: earn on Picked Up, reverse on Refund, adjust by Manager; balance as a sum (LOY-01, LOY-05); tests first. Done 2026-10-31 test-first: `transition()` earns 1 Star per drink (Reward Lines excluded) on Picked Up and reverses them on a Refund after Picked Up, in the same transaction; a reverse never takes the balance below zero (Stars already spent stay spent); Managers adjust with a reason at `/manage/stars`, with the Member row locked and an audit row. Also fixed: React 19 resets a form after its action, so checkout and the Stars form now keep what was typed after a refusal; the Manager editors still reset to saved values on an error (batch 5.2).
 - [ ] **4.3 Star Card and Rewards.** `/account/stars`; redeem 9 Stars at checkout; release on Cancel or Expire (LOY-02, LOY-03).
 - [ ] **4.4 Privacy.** Privacy notice page, marketing opt-in, data export and account deletion (ACC-03).
 
