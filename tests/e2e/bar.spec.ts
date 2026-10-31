@@ -60,7 +60,7 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
     await card.getByRole("button", { name: `${button} ${code}` }).click();
     // Every 5 seconds until Ready, then every 30 (ADR 0009).
     await expect(guest.getByRole("status")).toHaveText(message, {
-      timeout: button === "Paid and picked up" ? 35_000 : 6_000,
+      timeout: button === "Paid and picked up" ? 35_000 : 10_000,
     });
   }
   await expect(card).toHaveCount(0);

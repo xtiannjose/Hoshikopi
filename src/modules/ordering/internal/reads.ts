@@ -8,9 +8,11 @@ import {
   type PickupWindow,
 } from "@/modules/cafe";
 import { getCart, type CartOwner, type CartView } from "@/modules/cart";
+import { balance, STARS_PER_REWARD } from "@/modules/loyalty";
 
 import { expireUnpaid } from "./bar";
 import { orderLink, tokenMatches } from "./links";
+import { baseOf, rewardLineOf } from "./place";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS } from "./rules";
 import { offeredWindows } from "./windows";
 
@@ -21,6 +23,8 @@ export type CheckoutView = {
   windows: PickupWindow[];
   /** Guests may Pay at Pickup for up to 4 drinks (PAY-02). */
   payAtPickupAllowed: boolean;
+  /** A Member with 9 Stars may make one drink free (LOY-03). */
+  reward: { name: string; discountCents: number } | null;
 };
 
 /** What checkout offers this browser right now (ORD-03, ORD-04, ORD-07). */
@@ -44,11 +48,17 @@ export async function checkoutView(
     drinks: cart.drinks,
     food: cart.foodLines,
   });
+  const rewardLine = rewardLineOf(cart);
+  const reward =
+    memberId && rewardLine && (await balance(memberId)) >= STARS_PER_REWARD
+      ? { name: rewardLine.name, discountCents: baseOf(rewardLine) }
+      : null;
   return {
     state: orderingState(at, day),
     cart,
     prepMinutes,
     windows,
+    reward,
     payAtPickupAllowed:
       memberId !== null || cart.drinks <= GUEST_PAY_AT_PICKUP_MAX_DRINKS,
   };

@@ -2,7 +2,11 @@ import type { Order, OrderStatus, Prisma } from "@/generated/prisma/client";
 import { dayValue, now } from "@/lib/clock";
 import { db, inTransaction, type Client } from "@/lib/db";
 
-import { earnForOrder, reverseForOrder } from "@/modules/loyalty";
+import {
+  earnForOrder,
+  releaseRedemption,
+  reverseForOrder,
+} from "@/modules/loyalty";
 
 import { emailOrderPlaced, emailOrderReady } from "./emails";
 
@@ -146,7 +150,10 @@ function move(
       where: { id: order.id },
       data: changes(order, to, why),
     });
-    if (to === "cancelled" || to === "expired") await releaseWindow(tx, order);
+    if (to === "cancelled" || to === "expired") {
+      await releaseWindow(tx, order);
+      if (order.rewardStars > 0) await releaseRedemption(tx, order.id);
+    }
     // Stars move with the Order, in the same transaction (ADR 0008).
     if (to === "picked_up") {
       const lines = await tx.orderLine.findMany({

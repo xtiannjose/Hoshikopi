@@ -44,6 +44,10 @@ function messageFor(result: Exclude<PlaceOrderResult, { ok: true }>): string {
       return `Orders hold up to ${MAX_DRINKS_PER_ORDER} drinks. For more, email us a day ahead.`;
     case "pay_at_pickup_limit":
       return `Guests can pay at pickup for up to ${GUEST_PAY_AT_PICKUP_MAX_DRINKS} drinks. Pay online, or sign in to order more.`;
+    case "not_enough_stars":
+      return "You need 9 Stars for a free drink.";
+    case "reward_unavailable":
+      return "A Reward needs a drink in your Cart and a signed-in Member.";
     case "payment_start_failed":
       return "We couldn't open the payment page. Try again, or choose Pay at Pickup.";
     case "window_unavailable":
@@ -77,6 +81,7 @@ export async function placeOrderAction(
         ? { kind: "asap" }
         : { kind: "scheduled", windowStart: new Date(pickup) },
     paymentMethod: METHODS.includes(method) ? method : "pay_at_pickup",
+    useReward: form.get("useReward") === "on",
   });
   if (result.ok) {
     // The header's Cart count lives in the layout, which a redirect keeps.
