@@ -34,11 +34,8 @@ test("the switch pins Day at night, and it lasts a reload", async ({
   await openIn(page, "night", "/");
   const menu = page.getByRole("button", { name: "Open the menu" });
   if (await menu.isVisible()) await menu.click();
-  // People tap the label; the radio inside it is visually hidden.
-  await page
-    .getByText("Day", { exact: true })
-    .filter({ visible: true })
-    .click();
+  // People tap the sun; the radio inside its label is visually hidden.
+  await page.getByTitle("Day").filter({ visible: true }).click();
   await expect(
     page.getByRole("radio", { name: "Day" }).filter({ visible: true })
   ).toBeChecked();

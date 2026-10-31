@@ -80,7 +80,7 @@ Values are starting points for the Phase 1 prototypes; they must pass the contra
 | `--warning` | `#8A4F00` | `#F0A35E` | Preparing, Ordering Paused, the Last Order countdown (4.5:1 on `--muted` too) |
 | `--destructive` | `#B3261E` | `#FF8A80` | Cancel, errors |
 
-**Which palette shows** ([ADR 0010](adr/0010-theme-follows-manila-time.md)): Day from 6:00 AM to 5:59 PM Manila time, Night from 6:00 PM to 5:59 AM, for every visitor wherever they are; the site follows the cafe's sky. A switch in the header (Auto, Day, Night) pins one, saved per browser; Auto is the default. The device's light or dark setting is not used. The Bar Screen always uses the night palette.
+**Which palette shows** ([ADR 0010](adr/0010-theme-follows-manila-time.md)): Day from 6:00 AM to 5:59 PM Manila time, Night from 6:00 PM to 5:59 AM, for every visitor wherever they are; the site follows the cafe's sky. A switch in the header (Auto, Day, Night, shown as a stopwatch, a sun and a star with the words as screen-reader labels and tooltips) pins one, saved per browser; Auto is the default. The device's light or dark setting is not used. The Bar Screen always uses the night palette.
 
 ## 4. Typography
 
