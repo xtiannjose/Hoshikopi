@@ -121,9 +121,15 @@ npx prisma studio
 | `npm run db:reset` | Drops, migrates and seeds the dev database (asks first) |
 | `npm run perf` | Lighthouse mobile on Home and the menu (as on the iOne website) |
 
-## 8. Project copy on Google Drive
+## 8. Project copies: GitHub and Google Drive
 
-GitHub is not used for now (the same arrangement as the iOne website). The copy of the project is one git bundle of every branch, synced by Google Drive for desktop:
+GitHub is the remote: `origin` is https://github.com/xtiannjose/Hoshikopi. Push only when asked:
+
+```
+git push origin main <branch>
+```
+
+The backup is one git bundle of every branch, synced by Google Drive for desktop (remote `drive`):
 
 ```
 git bundle create "G:/My Drive/Coding Projects/Personal/Hoshikopi/hoshikopi.bundle" --all

@@ -55,8 +55,8 @@ Change a row here and every other document should follow. "Invented" rows are sh
 
 | Release | Contents |
 | --- | --- |
-| **MVP (Phases 0 to 5)** | Menu with Categories, photos and Option Groups; cafe info (hours, Special Hours, map, the space in photos, Amenities, visit FAQ, story); Home that opens with the room and both "Order ahead" and "Plan your visit"; share cards; an About this concept page; Cart and checkout for As Soon As Possible or Scheduled Pickup with Capacity; Payment Methods GCash, Maya, Card (Test Mode) and Pay at Pickup; Order status page with live updates; Bar Screen; Manager pages for menu, Options, Sold Out, hours, Capacity, Ordering Paused, Refunds; Member accounts (email link, Google); Stars, Star Card and Rewards; Events and Posts; order emails; Concept Notice |
-| **V1 (Phase 6)** | Favourites and one-tap reorder; Event sign-up with a cap; Recurring Events; Inquiries for private events and large Orders; time-boxed Promos and seasonal Menu Items; installable app (PWA) with "your order is ready" notifications; Filipino language; reports for the Manager (sales by day, top Menu Items) |
+| **MVP (Phases 0 to 5)** | Menu with Categories, photos and Option Groups; cafe info (hours, Special Hours, map, the space in photos, Amenities, visit FAQ, story); Home that opens with the room and both "Order ahead" and "Plan your visit"; share cards; an About this concept page; Allergens on every Menu Item; Day and Night copy; a Last Order countdown; Cart and checkout for As Soon As Possible or Scheduled Pickup with Capacity; Payment Methods GCash, Maya, Card (Test Mode) and Pay at Pickup; Order status page with live updates; Bar Screen; Manager pages for menu, Options, Sold Out, hours, Capacity, Ordering Paused, Refunds; Member accounts (email link, Google); Stars, Star Card and Rewards; Events and Posts; order emails; Concept Notice |
+| **V1 (Phase 6)** | Favourites and one-tap reorder; Event sign-up with a cap; Recurring Events; Inquiries for private events and large Orders; Pairings; Day and Night Barista Picks; time-boxed Promos and seasonal Menu Items; installable app (PWA) with "your order is ready" notifications; Filipino language; reports for the Manager (sales by day, top Menu Items) |
 | **Later** | More than one cafe; delivery through partners; gift cards; tiers in loyalty; table QR ordering; a real launch with a real business (see section 9) |
 
 ## 5. Functional requirements
@@ -73,17 +73,21 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | MENU-04 | The menu works without signing in and is fast on a phone (prerendered; prices and Sold Out update within a minute of a change) | M |
 | MENU-05 | Search and dietary filters (vegan, no caffeine, nut-free) | S |
 | MENU-06 | Seasonal Menu Items: an optional last day after which the Menu Item is Hidden by itself, built with Promos. Until then the Manager hides them by hand (research C-47) | S |
+| MENU-07 | Every Menu Item page shows its Allergens ("Contains: milk"), what an Option adds ("Almond milk adds tree nuts"), and one line on the shared kitchen; "No common allergens" when there are none (research C-06) | M |
+| MENU-08 | A Pairing on the Menu Item page ("Goes well with Ube Pandesal"): one Menu Item with photo and price, added to the Cart in one tap | S |
 | INFO-01 | Cafe page: Opening Hours, today's hours with Special Hours applied, "open now" state, the neighbourhood, map link, how to get there, email | M |
 | INFO-02 | Structured data for the cafe (CafeOrCoffeeShop with hours, address, Amenities as `amenityFeature`, `smokingAllowed`, `acceptsReservations` false, a room `photo`, `hasMap`) and for Events | M |
 | INFO-03 | Concept Notice on every page footer and at checkout, linking to the About this concept page | M |
 | INFO-04 | The space: 4 to 6 photos of the room on the cafe page and one on Home, with a short paragraph of concrete facts (seats, light, how it feels by day and by night) (research C-43) | M |
-| INFO-05 | Amenities on the cafe page: Wi-Fi, power outlets with a laptop note, pets, smoking, restroom, step-free entrance and accessible restroom, parking with the nearest car park. An Amenity with no value is left out, never guessed. A short visit FAQ answers from the same facts (research C-44, C-51) | M |
+| INFO-05 | Amenities on the cafe page: Wi-Fi, power outlets with a laptop note, pets, smoking, restroom, step-free entrance and accessible restroom, parking with the nearest car park. An Amenity with no value is left out, never guessed. A short FAQ answers from the same facts, plus ordering and Stars questions: cancelling until Accepted, Refunds, the Pay at Pickup limit, how Stars work, large Orders (research C-44, C-51) | M |
 | INFO-06 | One line joins pickup and Dine-in on the cafe page, the menu and the Order page: order here for pickup, or walk in and stay (research C-45) | M |
 | INFO-07 | Story on the cafe page: origin, a founder note, where the coffee comes from (regions, never a real roaster), the team by first name and role or not at all; every invented person is labelled (research C-48) | M |
-| INFO-08 | Home opens with a room photo, today's hours and two actions, Order ahead and Plan your visit; three Barista Picks under "Barista picks this week"; a visit block (neighbourhood, today's hours, directions) within the first two phone screens (research C-42, C-46) | M |
+| INFO-08 | Home opens with a room photo, today's hours and two actions, Order ahead and Plan your visit; three Barista Picks under "Barista picks this week"; today's hours, the neighbourhood and a directions link on the first phone screen (in the hero pickup card), and the full visit block at the end of Home (research C-42, C-46) | M |
 | INFO-09 | Share cards on every public page: Menu Item, Event and Post pages share their own photo with alt text; every other page shares one branded image (research C-49) | M |
 | INFO-10 | An About this concept page: what is invented (address, people, prices, photos), what is real (the code, Test Mode payments), and later the case study (research C-55) | M |
 | INFO-11 | Inquiry form for private events and large Orders (name, email, date, guests, message), saved for the Manager, who gets an email; Concept Notice on the form (research C-53) | S |
+| INFO-12 | Day and Night copy: the Home headline and line change with the palette (a morning line by day, an evening line by night); both are in the page and the palette shows one (ADR 0010) | M |
+| INFO-13 | Day and Night Barista Picks: the Manager picks three for each palette, and Home shows the set for the current one | S |
 
 ### 5.2 Cart and checkout
 
@@ -101,6 +105,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | ORD-10 | Order confirmation and "ready for pickup" emails | M |
 | ORD-11 | Favourites and one-tap reorder of a past Order | S |
 | ORD-12 | An Order holds at most 15 drinks; larger orders are asked to email the cafe, and to send an Inquiry once INFO-11 exists (research C-14, C-53) | M |
+| ORD-13 | In the 60 minutes before Last Order, the hero pickup card and checkout show "Last order in 25 min"; after Last Order they say when ordering opens again | M |
 
 ### 5.3 Payments
 
@@ -153,7 +158,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 ## 6. What makes Hoshikopi different
 
 1. **Honest pickup times.** Prep Time and Capacity per Pickup Window mean "ready in 8 minutes" is true, and a full window is never offered.
-2. **A menu that feels like the cafe.** A distinct visual identity (night sky and coffee: "star coffee") instead of a template, still fast on a phone.
+2. **A menu that feels like the cafe.** A distinct visual identity (night sky and coffee: "star coffee") instead of a template, still fast on a phone. It follows the cafe's clock: cream paper by day, night sky from 6 PM (ADR 0010).
 3. **Stars that are simple.** One Star per drink, nine for a free one: a paper stamp card, online.
 4. **A Bar Screen built for wet hands.** Big targets, one tap per step, a clear "make next" order.
 5. **Portfolio-grade engineering.** Money as integer centavos, server-side pricing, verified webhooks, tests for every rule, documented decisions.
@@ -163,7 +168,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | Area | Requirement |
 | --- | --- |
 | Performance | Menu and cafe pages prerendered; mobile Lighthouse performance 90 or more and LCP under 2.5 s on the menu; Bar Screen updates within 5 seconds |
-| Accessibility | WCAG 2.2 AA; full keyboard use; works at 200% text size; every animation respects reduced motion |
+| Accessibility | WCAG 2.2 AA in both the Day and the Night palette; full keyboard use; works at 200% text size; every animation respects reduced motion |
 | Security | Server-side pricing; verified, idempotent webhooks; rate limits on sign-in and checkout; strict security headers; Staff routes behind role checks |
 | Privacy | Data Privacy Act (RA 10173) basics: a privacy notice, consent for marketing emails, data export and deletion; collect only what an Order needs |
 | Reliability | Order Status transitions are explicit and tested; an expired or failed payment never leaves a Pickup Window taken |

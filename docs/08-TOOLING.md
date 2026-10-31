@@ -7,7 +7,7 @@ Status: draft v0.1, 2026-10-30. Which tool fits which job on Hoshikopi.
 | Job | Skill | Notes |
 | --- | --- | --- |
 | Money, Capacity, Prep Time, Stars, Order Status, webhooks | `tdd` | Test first, red then green, against the real test database |
-| Comparing design directions (batch 1.1) or trying a tricky screen | `prototype` with `design-taste-frontend` | Throwaway; the pick goes into an ADR |
+| Comparing build approaches (batch 1.1) or trying a tricky screen | `prototype` with `design-taste-frontend` | Throwaway; the pick goes into an ADR |
 | Any visible UI | `design-taste-frontend`, then `ui-ux-pro-max` for a review | Read `docs/05-DESIGN-SYSTEM.md` first |
 | Motion, the Star Card fill, View Transitions | `apple-design` | CSS first; reduced motion always |
 | Starting the app, screenshots at 375, 768, 1280 px | `run` | Look at it before calling a batch done |
@@ -61,7 +61,7 @@ Add a library only when the platform and installed packages cannot do the job, a
 - Docker Desktop is installed but not always running; start it before database work.
 - Chrome 156 is installed (Lighthouse uses it); Playwright's Chromium is installed.
 - Google Drive for desktop is drive `G:`; project copies go to `G:\My Drive\Coding Projects\Personal\<Project>\<project>.bundle`.
-- GitHub is out of use for now (account suspended); no `gh`, no pushes, no pull requests.
+- GitHub is back (2026-10-31): `origin` is https://github.com/xtiannjose/Hoshikopi; `gh` 2.101 is installed. Push only when the user asks.
 
 ## 6. References
 

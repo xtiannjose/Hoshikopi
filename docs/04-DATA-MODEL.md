@@ -35,10 +35,10 @@ audit_log, rate_limits (identity)
 | Table | Columns | Notes |
 | --- | --- | --- |
 | `categories` | `id`, `slug` unique, `name`, `sort` int, `is_hidden` bool | Coffee, Non-coffee, Tea, Pastries, All-day food, Beans and merch |
-| `menu_items` | `id`, `category_id` FK, `slug` unique, `name`, `description`, `base_cents` int ≥ 0, `is_drink` bool, `badges` text[] (`new`, `best_seller`, `barista_pick`, `vegan`, `contains_nuts`, `no_caffeine`), `photo_url`, `photo_alt`, `sold_out_on` date null, `is_hidden` bool, `sort` int | `sold_out_on = service_day` means Sold Out today; it clears itself the next day. Home's "Barista picks this week" shows `barista_pick` Menu Items by `sort`. V1 adds `available_until` date null: Hidden after that day (MENU-06) |
+| `menu_items` | `id`, `category_id` FK, `slug` unique, `name`, `description`, `base_cents` int ≥ 0, `is_drink` bool, `badges` text[] (`new`, `best_seller`, `barista_pick`, `vegan`, `no_caffeine`), `allergens` text[] (`milk`, `egg`, `wheat`, `soy`, `peanuts`, `tree_nuts`, `fish`, `shellfish`, `sesame`), `photo_url`, `photo_alt`, `sold_out_on` date null, `is_hidden` bool, `sort` int | `sold_out_on = service_day` means Sold Out today; it clears itself the next day. Home's "Barista picks this week" shows `barista_pick` Menu Items by `sort`. The "contains nuts" badge shows when `allergens` has `peanuts` or `tree_nuts` (MENU-07). V1 adds `available_until` date null: Hidden after that day (MENU-06); `pairs_with_id` FK null (MENU-08); and `barista_pick` splits into `pick_day` and `pick_night` (INFO-13) |
 | `option_groups` | `id`, `name` (Size, Milk, Sugar Level, Ice Level, Extra Shots, Add-ons), `min_select` int ≥ 0, `max_select` int ≥ `min_select`, `sort` | Shared by many Menu Items |
 | `menu_item_option_groups` | `menu_item_id` FK, `option_group_id` FK, `sort`; PK both | Which groups a Menu Item offers |
-| `options` | `id`, `option_group_id` FK, `name`, `delta_cents` int ≥ 0, `is_default` bool, `sold_out_on` date null, `sort` | At most one default per single-choice group |
+| `options` | `id`, `option_group_id` FK, `name`, `delta_cents` int ≥ 0, `is_default` bool, `adds_allergens` text[] (same values as `menu_items.allergens`), `sold_out_on` date null, `sort` | At most one default per single-choice group. Almond milk adds `tree_nuts` |
 
 ### Cafe (module `cafe`)
 
@@ -125,7 +125,7 @@ All names, prices and photos are invented for the concept (Concept Notice). Exam
 
 Option Groups: Size (Regular +0, Large +30), Milk (Whole +0, Oat +35, Almond +35), Sugar Level (0%, 25%, 50%, 75%, 100%), Ice Level (Less, Normal, Extra), Extra Shots (0 to 2, +35 each), Add-ons (Sea-salt cream +30, Sago +20).
 
-Barista Pick badge on Hoshi Latte, Tablea Tsokolate and Ube Pandesal.
+Barista Pick badge on Hoshi Latte, Tablea Tsokolate and Ube Pandesal. Allergens on every seeded Menu Item (for example Hoshi Latte: milk; Ube Pandesal: wheat, milk, egg).
 
 Also seeded: Opening Hours 7:00 to 21:00 (last order 20:30) every day, Capacity 12 drinks and 8 food Lines per window, the cafe's details and Amenities (invented, `area` Kapitolyo, Pasig, map pin on a public spot), two Events, three Posts, and in dev and test only: one Manager, one Barista and one Member account.
 

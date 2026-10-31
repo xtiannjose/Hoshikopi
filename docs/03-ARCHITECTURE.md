@@ -67,7 +67,7 @@ Rules:
 
 Cache Components (Next.js 16): public data loads through `"use cache"` functions with `cacheTag("menu")`, `cacheTag("hours")` or `cacheTag("content")`. Every Staff change calls `revalidateTag` for its tag, so the menu shows a Sold Out mark within seconds while pages stay static. Read the guides in `node_modules/next/dist/docs/` before using a Next API; rules learned on the iOne website and Hoshimono carry over (dynamic routes list their params in `generateStaticParams`; no `Date.now()`, `new Date()` or `Math.random()` while rendering, except inside cached functions or client islands).
 
-Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night palette is picked in the browser before first paint by a small inline script in the root layout (Manila hour plus any saved choice), so the server output is the same at every hour and stays cacheable.
+Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night palette is picked in the browser before first paint by a small inline script in the root layout (Manila hour plus any saved choice), so the server output is the same at every hour and stays cacheable. Copy that differs by palette (PRD INFO-12) is rendered in both versions and the palette shows one. The "open now" badge and the Last Order countdown (ORD-13) are tiny client islands that read the clock.
 
 ## 5. Cart and pricing
 
@@ -149,7 +149,7 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 - **Better Auth** ([ADR 0005](adr/0005-better-auth-members-and-staff.md)): Members sign in with an email link (sent through Resend) or Google. Staff are users with a `role` of `barista` or `manager`, created by a Manager invite; Staff sign in with the email link and must turn on a second factor (TOTP) before using `/manage`.
 - `requireMember()` and `requireStaff(role)` guard pages, Server Actions and route handlers; every Staff write goes through `audit()`.
 - Rate limits (Postgres-backed, as in Hoshimono): sign-in emails per address and IP, checkout per Cart and IP, webhook calls per IP, Inquiries per IP (V1).
-- Security headers: a strict Content-Security-Policy (PayMongo's checkout is a redirect, so no third-party scripts on our pages), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
+- Security headers: a strict Content-Security-Policy (PayMongo's checkout is a redirect, so no third-party scripts on our pages; the inline theme script from section 4 is allowed by its SHA-256 hash, because a per-request nonce would stop pages being prerendered; confirm against the Next 16 CSP guide in `node_modules/next/dist/docs/`), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
 - Every input is parsed with zod at the edge (Server Action or route handler).
 - Privacy (Data Privacy Act): a privacy notice, marketing email only with a separate opt-in, Member data export and deletion (orders are kept, de-identified, for the cafe's records).
 

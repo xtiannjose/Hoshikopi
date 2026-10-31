@@ -39,7 +39,7 @@ We redraw everything ourselves: no Flora photos, drawings, copy or logo.
 
 ### 1.2 Wireframes (claude.ai canvases, 2026-10-30)
 
-Each has Home at 1280 and 390 px and an interactive Hoshi Latte page at 390 px, with labelled photo slots.
+Each has the same seven boards, with labelled photo slots: Home at 1280 and 390 px, the Hoshi Latte page, the Visit page (`/cafe`), Cart and checkout, and Order status at 390 px, and the Bar Screen on a 1194 px tablet. Home has a Preview setting for the pickup card (sample time, live clock, closing soon, closed, Ordering Paused); Order status has one for each Order Status.
 
 | Direction | Link | What it is |
 | --- | --- | --- |
@@ -70,14 +70,14 @@ Values are starting points for the Phase 1 prototypes; they must pass the contra
 | `--primary` | kopi `#5A3420` | moonlight `#EEF0F7` | Primary buttons, selected Options, the lit pickup line |
 | `--primary-foreground` | cream `#FBF6EE` | ink `#141B2E` | Text on primary |
 | `--border` | `#E2D6C4` | `#334068` | Hairlines |
-| `--input` | `#9C8670` | `#5D6A94` | Control borders, dashed lines, hand-drawn dividers (3:1 on the background) |
+| `--input` | `#8C7662` | `#6874A0` | Control borders, rings, dashed lines, hand-drawn dividers (3:1 on `--background` and on `--muted`) |
 | `--star` | gold `#E8B74A` | gold `#E8B74A` | Logo star, Star Card stars; never for text on cream |
 | `--star-edge` | kopi `#5A3420` | none | Thin outline that keeps gold stars visible on cream |
 | `--lit` | kopi `#5A3420` | gold `#E8B74A` | Lit lines of the Star Card constellation |
 | `--night`, `--night-foreground` | ink, moonlight | ink, moonlight | Bar Screen, in both palettes |
 | `--ring` | `#2F6FD6` | `#2F6FD6` | Focus ring (visible on cream and on ink) |
-| `--success` | `#2E7D4F` | `#6FCF97` | Paid, Picked Up, "Open now" |
-| `--warning` | `#B26A00` | `#F0A35E` | Preparing, Ordering Paused |
+| `--success` | `#256B42` | `#6FCF97` | Paid, Picked Up, "Open now" (4.5:1 on `--muted` too) |
+| `--warning` | `#8A4F00` | `#F0A35E` | Preparing, Ordering Paused, the Last Order countdown (4.5:1 on `--muted` too) |
 | `--destructive` | `#B3261E` | `#FF8A80` | Cancel, errors |
 
 **Which palette shows** ([ADR 0010](adr/0010-theme-follows-manila-time.md)): Day from 6:00 AM to 5:59 PM Manila time, Night from 6:00 PM to 5:59 AM, for every visitor wherever they are; the site follows the cafe's sky. A switch in the header (Auto, Day, Night) pins one, saved per browser; Auto is the default. The device's light or dark setting is not used. The Bar Screen always uses the night palette.
@@ -103,20 +103,25 @@ Self-hosted through `next/font`, `display: swap`: two variable families, plus th
 
 | Component | Notes |
 | --- | --- |
-| Home order | Hero (a room photo, "Open now, closes 9 PM", Order ahead as the primary action and Plan your visit, which jumps to the visit block), Barista picks this week, printed menu, the space, next Event and latest Post, visit block (PRD INFO-08) |
+| Home order | Hero (headline, Order ahead as the primary action and Plan your visit, which jumps to the visit block; the hero pickup card; a room photo), divider, Barista picks this week, the Home menu section, Star Card, next Event and latest Post, divider, visit block with a photo of the space (PRD INFO-08) |
+| Hero pickup card | A ticket-style card: top line with the Manila clock, "Open until 9:00 PM", the neighbourhood and a directions link, so "where and when" shows on the first phone screen; the Pickup Time in the italic serif; a row of Pickup Windows (Now, the next four, Other) as rings on a dashed line, the picked one a star and the line lit up to it; Other opens a native time input. Within 60 minutes of Last Order the status reads "Last order in 25 min" in `--warning`. When closed or Ordering Paused, the row gives way to the reopening time |
+| Hero copy | One headline and line per palette, both in the page, the current palette shows one (PRD INFO-12). Day: "Your morning kopi, ready before you get here." / "Magandang umaga! Order ahead on your way in, pick up at the counter and earn a Star with every drink." Night: "Your evening kopi, ready before you get here." / "Order ahead for a study night or a late merienda, pick up at the counter and earn a Star with every drink." |
+| Divider | A hand-drawn wobbly line in `--input`, full width, between the hero and Barista picks and before the visit block |
 | Barista picks | "Barista picks this week": three Menu Items with the `barista_pick` badge, one large and two small, each with photo, name, price, one line and Add to order |
 | Visit block | The neighbourhood, today's hours, a directions link and the email; no phone, no street number (PRD section 2) |
 | Amenity list | On `/cafe`: Phosphor icon, label, short note ("Wi-Fi: yes, ask at the bar"); an unknown Amenity is left out |
-| Visit FAQ | On `/cafe`: five or six native `details` elements whose answers come from the Amenities and Dine-in rules; no FAQ structured data |
-| Home menu section | The Flora-style printed menu (section 1.1): Categories side by side, Menu Item names left, prices right in the mono, Price Deltas listed under a Category, one photo beside the list; each name links to its Menu Item page; Sold Out items show "Sold out today" |
+| Visit FAQ | On `/cafe`: about eight native `details` elements. Visit answers come from the Amenities and Dine-in rules; ordering and Stars answers come from the PRD rules (cancel until Accepted, Refunds, Pay at Pickup limit, Stars, large Orders); no FAQ structured data |
+| Home menu section | The Flora-style printed menu (section 1.1): Categories side by side, Menu Item names left, prices right in the mono, one photo beside the list; each name links to its Menu Item page; Sold Out items show "Sold out today"; "Make it yours" lists the Price Deltas below. A View switch (List, Photos) sits above it: two rings on a dashed thread with italic serif labels, the picked one a star; Photos shows Menu Item cards behind Category tabs |
 | Menu Item card | Used on `/menu`. Photo (4:3), name, one-line description, price, badges; Sold Out greys the photo and replaces the price with "Sold out today" |
 | Option picker | Each Option Group is a `fieldset` with a `legend`; single choice uses styled native radios as large chips; multi choice uses checkboxes; the Price Delta sits on the chip ("Oat +35"); the running price updates in a live region |
+| Allergen line | Under the description on the Menu Item page: an info icon and "Contains: milk. Almond milk adds tree nuts. Our kitchen also handles gluten and egg." in the mono; "No common allergens" when empty (PRD MENU-07) |
+| Pairing (V1) | Under the Option Groups: "Goes well with", one small card (photo, name, price, an add button) (PRD MENU-08) |
 | Quantity stepper | Two 44 px buttons around the number; long-press free |
 | Cart button and drawer | A floating pill with the count and total; the drawer is a native `dialog` |
 | Pickup Time picker | "As soon as possible: ready in about 10 min" first, then today's windows as chips; full windows are not shown (ordering for tomorrow comes in V1) |
 | Payment Method list | Radio cards: GCash, Maya, Card, Pay at Pickup, each with its logo or icon and a one-line note; a "Test Mode" tag on online methods |
 | Order status timeline | Placed, Paid, Accepted, Preparing, Ready, Picked Up; the current step is announced politely; Ready uses the gold star |
-| Star Card | Nine circles; filled ones show a gold star; a Reward appears when all nine are filled |
+| Star Card | "Nine Stars make a cup": a constellation of nine points that draws a cup. Earned Stars are gold stars (with `--star-edge` by day) joined by `--lit` lines; the rest are small rings on dashed `--input` lines. A Reward appears when all nine are lit |
 | Event card, Post card | Date block, photo, title, one line; Events show "Free" or a price |
 | Concept Notice | A slim footer line and a short note on checkout: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration." It links to `/concept` |
 | Bar Screen card | See section 9 |
@@ -127,7 +132,7 @@ Library components come through the shadcn CLI only when a native element cannot
 
 - CSS first: transitions, `@starting-style` for entering elements, View Transitions for the menu-to-item navigation where supported. No animation library unless a later ADR adds one; batch 1.1 Sample B tries Motion (`motion`) and its ADR decides.
 - Durations 150 to 250 ms for UI, up to 600 ms for the Star Card fill; ease-out curves.
-- The only "delight" moments: a Star filling in after pickup, and the Ready step on the status page. Both are skipped with reduced motion.
+- The only "delight" moments: a Star lighting up on the Star Card after pickup, the Ready step on the status page, and the ring turning into a star when a Pickup Window or the menu View is picked (350 ms). All are skipped with reduced motion.
 - Nothing animates while the Customer is choosing Options or paying.
 
 ## 8. Imagery, icons, copy
@@ -166,7 +171,7 @@ Built for a tablet behind the counter, used by Jomar with wet hands and a queue 
 | Page | Budget (mobile, Lighthouse simulated) |
 | --- | --- |
 | Home, menu, Menu Item | Performance 90+, LCP under 2.5 s, CLS under 0.05, total blocking time under 200 ms |
-| Every page | JavaScript under 170 kB compressed on first load; images in AVIF or WebP, menu photos under 80 kB each at card size |
+| Every page | JavaScript under 170 kB compressed on first load; images in AVIF or WebP, menu photos under 80 kB each at card size; the Day paper grain is a small tiled image (under 5 kB), never a live SVG filter over the page, which is slow to paint on phones |
 | Bar Screen | First data within 1 s on a tablet over Wi-Fi; each poll response under 5 kB when nothing changed |
 
 ## 12. Tailwind v4 mapping (Phase 0)

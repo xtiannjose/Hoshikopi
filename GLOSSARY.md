@@ -42,6 +42,14 @@ _Avoid_: Disabled, archived, deleted
 One of the Menu Items the baristas recommend this week, a good start for a first-time visitor. Home shows three under "Barista picks this week"; the Manager changes them.
 _Avoid_: Featured, signature (as a type name), highlight
 
+**Allergens**:
+The common allergens a Menu Item contains (milk, egg, wheat, soy, peanuts, tree nuts, fish, shellfish, sesame), shown on its page as "Contains: milk". An Option can add some (almond milk adds tree nuts).
+_Avoid_: Allergy info, dietary flags (for allergens)
+
+**Pairing**:
+A Menu Item suggested beside another on its page ("Goes well with Ube Pandesal").
+_Avoid_: Upsell, cross-sell (in UI copy), combo
+
 ### Ordering
 
 **Cart**:
@@ -155,6 +163,10 @@ _Avoid_: Claim, use
 **Opening Hours**:
 The cafe's regular hours per day of the week, in Manila time.
 _Avoid_: Schedule, store hours (in code)
+
+**Last Order**:
+The latest time an Order can be placed on a day (8:30 PM when the cafe closes at 9:00 PM). Opening Hours and Special Hours each set one.
+_Avoid_: Cut-off, closing time (for this)
 
 **Special Hours**:
 A one-day change to Opening Hours (holiday, private event, closed for maintenance).

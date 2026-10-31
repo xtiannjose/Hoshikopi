@@ -1,6 +1,6 @@
 # Hoshikopi
 
-A concept cafe in Metro Manila, and the website that runs it. Customers browse the menu, customize their drink, order ahead and pick up at the counter, pay with GCash, Maya, card or at pickup, and collect Stars toward a free drink. Baristas run live Orders on a Bar Screen; the Manager edits the menu, hours, Events and Posts.
+A concept cafe in Metro Manila, and the website that runs it. The site sells the place and the menu: Customers see the space and plan a visit, browse the menu, customize their drink, order ahead and pick up at the counter, pay with GCash, Maya, card or at pickup, and collect Stars toward a free drink. Baristas run live Orders on a Bar Screen; the Manager edits the menu, hours, the cafe's details, Events and Posts. The look follows the cafe's clock: cream paper by day, night sky from 6 PM.
 
 *Hoshi* is Japanese for star; *kopi* is coffee in Malay and Indonesian, close to the Filipino *kape*.
 
@@ -36,4 +36,4 @@ Follow [docs/06-SETUP.md](docs/06-SETUP.md). Every outside account (Neon, Vercel
 
 ## Project copy
 
-GitHub is not used for now. The copy of the project is a git bundle on Google Drive: `G:\My Drive\Coding Projects\Personal\Hoshikopi\hoshikopi.bundle` (how to refresh and restore it: [docs/06-SETUP.md](docs/06-SETUP.md) section 8).
+The project is on GitHub: https://github.com/xtiannjose/Hoshikopi. A git bundle on Google Drive is the backup: `G:\My Drive\Coding Projects\Personal\Hoshikopi\hoshikopi.bundle` (how to refresh and restore it: [docs/06-SETUP.md](docs/06-SETUP.md) section 8).

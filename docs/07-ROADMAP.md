@@ -2,11 +2,12 @@
 
 Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has small batches (one branch each) and exit criteria that must be observably true before the next phase starts. Scope is `docs/01-PRD.md`; requirement IDs (MENU-01, ORD-03...) link the two. Weeks are estimates for one developer working part time; dates move, the order does not.
 
-## 0. Where we are (updated 2026-10-30)
+## 0. Where we are (updated 2026-10-31)
 
-- **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and the first ADRs are written.
+- **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
+- **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Seven boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Bar Screen. Not wireframed yet: Star Card account page, Events and Posts pages, `/concept`, Manager pages.
 - **Next: Phase 0, batch 0.1** (scaffold).
-- **Copy:** the project lives on this computer and as a git bundle on Google Drive (`docs/06-SETUP.md` section 8). No GitHub for now.
+- **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
 
@@ -31,27 +32,28 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 | Auth | Better Auth: email link, Google; Staff roles and TOTP | 0, 4 | [ADR 0005](adr/0005-better-auth-members-and-staff.md) |
 | Payments | `PaymentProvider` interface; `fake` and PayMongo (Test Mode only) | 3 | [ADR 0003](adr/0003-payments-paymongo-test-mode.md) |
 | Email | Resend (terminal output until a key exists) | 2 | Roadmap batch 2.6 |
-| Hosting | Vercel Hobby (deployed from this computer while GitHub is out of use), Vercel Blob for photos | 5 | Decided in batch 5.4 |
+| Hosting | Vercel Hobby (deploys from GitHub), Vercel Blob for photos | 5 | Decided in batch 5.4 |
 | Tests | Vitest (real test database), Playwright with axe, Lighthouse | 0 | `docs/03-ARCHITECTURE.md` section 15 |
 
 ## 3. How every batch is worked
 
 1. Read the phase below and `CLAUDE.md`; pick the first unchecked batch; create its branch (`feature/<phase>.<batch>-<name>`).
 2. Build. Money, Capacity, Stars and Order Status rules go test-first with the `tdd` skill.
-3. `npm run qa` must pass; add `npm run test:e2e` for anything visible. Look at the change in the browser at 375, 768 and 1280 px.
+3. `npm run qa` must pass; add `npm run test:e2e` for anything visible. Look at the change in the browser at 375, 768 and 1280 px, in the Day and the Night palette.
 4. Tick the batch here, update any document the change affected, add an ADR if a decision was made.
-5. Commit only when the user asks (Conventional Commits). Merge into `main` with `git merge --no-ff` and refresh the Google Drive bundle only when the user asks.
+5. Commit only when the user asks (Conventional Commits). Merge into `main` with `git merge --no-ff`, push to GitHub and refresh the Google Drive bundle only when the user asks.
 
 ## 4. Decisions due along the way
 
 | When | Decision | Recorded in |
 | --- | --- | --- |
-| Batch 1.1 | Design direction: Sample A (native and CSS) or Sample B (library parts) | New ADR; `docs/05-DESIGN-SYSTEM.md` updated |
+| Batch 1.1 | Build approach for the chosen direction (ADR 0010): Sample A (native and CSS) or Sample B (library parts) | New ADR; `docs/05-DESIGN-SYSTEM.md` updated |
 | Batch 1.2 | Menu photos: stock, own photos or AI-generated, and their labelling | New ADR; `docs/ASSETS.md` |
 | Batch 2.1 | Capacity and Prep Time defaults (drinks and food per window, minutes per drink) | Seed data and `docs/04-DATA-MODEL.md` |
+| Batch 2.6 | Domain for the email sender (`MAIL_FROM`) and the contact address the footer shows (PRD section 2) | `docs/06-SETUP.md` section 5; PRD section 2 |
 | Batch 3.1 | PayMongo account: create one for test keys, or stay on `fake` for the MVP | ADR 0003 updated |
 | Batch 4.1 | Star rules confirmed (1 per drink, 9 for a Reward) | PRD section 2 |
-| Batch 5.4 | Hosting the demo: Vercel from this computer, or wait for a git host | New ADR |
+| Batch 5.4 | Hosting the demo: Vercel Git deploys from GitHub, or another host | New ADR |
 
 ## 5. Phase 0: Foundation (1 week)
 
@@ -72,8 +74,8 @@ Goal: a beautiful, fast menu and cafe page that a Manager can edit.
 
 - [ ] **1.1 Design direction.** Two quick prototypes of Home and a Menu Item page (`prototype`, `design-taste-frontend`), built on the chosen wireframe (Night's layout, Day and Night palettes by time, ADR 0010) with the same content and photos (`docs/05-DESIGN-SYSTEM.md` section 1.2). Sample A: native elements and CSS only. Sample B: library parts from the iOne research (`C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`: Kokonut, beUI, Animate UI Radix, Motion), on Home and Stars only; forms stay native. Each shown at 375 and 1280 px with its first-load JavaScript size and mobile Lighthouse score. The owner picks; ADR; design system updated; the other sample is deleted.
 - [ ] **1.2 Photos and assets.** Menu photo decision (ADR); `docs/ASSETS.md`; stand-in photos for the seeded menu, each with alt text; 4 to 6 AI-generated room photos of one consistent room, captioned "Concept image" (PRD section 2).
-- [ ] **1.3 Menu pages.** `/menu` by Category, `/menu/item/[slug]` with Option Groups shown (not yet orderable), badges including Barista Pick, Sold Out and Hidden (MENU-01 to MENU-04); the pickup and Dine-in line (INFO-06); Menu Item share cards (INFO-09); prerendered with the `menu` cache tag.
-- [ ] **1.4 Cafe page and home.** `/cafe`: Opening Hours with Special Hours, "open now", map link, directions, the space, Amenities, visit FAQ, story (INFO-01, INFO-04 to INFO-07); home in the order of `docs/05-DESIGN-SYSTEM.md` section 6: hero with Order ahead and Plan your visit, Barista picks this week, the printed-menu section, the space, visit block (INFO-08); `/manage/cafe` for the cafe's details and Amenities (STAFF-09); CafeOrCoffeeShop structured data (INFO-02, INFO-03).
+- [ ] **1.3 Menu pages.** `/menu` by Category, `/menu/item/[slug]` with Option Groups shown (not yet orderable), badges including Barista Pick, Sold Out and Hidden (MENU-01 to MENU-04); the allergen line (MENU-07); the pickup and Dine-in line (INFO-06); Menu Item share cards (INFO-09); prerendered with the `menu` cache tag.
+- [ ] **1.4 Cafe page and home.** `/cafe`: Opening Hours with Special Hours, "open now", map link, directions, the space, Amenities, the FAQ with ordering and Stars questions, story (INFO-01, INFO-04 to INFO-07); Day and Night hero copy (INFO-12); home in the order of `docs/05-DESIGN-SYSTEM.md` section 6: hero with Order ahead and Plan your visit, Barista picks this week, the printed-menu section, the space, visit block (INFO-08); `/manage/cafe` for the cafe's details and Amenities (STAFF-09); CafeOrCoffeeShop structured data (INFO-02, INFO-03).
 - [ ] **1.5 Manager: menu.** `/manage/menu`: Categories, Menu Items, Option Groups, Options, prices, photos (local files for now), Hidden, Sold Out; every save revalidates the `menu` tag (STAFF-03, STAFF-04).
 
 **Exit criteria:** a Manager changes a price and marks an item Sold Out, and the public menu shows both within seconds; mobile Lighthouse 90+ on `/menu`; zero axe violations.
@@ -85,7 +87,7 @@ Goal: a Guest orders and pays at pickup; a Barista runs the Order to Picked Up.
 - [ ] **2.1 Hours, Capacity, Prep Time.** `cafe` module: `isOpen`, Pickup Windows, Capacity per weekday, Ordering Paused, Prep Time formula; Manager pages for hours, Special Hours, Capacity and pause (STAFF-05); tests first.
 - [ ] **2.2 Cart.** Option picker becomes orderable; Cart with merge, edit and remove; Guest cookie; server pricing; Sold Out Lines flagged (ORD-01, ORD-02, ORD-06).
 - [ ] **2.3 Order Status machine.** `ordering` module: transitions table, `transition()`, `order_events`, Order Codes; every transition tested (section 7 of the architecture).
-- [ ] **2.4 Checkout and placement.** Pickup Time picker (ASAP and Scheduled), contact details, Pay at Pickup; `placeOrder` with the window lock; closed and paused refusals; the 15-drink cap and the Guest limit for Pay at Pickup (ORD-03 to ORD-05, ORD-07, ORD-12, PAY-02).
+- [ ] **2.4 Checkout and placement.** Pickup Time picker (ASAP and Scheduled), contact details, Pay at Pickup; `placeOrder` with the window lock; closed and paused refusals; the 15-drink cap and the Guest limit for Pay at Pickup; the Last Order countdown on the hero card and at checkout (ORD-03 to ORD-05, ORD-07, ORD-12, ORD-13, PAY-02).
 - [ ] **2.5 Order status page.** `/orders/[id]` with the access token; polling; customer cancel before Accepted; the pickup and Dine-in line (ORD-08, ORD-09, INFO-06).
 - [ ] **2.6 Emails.** Resend (or terminal output): Order placed, Ready for pickup (ORD-10).
 - [ ] **2.7 Bar Screen.** `/bar` with columns, polling, sound, one-tap steps, mark paid at the counter (STAFF-02); daily cron route and sweep-on-read for expiry.
@@ -122,7 +124,7 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 - [ ] **5.1 Events and Posts.** Public pages, Manager editors with Markdown preview, home sections, Event structured data, Event and Post share cards (EVT-01, NEWS-01, NEWS-02, STAFF-06, INFO-09).
 - [ ] **5.2 Accessibility and speed pass.** Keyboard-only walkthrough, screen reader spot checks, Lighthouse budgets (`docs/05-DESIGN-SYSTEM.md` section 11), image weights.
 - [ ] **5.3 Security pass.** Headers and CSP, rate limits, Staff TOTP, a review of webhook and checkout code (`security-review` skill).
-- [ ] **5.4 Demo deploy.** Neon database, Vercel project, Blob for photos, `PAYMENT_PROVIDER` and email settings for the demo; deploy from this computer (decision in section 4).
+- [ ] **5.4 Demo deploy.** Neon database, Vercel project, Blob for photos, `PAYMENT_PROVIDER` and email settings for the demo; deploy from GitHub (decision in section 4).
 
 **Exit criteria:** every MVP requirement in the PRD is met and ticked; the demo URL works for the two-minute demo script (PRD section 8); `qa:full` green.
 
@@ -135,6 +137,7 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 - [ ] **6.5 Filipino language** for customer pages.
 - [ ] **6.6 Reports and Birthday Treat** (STAFF-08, LOY-04); menu search and dietary filters (MENU-05).
 - [ ] **6.7 Recurring Events and Inquiries** (EVT-03, INFO-11); ORD-12 then points to the Inquiry form.
+- [ ] **6.8 Pairings and Day and Night Barista Picks** (MENU-08, INFO-13).
 
 **Exit criteria:** each V1 item works end to end with tests; budgets from Phase 5 still hold.
 
@@ -152,6 +155,6 @@ More than one cafe; delivery partners; gift cards; loyalty tiers; table QR order
 
 1. The requirement IDs it covers work end to end in the browser.
 2. Rules for money, Capacity, Stars and Order Status have tests that fail without the code.
-3. `npm run qa` green (and `qa:full` for anything visible); zero axe violations on touched pages.
+3. `npm run qa` green (and `qa:full` for anything visible); zero axe violations on touched pages, in both palettes.
 4. Words match `GLOSSARY.md`; no em dashes in UI copy; invented details carry the Concept Notice.
 5. Docs updated: this roadmap ticked, any changed document edited, an ADR for any decision.
