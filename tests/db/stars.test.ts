@@ -10,8 +10,12 @@ import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
-const hoshi = { kind: "staff", id: "seed-manager", role: "manager" } as const;
-const CHRISTIAN = "seed-member";
+const christian = {
+  kind: "staff",
+  id: "seed-manager",
+  role: "manager",
+} as const;
+const HOSHI = "seed-member";
 
 beforeEach(async () => {
   await resetDb(db);
@@ -59,8 +63,8 @@ async function order(memberId: string | null) {
     owner,
     memberId,
     seenTotalCents: (await getCart(owner)).totalCents,
-    customerName: "Christian",
-    customerEmail: "christian@example.com",
+    customerName: "Hoshi",
+    customerEmail: "hoshi@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
     paymentMethod: "pay_at_pickup",
@@ -77,14 +81,14 @@ async function pickUp(orderId: string) {
 
 describe("earning Stars (LOY-01)", () => {
   it("earns 1 Star per drink when a Member's Order is Picked Up", async () => {
-    const id = await order(CHRISTIAN);
+    const id = await order(HOSHI);
     await transition(id, "accepted", annika);
-    expect(await balance(CHRISTIAN)).toBe(0);
+    expect(await balance(HOSHI)).toBe(0);
     await transition(id, "preparing", annika);
     await transition(id, "ready", annika);
     await transition(id, "picked_up", annika);
-    expect(await balance(CHRISTIAN)).toBe(2);
-    expect(await starHistory(CHRISTIAN)).toEqual([
+    expect(await balance(HOSHI)).toBe(2);
+    expect(await starHistory(HOSHI)).toEqual([
       expect.objectContaining({ kind: "earn", stars: 2, orderId: id }),
     ]);
   });
@@ -95,13 +99,11 @@ describe("earning Stars (LOY-01)", () => {
   });
 
   it("takes the Stars back when a picked-up Order is Refunded", async () => {
-    const id = await order(CHRISTIAN);
+    const id = await order(HOSHI);
     await pickUp(id);
-    await refundOrder(id, hoshi);
-    expect(await balance(CHRISTIAN)).toBe(0);
-    expect(
-      (await starHistory(CHRISTIAN)).map((e) => [e.kind, e.stars])
-    ).toEqual([
+    await refundOrder(id, christian);
+    expect(await balance(HOSHI)).toBe(0);
+    expect((await starHistory(HOSHI)).map((e) => [e.kind, e.stars])).toEqual([
       ["reverse", -2],
       ["earn", 2],
     ]);
@@ -110,29 +112,29 @@ describe("earning Stars (LOY-01)", () => {
 
 describe("Manager adjustments (LOY-05)", () => {
   it("adds or removes Stars with a reason, never below zero", async () => {
-    expect(await adjustStars(CHRISTIAN, 3, "Welcome gift", hoshi)).toEqual({
+    expect(await adjustStars(HOSHI, 3, "Welcome gift", christian)).toEqual({
       ok: true,
     });
-    expect(await balance(CHRISTIAN)).toBe(3);
-    expect(await adjustStars(CHRISTIAN, -4, "Mistake", hoshi)).toEqual({
+    expect(await balance(HOSHI)).toBe(3);
+    expect(await adjustStars(HOSHI, -4, "Mistake", christian)).toEqual({
       ok: false,
       reason: "below_zero",
     });
-    expect(await adjustStars(CHRISTIAN, 1, " ", hoshi)).toEqual({
+    expect(await adjustStars(HOSHI, 1, " ", christian)).toEqual({
       ok: false,
       reason: "reason_required",
     });
-    expect(await adjustStars(CHRISTIAN, -3, "Mistake", hoshi)).toEqual({
+    expect(await adjustStars(HOSHI, -3, "Mistake", christian)).toEqual({
       ok: true,
     });
-    expect(await balance(CHRISTIAN)).toBe(0);
+    expect(await balance(HOSHI)).toBe(0);
     expect(
       await db.auditLog.count({ where: { action: "loyalty.adjust" } })
     ).toBe(2);
   });
 
   it("is for Managers only", async () => {
-    expect(await adjustStars(CHRISTIAN, 3, "Hi", annika)).toEqual({
+    expect(await adjustStars(HOSHI, 3, "Hi", annika)).toEqual({
       ok: false,
       reason: "not_allowed",
     });

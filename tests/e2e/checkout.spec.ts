@@ -24,8 +24,8 @@ test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
   await expectNoAxeViolations(page);
 
   await page.getByText("Pay at Pickup", { exact: true }).click();
-  await page.getByLabel("Name").fill("Christian");
-  await page.getByLabel("Email").fill("christian@example.com");
+  await page.getByLabel("Name").fill("Hoshi");
+  await page.getByLabel("Email").fill("hoshi@example.com");
   await page.getByRole("button", { name: /Place order, PHP 260/ }).click();
   await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
   await expect(page.getByRole("status")).toHaveText(

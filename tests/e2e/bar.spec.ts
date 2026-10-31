@@ -25,15 +25,16 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
   await guest.getByRole("button", { name: "Add to order" }).click();
   await expect(guest.getByRole("status")).toContainText("Added");
 
-  // A Scheduled Pickup: the third time offered today (tap its label).
+  // A Scheduled Pickup: the first time offered today (tap its label). The
+  // full-window test below takes the last, so late at night they differ.
   await guest.goto("/checkout");
   await guest
     .locator('label:has(input[name="pickup"]:not([value="asap"]))')
-    .nth(2)
+    .first()
     .click();
   await guest.getByText("Pay at Pickup", { exact: true }).click();
-  await guest.getByLabel("Name").fill("Christian Santos");
-  await guest.getByLabel("Email").fill("christian@example.com");
+  await guest.getByLabel("Name").fill("Hoshi Santos");
+  await guest.getByLabel("Email").fill("hoshi@example.com");
   await guest.getByRole("button", { name: /Place order/ }).click();
   await expect(guest).toHaveURL(/\/orders\/[\w-]+\?t=/);
   const code = await guest.getByRole("heading", { level: 1 }).innerText();
@@ -45,7 +46,7 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
   if (!(await card.isVisible())) {
     await bar.getByText(/Later today/).click();
   }
-  await expect(card).toContainText("Christian");
+  await expect(card).toContainText("Hoshi");
   await expect(card).toContainText("less ice please");
   await expect(card).toContainText("Pay at Pickup");
   await expectNoAxeViolations(bar);
@@ -72,7 +73,8 @@ test("a full Pickup Window is never offered (ORD-04)", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText("Added");
   await page.goto("/checkout");
   const offered = page.locator('input[name="pickup"]:not([value="asap"])');
-  const full = await offered.nth(3).getAttribute("value");
+  // The last window is offered at any hour the test cafe is open.
+  const full = await offered.last().getAttribute("value");
   await e2eQuery(
     `INSERT INTO pickup_window_usage (window_start, service_day, drinks, food, updated_at)
      VALUES ($1, ($1::timestamptz AT TIME ZONE 'Asia/Manila')::date, 12, 0, now())

@@ -40,8 +40,8 @@ async function order(
       serviceDay: new Date("2026-11-02"),
       code: `K-${String(++n).padStart(3, "0")}`,
       status: "placed",
-      customerName: "Christian Santos",
-      customerEmail: "christian@example.com",
+      customerName: "Hoshi Santos",
+      customerEmail: "hoshi@example.com",
       pickupKind: "scheduled",
       windowStart: at(window),
       paymentMethod,
@@ -75,7 +75,7 @@ describe("barBoard (STAFF-02)", () => {
     expect(board.orders.map((o) => o.code)).toEqual(["K-002", "K-001"]);
     expect(board.orders[0]).toMatchObject({
       status: "placed",
-      firstName: "Christian",
+      firstName: "Hoshi",
       payAtPickup: true,
       lines: [
         {

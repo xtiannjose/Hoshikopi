@@ -106,13 +106,13 @@ npm run db:seed
 npm run db:studio
 ```
 
-**Seeded accounts** (dev and test only; invented people, `.example` addresses that receive no real mail). There are no passwords: sign in at `/sign-in` with the email, and the link appears in the `npm run dev` terminal and in `data/mail/`.
+**Seeded accounts** (dev, test and the live demo; invented people, `.example` addresses that receive no real mail). There are no passwords: sign in at `/sign-in` with the email; locally the link appears in the `npm run dev` terminal and in `data/mail/`, on the live demo in the Vercel project's Logs (section 9, step 5).
 
 | Role | Name | Email | Id |
 | --- | --- | --- | --- |
-| Manager | Hoshi | `hoshi@hoshikopi.example` | `seed-manager` |
+| Manager | Christian | `christian@hoshikopi.example` | `seed-manager` |
 | Barista | Annika | `annika@hoshikopi.example` | `seed-barista` |
-| Member | Christian | `christian@hoshikopi.example` | `seed-member` |
+| Member | Hoshi | `hoshi@hoshikopi.example` | `seed-member` |
 
 Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `/manage` visit; `/bar` does not ask. Tests, the PRD personas and the seed use these same names.
 
@@ -122,7 +122,7 @@ Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `
 - **A Staff member lost their authenticator phone** (ADR 0014): delete their Second Factor and they enrol again on the next `/manage` visit:
 
   ```powershell
-  docker exec hoshikopi-db psql -U postgres -d hoshikopi -c "DELETE FROM two_factors WHERE user_id = (SELECT id FROM users WHERE email = 'hoshi@hoshikopi.example');"
+  docker exec hoshikopi-db psql -U postgres -d hoshikopi -c "DELETE FROM two_factors WHERE user_id = (SELECT id FROM users WHERE email = 'christian@hoshikopi.example');"
   ```
 
 ## 7. Everyday commands (defined in Phase 0)
@@ -166,7 +166,7 @@ git clone "G:\My Drive\Coding Projects\Personal\Hoshikopi\hoshikopi.bundle" Hosh
 The code is ready for Vercel: `vercel.json` runs `prisma migrate deploy` before `next build` and calls `/api/cron/daily` at 22:00 UTC (6:00 AM Manila, before opening). In order:
 
 1. **Neon** (region Singapore): create the project and copy two URLs: the pooled one (host has `-pooler`) and the direct one.
-2. **Resend**: create an API key. Until a domain is verified, Resend's test sender delivers only to the Resend account's own address, so only that address can sign in on the demo. Without a key, emails on Vercel are dropped (sign-in links never go to the logs).
+2. **Resend**: create an API key. Until a domain is verified, Resend's test sender delivers only to the Resend account's own address, so only that address can sign in on the demo. Without a key, emails to real addresses on Vercel are dropped (their sign-in links never go to the logs).
 3. **Vercel**: import `xtiannjose/Hoshikopi` from GitHub and set these variables for Production and Preview:
 
    | Variable | Value |
@@ -179,7 +179,7 @@ The code is ready for Vercel: `vercel.json` runs `prisma migrate deploy` before 
    | `CRON_SECRET` | 32+ random characters |
    | `RESEND_API_KEY`, `MAIL_FROM` | from step 2 |
 
-4. **Deploy**, then seed the menu once from your computer with the Neon direct URL: `$env:DATABASE_URL="<direct>"; $env:DIRECT_URL="<direct>"; npm run db:seed`.
-5. **Become a Manager**: sign in on the demo with your own email (it creates a Member), then in the Neon SQL editor run `UPDATE users SET role = 'manager' WHERE email = '<your email>';`. The next `/manage` visit asks you to set up the Second Factor.
+4. **Deploy** (the build runs the migrations; it reads Neon's `DATABASE_URL_UNPOOLED` when `DIRECT_URL` is not set), then seed the menu once from your computer with the Neon direct URL: `$env:DATABASE_URL="<direct>"; $env:DIRECT_URL="<direct>"; $env:ALLOW_REMOTE_SEED="1"; npm run db:seed`.
+5. **Sign in as a demo account**: on the live site, ask for a link for one of the seeded accounts (section 6), then open the Vercel project's **Logs**, find `[email] demo account <email>` and open the link under it. Or use your own email (needs Resend, step 2) and make it a Manager in the Neon SQL editor: `UPDATE users SET role = 'manager' WHERE email = '<your email>';`. The first `/manage` visit asks you to set up the Second Factor.
 6. **Blob** (for photo uploads): create a Blob store in the Vercel project, which adds `BLOB_READ_WRITE_TOKEN`; photo uploads to Blob are built and tested then (until then the demo shows the stand-ins and uploads fail on Vercel's read-only disk).
 7. **Check**: Lighthouse on Home, `/menu` and a Menu Item with PageSpeed Insights against the budgets (`docs/05-DESIGN-SYSTEM.md` section 11), and the two-minute demo script (PRD section 8).

@@ -11,7 +11,7 @@ export async function addToCart(page: Page, slug: string, quantity = 1) {
 }
 
 /** Checks out as a Guest paying at pickup; ends on the Order page. */
-export async function placeGuestOrder(page: Page, name = "Christian") {
+export async function placeGuestOrder(page: Page, name = "Hoshi") {
   await page.goto("/checkout");
   await page.getByText("Pay at Pickup", { exact: true }).click();
   await page.getByLabel("Name").fill(name);

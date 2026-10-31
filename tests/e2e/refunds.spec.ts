@@ -32,7 +32,7 @@ test("a Manager refunds a paid Order in full (PAY-05, STAFF-07)", async ({
   );
 
   const manager = await (await browser.newContext()).newPage();
-  await signIn(manager, "hoshi@hoshikopi.example", "/manage/orders");
+  await signIn(manager, "christian@hoshikopi.example", "/manage/orders");
   await expectNoAxeViolations(manager);
   await manager.getByText(`Refund ${code}`, { exact: true }).click();
   await manager.getByRole("button", { name: `Yes, refund ${code}` }).click();

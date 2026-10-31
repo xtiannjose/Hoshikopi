@@ -8,8 +8,8 @@ import {
 
 const ORDER: OrderForEmail = {
   code: "K-042",
-  customerName: "Christian",
-  customerEmail: "christian@example.com",
+  customerName: "Hoshi",
+  customerEmail: "hoshi@example.com",
   pickupKind: "asap",
   windowStart: new Date("2026-11-02T08:15:00Z"),
   paymentMethod: "pay_at_pickup",
@@ -30,14 +30,14 @@ describe("orderPlacedEmail (ORD-10)", () => {
   const email = orderPlacedEmail(ORDER, "https://hoshikopi.test/orders/x?t=y");
 
   it("names the Order Code and Pickup Time in the subject", () => {
-    expect(email.to).toBe("christian@example.com");
+    expect(email.to).toBe("hoshi@example.com");
     expect(email.subject).toBe(
       "Order K-042 at Hoshikopi: pickup around 4:15 PM"
     );
   });
 
   it("lists the Lines, the total with its VAT part, and the status link", () => {
-    expect(email.text).toContain("Salamat, Christian! We got your order.");
+    expect(email.text).toContain("Salamat, Hoshi! We got your order.");
     expect(email.text).toContain(
       "1 x Hoshi Latte (Large, Oat milk, 50%, Normal): PHP 250.00"
     );

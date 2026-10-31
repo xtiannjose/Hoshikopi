@@ -17,7 +17,11 @@ import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
 const fake = fakeProvider(`fake-webhook:${process.env.BETTER_AUTH_SECRET}`);
-const hoshi = { kind: "staff", id: "seed-manager", role: "manager" } as const;
+const christian = {
+  kind: "staff",
+  id: "seed-manager",
+  role: "manager",
+} as const;
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 
 beforeEach(async () => {
@@ -43,8 +47,8 @@ async function order(paymentMethod: PaymentMethod, pay = true) {
     owner,
     memberId: null,
     seenTotalCents: (await getCart(owner)).totalCents,
-    customerName: "Christian",
-    customerEmail: "christian@example.com",
+    customerName: "Hoshi",
+    customerEmail: "hoshi@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
     paymentMethod,
@@ -75,7 +79,7 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
   it("refunds a picked-up online Order in full through the provider", async () => {
     const placed = await order("card");
     await pickUp(placed.orderId);
-    expect(await refundOrder(placed.orderId, hoshi)).toEqual({ ok: true });
+    expect(await refundOrder(placed.orderId, christian)).toEqual({ ok: true });
     expect(
       (await db.order.findUniqueOrThrow({ where: { id: placed.orderId } }))
         .status
@@ -94,8 +98,8 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
     const placed = await order("gcash");
     await pickUp(placed.orderId);
     const results = await Promise.all([
-      refundOrder(placed.orderId, hoshi),
-      refundOrder(placed.orderId, hoshi),
+      refundOrder(placed.orderId, christian),
+      refundOrder(placed.orderId, christian),
     ]);
     expect(results.filter((r) => r.ok)).toHaveLength(1);
     expect(await db.refund.count()).toBe(1);
@@ -126,7 +130,7 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
   it("refunds Pay at Pickup at the counter, with no provider call", async () => {
     const placed = await order("pay_at_pickup");
     await pickUp(placed.orderId);
-    expect(await refundOrder(placed.orderId, hoshi)).toEqual({ ok: true });
+    expect(await refundOrder(placed.orderId, christian)).toEqual({ ok: true });
     expect(
       (await db.order.findUniqueOrThrow({ where: { id: placed.orderId } }))
         .status
@@ -148,7 +152,7 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
   it("refuses an Order that was never paid", async () => {
     const placed = await order("pay_at_pickup");
     await cancelByCustomer(placed.orderId, placed.accessToken);
-    expect(await refundOrder(placed.orderId, hoshi)).toEqual({
+    expect(await refundOrder(placed.orderId, christian)).toEqual({
       ok: false,
       reason: "not_allowed",
     });

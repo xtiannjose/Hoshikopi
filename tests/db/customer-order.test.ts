@@ -13,7 +13,7 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const owner = { guestTokenHash: "christian-browser" };
+const owner = { guestTokenHash: "hoshi-browser" };
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 
 beforeEach(async () => {
@@ -38,8 +38,8 @@ async function placed() {
     owner,
     memberId: null,
     seenTotalCents: (await getCart(owner)).totalCents,
-    customerName: "Christian",
-    customerEmail: "christian@example.com",
+    customerName: "Hoshi",
+    customerEmail: "hoshi@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
     paymentMethod: "pay_at_pickup",

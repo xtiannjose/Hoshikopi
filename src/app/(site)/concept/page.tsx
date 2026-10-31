@@ -14,7 +14,7 @@ const MADE_UP = [
   ],
   [
     "The people",
-    "Lia, Hoshi, Annika, Christian and every name on an order are examples.",
+    "Lia, Christian, Annika, Hoshi and every name on an order are examples.",
   ],
   [
     "The menu",

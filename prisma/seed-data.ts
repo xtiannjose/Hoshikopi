@@ -343,7 +343,7 @@ const STORY_MD = `Hoshikopi began as a coffee cart outside a friend's office in 
 
 Our beans come from farms in Benguet and Sagada, with a little barako from Batangas for body.
 
-The team: Lia (founder), Annika (head barista) and Hoshi (manager). Every person named here is invented for this concept.`;
+The team: Lia (founder), Annika (head barista) and Christian (manager). Every person named here is invented for this concept.`;
 
 export async function seedDatabase(
   db: PrismaClient,
@@ -511,8 +511,8 @@ export async function seedDatabase(
     data: [
       {
         id: "seed-manager",
-        name: "Hoshi",
-        email: "hoshi@hoshikopi.example",
+        name: "Christian",
+        email: "christian@hoshikopi.example",
         emailVerified: true,
         role: "manager",
       },
@@ -525,8 +525,8 @@ export async function seedDatabase(
       },
       {
         id: "seed-member",
-        name: "Christian",
-        email: "christian@hoshikopi.example",
+        name: "Hoshi",
+        email: "hoshi@hoshikopi.example",
         emailVerified: true,
       },
     ],

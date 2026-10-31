@@ -14,7 +14,11 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const hoshi = { id: "seed-manager", name: "Hoshi", role: "manager" as const };
+const christian = {
+  id: "seed-manager",
+  name: "Christian",
+  role: "manager" as const,
+};
 const MONDAY_9AM = "2026-11-02T01:00:00Z";
 
 const everyDay = (change: Record<string, string> = {}) =>
@@ -38,7 +42,7 @@ afterAll(() => db.$disconnect());
 describe("Opening Hours (STAFF-05)", () => {
   it("saves a day's new hours", async () => {
     expect(
-      await saveWeeklyHours(everyDay({ opensAt: "08:00" }), hoshi)
+      await saveWeeklyHours(everyDay({ opensAt: "08:00" }), christian)
     ).toEqual({
       ok: true,
     });
@@ -50,7 +54,7 @@ describe("Opening Hours (STAFF-05)", () => {
   it("refuses Last Order after closing", async () => {
     const result = await saveWeeklyHours(
       everyDay({ lastOrderAt: "21:30" }),
-      hoshi
+      christian
     );
     expect(result).toEqual({
       ok: false,
@@ -63,7 +67,7 @@ describe("Special Hours", () => {
   it("closes one day", async () => {
     await saveSpecialHours(
       { day: "2026-11-02", isClosed: true, note: "Staff day out" },
-      hoshi
+      christian
     );
     expect((await getOrderingDay(new Date(MONDAY_9AM))).hours).toBeNull();
   });
@@ -80,7 +84,7 @@ describe("Capacity", () => {
       await saveCapacity(
         rows,
         { baseMinutes: "3", perDrinkMinutes: "2" },
-        hoshi
+        christian
       )
     ).toEqual({ ok: true });
     expect(await getOrderingDay(new Date(MONDAY_9AM))).toMatchObject({
@@ -92,12 +96,12 @@ describe("Capacity", () => {
 
 describe("Ordering Paused", () => {
   it("pauses for a while with a message, then resumes", async () => {
-    await pauseOrdering(30, "The bar is swamped. Back soon!", hoshi);
+    await pauseOrdering(30, "The bar is swamped. Back soon!", christian);
     expect(await getOrderingDay(new Date(MONDAY_9AM))).toMatchObject({
       pausedUntil: new Date("2026-11-02T01:30:00Z"),
       pauseMessage: "The bar is swamped. Back soon!",
     });
-    await resumeOrdering(hoshi);
+    await resumeOrdering(christian);
     expect((await getOrderingDay(new Date(MONDAY_9AM))).pausedUntil).toBeNull();
   });
 });
