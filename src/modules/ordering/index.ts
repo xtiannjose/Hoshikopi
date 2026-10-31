@@ -24,3 +24,4 @@ export {
   type CheckoutView,
   type OrderView,
 } from "./internal/reads";
+export { cancelByCustomer, orderVersion } from "./internal/customer";

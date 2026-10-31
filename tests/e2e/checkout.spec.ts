@@ -1,18 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations } from "./axe";
 import { openAllDayToday } from "./db";
+import { addToCart } from "./order";
 
 test.beforeEach(openAllDayToday);
-
-async function addToCart(page: Page, slug: string, quantity = 1) {
-  await page.goto(`/menu/item/${slug}`);
-  for (let i = 1; i < quantity; i++) {
-    await page.getByRole("button", { name: "One more" }).click();
-  }
-  await page.getByRole("button", { name: "Add to order" }).click();
-  await expect(page.getByRole("status")).toContainText("Added");
-}
 
 test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
   page,
@@ -32,9 +24,9 @@ test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
   await page.getByLabel("Email").fill("bea@example.com");
   await page.getByRole("button", { name: /Place order, PHP 260/ }).click();
   await expect(page).toHaveURL(/\/orders\/\w+\?t=/);
-  await expect(
-    page.getByText("Salamat, Bea! We're making your Hoshi Latte.")
-  ).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText(
+    "Salamat! We got your order. The bar will accept it soon."
+  );
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^K-\d{3}$/);
   // Next keeps the previous page hidden for Back, so look in this one.
   await expect(
