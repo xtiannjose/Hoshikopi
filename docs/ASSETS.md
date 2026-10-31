@@ -9,3 +9,33 @@ Every file the site ships that was not written as code: where it came from and u
 | `src/app/icon.svg` | The gold star mark | Drawn for Hoshikopi | Ours |
 
 Fonts on pages (Fraunces, Plus Jakarta Sans, Courier Prime) are self-hosted by `next/font` from Google Fonts, all under the SIL Open Font License 1.1.
+
+## Concept images still to make
+
+Menu and room pictures are AI-generated concept images ([ADR 0012](adr/0012-concept-images-with-stand-ins.md)). Until a file exists the site shows a stand-in panel. To add one: generate it from the prompt, export WebP at the size given (menu pictures under 80 kB at card size), save it at the path, add a row to the table above with the tool and date, then set the Menu Item's photo in `/manage/menu` (or `photo_url` in the seed) and fill in `ROOM_PHOTOS` in `src/modules/cafe/internal/room.ts` for room pictures.
+
+**One style for all of them:** natural window light, warm and slightly grainy like film, close crops, shallow depth of field, cream and kopi-brown ceramics, dark walnut wood, hands but no faces, no text or logos except a small gold star where noted, no real brands.
+
+### Room (`public/room/<name>.webp`, 1600 by 1200, 4:3)
+
+| Name | Prompt (add the style line) | Caption |
+| --- | --- | --- |
+| `window-dusk` | A narrow cafe's long window bar at dusk, two cups and a laptop, warm lamps inside, blue street light outside | Concept image: the window bar at dusk |
+| `counter-morning` | A small espresso counter in morning light, a barista's hands pouring milk into a cream cup | Concept image: the counter in the morning |
+| `night-ceiling` | The same cafe after 6 PM, lamps low, a ceiling painted as a night sky with small gold stars | Concept image: the room after six |
+| `tables` | Four small walnut tables with cream cups and pastries, plants by the wall, soft daylight | Concept image: the tables by day |
+| `bench` | A wooden bench by the cafe door with a leashed dog resting under it, afternoon light | Concept image: the bench by the door |
+
+### Menu (`public/menu/<slug>.webp`, 1200 by 900, 4:3)
+
+The alt text for each is already in the seed (`prisma/seed-data.ts`, `PHOTO_ALT`); use it as the prompt, with the style line.
+
+| Slug | Slug | Slug |
+| --- | --- | --- |
+| `kopi-hitam` | `hoshi-latte` | `spanish-latte` |
+| `ube-latte` | `cafe-mocha` | `cold-brew` |
+| `matcha-latte` | `tablea-tsokolate` | `calamansi-honey-soda` |
+| `barako-chai` | `tanglad-ginger-tea` | `ube-pandesal` |
+| `ensaymada` | `butter-croissant` | `banana-bread` |
+| `tapa-rice-bowl` | `longganisa-pandesal` | `house-blend-250g` |
+| `hoshikopi-tumbler` | | |

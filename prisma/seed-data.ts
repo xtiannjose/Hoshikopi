@@ -301,6 +301,38 @@ const CATEGORIES: {
   },
 ];
 
+// Alt text for each Menu Item's concept image (ADR 0012), written as a menu
+// describes the item; the prompts that make the pictures are in docs/ASSETS.md.
+const PHOTO_ALT: Record<string, string> = {
+  "kopi-hitam": "Black coffee in a cream cup on a wooden counter",
+  "hoshi-latte":
+    "Iced Hoshi Latte with a white cap of sea-salt cream over espresso and milk",
+  "spanish-latte":
+    "Iced Spanish latte with a layer of milk over espresso and condensed milk",
+  "ube-latte": "Iced ube latte, purple milk with espresso poured on top",
+  "cafe-mocha": "Hot cafe mocha with a dusting of cocoa in a cream cup",
+  "cold-brew": "Cold brew over large ice cubes in a tall glass",
+  "matcha-latte": "Iced matcha latte, green over white milk in a glass",
+  "tablea-tsokolate":
+    "Thick hot chocolate in a small clay cup next to a round tablea disc",
+  "calamansi-honey-soda":
+    "Calamansi honey soda with halved calamansi and ice in a tall glass",
+  "barako-chai": "Barako chai with milk in a cream cup, cinnamon on the side",
+  "tanglad-ginger-tea":
+    "Golden lemongrass and ginger tea in a glass cup with a lemongrass stalk",
+  "ube-pandesal":
+    "Three purple ube pandesal rolls, one torn open to show cheese",
+  ensaymada: "Coiled ensaymada topped with sugar and grated cheese",
+  "butter-croissant": "Golden butter croissant on a cream plate",
+  "banana-bread": "Thick slice of banana bread with walnuts",
+  "tapa-rice-bowl":
+    "Beef tapa over garlic rice with a soft egg and pickled papaya",
+  "longganisa-pandesal":
+    "Longganisa patty sandwich in pandesal with white cheese and atchara",
+  "house-blend-250g": "Kraft bag of whole coffee beans with a gold star label",
+  "hoshikopi-tumbler": "Night-blue tumbler with a small gold star",
+};
+
 const SPACE_MD = `A narrow room with 28 seats: a long window bar for laptops, four small tables and a bench by the door for the dogs. By day the light comes in off the street and the walls look like cream paper. After six the lamps come down low and the ceiling shows a painted night sky.`;
 
 const DIRECTIONS_MD = `We are in Kapitolyo, Pasig, a short walk from Capitol Commons. From Shaw Boulevard, take a jeep or a tricycle to Kapitolyo and walk in. The pin on the map sits on a public spot nearby.`;
@@ -354,6 +386,7 @@ export async function seedDatabase(
             isDrink: category.isDrink,
             badges: item.badges ?? [],
             allergens: item.allergens ?? [],
+            photoAlt: PHOTO_ALT[item.slug],
             sort: itemSort,
             optionGroups: {
               create: (item.groups ?? []).map((group, groupSort) => ({
