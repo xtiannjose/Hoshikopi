@@ -4,6 +4,7 @@ export {
   addLine,
   clearCart,
   getCart,
+  mergeGuestCart,
   MAX_LINE_QUANTITY,
   MAX_NOTE_LENGTH,
   removeLine,

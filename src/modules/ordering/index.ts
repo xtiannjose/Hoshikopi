@@ -22,6 +22,7 @@ export {
   dayOrders,
   getOrderBrief,
   getOrderForCustomer,
+  ordersForMember,
   type CheckoutView,
   type OrderView,
 } from "./internal/reads";

@@ -7,6 +7,7 @@ import { formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { getHours } from "@/modules/cafe";
 import { currentCartOwner } from "@/modules/cart";
+import { currentMember } from "@/modules/identity";
 import { checkoutView } from "@/modules/ordering";
 
 import { CheckoutForm } from "./checkout-form";
@@ -32,7 +33,9 @@ export default function CheckoutPage() {
 }
 
 async function Checkout() {
-  const view = await checkoutView(await currentCartOwner(), null);
+  const owner = await currentCartOwner();
+  const member = await currentMember();
+  const view = await checkoutView(owner, member?.id ?? null);
   const { state, cart } = view;
 
   if (cart.lines.length === 0) {
@@ -136,6 +139,7 @@ async function Checkout() {
           totalCents={cart.totalCents}
           totalText={formatPrice(cart.totalCents)}
           payAtPickupAllowed={view.payAtPickupAllowed}
+          member={member ? { name: member.name, email: member.email } : null}
         />
       )}
     </div>

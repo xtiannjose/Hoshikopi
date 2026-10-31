@@ -9,5 +9,12 @@ export const authHandler = toNextJsHandler(auth);
 
 export { audit } from "./internal/audit";
 export { googleEnabled } from "./internal/auth";
-export { requireStaff, signOut, type Staff } from "./internal/session";
-export { emailSignInLink, safeNext } from "./internal/sign-in";
+export {
+  currentMember,
+  requireMember,
+  requireStaff,
+  signOut,
+  type Member,
+  type Staff,
+} from "./internal/session";
+export { emailSignInLink, googleSignInUrl, safeNext } from "./internal/sign-in";

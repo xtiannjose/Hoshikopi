@@ -4,6 +4,7 @@ import { ListIcon, XIcon } from "@phosphor-icons/react/ssr";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 
+import { AccountLink, AccountMenuLink, SignInLink } from "./account-link";
 import { CartButton, CartLink } from "./cart-button";
 import { Logo } from "./logo";
 import { MenuLink } from "./menu-link";
@@ -30,12 +31,9 @@ export function Header() {
         <div className="hidden lg:block">
           <ThemeSwitch name="theme-header" />
         </div>
-        <Link
-          href="/sign-in"
-          className="hidden font-medium no-underline hover:underline lg:inline"
-        >
-          Sign in
-        </Link>
+        <Suspense fallback={<SignInLink />}>
+          <AccountLink />
+        </Suspense>
         <Suspense fallback={<CartLink />}>
           <CartButton />
         </Suspense>
@@ -67,13 +65,16 @@ export function Header() {
         </div>
         <nav aria-label="Menu" className="mt-8">
           <ul className="grid gap-1 text-xl">
-            {[...NAV_LINKS, { href: "/sign-in", label: "Sign in" }].map(
-              (link) => (
-                <li key={link.href}>
-                  <MenuLink href={link.href} label={link.label} />
-                </li>
-              )
-            )}
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <MenuLink href={link.href} label={link.label} />
+              </li>
+            ))}
+            <li>
+              <Suspense fallback={<MenuLink href="/sign-in" label="Sign in" />}>
+                <AccountMenuLink />
+              </Suspense>
+            </li>
           </ul>
         </nav>
         <div className="mt-8">

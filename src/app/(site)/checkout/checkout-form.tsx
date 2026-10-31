@@ -34,8 +34,11 @@ export function CheckoutForm({
   totalCents,
   totalText,
   payAtPickupAllowed,
+  member,
 }: {
   payAtPickupAllowed: boolean;
+  /** A signed-in Member is prefilled and collects Stars (ORD-05). */
+  member: { name: string; email: string } | null;
   asap: WindowChoice | null;
   windows: WindowChoice[];
   totalCents: number;
@@ -101,6 +104,7 @@ export function CheckoutForm({
         </legend>
         <Field
           name="customerName"
+          defaultValue={member?.name}
           label="Name"
           autoComplete="given-name"
           error={error("customerName")}
@@ -110,6 +114,7 @@ export function CheckoutForm({
         </p>
         <Field
           name="customerEmail"
+          defaultValue={member?.email}
           label="Email"
           type="email"
           autoComplete="email"

@@ -24,3 +24,12 @@ export async function emailSignInLink(email: string, next: string) {
     headers: await headers(),
   });
 }
+
+/** Where to send the browser to sign in with Google (ACC-01). */
+export async function googleSignInUrl(next: string): Promise<string | null> {
+  const result = await auth.api.signInSocial({
+    body: { provider: "google", callbackURL: safeNext(next) },
+    headers: await headers(),
+  });
+  return result.url ?? null;
+}

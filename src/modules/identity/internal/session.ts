@@ -41,3 +41,18 @@ export async function requireStaff(
 export async function signOut() {
   await auth.api.signOut({ headers: await headers() });
 }
+
+export type Member = { id: string; name: string; email: string };
+
+/** The signed-in Member, or null for a Guest (ACC-01). */
+export async function currentMember(): Promise<Member | null> {
+  const user = await currentUser();
+  return user ? { id: user.id, name: user.name, email: user.email } : null;
+}
+
+/** The signed-in Member, or a redirect to sign-in. */
+export async function requireMember(next = "/account"): Promise<Member> {
+  const member = await currentMember();
+  if (!member) redirect(`/sign-in?next=${encodeURIComponent(next)}`);
+  return member;
+}

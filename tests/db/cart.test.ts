@@ -1,6 +1,12 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-import { addLine, getCart, removeLine, updateQuantity } from "@/modules/cart";
+import {
+  addLine,
+  getCart,
+  mergeGuestCart,
+  removeLine,
+  updateQuantity,
+} from "@/modules/cart";
 
 import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
@@ -110,6 +116,24 @@ describe("Cart (ORD-01, ORD-02)", () => {
     expect((await getCart(bea)).lines).toHaveLength(0);
     await addLine(bea, latte("Whole milk"));
     await removeLine(bea, (await getCart(bea)).lines[0].id);
+    expect((await getCart(bea)).lines).toHaveLength(0);
+  });
+});
+
+describe("mergeGuestCart (sign-in, docs/03 section 5)", () => {
+  it("moves a Guest's Lines into the Member's Cart, adding identical ones", async () => {
+    await db.user.create({
+      data: { id: "seed-member", name: "Bea", email: "bea@hoshikopi.example" },
+    });
+    const member = { memberId: "seed-member" };
+    await addLine(member, latte("Oat milk", { quantity: 2 }));
+    await addLine(bea, latte("Oat milk", { quantity: 19 }));
+    await addLine(bea, latte("Whole milk"));
+    await mergeGuestCart(bea, "seed-member");
+    const cart = await getCart(member);
+    expect(cart.lines.map((l) => l.quantity).sort((a, b) => a - b)).toEqual([
+      1, 20,
+    ]);
     expect((await getCart(bea)).lines).toHaveLength(0);
   });
 });
