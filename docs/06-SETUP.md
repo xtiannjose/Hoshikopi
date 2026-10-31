@@ -66,7 +66,7 @@ npx shadcn@latest init        # neutral base, CSS variables on; then replace col
 # Phase 3: no PayMongo SDK needed (plain fetch to the REST API)
 ```
 
-Keep `prisma` and `@prisma/client` on the same major version (Hoshimono found the CLI tagged ahead of the client once).
+Keep `prisma` and `@prisma/client` on the same major version (Hoshimono found the CLI tagged ahead of the client once). It happened again on 2026-10-31: npm's `latest` tag for `prisma` was `8.0.0-rc.29` while the client was 7.10.1, so install the CLI with an exact version (`prisma@7.10.1`).
 
 ## 5. Environment variables
 
@@ -101,9 +101,9 @@ docker exec hoshikopi-db psql -U postgres -c "CREATE DATABASE hoshikopi_e2e;"
 Then, once `prisma/schema.prisma` exists (Phase 0):
 
 ```powershell
-npx prisma migrate dev --name init
-npx prisma db seed
-npx prisma studio
+npm run db:migrate     # applies migrations to the dev database (Prisma 7 does not seed here)
+npm run db:seed
+npm run db:studio
 ```
 
 - Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`.

@@ -71,7 +71,7 @@ audit_log, rate_limits (identity)
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `payments` | `id`, `order_id` FK unique, `provider` (`paymongo`, `fake`), `provider_checkout_id`, `provider_payment_id` null, `method`, `amount_cents`, `status` enum (`pending`, `paid`, `failed`, `expired`, `refunded`) | One online Payment per Order in the MVP |
+| `payments` | `id`, `order_id` FK unique, `provider` (`paymongo`, `fake`), `provider_checkout_id`, `provider_payment_id` null, `checkout_url`, `method`, `amount_cents`, `status` enum (`pending`, `paid`, `failed`, `expired`, `refunded`) | One online Payment per Order in the MVP |
 | `payment_events` | `id`, `provider`, `provider_event_id`, `type`, `payload` jsonb, `received_at`; unique (`provider`, `provider_event_id`) | Webhook dedupe |
 | `refunds` | `id`, `payment_id` FK, `provider_refund_id`, `amount_cents`, `reason`, `actor_id`, `created_at` | Full refunds only in the MVP |
 
