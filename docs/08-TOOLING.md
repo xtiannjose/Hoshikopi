@@ -50,7 +50,7 @@ Stop every server you start. On Windows a server started through `npx` can outli
 | `@phosphor-icons/react` | Icons | 0 |
 | `vitest`, `@playwright/test`, `@axe-core/playwright` | Tests | 0 |
 | `react-markdown` | The cafe's space, directions and story; Events and Posts | 1 |
-| `resend` | Emails | 2 |
+| (none) | Emails go to Resend's REST API with `fetch`, like PayMongo; no SDK | 2 |
 | `motion`, shadcn registry parts (Kokonut, beUI, Animate UI) | Sample B in batch 1.1; kept only if its ADR picks Sample B | 1 |
 
 Add a library only when the platform and installed packages cannot do the job, and say why in the batch or an ADR. No PayMongo SDK: its REST API is called with `fetch`.

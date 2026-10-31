@@ -1,3 +1,6 @@
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations } from "./axe";
@@ -23,11 +26,23 @@ test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
   await page.getByLabel("Name").fill("Bea");
   await page.getByLabel("Email").fill("bea@example.com");
   await page.getByRole("button", { name: /Place order, PHP 260/ }).click();
-  await expect(page).toHaveURL(/\/orders\/\w+\?t=/);
+  await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
   await expect(page.getByRole("status")).toHaveText(
     "Salamat! We got your order. The bar will accept it soon."
   );
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^K-\d{3}$/);
+  // The "Order placed" email went out with the same Order Code (ORD-10).
+  const code = await page.getByRole("heading", { level: 1 }).innerText();
+  await expect
+    .poll(async () => {
+      const dir = path.join(process.cwd(), "data", "mail");
+      const files = await readdir(dir).catch(() => []);
+      const texts = await Promise.all(
+        files.map((f) => readFile(path.join(dir, f), "utf8"))
+      );
+      return texts.some((t) => t.includes(`Order ${code} at Hoshikopi`));
+    })
+    .toBe(true);
   // Next keeps the previous page hidden for Back, so look in this one.
   await expect(
     page
@@ -70,7 +85,7 @@ test("an Order page needs its link token", async ({ page }) => {
   await page.getByLabel("Name").fill("Lorna");
   await page.getByLabel("Mobile number").fill("0917 123 4567");
   await page.getByRole("button", { name: /Place order/ }).click();
-  await expect(page).toHaveURL(/\/orders\/\w+\?t=/);
+  await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
   const url = new URL(page.url());
   await page.goto(url.pathname + "?t=wrong");
   await expect(page.getByText(/could not be found/i)).toBeVisible();

@@ -13,7 +13,6 @@ export {
 export {
   normalizePhone,
   placeOrder,
-  tokenMatches,
   type Pickup,
   type PlaceOrderInput,
   type PlaceOrderResult,
@@ -25,3 +24,4 @@ export {
   type OrderView,
 } from "./internal/reads";
 export { cancelByCustomer, orderVersion } from "./internal/customer";
+export { orderLink, tokenMatches } from "./internal/links";
