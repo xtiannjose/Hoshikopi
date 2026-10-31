@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 2 done. **Next: Phase 3, batch 3.1** (provider interface and `fake`).
+- **Build:** Phases 0 to 2 done; batch 3.1 done. **Next: Phase 3, batch 3.2** (webhooks).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -98,7 +98,7 @@ Goal: a Guest orders and pays at pickup; a Barista runs the Order to Picked Up.
 
 Goal: GCash, Maya and Card work end to end without any real money.
 
-- [ ] **3.1 Provider interface and `fake`.** `PaymentProvider`, the `fake` adapter with `/dev/pay/[id]` and signed webhooks; production refusal (PAY-06).
+- [x] **3.1 Provider interface and `fake`.** `PaymentProvider`, the `fake` adapter with `/dev/pay/[id]` and signed webhooks; production refusal (PAY-06). Done 2026-10-31: `PaymentProvider` with `fake` (HMAC-signed events, checkout at `/dev/pay/[id]`) and `paymongo` adapters; `providerFor(env)` refuses a PayMongo key without `sk_test_` and keeps `fake` off production domains (it runs on localhost and `*.vercel.app`). Decision (section 4): no PayMongo account yet, so the MVP runs on `fake`; the PayMongo adapter exists and is unit-tested but has not met a sandbox. The checkout page and webhook route arrive in batch 3.2.
 - [ ] **3.2 Webhooks.** Signature check, `payment_events` dedupe, Order to `paid`; the return page reads the Order (PAY-03).
 - [ ] **3.3 Expiry.** Unpaid online Orders Expire after 15 minutes and release their window (PAY-04).
 - [ ] **3.4 PayMongo adapter.** Hosted checkout for GCash, Maya and Card with test keys only; the live-key guard (PAY-01). Skipped if the account decision says `fake` only.
