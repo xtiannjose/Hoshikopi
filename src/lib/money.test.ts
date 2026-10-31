@@ -5,6 +5,7 @@ import {
   formatDelta,
   formatPrice,
   formatReceipt,
+  parsePesos,
   vatPart,
 } from "./money";
 
@@ -59,5 +60,19 @@ describe("guards", () => {
   });
   it("adds centavos", () => {
     expect(addMoney(18500, 3500, 2000)).toBe(24000);
+  });
+});
+
+describe("parsePesos (Staff forms)", () => {
+  it("reads pesos as typed", () => {
+    expect(parsePesos("185")).toBe(18500);
+    expect(parsePesos(" 35.5 ")).toBe(3550);
+    expect(parsePesos("PHP 1,250.00")).toBe(125000);
+    expect(parsePesos("0")).toBe(0);
+  });
+  it("refuses anything unclear or negative", () => {
+    for (const bad of ["", "abc", "-5", "1.234", "12,34", "1e3"]) {
+      expect(parsePesos(bad)).toBeNull();
+    }
   });
 });

@@ -31,6 +31,18 @@ export function formatReceipt(cents: number): string {
   return format(cents, true);
 }
 
+const PESOS = /^(?:php)?\s*(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?$/i;
+
+/** "185", "35.5" or "PHP 1,250.00" -> centavos; null if unclear or negative. */
+export function parsePesos(input: string): number | null {
+  const match = PESOS.exec(input.trim());
+  if (!match) return null;
+  const cents =
+    Number(match[1].replaceAll(",", "")) * 100 +
+    Number((match[2] ?? "").padEnd(2, "0"));
+  return Number.isSafeInteger(cents) ? cents : null;
+}
+
 /** Sum of centavos. Throws on non-integers so float errors cannot enter. */
 export function addMoney(...amounts: number[]): number {
   let total = 0;
