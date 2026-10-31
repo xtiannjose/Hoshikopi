@@ -2,6 +2,8 @@ import type { Order, OrderStatus, Prisma } from "@/generated/prisma/client";
 import { dayValue, now } from "@/lib/clock";
 import { db, inTransaction, type Client } from "@/lib/db";
 
+import { earnForOrder, reverseForOrder } from "@/modules/loyalty";
+
 import { emailOrderPlaced, emailOrderReady } from "./emails";
 
 // The Order Status machine (docs/03-ARCHITECTURE.md section 7). Order
@@ -145,6 +147,20 @@ function move(
       data: changes(order, to, why),
     });
     if (to === "cancelled" || to === "expired") await releaseWindow(tx, order);
+    // Stars move with the Order, in the same transaction (ADR 0008).
+    if (to === "picked_up") {
+      const lines = await tx.orderLine.findMany({
+        where: { orderId: order.id, isDrink: true, isReward: false },
+      });
+      await earnForOrder(tx, {
+        id: order.id,
+        memberId: order.memberId,
+        drinks: lines.reduce((sum, line) => sum + line.quantity, 0),
+      });
+    }
+    if (to === "refunded" && order.status === "picked_up") {
+      await reverseForOrder(tx, order.id);
+    }
     await tx.orderEvent.create({
       data: {
         orderId: order.id,

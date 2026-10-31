@@ -56,3 +56,11 @@ export async function requireMember(next = "/account"): Promise<Member> {
   if (!member) redirect(`/sign-in?next=${encodeURIComponent(next)}`);
   return member;
 }
+
+/** A Member by email, for Staff screens. */
+export async function memberByEmail(email: string): Promise<Member | null> {
+  return db.user.findFirst({
+    where: { email: email.trim().toLowerCase(), deletedAt: null },
+    select: { id: true, name: true, email: true },
+  });
+}
