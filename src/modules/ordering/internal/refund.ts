@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { refundPayment } from "@/modules/payments";
+import { closeCheckout, refundPayment } from "@/modules/payments";
 
 import { emailOrderRefunded } from "./emails";
 import { transition, type Actor } from "./status";
@@ -52,6 +52,7 @@ export async function refundOrder(
 /**
  * Cancel an Order; a paid one goes on to a full Refund (docs/03 section 7).
  * Staff refund as themselves, a Customer's cancel is refunded by the system.
+ * An unpaid one has its checkout closed, so it cannot be paid afterwards.
  */
 export async function cancelOrder(
   orderId: string,
@@ -64,6 +65,8 @@ export async function cancelOrder(
       orderId,
       actor.kind === "staff" ? actor : { kind: "system" }
     );
+  } else if (result.ok) {
+    await closeCheckout(orderId);
   }
   return result;
 }

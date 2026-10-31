@@ -28,7 +28,7 @@ beforeEach(async () => {
 afterEach(unfreezeClock);
 afterAll(() => db.$disconnect());
 
-async function order(paymentMethod: PaymentMethod) {
+async function order(paymentMethod: PaymentMethod, pay = true) {
   const owner = { guestTokenHash: `guest-${Math.random()}` };
   const item = await db.menuItem.findUniqueOrThrow({
     where: { slug: "ube-pandesal" },
@@ -50,7 +50,7 @@ async function order(paymentMethod: PaymentMethod) {
     paymentMethod,
   });
   if (!result.ok) throw new Error(result.reason);
-  if (paymentMethod !== "pay_at_pickup") {
+  if (pay && paymentMethod !== "pay_at_pickup") {
     const payment = await db.payment.findUniqueOrThrow({
       where: { orderId: result.orderId },
     });
@@ -132,6 +132,17 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
         .status
     ).toBe("refunded");
     expect(await db.refund.count()).toBe(0);
+  });
+
+  it("closes the checkout of an unpaid online Order its Customer cancels", async () => {
+    const placed = await order("gcash", false);
+    expect(
+      (await cancelByCustomer(placed.orderId, placed.accessToken)).ok
+    ).toBe(true);
+    const payment = await db.payment.findUniqueOrThrow({
+      where: { orderId: placed.orderId },
+    });
+    expect(payment.status).toBe("expired");
   });
 
   it("refuses an Order that was never paid", async () => {

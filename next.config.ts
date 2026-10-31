@@ -1,5 +1,21 @@
 import type { NextConfig } from "next";
 
+// ADR 0013: prerendered pages carry Next's inline RSC scripts, which take no
+// nonce or hash, so scripts need 'unsafe-inline'; everything else is locked
+// to this site. Forms may land on PayMongo's checkout or Google's sign-in.
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://checkout.paymongo.com https://accounts.google.com",
+  "frame-ancestors 'none'",
+].join("; ");
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
@@ -7,14 +23,13 @@ const nextConfig: NextConfig = {
   // refuses bodies over 1 MB by default. The action checks the role first.
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
   // No page may be framed, sniffed as another type, leak its full address
-  // to other sites, or ask for the camera, microphone or location. The full
-  // Content-Security-Policy arrives with the security pass (batch 5.3).
+  // to other sites, or ask for the camera, microphone or location.
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
-          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Content-Security-Policy", value: csp },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

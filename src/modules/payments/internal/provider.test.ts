@@ -15,9 +15,30 @@ describe("providerFor (ADR 0003, PAY-06)", () => {
           PAYMENT_PROVIDER: "fake",
           NODE_ENV: "production",
           NEXT_PUBLIC_SITE_URL: "https://hoshikopi.vercel.app",
+          BETTER_AUTH_SECRET: "a-secret-of-at-least-32-characters",
         })
       ).name
     ).toBe("fake");
+  });
+
+  it("refuses the fake provider in production without its address or secret", () => {
+    const production = { PAYMENT_PROVIDER: "fake", NODE_ENV: "production" };
+    expect(() =>
+      providerFor(
+        env({
+          ...production,
+          BETTER_AUTH_SECRET: "a-secret-of-32-characters!!",
+        })
+      )
+    ).toThrow(/NEXT_PUBLIC_SITE_URL/);
+    expect(() =>
+      providerFor(
+        env({
+          ...production,
+          NEXT_PUBLIC_SITE_URL: "https://hoshikopi.vercel.app",
+        })
+      )
+    ).toThrow(/BETTER_AUTH_SECRET/);
   });
 
   it("refuses the fake provider on a production domain", () => {
@@ -27,6 +48,7 @@ describe("providerFor (ADR 0003, PAY-06)", () => {
           PAYMENT_PROVIDER: "fake",
           NODE_ENV: "production",
           NEXT_PUBLIC_SITE_URL: "https://hoshikopi.ph",
+          BETTER_AUTH_SECRET: "a-secret-of-at-least-32-characters",
         })
       )
     ).toThrow(/production domain/);

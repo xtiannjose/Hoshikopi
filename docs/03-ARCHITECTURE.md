@@ -146,10 +146,10 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 
 ## 13. Accounts, Staff and security
 
-- **Better Auth** ([ADR 0005](adr/0005-better-auth-members-and-staff.md)): Members sign in with an email link (sent through Resend) or Google. Staff are users with a `role` of `barista` or `manager`, created by a Manager invite; Staff sign in with the email link and must turn on a second factor (TOTP) before using `/manage`.
+- **Better Auth** ([ADR 0005](adr/0005-better-auth-members-and-staff.md)): Members sign in with an email link (sent through Resend) or Google. Staff are users with a `role` of `barista` or `manager`, created by a Manager invite; Staff sign in with the email link and must enter a Second Factor (TOTP) once per session before using `/manage`, checked by `requireStaff()` rather than Better Auth's plugin ([ADR 0014](adr/0014-staff-second-factor-in-identity.md)).
 - `requireMember()` and `requireStaff(role)` guard pages, Server Actions and route handlers; every Staff write goes through `audit()`.
-- Rate limits (Postgres-backed, as in Hoshimono): sign-in emails per address and IP, checkout per Cart and IP, webhook calls per IP, Inquiries per IP (V1).
-- Security headers: a strict Content-Security-Policy (PayMongo's checkout is a redirect, so no third-party scripts on our pages; the inline theme script from section 4 is allowed by its SHA-256 hash, because a per-request nonce would stop pages being prerendered; confirm against the Next 16 CSP guide in `node_modules/next/dist/docs/`), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
+- Rate limits (Postgres-backed, as in Hoshimono): sign-in emails per address (3 per 15 minutes) and IP (30), checkout tries per Cart (10 per 15 minutes) and IP (20), webhook calls per IP (120 a minute), Second Factor tries per Staff member (10 per 15 minutes), Inquiries per IP (V1).
+- Security headers: a Content-Security-Policy locked to this site (PayMongo's checkout is a redirect, so no third-party scripts on our pages); scripts need `'unsafe-inline'` because prerendered pages carry Next's inline RSC scripts, which take no nonce or hash ([ADR 0013](adr/0013-csp-allows-inline-scripts.md)); HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
 - Every input is parsed with zod at the edge (Server Action or route handler).
 - Privacy (Data Privacy Act): a privacy notice, marketing email only with a separate opt-in, Member data export and deletion (orders are kept, de-identified, for the cafe's records).
 

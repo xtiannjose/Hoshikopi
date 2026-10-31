@@ -15,10 +15,17 @@ export {
   requireMember,
   requireStaff,
   signOut,
+  staffAwaitingSecondFactor,
   type Member,
   type Staff,
 } from "./internal/session";
 export { emailSignInLink, googleSignInUrl, safeNext } from "./internal/sign-in";
+export {
+  enterSecondFactor,
+  secondFactorEnrolment,
+  type SecondFactorEnrolment,
+  type SecondFactorResult,
+} from "./internal/second-factor";
 export {
   forgetMember,
   memberProfile,
