@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 
-import type { Role } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
 import { auth } from "./auth";
@@ -20,7 +19,7 @@ async function currentUser() {
   });
 }
 
-export type Staff = { id: string; name: string; role: Role };
+export type Staff = { id: string; name: string; role: "barista" | "manager" };
 
 /**
  * The signed-in Staff member with at least `role` (a Manager may do what a
@@ -35,7 +34,8 @@ export async function requireStaff(
   const allowed =
     user.role === "manager" || (role === "barista" && user.role === "barista");
   if (!allowed) notFound();
-  return { id: user.id, name: user.name, role: user.role };
+  // `allowed` above rules out Members.
+  return { id: user.id, name: user.name, role: user.role as Staff["role"] };
 }
 
 export async function signOut() {
