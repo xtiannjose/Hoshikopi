@@ -13,6 +13,7 @@ export async function addToCart(page: Page, slug: string, quantity = 1) {
 /** Checks out as a Guest paying at pickup; ends on the Order page. */
 export async function placeGuestOrder(page: Page, name = "Bea") {
   await page.goto("/checkout");
+  await page.getByText("Pay at Pickup", { exact: true }).click();
   await page.getByLabel("Name").fill(name);
   await page.getByLabel("Email").fill(`${name.toLowerCase()}@example.com`);
   await page.getByRole("button", { name: /Place order/ }).click();

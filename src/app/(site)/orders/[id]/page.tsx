@@ -103,6 +103,20 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
       <p role="status" className="mt-4 text-lg font-semibold">
         {message(order)}
       </p>
+      {order.status === "placed" && order.payment?.status === "pending" && (
+        <a
+          href={order.payment.checkoutUrl}
+          className="bg-primary text-primary-foreground mt-4 inline-flex min-h-12 items-center rounded-full px-6 font-semibold no-underline"
+        >
+          Finish paying
+        </a>
+      )}
+      {order.status === "placed" && order.payment?.status === "failed" && (
+        <p className="text-destructive mt-4 font-semibold">
+          Your payment didn&apos;t go through. This order will be let go in a
+          few minutes; place it again, or choose Pay at Pickup.
+        </p>
+      )}
       {!closed && order.status !== "picked_up" && (
         <p className="mt-2 text-lg">
           Pickup{" "}
@@ -225,7 +239,10 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
         <p className="text-muted-foreground text-sm">
           {order.paymentMethod === "pay_at_pickup"
             ? "Pay at the counter when you collect."
-            : "Paid online."}
+            : order.payment?.status === "paid" ||
+                order.payment?.status === "refunded"
+              ? "Paid online (Test Mode)."
+              : "Not paid yet."}
         </p>
       </section>
       <div className="mt-6">

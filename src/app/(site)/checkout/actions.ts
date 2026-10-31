@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
+import type { PaymentMethod } from "@/generated/prisma/enums";
 import { formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { currentCartOwner } from "@/modules/cart";
@@ -12,6 +13,8 @@ import {
   placeOrder,
   type PlaceOrderResult,
 } from "@/modules/ordering";
+
+const METHODS: PaymentMethod[] = ["gcash", "maya", "card", "pay_at_pickup"];
 
 export type CheckoutState = {
   message?: string;
@@ -33,9 +36,9 @@ function messageFor(result: Exclude<PlaceOrderResult, { ok: true }>): string {
     case "too_many_drinks":
       return `Orders hold up to ${MAX_DRINKS_PER_ORDER} drinks. For more, email us a day ahead.`;
     case "pay_at_pickup_limit":
-      return `Guests can pay at pickup for up to ${GUEST_PAY_AT_PICKUP_MAX_DRINKS} drinks. Split your order, or sign in to order more.`;
-    case "payment_unavailable":
-      return "Choose Pay at Pickup.";
+      return `Guests can pay at pickup for up to ${GUEST_PAY_AT_PICKUP_MAX_DRINKS} drinks. Pay online, or sign in to order more.`;
+    case "payment_start_failed":
+      return "We couldn't open the payment page. Try again, or choose Pay at Pickup.";
     case "window_unavailable":
       return "That Pickup Time has passed. Choose another.";
     case "no_window":
@@ -54,6 +57,7 @@ export async function placeOrderAction(
   const owner = await currentCartOwner();
   if (!owner) return { message: "Your Cart is empty." };
   const pickup = String(form.get("pickup") ?? "asap");
+  const method = String(form.get("paymentMethod")) as PaymentMethod;
   const result = await placeOrder({
     owner,
     memberId: null,
@@ -65,12 +69,14 @@ export async function placeOrderAction(
       pickup === "asap"
         ? { kind: "asap" }
         : { kind: "scheduled", windowStart: new Date(pickup) },
-    paymentMethod: "pay_at_pickup",
+    paymentMethod: METHODS.includes(method) ? method : "pay_at_pickup",
   });
   if (result.ok) {
     // The header's Cart count lives in the layout, which a redirect keeps.
     refresh();
-    redirect(`/orders/${result.orderId}?t=${result.accessToken}`);
+    redirect(
+      result.checkoutUrl ?? `/orders/${result.orderId}?t=${result.accessToken}`
+    );
   }
   // Show the new prices, windows or pause beside the message.
   refresh();

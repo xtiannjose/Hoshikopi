@@ -72,6 +72,8 @@ export type OrderView = {
   cancelReason: string | null;
   /** Changes whenever the Order does; the page polls for it (ADR 0009). */
   version: string;
+  /** The online Payment, if any: pending shows "Finish paying". */
+  payment: { status: string; checkoutUrl: string } | null;
   lines: {
     name: string;
     options: { group: string; name: string; deltaCents: number }[];
@@ -89,7 +91,7 @@ export async function getOrderForCustomer(
   await expireUnpaid(now());
   const order = await db.order.findUnique({
     where: { id },
-    include: { lines: { orderBy: { createdAt: "asc" } } },
+    include: { lines: { orderBy: { createdAt: "asc" } }, payment: true },
   });
   if (!order || !token || !tokenMatches(token, order.accessTokenHash)) {
     return null;
@@ -111,6 +113,9 @@ export async function getOrderForCustomer(
     cancelledAt: order.cancelledAt,
     cancelReason: order.cancelReason,
     version: `${order.status}:${order.updatedAt.getTime()}`,
+    payment: order.payment
+      ? { status: order.payment.status, checkoutUrl: order.payment.checkoutUrl }
+      : null,
     lines: order.lines.map((line) => ({
       name: line.name,
       options: line.options as OrderView["lines"][number]["options"],
@@ -119,4 +124,12 @@ export async function getOrderForCustomer(
       note: line.note,
     })),
   };
+}
+
+/** The Order Code and total, for the fake checkout page (PAY-06). */
+export async function getOrderBrief(id: string) {
+  return db.order.findUnique({
+    where: { id },
+    select: { code: true, totalCents: true },
+  });
 }

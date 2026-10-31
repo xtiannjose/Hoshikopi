@@ -8,13 +8,34 @@ import { placeOrderAction, type CheckoutState } from "./actions";
 
 export type WindowChoice = { value: string; label: string };
 
+const PAYMENTS = [
+  {
+    value: "gcash",
+    label: "GCash",
+    note: "Pay now on a Test Mode checkout.",
+  },
+  { value: "maya", label: "Maya", note: "Pay now on a Test Mode checkout." },
+  {
+    value: "card",
+    label: "Card",
+    note: "Visa or Mastercard, on a Test Mode checkout.",
+  },
+  {
+    value: "pay_at_pickup",
+    label: "Pay at Pickup",
+    note: "Pay at the counter when you collect.",
+  },
+] as const;
+
 /** Pickup Time, contact details and Payment Method (ORD-03, ORD-05, PAY-02). */
 export function CheckoutForm({
   asap,
   windows,
   totalCents,
   totalText,
+  payAtPickupAllowed,
 }: {
+  payAtPickupAllowed: boolean;
   asap: WindowChoice | null;
   windows: WindowChoice[];
   totalCents: number;
@@ -106,21 +127,40 @@ export function CheckoutForm({
 
       <fieldset>
         <legend className="font-display text-2xl italic">Payment</legend>
-        <label className="border-primary bg-muted rounded-card mt-4 flex min-h-14 items-center gap-3 border px-4">
-          <input
-            type="radio"
-            name="paymentMethod"
-            value="pay_at_pickup"
-            defaultChecked
-            className="size-5"
-          />
-          <span>
-            <span className="font-semibold">Pay at Pickup</span>
-            <span className="text-muted-foreground block text-sm">
-              Pay at the counter when you collect.
-            </span>
-          </span>
-        </label>
+        <div className="mt-4 grid gap-3">
+          {PAYMENTS.filter(
+            (p) => p.value !== "pay_at_pickup" || payAtPickupAllowed
+          ).map((p, index) => (
+            <label
+              key={p.value}
+              className="border-input has-[:checked]:border-primary has-[:checked]:bg-muted has-[:focus-visible]:outline-ring rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value={p.value}
+                defaultChecked={index === 0}
+                className="size-5"
+              />
+              <span className="flex-1">
+                <span className="font-semibold">{p.label}</span>
+                <span className="text-muted-foreground block text-sm">
+                  {p.note}
+                </span>
+              </span>
+              {p.value !== "pay_at_pickup" && (
+                <span className="border-warning text-warning rounded-full border px-2 py-0.5 text-xs font-semibold">
+                  Test Mode
+                </span>
+              )}
+            </label>
+          ))}
+        </div>
+        {!payAtPickupAllowed && (
+          <p className="text-muted-foreground mt-3 text-sm">
+            Guests can pay at pickup for up to 4 drinks; pay online for more.
+          </p>
+        )}
       </fieldset>
 
       <div className="grid gap-3">

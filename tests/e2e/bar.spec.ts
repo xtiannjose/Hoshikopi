@@ -31,6 +31,7 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
     .locator('label:has(input[name="pickup"]:not([value="asap"]))')
     .nth(2)
     .click();
+  await guest.getByText("Pay at Pickup", { exact: true }).click();
   await guest.getByLabel("Name").fill("Bea Santos");
   await guest.getByLabel("Email").fill("bea@example.com");
   await guest.getByRole("button", { name: /Place order/ }).click();

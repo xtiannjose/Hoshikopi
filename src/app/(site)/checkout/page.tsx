@@ -7,10 +7,7 @@ import { formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { getHours } from "@/modules/cafe";
 import { currentCartOwner } from "@/modules/cart";
-import {
-  checkoutView,
-  GUEST_PAY_AT_PICKUP_MAX_DRINKS,
-} from "@/modules/ordering";
+import { checkoutView } from "@/modules/ordering";
 
 import { CheckoutForm } from "./checkout-form";
 
@@ -122,12 +119,7 @@ async function Checkout() {
         </p>
       )}
 
-      {!view.payAtPickupAllowed ? (
-        <p className="bg-muted rounded-card p-5">
-          Guests can pay at pickup for up to {GUEST_PAY_AT_PICKUP_MAX_DRINKS}{" "}
-          drinks. Split your order, or sign in to order more.
-        </p>
-      ) : !first ? (
+      {!first ? (
         <p className="bg-muted rounded-card p-5">
           No Pickup Times are left today. Walk in and order at the counter.
         </p>
@@ -143,6 +135,7 @@ async function Checkout() {
           }))}
           totalCents={cart.totalCents}
           totalText={formatPrice(cart.totalCents)}
+          payAtPickupAllowed={view.payAtPickupAllowed}
         />
       )}
     </div>
