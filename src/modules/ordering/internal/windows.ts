@@ -10,7 +10,7 @@ import {
 } from "@/modules/cafe";
 
 /** Drinks in Orders the bar is making now, for Prep Time (ADR 0007). */
-async function drinksQueuedAhead(client: Client, serviceDay: string) {
+export async function drinksQueuedAhead(client: Client, serviceDay: string) {
   const sum = await client.orderLine.aggregate({
     _sum: { quantity: true },
     where: {

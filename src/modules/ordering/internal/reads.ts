@@ -9,6 +9,7 @@ import {
 } from "@/modules/cafe";
 import { getCart, type CartOwner, type CartView } from "@/modules/cart";
 
+import { expireUnpaid } from "./bar";
 import { tokenMatches } from "./links";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS } from "./rules";
 import { offeredWindows } from "./windows";
@@ -28,6 +29,8 @@ export async function checkoutView(
   memberId: string | null
 ): Promise<CheckoutView> {
   const at = now();
+  // Unpaid online Orders give their windows back before we list them.
+  await expireUnpaid(at);
   const day = await getOrderingDay(at);
   const empty: CartView = {
     lines: [],
@@ -83,6 +86,7 @@ export async function getOrderForCustomer(
   id: string,
   token: string
 ): Promise<OrderView | null> {
+  await expireUnpaid(now());
   const order = await db.order.findUnique({
     where: { id },
     include: { lines: { orderBy: { createdAt: "asc" } } },
