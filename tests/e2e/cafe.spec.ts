@@ -81,9 +81,12 @@ test("a Manager edits the parking note and /cafe shows it", async ({
   await page.getByLabel("Parking and the nearest car park").fill(note);
   await page.getByRole("button", { name: "Save cafe details" }).click();
   await expect(page.getByRole("status")).toContainText("Saved.");
-  await page.goto("/cafe");
-  // In the Amenities and in the parking question.
-  await expect(page.getByText(note).first()).toBeVisible();
+  // In the Amenities and in the parking question; the first visit after a
+  // change may get the old page while Next renders the new one.
+  await expect(async () => {
+    await page.goto("/cafe");
+    await expect(page.getByText(note).first()).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
 });
 
 test("a Barista cannot open the cafe details", async ({ page }) => {

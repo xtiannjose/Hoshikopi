@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // Menu photos up to 2 MB go through a Server Action (batch 1.5), which
+  // refuses bodies over 1 MB by default. The action checks the role first.
+  experimental: { serverActions: { bodySizeLimit: "3mb" } },
   // No page may be framed, sniffed as another type, leak its full address
   // to other sites, or ask for the camera, microphone or location. The full
   // Content-Security-Policy arrives with the security pass (batch 5.3).

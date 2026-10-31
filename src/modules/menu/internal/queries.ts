@@ -115,13 +115,13 @@ function toCard(row: CardRow, today: string): MenuItemCard {
 
 /**
  * Visible Categories with their visible Menu Items. Cached under the `menu`
- * tag; Staff edits revalidate it, and the hourly lifetime turns Sold Out
- * over at the start of a new day.
+ * tag; Staff edits update it at once. The one-minute lifetime turns Sold Out
+ * over after midnight and heals a refill that raced two quick saves.
  */
 export async function getMenu(): Promise<MenuCategory[]> {
   "use cache";
   cacheTag("menu");
-  cacheLife("hours");
+  cacheLife("minutes");
   const today = manila(now()).day;
   const categories = await db.category.findMany({
     where: { isHidden: false },
@@ -151,7 +151,7 @@ export async function getMenuItem(
 ): Promise<MenuItemDetail | null> {
   "use cache";
   cacheTag("menu");
-  cacheLife("hours");
+  cacheLife("minutes");
   const today = manila(now()).day;
   const row = await db.menuItem.findFirst({
     where: { slug, ...visibleItem },
@@ -212,7 +212,7 @@ export async function menuSlugs(): Promise<{
 }> {
   "use cache";
   cacheTag("menu");
-  cacheLife("hours");
+  cacheLife("minutes");
   const menu = await getMenu();
   return {
     categories: menu.map((category) => category.slug),
@@ -226,7 +226,7 @@ export async function getPricedOptions(): Promise<
 > {
   "use cache";
   cacheTag("menu");
-  cacheLife("hours");
+  cacheLife("minutes");
   return db.option.findMany({
     where: { deltaCents: { gt: 0 } },
     orderBy: [{ optionGroup: { sort: "asc" } }, { sort: "asc" }],

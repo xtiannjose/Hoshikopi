@@ -47,7 +47,7 @@ export function BaristaPicks({ picks }: { picks: MenuItemCard[] }) {
                 className="border-input mt-1 inline-flex min-h-11 w-fit items-center rounded-full border px-5 font-semibold no-underline"
               >
                 Add to order
-                <span className="sr-only">: {item.name}</span>
+                <span className="sr-only"> ({item.name})</span>
               </Link>
             </div>
           </article>

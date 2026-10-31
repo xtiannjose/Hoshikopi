@@ -32,7 +32,7 @@ export type CafeDetails = CafeContact &
 export async function getCafeContact(): Promise<CafeContact> {
   "use cache";
   cacheTag("hours");
-  cacheLife("max");
+  cacheLife("minutes");
   return db.cafeSettings.findUniqueOrThrow({
     where: { id: 1 },
     select: { area: true, contactEmail: true },
@@ -43,7 +43,7 @@ export async function getCafeContact(): Promise<CafeContact> {
 export async function getCafeDetails(): Promise<CafeDetails> {
   "use cache";
   cacheTag("hours");
-  cacheLife("max");
+  cacheLife("minutes");
   const row = await db.cafeSettings.findUniqueOrThrow({ where: { id: 1 } });
   return {
     area: row.area,
@@ -73,7 +73,7 @@ const hhmm = (time: Date) => time.toISOString().slice(11, 16);
 export async function getHours(): Promise<Hours> {
   "use cache";
   cacheTag("hours");
-  cacheLife("hours");
+  cacheLife("minutes");
   const today = manila(now()).day;
   const [weekly, special] = await Promise.all([
     db.openingHours.findMany({ orderBy: { weekday: "asc" } }),
