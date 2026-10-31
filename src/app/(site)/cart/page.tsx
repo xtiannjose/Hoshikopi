@@ -64,7 +64,7 @@ async function Cart() {
               <h2 className="text-lg font-semibold">
                 <Link href={`/menu/item/${line.slug}`}>{line.name}</Link>
               </h2>
-              <p className="font-mono">
+              <p className="font-mono whitespace-nowrap">
                 {line.lineCents === null ? "" : formatPrice(line.lineCents)}
               </p>
             </div>

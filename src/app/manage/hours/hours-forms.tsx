@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { Field, fieldClass, SaveBar } from "@/components/manage/fields";
+import { Field, fieldClass, SaveBar } from "@/components/fields";
 import type { Hours } from "@/lib/hours";
 
 import {

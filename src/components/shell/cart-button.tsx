@@ -27,11 +27,14 @@ export async function CartButton() {
     <Link href="/cart" className={linkClass}>
       <BagIcon aria-hidden size={20} />
       Cart
-      <span className="font-mono text-sm font-normal">
+      <span className="font-mono text-sm font-normal whitespace-nowrap">
         {count}
         <span className="sr-only"> {count === 1 ? "item" : "items"},</span>
-        <span aria-hidden> · </span>
-        {formatPrice(cart.totalCents)}
+        {/* The total shows from 640 px; phones keep the pill on one line. */}
+        <span className="sr-only sm:not-sr-only">
+          <span aria-hidden> · </span>
+          {formatPrice(cart.totalCents)}
+        </span>
       </span>
     </Link>
   );

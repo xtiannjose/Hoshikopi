@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { Field } from "@/components/manage/fields";
+import { Field } from "@/components/fields";
 import { formatDate, formatTime, now } from "@/lib/clock";
 import { formatClock } from "@/lib/hours";
 import { getHoursForStaff } from "@/modules/cafe";

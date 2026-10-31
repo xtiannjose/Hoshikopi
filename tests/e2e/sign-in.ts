@@ -2,8 +2,8 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { expect, type Page } from "@playwright/test";
-import { Client } from "pg";
 
+import { e2eQuery } from "./db";
 const MAIL = path.join(process.cwd(), "data", "mail");
 
 /** The sign-in link in the outbox whose return path carries `nonce`. */
@@ -22,16 +22,10 @@ async function linkFor(nonce: string): Promise<string | null> {
  * limit is for people, so clear it in the e2e database first.
  */
 async function clearLinkLimits(email: string) {
-  const db = new Client({ connectionString: process.env.E2E_DATABASE_URL });
-  await db.connect();
-  try {
-    await db.query("DELETE FROM rate_limits WHERE key = $1 OR key LIKE $2", [
-      `link:${email}`,
-      "link-ip:%",
-    ]);
-  } finally {
-    await db.end();
-  }
+  await e2eQuery("DELETE FROM rate_limits WHERE key = $1 OR key LIKE $2", [
+    `link:${email}`,
+    "link-ip:%",
+  ]);
 }
 
 /**
