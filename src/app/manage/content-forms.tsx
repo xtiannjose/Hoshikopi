@@ -4,6 +4,7 @@ import { useActionState } from "react";
 
 import { Field, SaveBar } from "@/components/fields";
 import { MarkdownField } from "@/components/markdown-field";
+import { useKeptForm } from "@/components/use-kept-form";
 
 import {
   saveEventAction,
@@ -29,9 +30,10 @@ export type EventFormData = {
 
 export function EventForm({ event }: { event: EventFormData }) {
   const [state, action, pending] = useActionState(saveEventAction, idle);
+  const form = useKeptForm(action, state);
   const error = (name: string) => state.errors?.[name];
   return (
-    <form action={action} className="mt-6 grid gap-5">
+    <form {...form} className="mt-6 grid gap-5">
       {event.id && <input type="hidden" name="id" value={event.id} />}
       <div className="grid max-w-3xl gap-5">
         <Field
@@ -121,9 +123,10 @@ export type PostFormData = {
 
 export function PostForm({ post }: { post: PostFormData }) {
   const [state, action, pending] = useActionState(savePostAction, idle);
+  const form = useKeptForm(action, state);
   const error = (name: string) => state.errors?.[name];
   return (
-    <form action={action} className="mt-6 grid gap-5">
+    <form {...form} className="mt-6 grid gap-5">
       {post.id && <input type="hidden" name="id" value={post.id} />}
       <div className="grid max-w-3xl gap-5">
         <Field

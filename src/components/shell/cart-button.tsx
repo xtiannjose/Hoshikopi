@@ -7,12 +7,13 @@ import { currentCartOwner, getCart } from "@/modules/cart";
 const linkClass =
   "bg-primary text-primary-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 font-semibold no-underline shadow-sm transition-transform active:scale-[0.98]";
 
-/** The Cart button before the count arrives (and on prerendered pages). */
+/** The Cart button before the count arrives (and on prerendered pages).
+ * Under 360 px the word is for screen readers only, so the header fits 320 px. */
 export function CartLink() {
   return (
     <Link href="/cart" className={linkClass}>
       <BagIcon aria-hidden size={20} />
-      Cart
+      <span className="max-[359px]:sr-only">Cart</span>
     </Link>
   );
 }
@@ -26,7 +27,7 @@ export async function CartButton() {
   return (
     <Link href="/cart" className={linkClass}>
       <BagIcon aria-hidden size={20} />
-      Cart
+      <span className="max-[359px]:sr-only">Cart</span>
       <span className="font-mono text-sm font-normal whitespace-nowrap">
         {count}
         <span className="sr-only"> {count === 1 ? "item" : "items"},</span>

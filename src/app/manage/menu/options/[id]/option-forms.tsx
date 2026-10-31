@@ -8,6 +8,7 @@ import {
   Field,
   SaveBar,
 } from "@/components/fields";
+import { useKeptForm } from "@/components/use-kept-form";
 
 import {
   saveOptionAction,
@@ -29,8 +30,9 @@ export function GroupForm({
     saveOptionGroupAction,
     { status: "idle" }
   );
+  const form = useKeptForm(action, state);
   return (
-    <form action={action} className="mt-6 grid max-w-3xl gap-4">
+    <form {...form} className="mt-6 grid max-w-3xl gap-4">
       {group.id && <input type="hidden" name="id" value={group.id} />}
       <Field
         name="name"
@@ -83,9 +85,10 @@ export function OptionForm({
     saveOptionAction,
     { status: "idle" }
   );
+  const form = useKeptForm(action, state);
   const key = option.id ?? "new";
   return (
-    <form action={action} className="border-border grid gap-4 border-b pb-6">
+    <form {...form} className="border-border grid gap-4 border-b pb-6">
       {option.id && <input type="hidden" name="id" value={option.id} />}
       <input type="hidden" name="optionGroupId" value={groupId} />
       <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">

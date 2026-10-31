@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 
+import { useKeptForm } from "@/components/use-kept-form";
 import type { CafeDetails } from "@/modules/cafe";
 
 import { saveCafeAction, type CafeFormState } from "./actions";
@@ -30,6 +31,7 @@ export function CafeForm({ cafe }: { cafe: CafeDetails }) {
     saveCafeAction,
     { status: "idle" }
   );
+  const form = useKeptForm(action, state);
   const error = (name: string) => state.errors?.[name];
 
   const text = (
@@ -86,7 +88,7 @@ export function CafeForm({ cafe }: { cafe: CafeDetails }) {
   );
 
   return (
-    <form action={action} className="mt-8 grid max-w-3xl gap-8">
+    <form {...form} className="mt-8 grid max-w-3xl gap-8">
       <fieldset className="grid gap-4">
         <legend className="font-display mb-2 text-2xl italic">
           Where and how to reach us

@@ -66,6 +66,16 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
     page.getByRole("region", { name: "Preview" }).locator("strong")
   ).toHaveText("Free");
   await page.getByLabel("Published on the site").check();
+  // A refused save keeps what was typed (React 19 resets forms by default).
+  await page.getByLabel("Web address").fill("Cupping With Jomar");
+  await page.getByRole("button", { name: "Add Event" }).click();
+  await expect(page.getByText("Some fields need a fix.")).toBeVisible();
+  await expect(page.getByLabel("Title")).toHaveValue("Cupping with Jomar");
+  await expect(page.getByLabel("About the Event")).toHaveValue(
+    "**Free**, eight seats."
+  );
+  await expect(page.getByLabel("Published on the site")).toBeChecked();
+  await page.getByLabel("Web address").fill("cupping-with-jomar");
   await page.getByRole("button", { name: "Add Event" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Cupping with Jomar"
