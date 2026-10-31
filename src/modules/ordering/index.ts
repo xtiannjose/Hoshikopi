@@ -4,3 +4,9 @@ export {
   GUEST_PAY_AT_PICKUP_MAX_DRINKS,
   MAX_DRINKS_PER_ORDER,
 } from "./internal/rules";
+export {
+  nextOrderCode,
+  transition,
+  type Actor,
+  type TransitionResult,
+} from "./internal/status";
