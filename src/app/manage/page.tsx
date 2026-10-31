@@ -13,6 +13,7 @@ const ROLE = { barista: "Barista", manager: "Manager", customer: "Customer" };
 // What each role may open; pages also check for themselves.
 const AREAS: { href: string; label: string; roles: Staff["role"][] }[] = [
   { href: "/manage/menu", label: "Menu", roles: ["barista", "manager"] },
+  { href: "/manage/hours", label: "Hours and Capacity", roles: ["manager"] },
   { href: "/manage/cafe", label: "Cafe details", roles: ["manager"] },
 ];
 
