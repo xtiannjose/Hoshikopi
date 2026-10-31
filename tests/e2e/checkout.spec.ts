@@ -23,6 +23,7 @@ test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
   ).toBeVisible();
   await expectNoAxeViolations(page);
 
+  await page.getByText("Pay at Pickup", { exact: true }).click();
   await page.getByLabel("Name").fill("Bea");
   await page.getByLabel("Email").fill("bea@example.com");
   await page.getByRole("button", { name: /Place order, PHP 260/ }).click();
@@ -75,13 +76,17 @@ test("a Guest can't pay at pickup for more than 4 drinks (PAY-02)", async ({
   await addToCart(page, "kopi-hitam", 5);
   await page.goto("/checkout");
   await expect(
-    page.getByText("Guests can pay at pickup for up to 4 drinks.")
+    page.getByText(
+      "Guests can pay at pickup for up to 4 drinks; pay online for more."
+    )
   ).toBeVisible();
+  await expect(page.getByText("Pay at Pickup", { exact: true })).toHaveCount(0);
 });
 
 test("an Order page needs its link token", async ({ page }) => {
   await addToCart(page, "kopi-hitam");
   await page.goto("/checkout");
+  await page.getByText("Pay at Pickup", { exact: true }).click();
   await page.getByLabel("Name").fill("Lorna");
   await page.getByLabel("Mobile number").fill("0917 123 4567");
   await page.getByRole("button", { name: /Place order/ }).click();

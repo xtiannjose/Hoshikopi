@@ -1,7 +1,11 @@
 // payments module: Payments, provider events, Refunds.
 // Other modules import only this file (docs/03-ARCHITECTURE.md section 3).
 export { fakeProvider, type FakeProvider } from "./internal/fake";
-export { paymentProvider, providerFor } from "./internal/provider";
+export {
+  paymentProvider,
+  providerFor,
+  signFakeEvent,
+} from "./internal/provider";
 export type {
   Checkout,
   CheckoutRequest,
@@ -9,3 +13,12 @@ export type {
   PaymentProvider,
   ProviderEvent,
 } from "./internal/types";
+export {
+  paymentByCheckout,
+  paymentForOrder,
+  recordPaymentEvent,
+  startPayment,
+  verifyWebhookEvent,
+  type RecordedEvent,
+  type VerifiedEvent,
+} from "./internal/payments";

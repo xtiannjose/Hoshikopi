@@ -12,10 +12,11 @@ import {
   type Counts,
 } from "@/modules/cafe";
 import { clearCart, getCart, type CartOwner } from "@/modules/cart";
+import { startPayment, type OnlineMethod } from "@/modules/payments";
 
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS, MAX_DRINKS_PER_ORDER } from "./rules";
 import { emailOrderPlaced } from "./emails";
-import { hashToken, orderToken } from "./links";
+import { hashToken, orderLink, orderToken } from "./links";
 import { nextOrderCode } from "./status";
 import { offeredWindows } from "./windows";
 
@@ -43,12 +44,15 @@ export type PlaceOrderResult =
       windowStart: Date;
       /** For the status link; only its hash is stored. */
       accessToken: string;
+      /** The provider's hosted checkout for online Payment Methods. */
+      checkoutUrl: string | null;
+      totalCents: number;
     }
   | { ok: false; reason: "invalid"; errors: Partial<Record<string, string>> }
   | { ok: false; reason: "closed" | "paused" | "cart_problem" }
   | { ok: false; reason: "price_changed"; totalCents: number }
   | { ok: false; reason: "too_many_drinks" | "pay_at_pickup_limit" }
-  | { ok: false; reason: "payment_unavailable" }
+  | { ok: false; reason: "payment_start_failed" }
   | { ok: false; reason: "window_unavailable" | "no_window" }
   | { ok: false; reason: "window_full"; nextWindow: Date | null };
 
@@ -98,11 +102,6 @@ export async function placeOrder(
     }
     return { ok: false, reason: "invalid", errors };
   }
-  if (input.paymentMethod !== "pay_at_pickup") {
-    // Online Payment Methods arrive with Phase 3.
-    return { ok: false, reason: "payment_unavailable" };
-  }
-
   const result = await db.$transaction(
     async (tx): Promise<PlaceOrderResult> => {
       const at = now();
@@ -130,6 +129,7 @@ export async function placeOrder(
         return { ok: false, reason: "too_many_drinks" };
       }
       if (
+        input.paymentMethod === "pay_at_pickup" &&
         input.memberId === null &&
         cart.drinks > GUEST_PAY_AT_PICKUP_MAX_DRINKS
       ) {
@@ -232,12 +232,35 @@ export async function placeOrder(
         },
       });
       await clearCart(input.owner, tx);
-      return { ok: true, orderId: order.id, code, windowStart, accessToken };
+      return {
+        ok: true,
+        orderId: order.id,
+        code,
+        windowStart,
+        accessToken,
+        checkoutUrl: null,
+        totalCents: order.totalCents,
+      };
     }
   );
+  if (!result.ok) return result;
   // Pay at Pickup goes to the bar now; online Orders email once paid.
-  if (result.ok && input.paymentMethod === "pay_at_pickup") {
+  if (input.paymentMethod === "pay_at_pickup") {
     await emailOrderPlaced(result.orderId);
+    return result;
   }
-  return result;
+  try {
+    const { checkoutUrl } = await startPayment({
+      orderId: result.orderId,
+      orderCode: result.code,
+      amountCents: result.totalCents,
+      method: input.paymentMethod as OnlineMethod,
+      returnUrl: orderLink(result.orderId),
+    });
+    return { ...result, checkoutUrl };
+  } catch (error) {
+    // The Order stays Placed and Expires in 15 minutes, freeing its window.
+    console.error("[payments] checkout not started:", error);
+    return { ok: false, reason: "payment_start_failed" };
+  }
 }

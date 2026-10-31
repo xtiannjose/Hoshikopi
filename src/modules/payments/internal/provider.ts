@@ -1,6 +1,6 @@
-import { fakeProvider } from "./fake";
+import { fakeProvider, type FakeProvider } from "./fake";
 import { payMongoProvider } from "./paymongo";
-import type { PaymentProvider } from "./types";
+import type { PaymentProvider, ProviderEvent } from "./types";
 
 const LOCAL = ["localhost", "127.0.0.1"];
 
@@ -44,4 +44,11 @@ let current: PaymentProvider | null = null;
 export function paymentProvider(): PaymentProvider {
   current ??= providerFor(process.env);
   return current;
+}
+
+/** Signs an event as the fake checkout page sends it; fake provider only. */
+export function signFakeEvent(event: ProviderEvent) {
+  const provider = paymentProvider();
+  if (provider.name !== "fake") throw new Error("Not the fake provider");
+  return (provider as FakeProvider).signedEvent(event);
 }
