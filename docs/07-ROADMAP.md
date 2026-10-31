@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 and 1 done. **Next: Phase 2, batch 2.1** (hours, Capacity, Prep Time).
+- **Build:** Phases 0 and 1 done; batch 2.1 done. **Next: Phase 2, batch 2.2** (Cart).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -84,7 +84,7 @@ Goal: a beautiful, fast menu and cafe page that a Manager can edit.
 
 Goal: a Guest orders and pays at pickup; a Barista runs the Order to Picked Up.
 
-- [ ] **2.1 Hours, Capacity, Prep Time.** `cafe` module: `isOpen`, Pickup Windows, Capacity per weekday, Ordering Paused, Prep Time formula; Manager pages for hours, Special Hours, Capacity and pause (STAFF-05); tests first.
+- [x] **2.1 Hours, Capacity, Prep Time.** `cafe` module: `isOpen`, Pickup Windows, Capacity per weekday, Ordering Paused, Prep Time formula; Manager pages for hours, Special Hours, Capacity and pause (STAFF-05); tests first. Done 2026-10-31 test-first: `getOrderingDay` (fresh read: hours with Special Hours, Capacity for the weekday, pause, Prep Time settings), `orderingState`, `prepMinutes` and `pickupWindows`, which takes the window counts as an argument because `pickup_window_usage` belongs to `ordering`; windows start once the Order can be ready and end by closing; `/manage/hours` for STAFF-05.
 - [ ] **2.2 Cart.** Option picker becomes orderable; Cart with merge, edit and remove; Guest cookie; server pricing; Sold Out Lines flagged (ORD-01, ORD-02, ORD-06).
 - [ ] **2.3 Order Status machine.** `ordering` module: transitions table, `transition()`, `order_events`, Order Codes; every transition tested (section 7 of the architecture).
 - [ ] **2.4 Checkout and placement.** Pickup Time picker (ASAP and Scheduled), contact details, Pay at Pickup; `placeOrder` with the window lock; closed and paused refusals; the 15-drink cap and the Guest limit for Pay at Pickup; the Last Order countdown on the hero card and at checkout (ORD-03 to ORD-05, ORD-07, ORD-12, ORD-13, PAY-02).
