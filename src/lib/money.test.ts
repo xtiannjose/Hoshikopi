@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { addMoney, formatPrice, formatReceipt, vatPart } from "./money";
+import {
+  addMoney,
+  formatDelta,
+  formatPrice,
+  formatReceipt,
+  vatPart,
+} from "./money";
 
 describe("formatPrice (menu)", () => {
   it("drops zero centavos", () => {
@@ -11,6 +17,16 @@ describe("formatPrice (menu)", () => {
   });
   it("groups thousands", () => {
     expect(formatPrice(125000)).toBe("PHP 1,250");
+  });
+});
+
+describe("formatDelta (Option chips)", () => {
+  it("shows what an Option adds without the currency", () => {
+    expect(formatDelta(3500)).toBe("+35");
+    expect(formatDelta(3550)).toBe("+35.50");
+  });
+  it("is empty for a free Option", () => {
+    expect(formatDelta(0)).toBe("");
   });
 });
 
