@@ -1,7 +1,7 @@
 // The only place that reads "now" (CLAUDE.md). Store UTC, define and show
 // hours in Asia/Manila, which is UTC+8 all year (no daylight saving).
 
-const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
+export const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
 
 let frozen: Date | null = null;
 
