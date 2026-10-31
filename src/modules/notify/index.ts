@@ -4,6 +4,7 @@ import { send } from "./internal/outbox";
 import {
   orderPlacedEmail,
   orderReadyEmail,
+  orderRefundedEmail,
   type OrderForEmail,
 } from "./internal/templates";
 
@@ -25,4 +26,9 @@ export async function sendOrderPlaced(order: OrderForEmail, link: string) {
 /** "Ready for pickup" (ORD-10). */
 export async function sendOrderReady(order: OrderForEmail) {
   await send(orderReadyEmail(order));
+}
+
+/** "Refunded in full" (PAY-05). */
+export async function sendOrderRefunded(order: OrderForEmail) {
+  await send(orderRefundedEmail(order));
 }

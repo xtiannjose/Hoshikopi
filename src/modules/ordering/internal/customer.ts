@@ -2,7 +2,8 @@ import type { OrderStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
 import { tokenMatches } from "./links";
-import { transition, type TransitionResult } from "./status";
+import { cancelOrder } from "./refund";
+import type { TransitionResult } from "./status";
 
 async function orderWithToken(id: string, token: string) {
   const order = await db.order.findUnique({
@@ -21,7 +22,8 @@ export async function cancelByCustomer(
 ): Promise<TransitionResult> {
   const order = await orderWithToken(id, token);
   if (!order) return { ok: false, reason: "not_found" };
-  return transition(order.id, "cancelled", { kind: "customer" });
+  // A paid Order goes on to a full Refund (ORD-09).
+  return cancelOrder(order.id, { kind: "customer" });
 }
 
 /** A small answer for the status page's polling (ADR 0009). */

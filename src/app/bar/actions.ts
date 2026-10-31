@@ -1,7 +1,7 @@
 "use server";
 
 import { requireStaff } from "@/modules/identity";
-import { transition } from "@/modules/ordering";
+import { cancelOrder, transition } from "@/modules/ordering";
 
 const NEXT = {
   placed: "accepted",
@@ -25,9 +25,8 @@ export async function advanceOrder(id: string, from: keyof typeof NEXT) {
 /** A Manager cancels with a reason, behind a confirm. */
 export async function cancelAtBar(id: string, reason: string) {
   const staff = await requireStaff("manager", "/bar");
-  const result = await transition(
+  const result = await cancelOrder(
     id,
-    "cancelled",
     { kind: "staff", id: staff.id, role: staff.role },
     reason
   );

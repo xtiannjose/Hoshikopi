@@ -102,7 +102,7 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 | `ready` | `picked_up` | Barista (marks paid at the counter for Pay at Pickup) | Stars earned (`loyalty`); Redemption final |
 | `placed`, `paid` | `cancelled` | Customer, before `accepted` | Window and Stars released; a paid Order goes on to `refunded` |
 | any before `picked_up` | `cancelled` | Manager | Same as above; reason required |
-| `cancelled` (was paid), `picked_up` | `refunded` | Manager | Full PayMongo refund; Stars earned are taken back |
+| `cancelled` (was paid), `picked_up` | `refunded` | Manager; also the system, right after a Customer cancels a paid Order | Full refund through the provider (cash at the counter for Pay at Pickup); Stars earned are taken back |
 
 `transition(orderId, to, actor)` checks the table, locks the Order row, applies side effects and writes an `order_events` row. Anything else is a bug and throws. An Order left `ready` at closing stays `ready` for the Manager to close (V1 may add "not collected").
 

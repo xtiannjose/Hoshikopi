@@ -74,3 +74,21 @@ export function orderReadyEmail(order: OrderForEmail): Email {
     ].join("\n"),
   };
 }
+
+/** Refunded in full (PAY-05). */
+export function orderRefundedEmail(order: OrderForEmail): Email {
+  return {
+    to: order.customerEmail,
+    subject: `Order ${order.code} was refunded`,
+    text: [
+      `Your order ${order.code} was refunded in full: ${formatReceipt(order.totalCents)}.`,
+      order.paymentMethod === "pay_at_pickup"
+        ? "We refund it at the counter."
+        : "It goes back the way you paid (Test Mode: no real money moved).",
+      "",
+      "Sorry it didn't work out this time. Salamat for your patience.",
+      "",
+      FOOTER,
+    ].join("\n"),
+  };
+}

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import {
   sendOrderPlaced,
   sendOrderReady,
+  sendOrderRefunded,
   type OrderForEmail,
 } from "@/modules/notify";
 
@@ -53,5 +54,12 @@ export async function emailOrderReady(orderId: string) {
   await attempt("order ready", async () => {
     const order = await orderForEmail(orderId);
     if (order) await sendOrderReady(order);
+  });
+}
+
+export async function emailOrderRefunded(orderId: string) {
+  await attempt("order refunded", async () => {
+    const order = await orderForEmail(orderId);
+    if (order) await sendOrderRefunded(order);
   });
 }
