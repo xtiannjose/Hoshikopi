@@ -1,0 +1,560 @@
+// Source of truth for tables; docs/04-DATA-MODEL.md keeps the reasoning.
+// Covers the MVP; V1 tables (inquiries, recurring_events) arrive in Phase 6.
+//
+// Constraints Prisma cannot express (CHECKs, the order_events append-only
+// trigger) live in hand-edited migration SQL. Money is integer centavos in
+// *_cents columns (ADR 0002). Times are UTC; opening times are Manila time.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- menu ----------
+
+model Category {
+  id        String     @id @default(cuid())
+  slug      String     @unique
+  name      String
+  sort      Int        @default(0)
+  isHidden  Boolean    @default(false) @map("is_hidden")
+  items     MenuItem[]
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id           String                @id @default(cuid())
+  categoryId   String                @map("category_id")
+  category     Category              @relation(fields: [categoryId], references: [id])
+  slug         String                @unique
+  name         String
+  description  String
+  baseCents    Int                   @map("base_cents")
+  isDrink      Boolean               @map("is_drink")
+  // new, best_seller, barista_pick, vegan, no_caffeine
+  badges       String[]              @default([])
+  // milk, egg, wheat, soy, peanuts, tree_nuts, fish, shellfish, sesame
+  allergens    String[]              @default([])
+  photoUrl     String?               @map("photo_url")
+  photoAlt     String?               @map("photo_alt")
+  // Sold Out while this equals the cafe's service day.
+  soldOutOn    DateTime?             @map("sold_out_on") @db.Date
+  isHidden     Boolean               @default(false) @map("is_hidden")
+  sort         Int                   @default(0)
+  optionGroups MenuItemOptionGroup[]
+  cartLines    CartLine[]
+  orderLines   OrderLine[]
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([categoryId])
+  @@map("menu_items")
+}
+
+model OptionGroup {
+  id        String                @id @default(cuid())
+  name      String
+  minSelect Int                   @map("min_select")
+  maxSelect Int                   @map("max_select")
+  sort      Int                   @default(0)
+  options   Option[]
+  menuItems MenuItemOptionGroup[]
+  createdAt DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("option_groups")
+}
+
+model MenuItemOptionGroup {
+  menuItemId    String      @map("menu_item_id")
+  menuItem      MenuItem    @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  optionGroupId String      @map("option_group_id")
+  optionGroup   OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+  sort          Int         @default(0)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@id([menuItemId, optionGroupId])
+  @@map("menu_item_option_groups")
+}
+
+model Option {
+  id            String      @id @default(cuid())
+  optionGroupId String      @map("option_group_id")
+  optionGroup   OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+  name          String
+  deltaCents    Int         @default(0) @map("delta_cents")
+  isDefault     Boolean     @default(false) @map("is_default")
+  addsAllergens String[]    @default([]) @map("adds_allergens")
+  soldOutOn     DateTime?   @map("sold_out_on") @db.Date
+  sort          Int         @default(0)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([optionGroupId])
+  @@map("options")
+}
+
+// ---------- cafe ----------
+
+model OpeningHours {
+  weekday     Int      @id @db.SmallInt // 0 Sunday to 6 Saturday
+  opensAt     DateTime @map("opens_at") @db.Time(0)
+  lastOrderAt DateTime @map("last_order_at") @db.Time(0)
+  closesAt    DateTime @map("closes_at") @db.Time(0)
+  isClosed    Boolean  @default(false) @map("is_closed")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("opening_hours")
+}
+
+model SpecialHours {
+  day         DateTime  @id @db.Date
+  isClosed    Boolean   @map("is_closed")
+  opensAt     DateTime? @map("opens_at") @db.Time(0)
+  lastOrderAt DateTime? @map("last_order_at") @db.Time(0)
+  closesAt    DateTime? @map("closes_at") @db.Time(0)
+  note        String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("special_hours")
+}
+
+model CapacityRule {
+  weekday         Int      @id @db.SmallInt
+  drinksPerWindow Int      @map("drinks_per_window")
+  foodPerWindow   Int      @map("food_per_window")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("capacity_rules")
+}
+
+// Singleton row (id 1). No street, house number or phone (PRD section 2).
+// A null Amenity is unknown and left off the page.
+model CafeSettings {
+  id                  Int       @id @default(1)
+  orderingPausedUntil DateTime? @map("ordering_paused_until") @db.Timestamptz(3)
+  pauseMessage        String?   @map("pause_message")
+  prepBaseMinutes     Decimal   @map("prep_base_minutes") @db.Decimal(4, 1)
+  prepPerDrinkMinutes Decimal   @map("prep_per_drink_minutes") @db.Decimal(4, 1)
+  orderCodePrefix     String    @map("order_code_prefix")
+  area                String
+  mapLat              Decimal   @map("map_lat") @db.Decimal(8, 5)
+  mapLng              Decimal   @map("map_lng") @db.Decimal(8, 5)
+  directionsMd        String    @map("directions_md")
+  contactEmail        String    @map("contact_email")
+  spaceMd             String    @map("space_md")
+  storyMd             String    @map("story_md")
+  wifi                Boolean?
+  powerOutlets        Boolean?  @map("power_outlets")
+  petsAllowed         Boolean?  @map("pets_allowed")
+  smokingAllowed      Boolean?  @map("smoking_allowed")
+  restroom            Boolean?
+  stepFreeEntrance    Boolean?  @map("step_free_entrance")
+  accessibleRestroom  Boolean?  @map("accessible_restroom")
+  laptopNote          String?   @map("laptop_note")
+  petsNote            String?   @map("pets_note")
+  parkingNote         String?   @map("parking_note")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("cafe_settings")
+}
+
+// ---------- cart ----------
+
+// Exactly one owner: a Guest token or a Member (check constraint).
+model Cart {
+  id             String     @id @default(cuid())
+  guestTokenHash String?    @unique @map("guest_token_hash")
+  memberId       String?    @unique @map("member_id")
+  member         User?      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  lines          CartLine[]
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("carts")
+}
+
+// Choices only, never prices. choice_key = item + sorted Options + note.
+model CartLine {
+  id         String   @id @default(cuid())
+  cartId     String   @map("cart_id")
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  menuItemId String   @map("menu_item_id")
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  optionIds  String[] @map("option_ids")
+  quantity   Int
+  note       String   @default("")
+  choiceKey  String   @map("choice_key")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([cartId, choiceKey])
+  @@map("cart_lines")
+}
+
+// ---------- ordering ----------
+
+enum OrderStatus {
+  placed
+  paid
+  accepted
+  preparing
+  ready
+  picked_up
+  cancelled
+  expired
+  refunded
+}
+
+enum PickupKind {
+  asap
+  scheduled
+}
+
+enum PaymentMethod {
+  gcash
+  maya
+  card
+  pay_at_pickup
+}
+
+enum ActorKind {
+  customer
+  staff
+  system
+  webhook
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  serviceDay      DateTime      @map("service_day") @db.Date
+  code            String
+  status          OrderStatus
+  memberId        String?       @map("member_id")
+  member          User?         @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  customerName    String        @map("customer_name")
+  customerEmail   String?       @map("customer_email")
+  customerPhone   String?       @map("customer_phone")
+  pickupKind      PickupKind    @map("pickup_kind")
+  windowStart     DateTime      @map("window_start") @db.Timestamptz(3)
+  paymentMethod   PaymentMethod @map("payment_method")
+  totalCents      Int           @map("total_cents")
+  rewardStars     Int           @default(0) @map("reward_stars")
+  accessTokenHash String        @map("access_token_hash")
+  paidAtCounter   Boolean       @default(false) @map("paid_at_counter")
+  cancelReason    String?       @map("cancel_reason")
+  placedAt        DateTime      @map("placed_at") @db.Timestamptz(3)
+  paidAt          DateTime?     @map("paid_at") @db.Timestamptz(3)
+  acceptedAt      DateTime?     @map("accepted_at") @db.Timestamptz(3)
+  readyAt         DateTime?     @map("ready_at") @db.Timestamptz(3)
+  pickedUpAt      DateTime?     @map("picked_up_at") @db.Timestamptz(3)
+  cancelledAt     DateTime?     @map("cancelled_at") @db.Timestamptz(3)
+  lines           OrderLine[]
+  events          OrderEvent[]
+  payment         Payment?
+  starEntries     StarEntry[]
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([serviceDay, code])
+  @@index([status, windowStart])
+  @@index([memberId])
+  @@map("orders")
+}
+
+// Snapshot at placement; never changes after.
+model OrderLine {
+  id         String    @id @default(cuid())
+  orderId    String    @map("order_id")
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String?   @map("menu_item_id")
+  menuItem   MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  name       String
+  // [{ group, name, deltaCents }]
+  options    Json
+  unitCents  Int       @map("unit_cents")
+  quantity   Int
+  lineCents  Int       @map("line_cents")
+  isDrink    Boolean   @map("is_drink")
+  isReward   Boolean   @default(false) @map("is_reward")
+  note       String?
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([orderId])
+  @@map("order_lines")
+}
+
+// Append-only (a trigger refuses UPDATE and DELETE).
+model OrderEvent {
+  id         String       @id @default(cuid())
+  orderId    String       @map("order_id")
+  order      Order        @relation(fields: [orderId], references: [id])
+  fromStatus OrderStatus? @map("from_status")
+  toStatus   OrderStatus  @map("to_status")
+  actorKind  ActorKind    @map("actor_kind")
+  actorId    String?      @map("actor_id")
+  reason     String?
+  at         DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@index([orderId])
+  @@map("order_events")
+}
+
+// Counts taken per 15-minute Pickup Window; locked in placeOrder (ADR 0007).
+model PickupWindowUsage {
+  windowStart DateTime @id @map("window_start") @db.Timestamptz(3)
+  serviceDay  DateTime @map("service_day") @db.Date
+  drinks      Int      @default(0)
+  food        Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([serviceDay])
+  @@map("pickup_window_usage")
+}
+
+model OrderCodeCounter {
+  serviceDay DateTime @id @map("service_day") @db.Date
+  lastNumber Int      @default(0) @map("last_number")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("order_code_counters")
+}
+
+// ---------- payments ----------
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  expired
+  refunded
+}
+
+model Payment {
+  id                 String        @id @default(cuid())
+  orderId            String        @unique @map("order_id")
+  order              Order         @relation(fields: [orderId], references: [id])
+  provider           String // paymongo or fake
+  providerCheckoutId String        @map("provider_checkout_id")
+  providerPaymentId  String?       @map("provider_payment_id")
+  checkoutUrl        String        @map("checkout_url")
+  method             PaymentMethod
+  amountCents        Int           @map("amount_cents")
+  status             PaymentStatus @default(pending)
+  refunds            Refund[]
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([providerCheckoutId])
+  @@map("payments")
+}
+
+// Webhook dedupe: a repeated event changes nothing.
+model PaymentEvent {
+  id              String   @id @default(cuid())
+  provider        String
+  providerEventId String   @map("provider_event_id")
+  type            String
+  payload         Json
+  receivedAt      DateTime @default(now()) @map("received_at") @db.Timestamptz(3)
+
+  @@unique([provider, providerEventId])
+  @@map("payment_events")
+}
+
+model Refund {
+  id               String   @id @default(cuid())
+  paymentId        String   @map("payment_id")
+  payment          Payment  @relation(fields: [paymentId], references: [id])
+  providerRefundId String   @map("provider_refund_id")
+  amountCents      Int      @map("amount_cents")
+  reason           String
+  actorId          String   @map("actor_id")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([paymentId])
+  @@map("refunds")
+}
+
+// ---------- loyalty ----------
+
+enum StarKind {
+  earn
+  reserve
+  release
+  reverse
+  adjust
+}
+
+// Balance = sum of stars (ADR 0008).
+model StarEntry {
+  id        String   @id @default(cuid())
+  memberId  String   @map("member_id")
+  member    User     @relation("MemberStars", fields: [memberId], references: [id], onDelete: Cascade)
+  orderId   String?  @map("order_id")
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  kind      StarKind
+  stars     Int
+  reason    String?
+  actorId   String?  @map("actor_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([memberId])
+  @@index([orderId])
+  @@map("star_entries")
+}
+
+// ---------- content ----------
+
+model Event {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  startsAt    DateTime @map("starts_at") @db.Timestamptz(3)
+  endsAt      DateTime @map("ends_at") @db.Timestamptz(3)
+  summary     String
+  bodyMd      String   @map("body_md")
+  photoUrl    String?  @map("photo_url")
+  photoAlt    String?  @map("photo_alt")
+  priceCents  Int?     @map("price_cents")
+  signupUrl   String?  @map("signup_url")
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([startsAt])
+  @@map("events")
+}
+
+// Unpublished while published_at is null.
+model Post {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  bodyMd      String    @map("body_md")
+  coverUrl    String?   @map("cover_url")
+  coverAlt    String?   @map("cover_alt")
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+  authorId    String?   @map("author_id")
+  author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([publishedAt])
+  @@map("posts")
+}
+
+// ---------- identity: Better Auth tables plus roles and audit ----------
+// Fields follow the Better Auth core schema; ids are strings it generates.
+
+enum Role {
+  customer
+  barista
+  manager
+}
+
+model User {
+  id             String      @id
+  name           String
+  email          String      @unique
+  emailVerified  Boolean     @default(false) @map("email_verified")
+  image          String?
+  role           Role        @default(customer)
+  birthMonth     Int?        @map("birth_month") @db.SmallInt
+  marketingOptIn Boolean     @default(false) @map("marketing_opt_in")
+  deletedAt      DateTime?   @map("deleted_at") @db.Timestamptz(3)
+  sessions       Session[]
+  accounts       Account[]
+  cart           Cart?
+  orders         Order[]
+  stars          StarEntry[] @relation("MemberStars")
+  posts          Post[]
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  token     String   @unique
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+// Every Staff write.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String   @map("actor_id")
+  action     String
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  data       Json     @default("{}")
+  at         DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([targetType, targetId])
+  @@map("audit_log")
+}
+
+// Postgres-backed rate limiter.
+model RateLimit {
+  key         String
+  windowStart DateTime @map("window_start") @db.Timestamptz(3)
+  count       Int      @default(0)
+
+  @@id([key, windowStart])
+  @@map("rate_limits")
+}
