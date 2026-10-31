@@ -14,6 +14,8 @@ afterAll(() => db.$disconnect());
 describe("seed", () => {
   it("loads the menu, hours, cafe details and Staff", async () => {
     expect(await db.category.count()).toBe(6);
+    // Every Menu Item has alt text ready for its concept image (ADR 0012).
+    expect(await db.menuItem.count({ where: { photoAlt: null } })).toBe(0);
     const latte = await db.menuItem.findUniqueOrThrow({
       where: { slug: "hoshi-latte" },
       include: { optionGroups: true },

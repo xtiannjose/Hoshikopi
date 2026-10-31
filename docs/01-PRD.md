@@ -27,7 +27,7 @@ Change a row here and every other document should follow. "Invented" rows are sh
 | Market | Metro Manila, Philippines | confirmed 2026-10-30 |
 | Cafe location | One invented cafe in Kapitolyo, Pasig. The site shows the neighbourhood only, with no street or house number, and the map pin sits on a public spot, so the address can never lead anyone to a real home (research C-54) | invented |
 | Contact details | No phone number is shown; questions and large Orders go by email, to an address the owner controls. No social links until the owner runs real accounts (research C-54) | confirmed 2026-10-30 |
-| Room photos | AI-generated photos of one consistent room, labelled "Concept image" (research C-43). Menu photos are still decided in batch 1.2 | confirmed 2026-10-30 |
+| Room and menu photos | AI-generated concept images of one consistent room and menu, labelled "Concept image" (research C-43, [ADR 0012](adr/0012-concept-images-with-stand-ins.md)); stand-in panels until they are made | confirmed 2026-10-31 |
 | Look | The Night wireframe's layout; the Day palette from 6:00 AM and the Night palette from 6:00 PM, Manila time; visitors can pin one (ADR 0010) | confirmed 2026-10-30 |
 | Locale and time | `en-PH`, Filipino-English voice; Manila time (`Asia/Manila`) | confirm (Phase 0) |
 | Currency | PHP, prices include VAT, shown as `PHP 165` (no centavos on the menu) | confirm (Phase 1) |
@@ -190,7 +190,7 @@ Portfolio targets, measured in the Phase 7 review:
 
 | Topic | Risk or question | Plan |
 | --- | --- | --- |
-| Photos | Menu photos need rights: stock, own shots or AI-generated? Room photos are settled (section 2) | Decide menu photos in Phase 1 (ADR); label stand-ins |
+| Photos | Concept images are still to be generated (`docs/ASSETS.md`) | Stand-in panels until then (ADR 0012) |
 | PayMongo account | Test keys need a PayMongo account | The `fake` provider runs everything until then (PAY-06) |
 | Realtime | Bar Screen and status page need near-live updates on serverless hosting | Polling every few seconds first; revisit Server-Sent Events if needed (`docs/03-ARCHITECTURE.md`) |
 | Email sender | Order emails need a sending service and a domain | Resend with its test sender until a domain exists |
