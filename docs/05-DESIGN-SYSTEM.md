@@ -1,6 +1,6 @@
 # Design System
 
-Status: draft v0.1, 2026-10-30. The look and feel of Hoshikopi. Batch 1.1 builds two quick prototypes of the direction below with the same look and content (the `prototype` and `design-taste-frontend` skills): Sample A with native elements and CSS only, Sample B with library parts (`docs/07-ROADMAP.md` batch 1.1). The owner picks one, an ADR records it, and this document is then updated to match.
+Status: v0.2, 2026-10-31. The look and feel of Hoshikopi. Built with native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)); library parts (the old Sample B) were not built.
 
 ## 1. Design read
 
@@ -89,7 +89,7 @@ Values are starting points for the Phase 1 prototypes; they must pass the contra
 | Display and headings | Fraunces (variable, soft optical sizes) | Warm serif with character for the menu and hero; open font licence |
 | Text and UI | Plus Jakarta Sans (variable) | Clear at small sizes; made by an Indonesian foundry, a nod to kopi; open font licence |
 | Order Codes and prices in tables | Plus Jakarta Sans with tabular figures | `font-variant-numeric: tabular-nums` |
-| Typewriter accents (to try in batch 1.1) | Courier Prime, regular only | Prices in the printed-menu section, short notes under items, dates, small label buttons (the Flora feel, section 1.1); never body text; open font licence |
+| Typewriter accents | Courier Prime, regular only | Prices in the printed-menu section, short notes under items, dates, small label buttons (the Flora feel, section 1.1); never body text; open font licence |
 
 Self-hosted through `next/font`, `display: swap`: two variable families, plus the mono at one weight if batch 1.1 keeps it. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for Posts.
 
@@ -126,11 +126,11 @@ Self-hosted through `next/font`, `display: swap`: two variable families, plus th
 | Concept Notice | A slim footer line and a short note on checkout: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration." It links to `/concept` |
 | Bar Screen card | See section 9 |
 
-Library components come through the shadcn CLI only when a native element cannot do the job; each one must earn its place on a page. Batch 1.1 Sample B tries decorative parts from the iOne research (`C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`); forms and the Cart drawer stay native in both samples.
+Native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)). A library component needs a new ADR that shows a native element cannot do the job.
 
 ## 7. Motion
 
-- CSS first: transitions, `@starting-style` for entering elements, View Transitions for the menu-to-item navigation where supported. No animation library unless a later ADR adds one; batch 1.1 Sample B tries Motion (`motion`) and its ADR decides.
+- CSS only: transitions, `@starting-style` for entering elements, View Transitions for the menu-to-item navigation where supported. No animation library ([ADR 0011](adr/0011-native-elements-and-css.md)).
 - Durations 150 to 250 ms for UI, up to 600 ms for the Star Card fill; ease-out curves.
 - The only "delight" moments: a Star lighting up on the Star Card after pickup, the Ready step on the status page, and the ring turning into a star when a Pickup Window or the menu View is picked (350 ms). All are skipped with reduced motion.
 - Nothing animates while the Customer is choosing Options or paying.

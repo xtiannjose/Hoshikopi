@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phase 0 done (batches 0.1 to 0.6). **Next: Phase 1, batch 1.1** (design direction).
+- **Build:** Phase 0 done; batch 1.1 done. **Next: Phase 1, batch 1.2** (photos and assets).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -72,7 +72,7 @@ Goal: an empty but real app with the database, auth skeleton, design tokens and 
 
 Goal: a beautiful, fast menu and cafe page that a Manager can edit.
 
-- [ ] **1.1 Design direction.** Two quick prototypes of Home and a Menu Item page (`prototype`, `design-taste-frontend`), built on the chosen wireframe (Night's layout, Day and Night palettes by time, ADR 0010) with the same content and photos (`docs/05-DESIGN-SYSTEM.md` section 1.2). Sample A: native elements and CSS only. Sample B: library parts from the iOne research (`C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`: Kokonut, beUI, Animate UI Radix, Motion), on Home and Stars only; forms stay native. Each shown at 375 and 1280 px with its first-load JavaScript size and mobile Lighthouse score. The owner picks; ADR; design system updated; the other sample is deleted.
+- [x] **1.1 Design direction.** Done 2026-10-31 without the two samples: the owner asked for the site to be built straight through, so Sample A (native elements and CSS) was recorded as the approach ([ADR 0011](adr/0011-native-elements-and-css.md)); Sample B can still be asked for.
 - [ ] **1.2 Photos and assets.** Menu photo decision (ADR); `docs/ASSETS.md`; stand-in photos for the seeded menu, each with alt text; 4 to 6 AI-generated room photos of one consistent room, captioned "Concept image" (PRD section 2).
 - [ ] **1.3 Menu pages.** `/menu` by Category, `/menu/item/[slug]` with Option Groups shown (not yet orderable), badges including Barista Pick, Sold Out and Hidden (MENU-01 to MENU-04); the allergen line (MENU-07); the pickup and Dine-in line (INFO-06); Menu Item share cards (INFO-09); prerendered with the `menu` cache tag.
 - [ ] **1.4 Cafe page and home.** `/cafe`: Opening Hours with Special Hours, "open now", map link, directions, the space, Amenities, the FAQ with ordering and Stars questions, story (INFO-01, INFO-04 to INFO-07); Day and Night hero copy (INFO-12); home in the order of `docs/05-DESIGN-SYSTEM.md` section 6: hero with Order ahead and Plan your visit, Barista picks this week, the printed-menu section, the space, visit block (INFO-08); `/manage/cafe` for the cafe's details and Amenities (STAFF-09); CafeOrCoffeeShop structured data (INFO-02, INFO-03).
