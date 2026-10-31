@@ -8,8 +8,8 @@ export type Email = { to: string; subject: string; text: string };
 
 /**
  * Sends through Resend's REST API when RESEND_API_KEY is set (no SDK).
- * Without a key, emails go to the terminal and, off Vercel, to data/mail/
- * where end-to-end tests read them (docs/06-SETUP.md section 2).
+ * Without a key, emails go to the terminal and data/mail/, where end-to-end
+ * tests read them (docs/06-SETUP.md section 2); on Vercel they are dropped.
  */
 export async function send(email: Email): Promise<void> {
   const key = process.env.RESEND_API_KEY;
@@ -32,8 +32,14 @@ export async function send(email: Email): Promise<void> {
     }
     return;
   }
+  if (process.env.VERCEL) {
+    // ADR 0005: sign-in links never sit in hosting logs; the demo needs Resend.
+    console.error(
+      `[email] not sent, RESEND_API_KEY is missing: ${email.subject}`
+    );
+    return;
+  }
   console.log(`\n[email] to ${email.to}: ${email.subject}\n${email.text}\n`);
-  if (process.env.VERCEL) return;
   const dir = path.join(process.cwd(), "data", "mail");
   await mkdir(dir, { recursive: true });
   const stamp = now().toISOString().replace(/[:.]/g, "-");

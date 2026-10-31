@@ -19,8 +19,8 @@ Windows notes: use PowerShell or Git Bash. In PowerShell, call `npm.cmd` if scri
 
 | Account | Needed for | Phase | Local stand-in until then |
 | --- | --- | --- | --- |
-| Neon (PostgreSQL, Singapore) | Hosted dev, test and preview databases | 6 | Docker Postgres (section 6) |
-| Vercel (Hobby) | Hosting the demo, Blob storage for photos, cron | 6 | `npm run dev` and photos in `public/menu/` |
+| Neon (PostgreSQL, Singapore) | The demo database | 5.4 | Docker Postgres (section 6) |
+| Vercel (Hobby) | Hosting the demo, Blob storage for photos, cron | 5.4 | `npm run dev` and photos in `public/menu/` |
 | PayMongo (test keys only) | GCash, Maya and Card in Test Mode | 3 | The `fake` payment provider |
 | Resend | Sign-in links and order emails | 2 | Emails written to the terminal and `data/mail/` |
 | Google Cloud OAuth client | "Sign in with Google" | 4 | Email link sign-in only |
@@ -85,7 +85,7 @@ Copy `.env.example` to `.env.local` and fill in what you have. Never commit `.en
 | `RESEND_API_KEY` | `re_...`; empty means emails go to the terminal | Phase 2 |
 | `MAIL_FROM` | `Hoshikopi <onboarding@resend.dev>` until a domain exists | Phase 2 |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty turns Google sign-in off | Phase 4 |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob; empty uses `public/menu/` | Phase 6 |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob; empty uses `public/menu/` | Batch 5.4 |
 | `CRON_SECRET` | random string; `/api/cron/daily` checks it | Phase 2 |
 
 ## 6. Database
@@ -150,3 +150,26 @@ Refresh it only when asked, after commits or a merge. To restore on another comp
 ```
 git clone "G:\My Drive\Coding Projects\Personal\Hoshikopi\hoshikopi.bundle" Hoshikopi
 ```
+
+## 9. Demo deploy (batch 5.4, needs the owner's accounts)
+
+The code is ready for Vercel: `vercel.json` runs `prisma migrate deploy` before `next build` and calls `/api/cron/daily` at 22:00 UTC (6:00 AM Manila, before opening). In order:
+
+1. **Neon** (region Singapore): create the project and copy two URLs: the pooled one (host has `-pooler`) and the direct one.
+2. **Resend**: create an API key. Until a domain is verified, Resend's test sender delivers only to the Resend account's own address, so only that address can sign in on the demo. Without a key, emails on Vercel are dropped (sign-in links never go to the logs).
+3. **Vercel**: import `xtiannjose/Hoshikopi` from GitHub and set these variables for Production and Preview:
+
+   | Variable | Value |
+   | --- | --- |
+   | `DATABASE_URL` | Neon pooled URL |
+   | `DIRECT_URL` | Neon direct URL (migrations) |
+   | `BETTER_AUTH_SECRET` | new: `npx @better-auth/cli secret` (never reuse the local one) |
+   | `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL` | `https://<project>.vercel.app` |
+   | `PAYMENT_PROVIDER` | `fake` (refuses any domain but `*.vercel.app` and previews) |
+   | `CRON_SECRET` | 32+ random characters |
+   | `RESEND_API_KEY`, `MAIL_FROM` | from step 2 |
+
+4. **Deploy**, then seed the menu once from your computer with the Neon direct URL: `$env:DATABASE_URL="<direct>"; $env:DIRECT_URL="<direct>"; npm run db:seed`.
+5. **Become a Manager**: sign in on the demo with your own email (it creates a Member), then in the Neon SQL editor run `UPDATE users SET role = 'manager' WHERE email = '<your email>';`. The next `/manage` visit asks you to set up the Second Factor.
+6. **Blob** (for photo uploads): create a Blob store in the Vercel project, which adds `BLOB_READ_WRITE_TOKEN`; photo uploads to Blob are built and tested then (until then the demo shows the stand-ins and uploads fail on Vercel's read-only disk).
+7. **Check**: Lighthouse on Home, `/menu` and a Menu Item with PageSpeed Insights against the budgets (`docs/05-DESIGN-SYSTEM.md` section 11), and the two-minute demo script (PRD section 8).
