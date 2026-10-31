@@ -3,7 +3,9 @@
 import { headers } from "next/headers";
 
 import { clientIp, takeToken } from "@/lib/rate-limit";
-import { emailSignInLink } from "@/modules/identity";
+import { redirect } from "next/navigation";
+
+import { emailSignInLink, googleSignInUrl } from "@/modules/identity";
 
 export type SignInState =
   | { status: "idle" }
@@ -49,4 +51,10 @@ export async function requestSignInLink(
       email,
     };
   }
+}
+
+/** Starts Google sign-in when its keys are set (ACC-01). */
+export async function googleSignInAction(form: FormData) {
+  const url = await googleSignInUrl(String(form.get("next") ?? ""));
+  if (url) redirect(url);
 }

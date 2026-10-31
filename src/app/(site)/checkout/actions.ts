@@ -7,6 +7,7 @@ import type { PaymentMethod } from "@/generated/prisma/enums";
 import { formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { currentCartOwner } from "@/modules/cart";
+import { currentMember } from "@/modules/identity";
 import {
   GUEST_PAY_AT_PICKUP_MAX_DRINKS,
   MAX_DRINKS_PER_ORDER,
@@ -60,7 +61,7 @@ export async function placeOrderAction(
   const method = String(form.get("paymentMethod")) as PaymentMethod;
   const result = await placeOrder({
     owner,
-    memberId: null,
+    memberId: (await currentMember())?.id ?? null,
     seenTotalCents: Number(form.get("seenTotalCents")),
     customerName: String(form.get("customerName") ?? ""),
     customerEmail: String(form.get("customerEmail") ?? ""),

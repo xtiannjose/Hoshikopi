@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CheckIcon } from "@phosphor-icons/react/ssr";
@@ -245,6 +246,12 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
               : "Not paid yet."}
         </p>
       </section>
+      {!order.isMember && (
+        <p className="bg-muted rounded-card mt-6 p-4">
+          Collect Stars next time: <Link href="/sign-in">sign in</Link> with
+          your email before you order. Nine Stars make a free drink.
+        </p>
+      )}
       <div className="mt-6">
         <PickupLine />
       </div>

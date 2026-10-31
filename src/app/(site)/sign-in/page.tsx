@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { safeNext } from "@/modules/identity";
+import { googleEnabled, safeNext } from "@/modules/identity";
+
+import { googleSignInAction } from "./actions";
 
 import { SignInForm } from "./sign-in-form";
 
@@ -33,5 +35,24 @@ async function Form({
   searchParams: PageProps<"/sign-in">["searchParams"];
 }) {
   const { next } = await searchParams;
-  return <SignInForm next={safeNext(typeof next === "string" ? next : null)} />;
+  const target = safeNext(typeof next === "string" ? next : null);
+  return (
+    <div className="grid gap-6">
+      {googleEnabled() && (
+        <>
+          <form action={googleSignInAction}>
+            <input type="hidden" name="next" value={target} />
+            <button
+              type="submit"
+              className="border-input min-h-12 w-full rounded-full border px-6 font-semibold"
+            >
+              Continue with Google
+            </button>
+          </form>
+          <p className="text-muted-foreground text-center text-sm">or</p>
+        </>
+      )}
+      <SignInForm next={target} />
+    </div>
+  );
 }

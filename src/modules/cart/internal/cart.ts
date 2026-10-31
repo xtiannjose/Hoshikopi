@@ -184,3 +184,49 @@ export async function removeLine(
 export async function clearCart(owner: CartOwner, client: Client = db) {
   await client.cartLine.deleteMany({ where: { cart: ownerWhere(owner) } });
 }
+
+/**
+ * On sign-in, a Guest's Cart joins the Member's: identical choices add up
+ * (at most 20 a Line), then the Guest Cart is gone (docs/03 section 5).
+ */
+export async function mergeGuestCart(
+  guest: CartOwner,
+  memberId: string
+): Promise<void> {
+  await db.$transaction(async (tx) => {
+    const from = await tx.cart.findUnique({
+      where: ownerWhere(guest),
+      include: { lines: true },
+    });
+    if (!from) return;
+    const to = await tx.cart.upsert({
+      where: { memberId },
+      update: {},
+      create: { memberId },
+    });
+    for (const line of from.lines) {
+      const existing = await tx.cartLine.findUnique({
+        where: {
+          cartId_choiceKey: { cartId: to.id, choiceKey: line.choiceKey },
+        },
+      });
+      if (existing) {
+        await tx.cartLine.update({
+          where: { id: existing.id },
+          data: {
+            quantity: Math.min(
+              existing.quantity + line.quantity,
+              MAX_LINE_QUANTITY
+            ),
+          },
+        });
+      } else {
+        await tx.cartLine.update({
+          where: { id: line.id },
+          data: { cartId: to.id },
+        });
+      }
+    }
+    await tx.cart.delete({ where: { id: from.id } });
+  });
+}

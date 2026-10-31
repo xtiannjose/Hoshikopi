@@ -10,7 +10,7 @@ import {
 import { getCart, type CartOwner, type CartView } from "@/modules/cart";
 
 import { expireUnpaid } from "./bar";
-import { tokenMatches } from "./links";
+import { orderLink, tokenMatches } from "./links";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS } from "./rules";
 import { offeredWindows } from "./windows";
 
@@ -72,6 +72,8 @@ export type OrderView = {
   cancelReason: string | null;
   /** Changes whenever the Order does; the page polls for it (ADR 0009). */
   version: string;
+  /** Guests are offered an account to keep Stars (ORD-05). */
+  isMember: boolean;
   /** The online Payment, if any: pending shows "Finish paying". */
   payment: { status: string; checkoutUrl: string } | null;
   lines: {
@@ -113,6 +115,7 @@ export async function getOrderForCustomer(
     cancelledAt: order.cancelledAt,
     cancelReason: order.cancelReason,
     version: `${order.status}:${order.updatedAt.getTime()}`,
+    isMember: order.memberId !== null,
     payment: order.payment
       ? { status: order.payment.status, checkoutUrl: order.payment.checkoutUrl }
       : null,
@@ -169,4 +172,23 @@ export async function dayOrders(day: string) {
     count: counted.length,
     totalCents: counted.reduce((sum, o) => sum + o.totalCents, 0),
   };
+}
+
+/** A Member's Orders, newest first, with their status links (ACC-02). */
+export async function ordersForMember(memberId: string, take = 20) {
+  const orders = await db.order.findMany({
+    where: { memberId },
+    orderBy: { placedAt: "desc" },
+    take,
+    include: { lines: { select: { name: true, quantity: true } } },
+  });
+  return orders.map((order) => ({
+    id: order.id,
+    code: order.code,
+    status: order.status,
+    placedAt: order.placedAt,
+    totalCents: order.totalCents,
+    summary: order.lines.map((l) => `${l.quantity} x ${l.name}`).join(", "),
+    link: orderLink(order.id).replace(/^https?:\/\/[^/]+/, ""),
+  }));
 }
