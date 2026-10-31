@@ -23,4 +23,6 @@ export async function openAllDayToday() {
      ON CONFLICT (day) DO NOTHING`,
     [today]
   );
+  // Every e2e Order comes from one IP, so reset the checkout limits.
+  await e2eQuery("DELETE FROM rate_limits WHERE key LIKE 'checkout%'");
 }

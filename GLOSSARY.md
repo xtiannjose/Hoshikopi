@@ -140,6 +140,10 @@ _Avoid_: Admin, owner (in code)
 The staff page on a tablet behind the counter that lists live Orders by Pickup Time and moves them through Order Status.
 _Avoid_: Kitchen display, KDS, POS, dashboard
 
+**Second Factor**:
+The 6-digit code from an authenticator app (TOTP) that Staff enter after the email link before using `/manage`, once per session. The Bar Screen does not ask for it (ADR 0005).
+_Avoid_: 2FA, MFA, OTP (in code; `twoFactor` only where the table is named)
+
 ### Loyalty
 
 **Star**:

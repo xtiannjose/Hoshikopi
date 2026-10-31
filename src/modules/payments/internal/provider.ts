@@ -23,8 +23,14 @@ export function providerFor(env: NodeJS.ProcessEnv): PaymentProvider {
     return payMongoProvider(key, env.PAYMONGO_WEBHOOK_SECRET);
   }
   if (env.NODE_ENV === "production") {
-    const host = new URL(env.NEXT_PUBLIC_SITE_URL ?? "http://localhost")
-      .hostname;
+    // Fail closed: no address could hide a real domain, and no secret would
+    // sign webhooks with a key anyone can read in this repository.
+    if (!env.NEXT_PUBLIC_SITE_URL || !env.BETTER_AUTH_SECRET) {
+      throw new Error(
+        "The fake payment provider needs NEXT_PUBLIC_SITE_URL and BETTER_AUTH_SECRET in production."
+      );
+    }
+    const host = new URL(env.NEXT_PUBLIC_SITE_URL).hostname;
     const allowed =
       LOCAL.includes(host) ||
       host.endsWith(".vercel.app") ||

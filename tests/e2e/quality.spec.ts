@@ -92,3 +92,26 @@ test("the skip link and a keyboard-only order", async ({ page }, testInfo) => {
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toContainText("Added");
 });
+
+test("the Content-Security-Policy holds and nothing breaks it (ADR 0013)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "headers are the same");
+  const violations: string[] = [];
+  page.on("console", (message) => {
+    if (message.text().includes("Content Security Policy"))
+      violations.push(message.text());
+  });
+  await openAllDayToday();
+  for (const path of ["/", "/menu/item/hoshi-latte", "/cafe", "/checkout"]) {
+    const response = await page.goto(path);
+    const csp = response?.headers()["content-security-policy"] ?? "";
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).toContain("object-src 'none'");
+  }
+  await page.goto("/menu/item/hoshi-latte");
+  await page.getByRole("button", { name: "Add to order" }).click();
+  await expect(page.getByRole("status")).toContainText("Added");
+  expect(violations).toEqual([]);
+});

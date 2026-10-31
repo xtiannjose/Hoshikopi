@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { CheckIcon } from "@phosphor-icons/react/ssr";
 
@@ -80,6 +81,8 @@ function message(order: OrderView): string {
 }
 
 async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
+  // Per request (the link token), and the read below checks the clock.
+  await connection();
   const { id } = await params;
   const { t } = await searchParams;
   const token = typeof t === "string" ? t : "";

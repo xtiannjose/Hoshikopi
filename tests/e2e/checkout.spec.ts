@@ -97,3 +97,28 @@ test("an Order page needs its link token", async ({ page }) => {
   await page.goto(url.pathname + "?t=wrong");
   await expect(page.getByText(/could not be found/i)).toBeVisible();
 });
+
+test("checkout refuses an 11th try from one Cart in 15 minutes", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  // Its own IP, so other tests' Orders don't share this bucket.
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": "203.0.113.11" });
+  await addToCart(page, "hoshi-latte");
+  await page.goto("/checkout");
+  const place = page.getByRole("button", { name: /Place order/ });
+  // Tries without contact details are refused fast but still count.
+  await place.evaluate((button) => {
+    (button as HTMLButtonElement).form!.noValidate = true;
+  });
+  for (let i = 0; i < 10; i++) {
+    const answered = page.waitForResponse(
+      (r) => r.request().method() === "POST"
+    );
+    await place.click();
+    await answered;
+    await expect(place).toBeEnabled();
+  }
+  await place.click();
+  await expect(page.getByText("Too many tries.")).toBeVisible();
+});

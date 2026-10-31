@@ -1,11 +1,13 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import type { PaymentMethod } from "@/generated/prisma/enums";
 import { formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
+import { clientIp, takeToken } from "@/lib/rate-limit";
 import { currentCartOwner } from "@/modules/cart";
 import { currentMember } from "@/modules/identity";
 import {
@@ -16,6 +18,7 @@ import {
 } from "@/modules/ordering";
 
 const METHODS: PaymentMethod[] = ["gcash", "maya", "card", "pay_at_pickup"];
+const FIFTEEN_MINUTES = 15 * 60;
 
 export type CheckoutState = {
   message?: string;
@@ -67,15 +70,33 @@ export async function placeOrderAction(
 ): Promise<CheckoutState> {
   const owner = await currentCartOwner();
   if (!owner) return { message: "Your Cart is empty." };
+  const values = {
+    customerName: String(form.get("customerName") ?? ""),
+    customerEmail: String(form.get("customerEmail") ?? ""),
+    customerPhone: String(form.get("customerPhone") ?? ""),
+  };
+  // Every try counts, so nobody can hold Pickup Windows with a flood of Orders.
+  const cartKey = "memberId" in owner ? owner.memberId : owner.guestTokenHash;
+  const allowed =
+    (await takeToken(`checkout:${cartKey}`, 10, FIFTEEN_MINUTES)) &&
+    (await takeToken(
+      `checkout-ip:${clientIp(await headers())}`,
+      20,
+      FIFTEEN_MINUTES
+    ));
+  if (!allowed) {
+    return {
+      message: "Too many tries. Wait 15 minutes, then place your order.",
+      values,
+    };
+  }
   const pickup = String(form.get("pickup") ?? "asap");
   const method = String(form.get("paymentMethod")) as PaymentMethod;
   const result = await placeOrder({
     owner,
     memberId: (await currentMember())?.id ?? null,
     seenTotalCents: Number(form.get("seenTotalCents")),
-    customerName: String(form.get("customerName") ?? ""),
-    customerEmail: String(form.get("customerEmail") ?? ""),
-    customerPhone: String(form.get("customerPhone") ?? ""),
+    ...values,
     pickup:
       pickup === "asap"
         ? { kind: "asap" }
@@ -95,10 +116,6 @@ export async function placeOrderAction(
   return {
     message: messageFor(result),
     errors: result.reason === "invalid" ? result.errors : undefined,
-    values: {
-      customerName: String(form.get("customerName") ?? ""),
-      customerEmail: String(form.get("customerEmail") ?? ""),
-      customerPhone: String(form.get("customerPhone") ?? ""),
-    },
+    values,
   };
 }
