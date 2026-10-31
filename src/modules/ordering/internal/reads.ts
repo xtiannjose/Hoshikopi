@@ -202,3 +202,42 @@ export async function ordersForMember(memberId: string, take = 20) {
     link: orderLink(order.id).replace(/^https?:\/\/[^/]+/, ""),
   }));
 }
+
+/** A Member's Orders for their data export (ACC-03). */
+export async function ordersForExport(memberId: string) {
+  const orders = await db.order.findMany({
+    where: { memberId },
+    orderBy: { placedAt: "asc" },
+    include: { lines: { orderBy: { createdAt: "asc" } } },
+  });
+  return orders.map((order) => ({
+    code: order.code,
+    placedAt: order.placedAt,
+    status: order.status,
+    paymentMethod: order.paymentMethod,
+    totalCents: order.totalCents,
+    lines: order.lines.map((line) => ({
+      name: line.name,
+      quantity: line.quantity,
+      lineCents: line.lineCents,
+      options: (line.options as { name: string }[]).map((o) => o.name),
+    })),
+  }));
+}
+
+/**
+ * Deleting an account keeps its Orders for the cafe's records but without
+ * the person: no Member link, name, phone or real email (ACC-03, docs/03
+ * section 13). The email column needs a value, so it gets a placeholder.
+ */
+export async function deidentifyOrders(memberId: string) {
+  await db.order.updateMany({
+    where: { memberId },
+    data: {
+      memberId: null,
+      customerName: "Deleted customer",
+      customerEmail: "deleted@hoshikopi.invalid",
+      customerPhone: null,
+    },
+  });
+}

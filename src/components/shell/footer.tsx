@@ -16,6 +16,7 @@ export async function Footer() {
             {[
               ...NAV_LINKS,
               { href: "/account", label: "Your account" },
+              { href: "/privacy", label: "Privacy" },
               { href: "/concept", label: "About this concept" },
             ].map((link) => (
               <li key={link.href}>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 import { formatPrice } from "@/lib/money";
@@ -137,7 +138,8 @@ export function CheckoutForm({
           error={error("customerName")}
         />
         <p className="text-muted-foreground -mb-2 text-sm">
-          An email or a mobile number, so we can reach you about your Order.
+          An email or a mobile number, so we can reach you about your Order. We
+          use them for nothing else. <Link href="/privacy">Privacy</Link>
         </p>
         <Field
           name="customerEmail"

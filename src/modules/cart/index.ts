@@ -3,6 +3,7 @@
 export {
   addLine,
   clearCart,
+  deleteMemberCart,
   getCart,
   mergeGuestCart,
   MAX_LINE_QUANTITY,

@@ -20,8 +20,10 @@ export {
 export {
   checkoutView,
   dayOrders,
+  deidentifyOrders,
   getOrderBrief,
   getOrderForCustomer,
+  ordersForExport,
   ordersForMember,
   type CheckoutView,
   type OrderView,

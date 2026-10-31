@@ -6,6 +6,7 @@ export {
   balance,
   canRedeem,
   earnForOrder,
+  forgetStars,
   releaseRedemption,
   reserveRedemption,
   reverseForOrder,

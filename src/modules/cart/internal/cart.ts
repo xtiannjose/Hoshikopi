@@ -230,3 +230,8 @@ export async function mergeGuestCart(
     await tx.cart.delete({ where: { id: from.id } });
   });
 }
+
+/** Deleting an account removes the Member's Cart (ACC-03). */
+export async function deleteMemberCart(memberId: string) {
+  await db.cart.deleteMany({ where: { memberId } });
+}
