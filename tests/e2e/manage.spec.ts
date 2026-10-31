@@ -1,15 +1,12 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
+import { expectNoAxeViolations } from "./axe";
 import { signIn } from "./sign-in";
 
 test("a seeded Manager signs in to /manage", async ({ page }) => {
   await signIn(page, "kai@hoshikopi.example", "/manage");
   await expect(page.getByText("Signed in as Kai (Manager).")).toBeVisible();
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .analyze();
-  expect(results.violations).toEqual([]);
+  await expectNoAxeViolations(page);
 });
 
 test("a seeded Barista signs in to /manage", async ({ page }) => {
