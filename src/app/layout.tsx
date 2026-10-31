@@ -16,12 +16,16 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Hoshikopi",
-  description: "A concept cafe in Kapitolyo, Pasig. Order ahead for pickup and earn Stars.",
+  description:
+    "A concept cafe in Kapitolyo, Pasig. Order ahead for pickup and earn Stars.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${jakarta.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${fraunces.variable} ${jakarta.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );

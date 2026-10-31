@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** batch 0.1 (scaffold) done. **Next: Phase 0, batch 0.2** (quality gates).
+- **Build:** batches 0.1 (scaffold) and 0.2 (quality gates) done. **Next: Phase 0, batch 0.3** (database).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -60,7 +60,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 Goal: an empty but real app with the database, auth skeleton, design tokens and quality gates in place.
 
 - [x] **0.1 Scaffold.** Next.js into this folder (`docs/06-SETUP.md` section 3); remove defaults; `AGENTS.md` block kept; `.env.example`; `npm run dev` works. Done 2026-10-31 with Next.js 16.4.3 and React 19.3; the scaffold already turns on `cacheComponents`.
-- [ ] **0.2 Quality gates.** ESLint (with the module-boundary import rule), Prettier, TypeScript strict, Vitest, Playwright with axe, the `qa`, `qa:full` and `test:e2e` scripts; one passing test of each kind. The type check runs `next typegen` first: `LayoutProps` and route types are generated.
+- [x] **0.2 Quality gates.** ESLint (with the module-boundary import rule), Prettier, TypeScript strict, Vitest, Playwright with axe, the `qa`, `qa:full` and `test:e2e` scripts; one passing test of each kind. The type check runs `next typegen` first: `LayoutProps` and route types are generated. Done 2026-10-31: Vitest 5 (needs `@types/node` 24), Playwright 1.64 at 375 and 1280 px; the unit test proves the boundary rule; `qa` audits production dependencies only (the 16 moderate advisories are in ESLint's dev-only `minimatch`).
 - [ ] **0.3 Database.** Docker Postgres (section 6 of setup); Prisma schema for every table in `docs/04-DATA-MODEL.md`; first migration with the CHECK constraints; seed data; test database guard.
 - [ ] **0.4 Modules and money.** `src/modules/*` folders with `index.ts`; `lib/money.ts` (centavos, formatting `PHP 165`); `lib/clock.ts` (Manila time, freezable in tests); tests first.
 - [ ] **0.5 Auth skeleton.** Better Auth with email link (link printed to the terminal until Resend), Staff roles, `requireStaff`, `audit()`; seeded Manager and Barista can sign in to an empty `/manage`.
