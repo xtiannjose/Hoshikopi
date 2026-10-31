@@ -61,7 +61,14 @@ export type OrderView = {
   paymentMethod: string;
   totalCents: number;
   placedAt: Date;
-  updatedAt: Date;
+  paidAt: Date | null;
+  acceptedAt: Date | null;
+  readyAt: Date | null;
+  pickedUpAt: Date | null;
+  cancelledAt: Date | null;
+  cancelReason: string | null;
+  /** Changes whenever the Order does; the page polls for it (ADR 0009). */
+  version: string;
   lines: {
     name: string;
     options: { group: string; name: string; deltaCents: number }[];
@@ -93,7 +100,13 @@ export async function getOrderForCustomer(
     paymentMethod: order.paymentMethod,
     totalCents: order.totalCents,
     placedAt: order.placedAt,
-    updatedAt: order.updatedAt,
+    paidAt: order.paidAt,
+    acceptedAt: order.acceptedAt,
+    readyAt: order.readyAt,
+    pickedUpAt: order.pickedUpAt,
+    cancelledAt: order.cancelledAt,
+    cancelReason: order.cancelReason,
+    version: `${order.status}:${order.updatedAt.getTime()}`,
     lines: order.lines.map((line) => ({
       name: line.name,
       options: line.options as OrderView["lines"][number]["options"],
