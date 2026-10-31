@@ -65,3 +65,8 @@ export function formatTime(at: Date): string {
 export function formatDate(at: Date): string {
   return dateFormat.format(at);
 }
+
+/** A datetime-local value in Manila time: "2026-11-12T19:00". */
+export function manilaInputValue(at: Date): string {
+  return new Date(at.getTime() + MANILA_OFFSET_MS).toISOString().slice(0, 16);
+}
