@@ -106,13 +106,23 @@ npm run db:seed
 npm run db:studio
 ```
 
+**Seeded accounts** (dev and test only; invented people, `.example` addresses that receive no real mail). There are no passwords: sign in at `/sign-in` with the email, and the link appears in the `npm run dev` terminal and in `data/mail/`.
+
+| Role | Name | Email | Id |
+| --- | --- | --- | --- |
+| Manager | Hoshi | `hoshi@hoshikopi.example` | `seed-manager` |
+| Barista | Annika | `annika@hoshikopi.example` | `seed-barista` |
+| Member | Christian | `christian@hoshikopi.example` | `seed-member` |
+
+Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `/manage` visit; `/bar` does not ask. Tests, the PRD personas and the seed use these same names.
+
 - Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`.
 - Playwright uses `hoshikopi_e2e`, reset and seeded before each run.
 - The first migration adds the CHECK constraints and unique indexes in `docs/04-DATA-MODEL.md` section 4 by hand where Prisma cannot express them.
 - **A Staff member lost their authenticator phone** (ADR 0014): delete their Second Factor and they enrol again on the next `/manage` visit:
 
   ```powershell
-  docker exec hoshikopi-db psql -U postgres -d hoshikopi -c "DELETE FROM two_factors WHERE user_id = (SELECT id FROM users WHERE email = 'kai@hoshikopi.example');"
+  docker exec hoshikopi-db psql -U postgres -d hoshikopi -c "DELETE FROM two_factors WHERE user_id = (SELECT id FROM users WHERE email = 'hoshi@hoshikopi.example');"
   ```
 
 ## 7. Everyday commands (defined in Phase 0)

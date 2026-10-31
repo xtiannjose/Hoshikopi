@@ -26,7 +26,7 @@ test("a Member earns Stars, redeems a free drink, cancels and gets them back (Ph
   const code = await member.getByRole("heading", { level: 1 }).innerText();
 
   const bar = await (await browser.newContext()).newPage();
-  await signIn(bar, "jomar@hoshikopi.example", "/bar");
+  await signIn(bar, "annika@hoshikopi.example", "/bar");
   const card = bar.getByRole("article", { name: `Order ${code}` });
   for (const step of [
     "Accept",

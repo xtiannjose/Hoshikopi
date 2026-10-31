@@ -32,20 +32,20 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
     .nth(2)
     .click();
   await guest.getByText("Pay at Pickup", { exact: true }).click();
-  await guest.getByLabel("Name").fill("Bea Santos");
-  await guest.getByLabel("Email").fill("bea@example.com");
+  await guest.getByLabel("Name").fill("Christian Santos");
+  await guest.getByLabel("Email").fill("christian@example.com");
   await guest.getByRole("button", { name: /Place order/ }).click();
   await expect(guest).toHaveURL(/\/orders\/[\w-]+\?t=/);
   const code = await guest.getByRole("heading", { level: 1 }).innerText();
 
   const bar = await (await browser.newContext()).newPage();
-  await signIn(bar, "jomar@hoshikopi.example", "/bar");
+  await signIn(bar, "annika@hoshikopi.example", "/bar");
   const card = bar.getByRole("article", { name: `Order ${code}` });
   // A Scheduled Order may still sit under "Later today".
   if (!(await card.isVisible())) {
     await bar.getByText(/Later today/).click();
   }
-  await expect(card).toContainText("Bea");
+  await expect(card).toContainText("Christian");
   await expect(card).toContainText("less ice please");
   await expect(card).toContainText("Pay at Pickup");
   await expectNoAxeViolations(bar);

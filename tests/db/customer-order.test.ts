@@ -13,8 +13,8 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const owner = { guestTokenHash: "bea-browser" };
-const jomar = { kind: "staff", id: "seed-barista", role: "barista" } as const;
+const owner = { guestTokenHash: "christian-browser" };
+const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 
 beforeEach(async () => {
   await resetDb(db);
@@ -38,8 +38,8 @@ async function placed() {
     owner,
     memberId: null,
     seenTotalCents: (await getCart(owner)).totalCents,
-    customerName: "Bea",
-    customerEmail: "bea@example.com",
+    customerName: "Christian",
+    customerEmail: "christian@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
     paymentMethod: "pay_at_pickup",
@@ -62,7 +62,7 @@ describe("cancelByCustomer (ORD-09)", () => {
 
   it("refuses once the bar accepted", async () => {
     const order = await placed();
-    await transition(order.orderId, "accepted", jomar);
+    await transition(order.orderId, "accepted", annika);
     expect(await cancelByCustomer(order.orderId, order.accessToken)).toEqual({
       ok: false,
       reason: "not_allowed",
@@ -78,7 +78,7 @@ describe("orderVersion (polling, ADR 0009)", () => {
     expect(before).toMatchObject({ status: "placed" });
     expect(await orderVersion(order.orderId, "wrong")).toBeNull();
     freezeClock("2026-11-02T01:05:00Z");
-    await transition(order.orderId, "accepted", jomar);
+    await transition(order.orderId, "accepted", annika);
     const after = await orderVersion(order.orderId, order.accessToken);
     expect(after?.status).toBe("accepted");
     expect(after?.version).not.toBe(before?.version);

@@ -12,8 +12,8 @@ const WINDOW = new Date("2026-11-02T02:00:00Z");
 const customer: Actor = { kind: "customer" };
 const webhook: Actor = { kind: "webhook" };
 const system: Actor = { kind: "system" };
-const jomar: Actor = { kind: "staff", id: "seed-barista", role: "barista" };
-const kai: Actor = { kind: "staff", id: "seed-manager", role: "manager" };
+const annika: Actor = { kind: "staff", id: "seed-barista", role: "barista" };
+const hoshi: Actor = { kind: "staff", id: "seed-manager", role: "manager" };
 
 beforeEach(async () => {
   await resetDb(db);
@@ -38,8 +38,8 @@ async function placedOrder(paymentMethod: PaymentMethod = "pay_at_pickup") {
       serviceDay: new Date("2026-11-02"),
       code: `K-${Math.random().toString().slice(2, 8)}`,
       status: "placed",
-      customerName: "Bea",
-      customerEmail: "bea@hoshikopi.example",
+      customerName: "Christian",
+      customerEmail: "christian@hoshikopi.example",
       pickupKind: "scheduled",
       windowStart: WINDOW,
       paymentMethod,
@@ -81,7 +81,9 @@ describe("transition: Pay at Pickup through the bar", () => {
   it("moves Placed > Accepted > Preparing > Ready > Picked Up", async () => {
     const order = await placedOrder();
     for (const to of ["accepted", "preparing", "ready", "picked_up"] as const) {
-      expect(await transition(order.id, to, jomar)).toMatchObject({ ok: true });
+      expect(await transition(order.id, to, annika)).toMatchObject({
+        ok: true,
+      });
     }
     const done = await db.order.findUniqueOrThrow({
       where: { id: order.id },
@@ -103,7 +105,7 @@ describe("transition: Pay at Pickup through the bar", () => {
 
   it("refuses skipping a step", async () => {
     const order = await placedOrder();
-    expect(await transition(order.id, "ready", jomar)).toEqual({
+    expect(await transition(order.id, "ready", annika)).toEqual({
       ok: false,
       reason: "not_allowed",
       status: "placed",
@@ -114,10 +116,10 @@ describe("transition: Pay at Pickup through the bar", () => {
 describe("transition: online payment", () => {
   it("needs a verified payment before the bar accepts", async () => {
     const order = await placedOrder("gcash");
-    expect((await transition(order.id, "accepted", jomar)).ok).toBe(false);
-    expect((await transition(order.id, "paid", jomar)).ok).toBe(false);
+    expect((await transition(order.id, "accepted", annika)).ok).toBe(false);
+    expect((await transition(order.id, "paid", annika)).ok).toBe(false);
     expect((await transition(order.id, "paid", webhook)).ok).toBe(true);
-    expect((await transition(order.id, "accepted", jomar)).ok).toBe(true);
+    expect((await transition(order.id, "accepted", annika)).ok).toBe(true);
     expect(
       (await db.order.findUniqueOrThrow({ where: { id: order.id } })).paidAt
     ).toBeTruthy();
@@ -145,7 +147,7 @@ describe("transition: cancelling (ORD-09)", () => {
 
   it("refuses a Customer cancel once the bar accepted", async () => {
     const order = await placedOrder();
-    await transition(order.id, "accepted", jomar);
+    await transition(order.id, "accepted", annika);
     expect(await transition(order.id, "cancelled", customer)).toEqual({
       ok: false,
       reason: "not_allowed",
@@ -155,18 +157,18 @@ describe("transition: cancelling (ORD-09)", () => {
 
   it("lets a Manager cancel up to Ready, with a reason", async () => {
     const order = await placedOrder();
-    await transition(order.id, "accepted", jomar);
-    await transition(order.id, "preparing", jomar);
-    expect(await transition(order.id, "cancelled", kai)).toEqual({
+    await transition(order.id, "accepted", annika);
+    await transition(order.id, "preparing", annika);
+    expect(await transition(order.id, "cancelled", hoshi)).toEqual({
       ok: false,
       reason: "reason_required",
       status: "preparing",
     });
     expect(
-      (await transition(order.id, "cancelled", jomar, "Out of milk")).ok
+      (await transition(order.id, "cancelled", annika, "Out of milk")).ok
     ).toBe(false);
     expect(
-      (await transition(order.id, "cancelled", kai, "Out of milk")).ok
+      (await transition(order.id, "cancelled", hoshi, "Out of milk")).ok
     ).toBe(true);
     expect(
       (await db.order.findUniqueOrThrow({ where: { id: order.id } }))
@@ -190,8 +192,8 @@ describe("transition: Refunds", () => {
     const order = await placedOrder("card");
     await transition(order.id, "paid", webhook);
     await transition(order.id, "cancelled", customer);
-    expect((await transition(order.id, "refunded", jomar)).ok).toBe(false);
-    expect((await transition(order.id, "refunded", kai)).ok).toBe(true);
+    expect((await transition(order.id, "refunded", annika)).ok).toBe(false);
+    expect((await transition(order.id, "refunded", hoshi)).ok).toBe(true);
     expect(await usage()).toMatchObject({ drinks: 0, food: 0 });
     expect(await statusOf(order.id)).toBe("refunded");
   });
@@ -199,15 +201,15 @@ describe("transition: Refunds", () => {
   it("refuses refunding a cancelled Order that was never paid", async () => {
     const order = await placedOrder();
     await transition(order.id, "cancelled", customer);
-    expect((await transition(order.id, "refunded", kai)).ok).toBe(false);
+    expect((await transition(order.id, "refunded", hoshi)).ok).toBe(false);
   });
 
   it("refunds a Picked Up Order", async () => {
     const order = await placedOrder();
     for (const to of ["accepted", "preparing", "ready", "picked_up"] as const) {
-      await transition(order.id, to, jomar);
+      await transition(order.id, to, annika);
     }
-    expect((await transition(order.id, "refunded", kai)).ok).toBe(true);
+    expect((await transition(order.id, "refunded", hoshi)).ok).toBe(true);
   });
 });
 

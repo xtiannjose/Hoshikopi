@@ -143,7 +143,7 @@ const Contact = z
       .trim()
       .toLowerCase()
       .refine((v) => v === "" || z.email().safeParse(v).success, {
-        message: "Enter an email address, like bea@example.com.",
+        message: "Enter an email address, like christian@example.com.",
       }),
     customerPhone: z
       .string()

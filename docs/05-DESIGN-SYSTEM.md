@@ -146,7 +146,7 @@ Native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)). 
 
 ## 9. Bar Screen
 
-Built for a tablet behind the counter, used by Jomar with wet hands and a queue in front of him.
+Built for a tablet behind the counter, used by Annika with wet hands and a queue waiting.
 
 - Night palette, very high contrast, landscape first.
 - Columns by Order Status: New (Placed and Paid), Making (Accepted and Preparing), Ready. Within a column, sorted by Pickup Time, then placement time.

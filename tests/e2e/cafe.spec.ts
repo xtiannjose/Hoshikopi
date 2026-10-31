@@ -76,7 +76,7 @@ test("a Manager edits the parking note and /cafe shows it", async ({
 }, testInfo) => {
   // One project only: both would edit the same row at once.
   test.skip(testInfo.project.name !== "desktop", "desktop task");
-  await signIn(page, "kai@hoshikopi.example", "/manage/cafe");
+  await signIn(page, "hoshi@hoshikopi.example", "/manage/cafe");
   const note = `Park at the church lot ${Date.now()}.`;
   await page.getByLabel("Parking and the nearest car park").fill(note);
   await page.getByRole("button", { name: "Save cafe details" }).click();
@@ -90,6 +90,6 @@ test("a Manager edits the parking note and /cafe shows it", async ({
 });
 
 test("a Barista cannot open the cafe details", async ({ page }) => {
-  await signIn(page, "jomar@hoshikopi.example", "/manage/cafe");
+  await signIn(page, "annika@hoshikopi.example", "/manage/cafe");
   await expect(page.getByText(/could not be found/i)).toBeVisible();
 });
