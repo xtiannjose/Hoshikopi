@@ -21,6 +21,11 @@ export function formatPrice(cents: number): string {
   return format(cents, false);
 }
 
+/** A Price Delta on an Option chip: 3500 -> "+35"; free Options show nothing. */
+export function formatDelta(cents: number): string {
+  return cents === 0 ? "" : `+${format(cents, false).replace("PHP ", "")}`;
+}
+
 /** Receipts and totals: 16500 -> "PHP 165.00". */
 export function formatReceipt(cents: number): string {
   return format(cents, true);

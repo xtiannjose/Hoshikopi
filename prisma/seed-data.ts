@@ -37,9 +37,9 @@ const GROUPS: Record<
     min: 1,
     max: 1,
     options: [
-      ["Whole", 0, true],
-      ["Oat", 35],
-      ["Almond", 35, false, ["tree_nuts"]],
+      ["Whole milk", 0, true],
+      ["Oat milk", 35],
+      ["Almond milk", 35, false, ["tree_nuts"]],
     ],
   },
   sugar: {
