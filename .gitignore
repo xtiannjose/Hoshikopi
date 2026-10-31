@@ -30,3 +30,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.log
+
+# hosting and keys
+.vercel
+*.pem

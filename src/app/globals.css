@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* Colour tokens and the Day and Night palettes arrive in batch 0.6 (docs/05-DESIGN-SYSTEM.md section 3). */
+@theme inline {
+  --font-sans: var(--font-jakarta);
+  --font-serif: var(--font-fraunces);
+}
