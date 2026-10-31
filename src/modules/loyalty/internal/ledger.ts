@@ -164,3 +164,8 @@ export async function releaseRedemption(
     },
   });
 }
+
+/** Deleting an account forgets its Star history (ACC-03). */
+export async function forgetStars(memberId: string) {
+  await db.starEntry.deleteMany({ where: { memberId } });
+}

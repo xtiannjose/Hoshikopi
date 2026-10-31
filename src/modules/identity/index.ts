@@ -19,3 +19,9 @@ export {
   type Staff,
 } from "./internal/session";
 export { emailSignInLink, googleSignInUrl, safeNext } from "./internal/sign-in";
+export {
+  forgetMember,
+  memberProfile,
+  updateProfile,
+  type MemberProfile,
+} from "./internal/privacy";

@@ -5,11 +5,15 @@ import { Suspense } from "react";
 import { StarCard } from "@/components/star-card";
 import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
-import { requireMember } from "@/modules/identity";
+import { memberProfile, requireMember } from "@/modules/identity";
 import { balance } from "@/modules/loyalty";
 import { ordersForMember } from "@/modules/ordering";
 
-import { signOutAction } from "./actions";
+import {
+  deleteAccountAction,
+  signOutAction,
+  updateProfileAction,
+} from "./actions";
 
 export const metadata: Metadata = {
   title: "Your account",
@@ -40,9 +44,10 @@ export default function AccountPage() {
 
 async function Account() {
   const member = await requireMember("/account");
-  const [orders, stars] = await Promise.all([
+  const [orders, stars, profile] = await Promise.all([
     ordersForMember(member.id),
     balance(member.id),
+    memberProfile(member.id),
   ]);
   return (
     <div className="grid gap-10 pt-8">
@@ -99,6 +104,67 @@ async function Account() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section aria-labelledby="details" className="grid gap-4">
+        <h2 id="details" className="font-display text-3xl italic">
+          Your details
+        </h2>
+        <form action={updateProfileAction} className="grid max-w-md gap-4">
+          <div className="grid gap-1.5">
+            <label htmlFor="name" className="font-semibold">
+              Name for your orders
+            </label>
+            <input
+              id="name"
+              name="name"
+              defaultValue={profile?.name ?? ""}
+              maxLength={60}
+              className="rounded-card border-input bg-background min-h-11 border px-3"
+            />
+          </div>
+          <label className="flex min-h-11 items-start gap-3">
+            <input
+              type="checkbox"
+              name="marketingOptIn"
+              defaultChecked={profile?.marketingOptIn}
+              className="mt-1 size-5"
+            />
+            <span>
+              Email me about new drinks and Events. Separate from order emails;
+              untick any time.
+            </span>
+          </label>
+          <button
+            type="submit"
+            className="border-input min-h-11 justify-self-start rounded-full border px-5 font-semibold"
+          >
+            Save my details
+          </button>
+        </form>
+        <p className="flex flex-wrap gap-x-6 gap-y-2">
+          <a href="/api/account/export" download>
+            Download my data
+          </a>
+          <Link href="/privacy">Privacy</Link>
+        </p>
+        <details className="max-w-md">
+          <summary className="text-destructive min-h-11 cursor-pointer py-2 font-semibold">
+            Delete my account
+          </summary>
+          <form action={deleteAccountAction} className="grid gap-3 py-2">
+            <p>
+              Your Stars and sign-in go for good. Your orders stay as the
+              cafe&apos;s records, without your name, email or phone.
+            </p>
+            <button
+              type="submit"
+              className="border-destructive text-destructive min-h-11 justify-self-start rounded-full border px-5 font-semibold"
+            >
+              Yes, delete my account
+            </button>
+          </form>
+        </details>
       </section>
 
       <form action={signOutAction}>

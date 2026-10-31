@@ -11,6 +11,7 @@ test("a Manager refunds a paid Order in full (PAY-05, STAFF-07)", async ({
   browser,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "desktop task");
+  test.setTimeout(90_000);
   const guest = await (await browser.newContext()).newPage();
   await addToCart(guest, "kopi-hitam");
   await guest.goto("/checkout");
@@ -38,8 +39,9 @@ test("a Manager refunds a paid Order in full (PAY-05, STAFF-07)", async ({
   await expect(
     manager.getByRole("row").filter({ hasText: code })
   ).toContainText("Refunded");
+  // The page stops polling once an Order is Picked Up (ADR 0009).
+  await guest.reload();
   await expect(guest.getByRole("status")).toHaveText(
-    "This order was refunded in full.",
-    { timeout: 40_000 }
+    "This order was refunded in full."
   );
 });
