@@ -14,6 +14,7 @@ export type {
   ProviderEvent,
 } from "./internal/types";
 export {
+  closeCheckout,
   paymentByCheckout,
   paymentForOrder,
   recordPaymentEvent,
