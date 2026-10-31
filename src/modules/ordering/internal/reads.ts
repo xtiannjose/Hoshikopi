@@ -133,3 +133,40 @@ export async function getOrderBrief(id: string) {
     select: { code: true, totalCents: true },
   });
 }
+
+/** A day's Orders and totals for the Manager (STAFF-07). */
+export async function dayOrders(day: string) {
+  const orders = await db.order.findMany({
+    where: { serviceDay: new Date(`${day}T00:00:00Z`) },
+    orderBy: { placedAt: "asc" },
+    include: { payment: { select: { status: true } } },
+  });
+  const counted = orders.filter(
+    (o) => !["cancelled", "expired", "refunded"].includes(o.status)
+  );
+  return {
+    orders: orders.map((o) => ({
+      id: o.id,
+      code: o.code,
+      status: o.status,
+      customerName: o.customerName,
+      placedAt: o.placedAt,
+      windowStart: o.windowStart,
+      paymentMethod: o.paymentMethod,
+      totalCents: o.totalCents,
+      paid: o.paidAt !== null,
+      refundable:
+        o.status === "picked_up" ||
+        (o.status === "cancelled" && o.paidAt !== null),
+      cancellable: [
+        "placed",
+        "paid",
+        "accepted",
+        "preparing",
+        "ready",
+      ].includes(o.status),
+    })),
+    count: counted.length,
+    totalCents: counted.reduce((sum, o) => sum + o.totalCents, 0),
+  };
+}

@@ -18,6 +18,8 @@ export {
   paymentByCheckout,
   paymentForOrder,
   recordPaymentEvent,
+  refundPayment,
+  type RefundOutcome,
   startPayment,
   verifyWebhookEvent,
   type RecordedEvent,

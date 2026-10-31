@@ -138,3 +138,50 @@ export async function closeCheckout(orderId: string): Promise<void> {
     console.error("[payments] checkout not expired at the provider:", error);
   }
 }
+
+export type RefundOutcome =
+  "no_online_payment" | "refunded" | "already_refunded";
+
+/**
+ * Refund an Order's online Payment in full (PAY-05). The Payment is claimed
+ * paid -> refunded first, so two refunds at once cannot both reach the
+ * provider; the claim is undone if the provider refuses.
+ */
+export async function refundPayment(
+  orderId: string,
+  actorId: string
+): Promise<RefundOutcome> {
+  const payment = await db.payment.findUnique({ where: { orderId } });
+  if (!payment) return "no_online_payment";
+  const claimed = await db.payment.updateMany({
+    where: { id: payment.id, status: "paid" },
+    data: { status: "refunded" },
+  });
+  if (claimed.count === 0) {
+    return payment.status === "refunded"
+      ? "already_refunded"
+      : "no_online_payment";
+  }
+  try {
+    const { refundId } = await paymentProvider().refund(
+      payment.providerPaymentId ?? "",
+      payment.amountCents
+    );
+    await db.refund.create({
+      data: {
+        paymentId: payment.id,
+        providerRefundId: refundId,
+        amountCents: payment.amountCents,
+        reason: "Full refund",
+        actorId,
+      },
+    });
+  } catch (error) {
+    await db.payment.update({
+      where: { id: payment.id },
+      data: { status: "paid" },
+    });
+    throw error;
+  }
+  return "refunded";
+}

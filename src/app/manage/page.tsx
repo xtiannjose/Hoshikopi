@@ -14,6 +14,7 @@ const ROLE = { barista: "Barista", manager: "Manager", customer: "Customer" };
 const AREAS: { href: string; label: string; roles: Staff["role"][] }[] = [
   { href: "/bar", label: "Bar Screen", roles: ["barista", "manager"] },
   { href: "/manage/menu", label: "Menu", roles: ["barista", "manager"] },
+  { href: "/manage/orders", label: "Orders and Refunds", roles: ["manager"] },
   { href: "/manage/hours", label: "Hours and Capacity", roles: ["manager"] },
   { href: "/manage/cafe", label: "Cafe details", roles: ["manager"] },
 ];

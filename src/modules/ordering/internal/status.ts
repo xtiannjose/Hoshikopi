@@ -53,10 +53,12 @@ function allowed(order: Order, to: OrderStatus, actor: Actor): boolean {
         ["placed", "paid", "accepted", "preparing", "ready"].includes(from)
       );
     case "refunded":
+      // The system refunds a paid Order its Customer cancelled (ORD-09).
       return (
-        isManager(actor) &&
-        (from === "picked_up" ||
-          (from === "cancelled" && order.paidAt !== null))
+        (isManager(actor) && from === "picked_up") ||
+        ((isManager(actor) || actor.kind === "system") &&
+          from === "cancelled" &&
+          order.paidAt !== null)
       );
     default:
       return false;
