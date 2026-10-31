@@ -1,0 +1,47 @@
+import { describe, expect, it } from "vitest";
+
+import { addMoney, formatPrice, formatReceipt, vatPart } from "./money";
+
+describe("formatPrice (menu)", () => {
+  it("drops zero centavos", () => {
+    expect(formatPrice(16500)).toBe("PHP 165");
+  });
+  it("keeps centavos when there are some", () => {
+    expect(formatPrice(16550)).toBe("PHP 165.50");
+  });
+  it("groups thousands", () => {
+    expect(formatPrice(125000)).toBe("PHP 1,250");
+  });
+});
+
+describe("formatReceipt", () => {
+  it("always shows centavos", () => {
+    expect(formatReceipt(16500)).toBe("PHP 165.00");
+    expect(formatReceipt(5)).toBe("PHP 0.05");
+  });
+  it("shows a minus for refunds", () => {
+    expect(formatReceipt(-16500)).toBe("-PHP 165.00");
+  });
+});
+
+describe("vatPart", () => {
+  it("is 12/112 of a VAT-inclusive total", () => {
+    expect(vatPart(11200)).toBe(1200);
+  });
+  it("rounds half up once", () => {
+    // 14 * 12 / 112 = 1.5 centavos
+    expect(vatPart(14)).toBe(2);
+    // 13 * 12 / 112 = 1.39 centavos
+    expect(vatPart(13)).toBe(1);
+  });
+});
+
+describe("guards", () => {
+  it("refuses fractions of a centavo", () => {
+    expect(() => formatPrice(165.5)).toThrow(RangeError);
+    expect(() => addMoney(100, 0.1)).toThrow(RangeError);
+  });
+  it("adds centavos", () => {
+    expect(addMoney(18500, 3500, 2000)).toBe(24000);
+  });
+});
