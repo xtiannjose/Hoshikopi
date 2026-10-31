@@ -38,6 +38,18 @@ _Avoid_: Out of stock, unavailable (for Hidden items)
 A Menu Item that does not appear on the menu at all (retired, or seasonal and off-season).
 _Avoid_: Disabled, archived, deleted
 
+**Barista Pick**:
+One of the Menu Items the baristas recommend this week, a good start for a first-time visitor. Home shows three under "Barista picks this week"; the Manager changes them.
+_Avoid_: Featured, signature (as a type name), highlight
+
+**Allergens**:
+The common allergens a Menu Item contains (milk, egg, wheat, soy, peanuts, tree nuts, fish, shellfish, sesame), shown on its page as "Contains: milk". An Option can add some (almond milk adds tree nuts).
+_Avoid_: Allergy info, dietary flags (for allergens)
+
+**Pairing**:
+A Menu Item suggested beside another on its page ("Goes well with Ube Pandesal").
+_Avoid_: Upsell, cross-sell (in UI copy), combo
+
 ### Ordering
 
 **Cart**:
@@ -121,7 +133,7 @@ Staff who use the Bar Screen: accept, prepare and complete Orders, and mark Menu
 _Avoid_: Crew, operator
 
 **Manager**:
-Staff who also edit the menu, prices, Opening Hours, Capacity, Events and Posts, and issue Refunds.
+Staff who also edit the menu, prices, Opening Hours, Capacity, the cafe's details and Amenities, Events and Posts, and issue Refunds.
 _Avoid_: Admin, owner (in code)
 
 **Bar Screen**:
@@ -152,13 +164,33 @@ _Avoid_: Claim, use
 The cafe's regular hours per day of the week, in Manila time.
 _Avoid_: Schedule, store hours (in code)
 
+**Last Order**:
+The latest time an Order can be placed on a day (8:30 PM when the cafe closes at 9:00 PM). Opening Hours and Special Hours each set one.
+_Avoid_: Cut-off, closing time (for this)
+
 **Special Hours**:
 A one-day change to Opening Hours (holiday, private event, closed for maintenance).
 _Avoid_: Holiday hours (for non-holidays), exceptions
 
+**Dine-in**:
+Walking in and staying at the cafe to eat or drink. Walk-in only: no table bookings, and online Orders are for pickup at the counter.
+_Avoid_: Reservation, table service, eat-in
+
+**Amenity**:
+A fact about visiting the cafe that is not about the menu: Wi-Fi, power outlets, pets, smoking, restroom, step-free entrance, parking. An unknown Amenity is left out, never guessed.
+_Avoid_: Facility, feature, perk
+
 **Event**:
 Something happening at the cafe on a date: a cupping, latte art night, open mic, market day. Has a start, an end and an optional sign-up link.
 _Avoid_: Activity, happening
+
+**Recurring Event**:
+Something that happens at the cafe on the same weekday every week ("Open mic, Thursdays 7 PM"). Shown as a weekly line, not as a dated Event.
+_Avoid_: Series, repeating event, weekly Event
+
+**Inquiry**:
+A message to the cafe about a private event or a large Order that the online Cart cannot take.
+_Avoid_: Booking, reservation, contact request
 
 **Post**:
 A news article on the site: a new drink, a story about a supplier, a cafe update.

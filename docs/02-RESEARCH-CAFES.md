@@ -166,6 +166,173 @@ Release key: **MVP** is the first slice that proves order-ahead end to end (menu
 
 **Toast online ordering** (platform). ASAP cut-off at closing minus prep time, scheduling up to 14 days by default, same day with 0 [29]. Delays lengthen the quoted time without telling guests; snooze for 20 or 40 minutes or the rest of the day [28].
 
+## Part 2: the cafe as a place
+
+Checked 2026-10-30 21:24 Manila.
+
+Purpose: Part 1 leaned on bean shops and app-first chains. This part asks how cafe-first sites (a place to be plus a menu) sell the visit, and what Hoshikopi's planning is missing on that side. Same rules: ideas and structure only, no names, branding, copy, photos or code. Words follow `GLOSSARY.md`; new words are listed as proposals in the gaps section, not used as if defined.
+
+How this was gathered, and its limits: each site opened in a real browser (Playwright, Chromium) at 1280 px, reading rendered text, headings, links, share tags and JSON-LD; six Home or store pages measured at 390 by 844 px for where the menu and the visit facts first appear; the full text of 11 pages searched for amenity words (Wi-Fi, laptop, outlet, restroom, smoking, pets, accessibility, parking, reservations). Help pages and specs read through a fetch tool. No screenshots, so layout notes come from the page structure. Read only: no sign-ups, logins, orders or form submissions. Philippine cafes with a working site of their own were hard to find (see Leading with the place), so the Philippine examples are one independent cafe (Rustic Mornings), three small chains (Purple Oven, Mary Grace, Nono's) and % Arabica's Manila store page. Elephant Grounds' Manila franchise has no page of its own that was found. Toast's blog sits behind a bot check. The vendor surveys are US only, not cafe specific, and from 2017 to 2023. Google's attribute help page names only some attribute groups; the full list shows only inside a Business Profile and was not opened. Anything not confirmed at the owner is marked UNVERIFIED.
+
+### Summary
+
+The best ideas, in priority order:
+
+1. **C-42 Home opens with both doors.** A photo of the room, today's hours and two actions: Order ahead and Plan your visit. On a phone, Flora keeps its address and hours in the footer and two Philippine chains leave them off Home entirely [54, 66, 69].
+2. **C-43 The space, in photos and words.** The sites that sell a visit best describe the room: size, building, light, seats [61, 63, 64]. Hoshikopi's photo plan covers menu photos only.
+3. **C-44 Visit facts.** Wi-Fi, outlets and laptops, pets, smoking, restroom, step-free entrance, parking with the nearest car park. Google Business Profile collects these [75], none of the 10 sites lists most of them, and Hoshikopi will have no profile (C-36), so the cafe page has to carry them.
+4. **C-45 Join ordering ahead and staying in one sentence.** The site sells pickup; the cafe sells a seat. "Walk in to dine in, no booking needed" belongs wherever ordering appears.
+5. **C-49 Share cards that show the drink.** Cafe-first sites share logos, tiny images or a card titled "Home" [54, 64, 69]; Open Graph asks for alt text with every image [79]. Cheap, and it serves the owner's "people share it" brief.
+6. **C-54 Contact details that cannot reach a stranger.** An invented phone number or social handle may belong to a real person. Show invented details as text and link only accounts the owner runs.
+7. **C-46 First time here.** Three Signature Menu Items near the top of Home. The architecture promises "featured Menu Items" on Home, but no field picks them.
+8. **C-55 About this concept.** The honest stand-in for reviews, press and awards: one page on what is invented and what is real, linked from the Concept Notice.
+
+Not worth it for a concept: reviews or press (C-56), an Instagram feed (C-60), careers (C-61), catering (C-62) and a bring-your-own-cup discount (C-63).
+
+### Candidates
+
+Same columns and release keys as the first table. Top: rank in this part's summary.
+
+| ID | Feature | Value | Effort | Release | Reason | Sources | Top |
+|---|---|---|---|---|---|---|---|
+| C-42 | Home opens with both doors: a hero photo of the room, today's hours ("Open now, closes 9 PM") and two actions, Order ahead and Plan your visit; a visit block (address, today's hours, directions) within the first two phone screens | High | S | MVP | At 390 px Flora shows its address and hours only in the footer, Nono's and Mary Grace not on Home at all; Rustic Mornings (second screen) and Purple Oven (first screen) answer "where and when" early | 54, 64, 65, 66, 69 | 1 |
+| C-43 | The space in photos and words: 4 to 6 photos of the room on `/cafe` (counter, window seats, evening light) and one on Home, plus a short paragraph of concrete facts (seats, size, light, how it feels by day and by night) | High | S | MVP | Kurasu and % Arabica sell each cafe by its room (size, old building, materials, booths), Rustic Mornings by its garden; MGH (vendor survey, 2019): 69% say a website helps them decide whether to dine in | 54, 61, 63, 64, 84 | 2 |
+| C-44 | Visit facts on `/cafe`: walk-in dine-in (no reservations), number of seats, Wi-Fi, power outlets and a laptop note, pets, smoking, restroom, step-free entrance and accessible restroom, parking with the nearest car park and walking minutes; each fact edited by the Manager, unknown facts left out | High | S | MVP | These are the facts Google Business Profile collects; Nono's gives parking per store with walking minutes and Mary Grace filters stores by alfresco, function room, kids corner and seats; none of the 10 sites mentions Wi-Fi, outlets, laptops, restrooms or step-free access, though persona Migs studies at the cafe | 67, 70, 71, 75 | 3 |
+| C-45 | One sentence that joins ordering ahead and staying ("Order here for pickup at the counter. Staying? Walk in and find a seat; we call your Order Code at the bar.") on `/cafe`, the menu and the Order page | High | S | MVP | The site sells pickup only but the cafe also sells a stay; Mary Grace says plainly it serves dine-in, take-away and delivery; table reservations are a PRD non-goal, so the site should say so | 67 | 4 |
+| C-46 | First time here: three Signature Menu Items with one line on why (Hoshi Latte first) near the top of Home, each linking to its Menu Item page | Medium | S | MVP | Rustic Mornings opens its menu with Bestsellers and prices, Flora with fall specials, Mary Grace with its Ube Series; Home lists "featured Menu Items" but `menu_items` has no field to pick them | 54, 64, 66 | 7 |
+| C-47 | Seasonal Menu Items with an end date: a "This season" set on Home and the menu, Hidden automatically after the date | Medium | S | V1 | Flora (fall specials), Mary Grace (Ube Series) and Kurasu (a 2026 seasonal blend) all rotate a season; C-05 has a Limited time badge but no end date | 54, 60, 66 | |
+| C-48 | Story and people on `/cafe`: an origin story, a founder note, the team by first name and role, where the coffee comes from; every invented person and supplier labelled; photos of hands and backs, not faces | Medium | S | MVP | Flora's founder note, Rustic Mornings' three-generation story, Mary Grace's "how it all began" and Elephant Grounds' coffee program note; ADR 0006 already says the people are invented | 55, 59, 64, 66 | |
+| C-49 | Share cards on every public page: `og:title`, `og:description`, `og:url`, `og:type` (`article` for Posts), a 1200 by 630 `og:image` with `og:image:alt`, `twitter:card` set to `summary_large_image`; a Menu Item card shows its photo, name and Base Price | High | S | MVP | Flora's share image is 254 by 174 px, Rustic Mornings shares its logo, Nono's titles its card "Home", Purple Oven has no tags; none of the 8 sites checked sets `og:image:alt`; the owner wants a site people share | 54, 64, 65, 69, 79 | 5 |
+| C-50 | Extend the C-35 JSON-LD: `amenityFeature` (name and value pairs from C-44), `smokingAllowed`, `acceptsReservations` set to false, `photo` of the room, `hasMap`; `sameAs` only for real profiles | Low | S | MVP | Cheap once C-44 exists, but Google's local business guide uses none of these and the demo is noindex (ADR 0006); worth it only as correct, complete data | 41, 76, 77, 78 | |
+| C-51 | Visit FAQ on `/cafe`, written from the C-44 facts: dining in, reservations, Wi-Fi and laptops, pets, parking, large Orders, ordering for later, accessibility; no FAQPage markup | Medium | S | MVP | Nono's gives pets a full page of rules and Kurasu links a help center; Google retired FAQ rich results in 2026, so the FAQ is for people only | 60, 71, 81 | |
+| C-52 | Recurring Events: a short list of weekly moments ("Open mic, Thursdays 7 PM") on `/cafe` and `/events`, kept apart from dated Events | Medium | S | V1 | Flora runs a weekly flower day beside its dated, ticketed Event; the `events` table holds one start and one end | 54, 56 | |
+| C-53 | Inquiry form for private events and large Orders (name, email or phone, date, guests, occasion, message), saved for the Manager and answered by email, with the Concept Notice on the form | Medium | M | V1 | Rustic Mornings, Mary Grace (capacity per space, reply within 48 hours), Nono's (function rooms, coffee cart) and Elephant Grounds (catering) all sell group visits; ORD-12 sends big Orders to "call the cafe" with no line to call | 59, 64, 68, 70, 72 | |
+| C-54 | Contact details that cannot reach a stranger: the phone shown as text marked invented, not a `tel:` link; email only on a domain the owner controls; no invented social handles; social links and `sameAs` only for accounts the owner runs | High | S | MVP | Most cafe sites checked link Instagram, several Facebook too; an invented handle or mobile number may belong to a real person; C-39 puts phone and email in the footer | 54, 57, 64, 66, 69, 70 | 6 |
+| C-55 | An "About this concept" page linked from the Concept Notice: what is invented (address, people, prices, photos), what is real (the code, Test Mode payments), and later the case study | Medium | S | MVP | The honest stand-in for the press pages, awards and review counts real cafes show (Kurasu has a press page and 4,969 shop reviews); Google gives no stars to reviews a business controls | 60, 80 | 8 |
+| C-56 | Reviews, testimonials, press quotes or star ratings | Low | S | Skip | All would be invented for a concept; Google treats reviews a business controls about itself as ineligible for stars | 80 | |
+| C-57 | "Popular this week" from real Order counts on the demo, labelled as demo data | Low | S | Later | Honest proof once STAFF-08 reports exist; Rustic Mornings' Bestsellers show the appeal; small demo volumes make it noisy | 64 | |
+| C-58 | Newsletter sign-up for Guests | Low | S | Later | Flora, Nono's, Kurasu, Escape and Binocle all ask; Members already have `marketing_opt_in`, and a Guest list adds Data Privacy Act duties (C-38) with nothing to send | 54, 57, 58, 60, 69 | |
+| C-59 | Neighbourhood guide ("our favourite spots nearby") | Low | S | Later | % Arabica lists six nearby places on its Manila store page; for an invented cafe, naming real businesses implies ties that do not exist; landmarks in directions are fine (C-34) | 63 | |
+| C-60 | Instagram feed on Home | Low | M | Skip | No real account; Meta's oEmbed is for front-end display only and skips private accounts; a third-party script works against the performance budget | 82 | |
+| C-61 | Careers page | Low | S | Skip | Mary Grace, Kurasu and Elephant Grounds recruit on their sites; a concept would mislead job seekers | 59, 60, 66 | |
+| C-62 | Catering or a coffee cart for outside events | Low | M | Skip | Nono's coffee cart and Elephant Grounds' catering are off-site services; Hoshikopi is pickup only | 59, 72 | |
+| C-63 | Bring-your-own-cup discount | Low | S | Skip | Not seen on any site checked; a discount needs a negative Price Delta, which the glossary forbids; a scheduled Order is made before the cup arrives | none found | |
+
+### Patterns that matter
+
+#### Leading with the place
+- Of the five shortlist sites named as cafe-first, two are bean shops with no cafe content (Binocle, Escape) and three keep their cafes one or two clicks behind a shop or a brand story (Kurasu, Elephant Grounds, % Arabica) [57 to 63]. Flora is the only one that leads with its own cafe and menu [54].
+- The best place-selling is plain description of the room: size, building history, materials, seats, light and what is nearby. Kurasu writes a paragraph per store [61], % Arabica names the architect and the materials [63], Rustic Mornings describes its garden and art [64]. No page checked uses a virtual tour or a video of the space.
+- At 390 by 844 px: Flora's menu starts about 1,640 px down and its address and hours sit only in the footer, about 6,700 px down a 7,100 px page [54]; Rustic Mornings shows its address about 1,640 px down [64]; Purple Oven shows hours on the first screen [65]; Nono's and Mary Grace show no address or hours on Home [66, 69]. No site has a sticky visit or order button; Mary Grace pins a promo bar for its delivery site [66]. None scrolls sideways.
+- Philippine cafes with a working site of their own were hard to find: Coffee Project's Shopify store says it is unavailable, the domain a listing gives for Single Origin is open for registration, and about 15 other guessed domains were parked, unregistered or unreachable [73]. Directory listings for independent Kapitolyo cafes point only to Facebook and Instagram (UNVERIFIED) [74]. A neighbourhood cafe with a good site stands out here.
+
+#### Visit facts
+- Across the full text of 11 pages, none mentions Wi-Fi, laptops, power outlets, restrooms, smoking or step-free access [54, 55, 59, 61, 63 to 67, 69, 70]. Only Nono's covers pets (a page of rules) and parking (a line per store) [70, 71]; Mary Grace filters stores by Alfresco Dining, Function Room, Kids Corner and seating capacity [67].
+- Google Business Profile is where these facts usually live: owners set attributes such as Wi-Fi, outdoor seats and wheelchair-accessible entrance, restroom, seating, parking and elevator; some come from visitors' answers; availability varies by country and business category [75]. Hoshikopi skips a profile (C-36), so its own cafe page is the only place to learn them.
+- The most useful parking line names the nearest car park and the walk ("3 min. walk") [70]. Kurasu's "steps from" a train station is the transit version [61]. Purple Oven and Nono's link branches to a Google Maps search; % Arabica embeds a map [62, 65, 70]. A plain link (C-34) is enough and costs no script.
+- Mary Grace states its service modes (dine-in at cafes, take-away, delivery) and says holiday hours may change, so call first [67]. No site explains how ordering ahead relates to sitting down.
+- Personas: Migs studies at the cafe two afternoons a week (Wi-Fi, outlets, laptop rules), Tita Lorna brings the family on Saturday mornings (parking, step-free entrance), Bea comes by jeep (commute). No planning doc holds any of these facts.
+
+#### Menu on cafe-first sites
+- Prices on the page win: Flora and Rustic Mornings print the menu with prices on Home, and Flora lists add-ons with their price, like Price Deltas [54, 64]. Nono's and Elephant Grounds still use PDFs [59, 69], which C-01 already rules out.
+- Every cafe-first site rotates something: fall specials (Flora), an Ube Series (Mary Grace), a seasonal blend (Kurasu) [54, 60, 66]. A start-here set (Bestsellers, a signature line) sits at the top at Rustic Mornings and Mary Grace [64, 66].
+- Food pairing: not seen anywhere. Coffee sourcing appears as one line (Elephant Grounds' East Java farm) or as tasting notes on beans for sale (Kurasu) [59, 60]; C-07 covers it.
+
+#### Story and people
+- Origin stories are short and personal: a founder who started with a market coffee cart (Flora), a mother and daughter who turned private dining into a garden cafe (Rustic Mornings), a mother baking for village bazaars (Mary Grace) [55, 64, 66]. Teams show up as "join us" pages, not named baristas [59, 60, 66].
+- Every Hoshikopi person and supplier is invented (ADR 0006), so the story works only if it is labelled. Naming a real farm or roaster as a supplier would claim a relationship that does not exist.
+
+#### Community, events and groups
+- Flora pairs a weekly ritual (a flower day every Friday) with dated, ticketed Events that name the instructor and keep an archive [54, 56].
+- Group business is everywhere: a private event form (Rustic Mornings), event spaces with capacity and a reply promise (Mary Grace), function rooms and a coffee cart (Nono's), catering and collaborations by email or WhatsApp (Elephant Grounds) [59, 64, 68, 70, 72]. Commune's event space in Part 1 is the same pattern [16].
+
+#### Sharing and social links
+- Share cards are weak on cafe-first sites: Flora's image is 254 by 174 px, Rustic Mornings shares its logo, Nono's card is titled "Home", Purple Oven has no tags [54, 64, 65, 69]. Mary Grace, Escape and Binocle use large images [57, 58, 66]. None of the 8 sites checked sets `og:image:alt`.
+- Open Graph requires `og:title`, `og:type`, `og:image` and `og:url`, says `og:image:alt` should accompany an image, and has no place or restaurant type, so cafe pages use `website` and Posts `article` [79].
+- Instagram is the usual social link (Flora adds TikTok; Mary Grace and Nono's add Facebook and LinkedIn) [54, 66, 69]. Purple Oven offers only phone, Viber and email [65].
+
+#### Social proof, honestly
+- What these sites use as proof: Kurasu's 4,969 shop reviews and press page, Elephant Grounds' Cup of Excellence farm, % Arabica's named architect [59, 60, 63]. The cafe pages themselves mostly show none.
+- Google: when a business controls the reviews about itself, its pages are ineligible for review stars, and LocalBusiness review markup is meant for sites that review other businesses [41, 80]. Invented reviews would also break ADR 0006.
+- Honest options for a concept: the About this concept page (C-55), real Order counts on the demo labelled as such (C-57), and the case study (Phase 7).
+
+#### What visitors look for (vendor surveys)
+All US, none cafe specific, none Philippine. Read them as direction, not numbers to quote.
+- MGH, a marketing agency (press release, 2019-08-29, 1,101 US adults who eat out or order at least monthly): 77% are likely to visit a restaurant's website first; 69% say it helps them decide whether to dine in; 45% look for food photos (59% of 18 to 24 year olds); 68% were put off visiting by a website, most often by the menu items (65%), then food photos (36%), hard navigation (33%), hard-to-read menus (30%) and an old look (30%) [84].
+- BentoBox (2023-05-17, over 2,000 US diners): 86% research new restaurants online; 75% would pick the one with the better website [83].
+- TouchBistro (fielded June 2017, 521 US adults who eat out weekly): 59% look at the online menu and 51% at the website before going; type of food is the top reason to choose (63%) [85].
+- Toast's diner survey sits behind a bot check; a figure seen in search results (32% "always" check a website) is UNVERIFIED [86].
+- None of these asks about Wi-Fi, seating or pets, and no survey of what Filipino cafe-goers look for was found.
+
+#### Platforms and specs
+- schema.org `Place` has `amenityFeature` (a LocationFeatureSpecification: free-text `name`, a `value`, optional `hoursAvailable`), `smokingAllowed`, `publicAccess`, `isAccessibleForFree`, `maximumAttendeeCapacity`, `photo`, `hasMap`, `specialOpeningHoursSpecification` and `event`; `sameAs` comes from Thing [76, 77]. `FoodEstablishment` adds `acceptsReservations` (Boolean, URL or text) [78].
+- Google's local business guide lists none of `amenityFeature`, `smokingAllowed`, `acceptsReservations` or `photo`; `image` is required only for a restaurant carousel [41]. Google retired FAQ rich results in 2026 [81].
+- Meta's Instagram oEmbed returns embed HTML for front-end display only, skips private accounts and allows 1,000 requests an hour [82].
+
+### Site notes
+
+**Flora Café** (`florawellnesscafe.com`, Modesto, US; the owner's pick). Squarespace. Home runs hero photos (the patio, a cup carried across a crosswalk, a pop-up bar), the full menu with add-on prices and four fall specials, a weekly flower day, the next Event, merch, two Posts and a newsletter, then address, hours and email in the footer [54]. About has a founder note on starting as a market coffee cart and pop-up, now on a restaurant's patio [55]. Events show date, time, instructor, a ticket link and an archive [56]. No order-ahead, map, parking, Wi-Fi, pets, FAQ or reviews. Share image 254 by 174 px; LocalBusiness JSON-LD with name, address and image only; 5 of 50 images without alt [54].
+
+**Café Binocle** (`cafebinocle.com`, Quebec). Shopify micro-roaster in French: subscriptions, artist collaborations, "where to find us", newsletter, a collaboration email. No cafe visit content [57].
+
+**Escape Coffee Company** (`escape.cafe`, Montreal). Shopify roaster: beans by roast series, subscriptions, wholesale, equipment repair; one lab address in the footer. Large share image and Organization JSON-LD [58].
+
+**Elephant Grounds** (`elephantgrounds.com`, Hong Kong; franchise in Manila). A food-photo hero with no headline, the story (2013, Manila franchise), a coffee program from an East Java farm, shop products on a partner site, pastries "made from scratch in-house", events and collaboration by email and WhatsApp, one store with hours and a PDF menu, a roastery with no address, catering and careers by email, app badges [59].
+
+**Kurasu** (`kurasu.kyoto`, Kyoto). Home is a bean and gear shop with 4,969 shop reviews and links to press, careers, wholesale and a help center; 99 of 122 images have empty alt [60]. The stores page is the best "sell the room" writing seen: a paragraph per store on size, building and neighbourhood (a 28 m² first shop, a townhouse roastery open to the public once a month, a former photo studio steps from a train station), each with a Google Maps link and no hours [61].
+
+**% Arabica** (`arabica.com`, global; two Manila cafes). Home is a full-screen image with five links. Locations go region, country, city, store, over an embedded map [62]. The Manila BGC Roastery page tells the design story (architect, stone facade, brick interior, booths) and lists six favourite spots nearby; no hours appeared in the rendered text [63].
+
+**Rustic Mornings** (`rusticmornings.com`, Marikina; independent). One-page Squarespace site: a "come home" welcome, the family story, three phone numbers, address and hours on the second phone screen, Bestsellers and drinks with prices, a bakeshop link and a private event form (occasion, date, guests). LocalBusiness JSON-LD; the share image is the logo; footer year 2019 [64].
+
+**Purple Oven** (`purpleoven.com.ph`, Metro Manila bakery cafe). One short page: a line on baking with real butter, a menu link, hours by region, branches as Google Maps search links, landline and Viber. No share tags or JSON-LD [65].
+
+**Mary Grace Cafe** (`marygracecafe.com`, Philippine cafe chain). Home: What's New (openings, the Ube Series), celebration cakes, the founder's story; ordering on a separate delivery site; careers [66]. Locations filter by store type, services and seating capacity and say to call a branch before dropping by on holidays [67]. Event spaces list each branch's capacity and hours with an inquiry button and a 48-hour reply promise [68].
+
+**Nono's** (`nonos.ph`, Metro Manila restaurant and bakery). Home: comfort food and bakery, PDF menus (kitchen, bakery and beverages, party platters), "book us for your next event", What's New and a newsletter with a plain opt-in sentence [69]. Stores list hours per day, a phone and a parking note per branch, and flag function rooms [70]. A pet policy page [71] and a coffee cart for weddings and company events [72].
+
+### Gaps in the planning docs
+
+The pattern behind the gaps: the planning docs treat `/cafe` as hours plus "about". What a visitor weighs before coming in (the room, seats, Wi-Fi, pets, parking, access, how pickup and staying fit together) has no requirement, field, component or batch. Only candidates worth taking (MVP and V1) are listed; Later and Skip candidates change no document now.
+
+**Applied 2026-10-30 (owner's picks).** The docs now carry these candidates, with four differences from the table below: Amenities are fixed columns on `cafe_settings`, not an `amenities` table; room photos are static files, not `cafe_photos`; C-46 is the Barista Pick badge ("Barista picks this week"), not `featured_sort` or a Signature; no phone is shown at all, and the address stops at the neighbourhood.
+
+| Candidate | Document and section | Change |
+|---|---|---|
+| C-42 | `docs/03-ARCHITECTURE.md` section 4, `/` row | Add the visit block (address, today's hours, directions) and the two actions to Home's contents |
+| C-42 | `docs/05-DESIGN-SYSTEM.md` section 6 | New Visit block component; a Home section order: hero with the room, first-time picks, printed menu, the space, next Event, latest Post, visit block |
+| C-43 | `docs/01-PRD.md` section 5.1, INFO-01 | Add "photos and a short description of the space" |
+| C-43 | `docs/07-ROADMAP.md` batch 1.2; `docs/05-DESIGN-SYSTEM.md` section 8 | The photo decision and `docs/ASSETS.md` cover room photos as well as menu photos; imagery guidance for the room (evening light, window seats, empty or hands only) |
+| C-43 | `docs/04-DATA-MODEL.md` section 3, Cafe | New `cafe_photos` (`id`, `url`, `alt`, `sort`), or static files if the Manager never edits them |
+| C-44 | `docs/01-PRD.md` INFO-01 and STAFF-05 | Visit facts on the cafe page; Managers edit them |
+| C-44 | `docs/04-DATA-MODEL.md` section 3, Cafe | New `amenities` table (`key` PK, `value` bool null, `note` text, `sort`) with keys such as `wifi`, `outlets`, `pets`, `smoking`, `step_free_entrance`, `accessible_restroom`, `parking`; or fixed columns on `cafe_settings` |
+| C-44 | `docs/03-ARCHITECTURE.md` section 4, `/cafe` row | Amenity edits revalidate the page (the `hours` tag, or a new `cafe` tag) |
+| C-44 | `docs/05-DESIGN-SYSTEM.md` section 6 | Visit facts list: icon, label, short note; a fact with no value is left out, never guessed |
+| C-44 | `GLOSSARY.md`, Cafe and content | Proposed word Amenity |
+| C-45 | `docs/01-PRD.md` section 5.1; `docs/05-DESIGN-SYSTEM.md` section 8 | A requirement that `/cafe`, the menu and the Order page explain pickup and walk-in dine-in; the sentence goes into the copy rules; proposed word Dine-in |
+| C-46 | `docs/04-DATA-MODEL.md` section 3, `menu_items` | A field that picks Home's featured Menu Items (`featured_sort` int null, or a `signature` badge); the architecture already promises "featured Menu Items" with no field behind it; proposed word Signature |
+| C-47 | `docs/04-DATA-MODEL.md` section 3, `menu_items`; `docs/07-ROADMAP.md` batch 6.3 | `available_until` date null that hides the Menu Item after the date; built with Promos |
+| C-48 | `docs/01-PRD.md` INFO-01; `docs/07-ROADMAP.md` batch 1.4 | Spell out "about the cafe": origin story, founder note, team, coffee source, each labelled as invented |
+| C-49 | `docs/01-PRD.md` section 5.1 | New INFO-04: share cards on every public page |
+| C-49 | `docs/03-ARCHITECTURE.md` section 14 | How share images are made (a file per route, or generated from the Menu Item photo) and cached; read the metadata guide in `node_modules/next/dist/docs/` first |
+| C-49 | `docs/07-ROADMAP.md` batches 1.3, 1.4 and 5.1 | Share cards in each public page's scope |
+| C-50 | `docs/01-PRD.md` INFO-02 | Add the amenity, smoking, reservation and photo properties |
+| C-51 | `docs/01-PRD.md` INFO-01; `docs/07-ROADMAP.md` batch 1.4 | A visit FAQ on `/cafe` built from the visit facts |
+| C-52 | `docs/04-DATA-MODEL.md` section 3, Content; `docs/01-PRD.md` EVT-01; `GLOSSARY.md` Event | A `recurring_events` table (`title`, `weekday`, `starts_at`, `ends_at`, `note`, `is_published`) or a weekday rule on `events`; an S requirement; proposed word Recurring Event |
+| C-53 | `docs/01-PRD.md` sections 5.2 and 5.5 | New S requirement for an Inquiry, linked from ORD-12 and the Events page |
+| C-53 | `docs/04-DATA-MODEL.md` section 3, Content; `docs/03-ARCHITECTURE.md` section 4 | An `inquiries` table (`kind`, name, contact, date, guests, message, `status`); routes such as `/cafe/inquire` and `/manage/inquiries`; rate limits and the privacy notice cover it |
+| C-53 | `docs/07-ROADMAP.md` section 11; `GLOSSARY.md` | A Phase 6 batch; proposed word Inquiry |
+| C-54 | `docs/01-PRD.md` section 2; `docs/05-DESIGN-SYSTEM.md` section 6 | A new Assumptions row: the phone shown as invented text, not a `tel:` link; email only on the owner's domain; no social links until real accounts exist. The footer follows it. Fits ADR 0006 as written, so no new ADR |
+| C-55 | `docs/03-ARCHITECTURE.md` section 4; `docs/05-DESIGN-SYSTEM.md` section 6, Concept Notice; `docs/07-ROADMAP.md` batches 0.6 and 7.2 | A new prerendered route (for example `/concept`); the Concept Notice links to it; the case study link is added in 7.2 |
+
+Proposed glossary words (not yet defined; add to `GLOSSARY.md` before any code uses them):
+
+- **Amenity**: a fact about the cafe as a place to stay (Wi-Fi, power outlets, pets, step-free entrance, parking), shown on the cafe page. _Avoid_: feature, attribute (in UI copy).
+- **Dine-in**: eating or drinking at the cafe after walking in; not ordered through the site in Version 1. _Avoid_: for here (in code), table service.
+- **Signature**: a Menu Item the cafe suggests to first-time Customers; at most three at a time.
+- **Recurring Event**: something that happens at the cafe on the same weekday and time every week, with no sign-up.
+- **Inquiry**: a Customer's request about a private event or a large Order, answered by the Manager by email.
+
 ## Sources
 
 1. https://starbucks.ph/order - Starbucks PH Mobile Order & Pay page. Undated (footer 2022). Order window, Starbucks Card payment, 15-item cap, no cancellation, ready notice, in-store or curbside.
@@ -221,3 +388,36 @@ Release key: **MVP** is the first slice that proves order-ahead end to end (menu
 51. https://baymard.com/lists/cart-abandonment-rate - Abandonment rate and reasons. Updated 2025-09-22.
 52. https://baymard.com/research-articles/current-state-of-checkout-ux - Guest checkout findings. 2024-11-13, updated 2025-11-25.
 53. https://measuringu.com/?p=508 - MeasuringU restaurant website ordering study. 2018-12-19.
+54. https://www.florawellnesscafe.com/ (rendered page) - Flora Café home. Footer 2026. Hero photos of the patio and street, menu with add-on prices and fall specials, weekly flower day, next Event, merch, Posts, newsletter; address and hours only in the footer (about 6,700 px down at 390 px); share image 254 by 174 px; minimal LocalBusiness JSON-LD; Instagram and TikTok.
+55. https://www.florawellnesscafe.com/about - Flora founder note: market coffee cart, pop-up, patio cafe since November 2024.
+56. https://www.florawellnesscafe.com/events - Flora Events: date, time, instructor, ticket link, archive.
+57. https://www.cafebinocle.com/ (rendered page) - Café Binocle, Shopify micro-roaster in French: subscriptions, newsletter, collaboration email; no cafe visit content.
+58. https://escape.cafe/ (rendered page) - Escape Coffee Company, Shopify roaster: beans, subscriptions, wholesale; one address; 1200 by 630 share image; Organization JSON-LD.
+59. https://www.elephantgrounds.com/ - Elephant Grounds home. Footer 2025. Story and Manila franchise, coffee program, pastries made in-house, events and catering contacts, one store with hours and a PDF menu, careers, app badges.
+60. https://kurasu.kyoto/ (rendered page) - Kurasu home: bean and gear shop, 4,969 shop reviews, press, careers, wholesale and help center links, newsletter; 99 of 122 images with empty alt.
+61. https://kurasu.kyoto/pages/cafe - Kurasu "Our Global Stores": a paragraph on each space (size, building history, transit), Google Maps links, no hours.
+62. https://arabica.com/en/locations/ - % Arabica locations by region, country and city over an embedded Google Map; Philippines 2.
+63. https://arabica.com/en/location/arabica-manila-bgc-roastery/ - % Arabica Manila BGC Roastery: design story (architect, facade, brick interior, booths), six nearby favourite spots, Google Maps place link; no hours in the rendered text.
+64. https://www.rusticmornings.com/ - Rustic Mornings, Marikina. Footer 2019. Family story, phones, address and hours (second screen at 390 px), Bestsellers and drinks with prices, private event form; LocalBusiness JSON-LD; logo as share image.
+65. https://www.purpleoven.com.ph/ - Purple Oven. Footer 2025. Menu link, hours by region on the first screen, branches as Google Maps search links, landline and Viber; no share tags or JSON-LD.
+66. https://www.marygracecafe.com/ - Mary Grace Cafe home: What's New, Ube Series, founder's story, separate ordering site, careers, Facebook, Instagram, LinkedIn; no address or hours on Home.
+67. https://www.marygracecafe.com/locations - Store filters by type, services (Alfresco Dining, Function Room, Kids Corner) and seating capacity; dine-in, take-away and delivery; call a branch before dropping by on holidays.
+68. https://www.marygracecafe.com/functions - Event spaces per branch with capacity, hours, an inquiry button and a 48-hour reply.
+69. https://nonos.ph/ - Nono's home. Footer 2026. Comfort food and bakery, PDF menus, events, What's New, newsletter opt-in sentence; share card titled "Home"; no address or hours on Home.
+70. https://nonos.ph/our-stores/ - Nono's stores: daily hours, phone, a parking note per branch (nearest car park and walking time), function room flag.
+71. https://nonos.ph/pet-friendly-policy/ - Nono's pet policy: alfresco, indoors when there is room, leash or carrier, off furniture, mall rules, no feeding from plates.
+72. https://nonos.ph/coffee-cart/ - Nono's coffee cart for weddings, birthdays and company events; inquiry form and phone.
+73. Domain checks, 2026-10-30: https://www.coffeeproject.com.ph/ (Shopify "This store is currently unavailable"), https://singleorigin.com.ph/ (open for registration; named as Single Origin's site in a search result), and about 15 guessed domains for other Metro Manila cafes (parked, unregistered, refusing connections or timing out, including `thecurator.com.ph` and `tobysestate.com.ph`). Supports: few Philippine cafes keep a working site of their own.
+74. https://primer.com.ph/food/location/philippines/pasig/kapitolyo/stay-up-espresso-bar/ and https://www.remyeats.com/philippines/couch-club-kapitolyo/469 - Directory listings for Kapitolyo cafes that point to Facebook and Instagram. Seen in search results only, not opened: UNVERIFIED.
+75. https://support.google.com/business/answer/9049526 - Google Business Profile, business attributes. Undated (footer 2026). Wi-Fi, outdoor seats, accessibility (entrance, restroom, seating, parking, elevator, hearing), attributes from visitors, availability by country and category.
+76. https://schema.org/Place - `amenityFeature`, `smokingAllowed`, `publicAccess`, `isAccessibleForFree`, `maximumAttendeeCapacity`, `photo`, `hasMap`, `specialOpeningHoursSpecification`, `event`; `sameAs` and `image` from Thing.
+77. https://schema.org/LocationFeatureSpecification - Name and value pairs, `hoursAvailable`, `validFrom`, `validThrough`; no fixed list of names.
+78. https://schema.org/FoodEstablishment - `acceptsReservations` (Boolean, URL or text), `hasMenu`, `servesCuisine`; LocalBusiness `paymentAccepted`, `currenciesAccepted`, `priceRange`.
+79. https://ogp.me/ - The Open Graph protocol. Required `og:title`, `og:type`, `og:image`, `og:url`; image width, height and alt; alt should accompany an image; types include `website` and `article`, no place type.
+80. https://developers.google.com/search/docs/appearance/structured-data/review-snippet - Self-serving reviews are ineligible for stars; LocalBusiness review markup is for sites reviewing other businesses. Updated 2026-09-08.
+81. https://developers.google.com/search/docs/appearance/structured-data/faqpage - FAQ rich results deprecated from 2026-05-07 and no longer shown (2026-06-15 entry).
+82. https://developers.facebook.com/docs/instagram-platform/oembed - Meta Instagram oEmbed: embed HTML for front-end display only, no private accounts, 1,000 requests an hour. Undated.
+83. https://getbento.com/blog/2023-diner-journey - BentoBox (vendor survey), 2023-05-17, over 2,000 US diners: 86% research online, 75% prefer the better website.
+84. https://prnewswire.com/news-releases/survey-nearly-70-of-us-diners-say-a-restaurants-website-has-discouraged-them-from-visiting-300909229.html - MGH, a marketing agency (vendor survey), press release via PR Newswire, 2019-08-29, 1,101 US adults: website use before dining, food photos, what puts people off. MGH's own landing page (`mghus.com/lp/restaurant-survey`) not opened.
+85. https://www.touchbistro.com/wp-content/uploads/2021/01/How_Diners_Choose_Restaurants_Singles.pdf - TouchBistro (vendor survey), "How Diners Choose Restaurants", fielded June 2017 by an independent firm, 521 US adults who eat out weekly: online menu 59%, website 51%, type of food 63%.
+86. https://pos.toasttab.com/blog/on-the-line/restaurant-reviews-and-ratings-data - Toast diner survey. Blocked by a bot check; "32% always check websites" seen in search results only: UNVERIFIED.

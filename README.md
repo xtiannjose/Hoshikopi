@@ -1,6 +1,6 @@
 # Hoshikopi
 
-A concept cafe in Metro Manila, and the website that runs it. Customers browse the menu, customize their drink, order ahead and pick up at the counter, pay with GCash, Maya, card or at pickup, and collect Stars toward a free drink. Baristas run live Orders on a Bar Screen; the Manager edits the menu, hours, Events and Posts.
+A concept cafe in Metro Manila, and the website that runs it. The site sells the place and the menu: Customers see the space and plan a visit, browse the menu, customize their drink, order ahead and pick up at the counter, pay with GCash, Maya, card or at pickup, and collect Stars toward a free drink. Baristas run live Orders on a Bar Screen; the Manager edits the menu, hours, the cafe's details, Events and Posts. The look follows the cafe's clock: cream paper by day, night sky from 6 PM.
 
 *Hoshi* is Japanese for star; *kopi* is coffee in Malay and Indonesian, close to the Filipino *kape*.
 
@@ -28,7 +28,7 @@ Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS 4,
 | [docs/06-SETUP.md](docs/06-SETUP.md) | Prerequisites, accounts, scaffold, env vars, database, commands, Google Drive copy | Setting up or moving to a new computer |
 | [docs/07-ROADMAP.md](docs/07-ROADMAP.md) | Phases 0 to 7, batches with checkboxes, exit criteria, decisions due, definition of done | Picking the next piece of work |
 | [docs/08-TOOLING.md](docs/08-TOOLING.md) | Which skill fits which job, agents, ports, libraries, machine facts, prompts | Choosing how to work |
-| [docs/adr/](docs/adr/) | Decisions and why (0001 to 0009) | Before changing a decision |
+| [docs/adr/](docs/adr/) | Decisions and why (0001 to 0010) | Before changing a decision |
 
 ## Getting started
 
@@ -36,4 +36,4 @@ Follow [docs/06-SETUP.md](docs/06-SETUP.md). Every outside account (Neon, Vercel
 
 ## Project copy
 
-GitHub is not used for now. The copy of the project is a git bundle on Google Drive: `G:\My Drive\Coding Projects\Personal\Hoshikopi\hoshikopi.bundle` (how to refresh and restore it: [docs/06-SETUP.md](docs/06-SETUP.md) section 8).
+The project is on GitHub: https://github.com/xtiannjose/Hoshikopi. A git bundle on Google Drive is the backup: `G:\My Drive\Coding Projects\Personal\Hoshikopi\hoshikopi.bundle` (how to refresh and restore it: [docs/06-SETUP.md](docs/06-SETUP.md) section 8).

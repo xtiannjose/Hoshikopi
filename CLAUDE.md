@@ -1,6 +1,6 @@
 # Hoshikopi
 
-Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): menu, order ahead for pickup, Stars loyalty, Events and Posts, a Bar Screen for baristas. A portfolio project: invented details are labelled and no real money moves (ADR 0006). Planning docs are complete; code is built phase by phase from `docs/07-ROADMAP.md`.
+Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): the cafe as a place to visit, menu, order ahead for pickup, Stars loyalty, Events and Posts, a Bar Screen for baristas. A portfolio project: invented details are labelled and no real money moves (ADR 0006). Planning docs are complete; code is built phase by phase from `docs/07-ROADMAP.md`.
 
 ## Start of every task
 
@@ -31,6 +31,7 @@ Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): menu
 - **Next.js 16 with Cache Components** is newer than most training data: read the guide in `node_modules/next/dist/docs/` before using a Next API. Public pages are prerendered and refreshed by cache tag (`menu`, `hours`, `content`).
 - **Server Components by default.** `"use client"` only for leaf components with state or browser APIs. Native form controls before library widgets.
 - **The Concept Notice stays visible** on every page and at checkout.
+- **Two palettes on the cafe's clock** (ADR 0010): Day 6 AM to 6 PM Manila time, Night otherwise, chosen in the browser before first paint so pages stay prerendered.
 
 ## Environment
 
@@ -42,9 +43,9 @@ Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): menu
 ## Test and commit discipline
 
 - Build money, Capacity, Prep Time, Stars, Order Status and webhook handlers test-first with the `tdd` skill, against the real test database.
-- A batch is done when the roadmap's definition of done (section 14) is met; look at it in the browser at 375 and 1280 px.
-- Commits, merges into `main` and refreshing the Google Drive bundle: only when the user asks, each time. One branch per batch; merge with `git merge --no-ff`. Conventional Commits.
-- GitHub is out of use for now: no `gh`, no pushes, no pull requests. The project copy is a git bundle on Google Drive (`docs/06-SETUP.md` section 8).
+- A batch is done when the roadmap's definition of done (section 14) is met; look at it in the browser at 375 and 1280 px, in both palettes.
+- Commits, pushes, pull requests and refreshing the Google Drive bundle: only when the user asks, each time. One branch per batch, pushed with a pull request into `main`; the user merges it on GitHub with a merge commit. Conventional Commits.
+- GitHub (`origin`, https://github.com/xtiannjose/Hoshikopi, public) holds the project; the git bundle on Google Drive is the backup (`docs/06-SETUP.md` section 8).
 
 ## Voice
 
