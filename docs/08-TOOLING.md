@@ -61,7 +61,7 @@ Add a library only when the platform and installed packages cannot do the job, a
 - Docker Desktop is installed but not always running; start it before database work.
 - Chrome 156 is installed (Lighthouse uses it); Playwright's Chromium is installed.
 - Google Drive for desktop is drive `G:`; project copies go to `G:\My Drive\Coding Projects\Personal\<Project>\<project>.bundle`.
-- GitHub is back (2026-10-31): `origin` is https://github.com/xtiannjose/Hoshikopi; `gh` 2.101 is installed. Push only when the user asks.
+- GitHub is back (2026-10-31): `origin` is https://github.com/xtiannjose/Hoshikopi; `gh` 2.101 is installed and signed in. Push and open pull requests only when the user asks; the user merges them.
 
 ## 6. References
 

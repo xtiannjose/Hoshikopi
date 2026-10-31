@@ -39,7 +39,7 @@ We redraw everything ourselves: no Flora photos, drawings, copy or logo.
 
 ### 1.2 Wireframes (claude.ai canvases, 2026-10-30)
 
-Each has the same seven boards, with labelled photo slots: Home at 1280 and 390 px, the Hoshi Latte page, the Visit page (`/cafe`), Cart and checkout, and Order status at 390 px, and the Bar Screen on a 1194 px tablet. Home has a Preview setting for the pickup card (sample time, live clock, closing soon, closed, Ordering Paused); Order status has one for each Order Status.
+Each has the same twelve boards, with labelled photo slots: Home at 1280 and 390 px; at 390 px the Hoshi Latte page, the Visit page (`/cafe`), Cart and checkout, Order status, the Star Card and account page (`/account`), Events, a Post and About this concept (`/concept`); the Bar Screen on a 1194 px tablet; and the Manager pages at 1280 px (Today with Refunds and Ordering Paused, the Menu editor with Sold Out, Hours and capacity). Preview settings: Home's pickup card (sample time, live clock, closing soon, closed, Ordering Paused); Order status for each Order Status; the account page for a Member with 5 Stars, a Reward ready, a new Member or signed out; the Manager pages for each section. Not wireframed: Cafe details, Events, Posts and Staff forms in `/manage`, and V1 features.
 
 | Direction | Link | What it is |
 | --- | --- | --- |

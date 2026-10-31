@@ -5,7 +5,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 ## 0. Where we are (updated 2026-10-31)
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
-- **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Seven boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Bar Screen. Not wireframed yet: Star Card account page, Events and Posts pages, `/concept`, Manager pages.
+- **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
 - **Next: Phase 0, batch 0.1** (scaffold).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
@@ -41,7 +41,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 2. Build. Money, Capacity, Stars and Order Status rules go test-first with the `tdd` skill.
 3. `npm run qa` must pass; add `npm run test:e2e` for anything visible. Look at the change in the browser at 375, 768 and 1280 px, in the Day and the Night palette.
 4. Tick the batch here, update any document the change affected, add an ADR if a decision was made.
-5. Commit only when the user asks (Conventional Commits). Merge into `main` with `git merge --no-ff`, push to GitHub and refresh the Google Drive bundle only when the user asks.
+5. Commit, push and open a pull request into `main` only when the user asks (Conventional Commits); the user merges it on GitHub with a merge commit. Refresh the Google Drive bundle only when the user asks.
 
 ## 4. Decisions due along the way
 

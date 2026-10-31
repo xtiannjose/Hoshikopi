@@ -32,7 +32,7 @@ Use accounts owned by the project, never a work account; keep keys only in `.env
 This folder already holds the documents, and the Next.js scaffolder refuses to write into a folder with files that could conflict. Scaffold in a sibling folder, then copy in without overwriting (the same method Hoshimono used):
 
 ```powershell
-cd C:\Users\cjose\Documents\Projects\Personal
+cd D:\Coding\projects\Personal
 npx create-next-app@latest hoshikopi-scaffold --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm --disable-git
 robocopy hoshikopi-scaffold Hoshikopi /E /XC /XN /XO /XD node_modules .next /L
 robocopy hoshikopi-scaffold Hoshikopi /E /XC /XN /XO /XD node_modules .next
@@ -123,11 +123,14 @@ npx prisma studio
 
 ## 8. Project copies: GitHub and Google Drive
 
-GitHub is the remote: `origin` is https://github.com/xtiannjose/Hoshikopi. Push only when asked:
+GitHub is the remote: `origin` is https://github.com/xtiannjose/Hoshikopi (public, so nothing secret goes in). When asked, push the batch branch and open a pull request into `main`; the owner merges it on GitHub with "Create a merge commit":
 
 ```
-git push origin main <branch>
+git push -u origin <branch>
+gh pr create --base main --head <branch>
 ```
+
+After a merge, update the local copy with `git switch main` and `git pull`.
 
 The backup is one git bundle of every branch, synced by Google Drive for desktop (remote `drive`):
 

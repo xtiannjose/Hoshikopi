@@ -44,8 +44,8 @@ Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): the 
 
 - Build money, Capacity, Prep Time, Stars, Order Status and webhook handlers test-first with the `tdd` skill, against the real test database.
 - A batch is done when the roadmap's definition of done (section 14) is met; look at it in the browser at 375 and 1280 px, in both palettes.
-- Commits, pushes, merges into `main` and refreshing the Google Drive bundle: only when the user asks, each time. One branch per batch; merge locally with `git merge --no-ff`. Conventional Commits.
-- GitHub (`origin`, https://github.com/xtiannjose/Hoshikopi) holds the project; the git bundle on Google Drive is the backup (`docs/06-SETUP.md` section 8).
+- Commits, pushes, pull requests and refreshing the Google Drive bundle: only when the user asks, each time. One branch per batch, pushed with a pull request into `main`; the user merges it on GitHub with a merge commit. Conventional Commits.
+- GitHub (`origin`, https://github.com/xtiannjose/Hoshikopi, public) holds the project; the git bundle on Google Drive is the backup (`docs/06-SETUP.md` section 8).
 
 ## Voice
 
