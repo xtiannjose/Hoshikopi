@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists); batches 5.1 to 5.3 done; 5.4 prepared and waiting for the owner's Neon, Vercel and Resend accounts. **Next: Phase 6, batch 6.1** (Favourites and reorder) while 5.4 waits.
+- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists); batches 5.1 to 5.3 done; 5.4 prepared and waiting for the owner's Neon, Vercel and Resend accounts. Batch 6.1 done. **Next: Phase 6, batch 6.2** (Event sign-up with a cap) while 5.4 waits.
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -130,7 +130,7 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 
 ## 11. Phase 6: V1 features (2 weeks)
 
-- [ ] **6.1 Favourites and reorder** (ORD-11).
+- [x] **6.1 Favourites and reorder** (ORD-11). Done 2026-10-31: Members save a Menu Item with its Options from its page (Guests are asked to sign in) and see them in `/account` priced today, with Add and Remove; each past Order has Order again, which puts its Lines back in the Cart through `addLine` (checked and priced today) and says how many were left out. Order Lines now keep their Option ids (`option_ids`) next to the snapshot; Favourites go with the Cart when an account is deleted.
 - [ ] **6.2 Event sign-up with a cap** (EVT-02).
 - [ ] **6.3 Promos and seasonal Menu Items** (time-boxed price changes on Menu Items; `available_until`, MENU-06).
 - [ ] **6.4 Installable app and "order ready" notifications** (PWA, web push).

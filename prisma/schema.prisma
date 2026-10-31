@@ -51,6 +51,7 @@ model MenuItem {
   optionGroups MenuItemOptionGroup[]
   cartLines    CartLine[]
   orderLines   OrderLine[]
+  favourites   Favourite[]
   createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -203,6 +204,21 @@ model CartLine {
   @@map("cart_lines")
 }
 
+/// A Member's saved Menu Item and Options (ORD-11), owned by the cart module.
+model Favourite {
+  id         String   @id @default(cuid())
+  memberId   String   @map("member_id")
+  member     User     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  menuItemId String   @map("menu_item_id")
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  optionIds  String[] @map("option_ids")
+  choiceKey  String   @map("choice_key")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([memberId, choiceKey])
+  @@map("favourites")
+}
+
 // ---------- ordering ----------
 
 enum OrderStatus {
@@ -283,6 +299,8 @@ model OrderLine {
   name       String
   // [{ group, name, deltaCents }]
   options    Json
+  /// The chosen Options' ids, for Order again (the snapshot stays the record).
+  optionIds  String[]  @default([]) @map("option_ids")
   unitCents  Int       @map("unit_cents")
   quantity   Int
   lineCents  Int       @map("line_cents")
@@ -479,6 +497,7 @@ model User {
   sessions       Session[]
   accounts       Account[]
   secondFactor   SecondFactor?
+  favourites     Favourite[]
   cart           Cart?
   orders         Order[]
   stars          StarEntry[]   @relation("MemberStars")

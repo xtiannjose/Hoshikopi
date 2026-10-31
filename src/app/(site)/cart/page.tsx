@@ -20,11 +20,12 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function CartPage() {
+export default function CartPage({ searchParams }: PageProps<"/cart">) {
   return (
     <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 md:px-8">
       <h1 className="font-display pt-8 pb-1 text-5xl italic">Your Cart</h1>
       <Suspense fallback={<p className="mt-6">Getting your Cart...</p>}>
+        <LeftOut searchParams={searchParams} />
         <Cart />
       </Suspense>
     </main>
@@ -37,6 +38,23 @@ const PROBLEMS: Record<NonNullable<CartLineView["problem"]>, string> = {
   option_sold_out: "One of its options is sold out today.",
   invalid_options: "Its options changed on the menu.",
 };
+
+/** After Order again: how many Lines could not be added today (ORD-11). */
+async function LeftOut({
+  searchParams,
+}: Pick<PageProps<"/cart">, "searchParams">) {
+  const { left } = await searchParams;
+  // A count, never text from the address, capped at an Order's size.
+  const count = Math.min(Math.floor(Number(left)) || 0, 20);
+  if (count < 1) return null;
+  return (
+    <p role="status" className="bg-muted rounded-card mt-6 p-4">
+      {count === 1
+        ? "1 item from that order is sold out or off the menu today, so we left it out."
+        : `${count} items from that order are sold out or off the menu today, so we left them out.`}
+    </p>
+  );
+}
 
 async function Cart() {
   const owner = await currentCartOwner();

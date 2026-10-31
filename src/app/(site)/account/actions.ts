@@ -3,7 +3,12 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { deleteMemberCart } from "@/modules/cart";
+import {
+  addLine,
+  deleteMemberCart,
+  favouritesFor,
+  removeFavourite,
+} from "@/modules/cart";
 import {
   forgetMember,
   requireMember,
@@ -11,7 +16,7 @@ import {
   updateProfile,
 } from "@/modules/identity";
 import { forgetStars } from "@/modules/loyalty";
-import { deidentifyOrders } from "@/modules/ordering";
+import { deidentifyOrders, orderAgain } from "@/modules/ordering";
 
 export async function signOutAction() {
   await signOut();
@@ -42,4 +47,40 @@ export async function deleteAccountAction() {
   await forgetMember(member.id);
   refresh();
   redirect("/");
+}
+
+/** Add a Favourite to the Cart at today's price (ORD-11). */
+export async function addFavouriteAction(form: FormData) {
+  const member = await requireMember("/account");
+  const favourite = (await favouritesFor(member.id)).find(
+    (saved) => saved.id === form.get("id")
+  );
+  const result = favourite
+    ? await addLine(
+        { memberId: member.id },
+        {
+          menuItemId: favourite.menuItemId,
+          optionIds: favourite.optionIds,
+          quantity: 1,
+          note: "",
+        }
+      )
+    : { ok: false };
+  refresh();
+  redirect(result.ok ? "/cart" : "/cart?left=1");
+}
+
+export async function removeFavouriteAction(form: FormData) {
+  const member = await requireMember("/account");
+  await removeFavourite(member.id, String(form.get("id") ?? ""));
+  refresh();
+}
+
+/** Order again: a past Order's Lines go back in the Cart (ORD-11). */
+export async function orderAgainAction(form: FormData) {
+  const member = await requireMember("/account");
+  const result = await orderAgain(String(form.get("orderId") ?? ""), member.id);
+  refresh();
+  const left = result?.skipped.length ?? 0;
+  redirect(left ? `/cart?left=${left}` : "/cart");
 }

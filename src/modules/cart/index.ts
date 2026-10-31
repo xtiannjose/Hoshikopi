@@ -16,4 +16,11 @@ export {
   type CartView,
   type NewLine,
 } from "./internal/cart";
+export {
+  favouritesFor,
+  removeFavourite,
+  saveFavourite,
+  type FavouriteResult,
+  type FavouriteView,
+} from "./internal/favourites";
 export { cartOwnerForWrite, currentCartOwner } from "./internal/session";

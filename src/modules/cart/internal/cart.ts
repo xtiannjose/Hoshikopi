@@ -50,7 +50,7 @@ const ownerWhere = (owner: CartOwner) =>
     : { guestTokenHash: owner.guestTokenHash };
 
 /** Identical choices share a key, so they merge into one Line. */
-const choiceKey = (line: {
+export const choiceKey = (line: {
   menuItemId: string;
   optionIds: string[];
   note: string;
@@ -231,7 +231,10 @@ export async function mergeGuestCart(
   });
 }
 
-/** Deleting an account removes the Member's Cart (ACC-03). */
+/** Deleting an account removes the Member's Cart and Favourites (ACC-03). */
 export async function deleteMemberCart(memberId: string) {
-  await db.cart.deleteMany({ where: { memberId } });
+  await db.$transaction([
+    db.cart.deleteMany({ where: { memberId } }),
+    db.favourite.deleteMany({ where: { memberId } }),
+  ]);
 }

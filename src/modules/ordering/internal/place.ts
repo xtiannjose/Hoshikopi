@@ -96,6 +96,7 @@ function snapshotLines(lines: Line[], rewardLine: Line | undefined) {
         name,
         deltaCents,
       })),
+      optionIds: line.options.map((option) => option.id),
       isDrink: line.isDrink,
       note: line.note || null,
     };
