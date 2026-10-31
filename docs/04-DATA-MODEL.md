@@ -129,7 +129,7 @@ Option Groups: Size (Regular +0, Large +30), Milk (Whole +0, Oat +35, Almond +35
 
 Barista Pick badge on Hoshi Latte, Tablea Tsokolate and Ube Pandesal. Allergens on every seeded Menu Item (for example Hoshi Latte: milk; Ube Pandesal: wheat, milk, egg).
 
-Also seeded: Opening Hours 7:00 to 21:00 (last order 20:30) every day, Capacity 12 drinks and 8 food Lines per window, the cafe's details and Amenities (invented, `area` Kapitolyo, Pasig, map pin on a public spot), two Events, three Posts, and in dev and test only: one Manager (Hoshi, `seed-manager`), one Barista (Annika, `seed-barista`) and one Member (Christian, `seed-member`); their emails are in `docs/06-SETUP.md` section 6.
+Also seeded: Opening Hours 7:00 to 21:00 (last order 20:30) every day, Capacity 12 drinks and 8 food Lines per window, the cafe's details and Amenities (invented, `area` Kapitolyo, Pasig, map pin on a public spot), two Events, three Posts, and in dev and test only: one Manager (Christian, `seed-manager`), one Barista (Annika, `seed-barista`) and one Member (Hoshi, `seed-member`); their emails are in `docs/06-SETUP.md` section 6.
 
 ## 6. Migration policy
 

@@ -34,7 +34,7 @@ async function expectOnMenu(
 test("a Manager changes a price and the public menu shows it", async ({
   page,
 }) => {
-  await signIn(page, "hoshi@hoshikopi.example", "/manage/menu");
+  await signIn(page, "christian@hoshikopi.example", "/manage/menu");
   await expectNoAxeViolations(page);
   await page.getByRole("link", { name: "Spanish Latte" }).click();
   await page.getByLabel("Base Price (PHP)").fill("170");

@@ -231,7 +231,7 @@ Same columns and release keys as the first table. Top: rank in this part's summa
 - Google Business Profile is where these facts usually live: owners set attributes such as Wi-Fi, outdoor seats and wheelchair-accessible entrance, restroom, seating, parking and elevator; some come from visitors' answers; availability varies by country and business category [75]. Hoshikopi skips a profile (C-36), so its own cafe page is the only place to learn them.
 - The most useful parking line names the nearest car park and the walk ("3 min. walk") [70]. Kurasu's "steps from" a train station is the transit version [61]. Purple Oven and Nono's link branches to a Google Maps search; % Arabica embeds a map [62, 65, 70]. A plain link (C-34) is enough and costs no script.
 - Mary Grace states its service modes (dine-in at cafes, take-away, delivery) and says holiday hours may change, so call first [67]. No site explains how ordering ahead relates to sitting down.
-- Personas: Migs studies at the cafe two afternoons a week (Wi-Fi, outlets, laptop rules), Tita Lorna brings the family on Saturday mornings (parking, step-free entrance), Christian comes by jeep (commute). No planning doc holds any of these facts.
+- Personas: Migs studies at the cafe two afternoons a week (Wi-Fi, outlets, laptop rules), Tita Lorna brings the family on Saturday mornings (parking, step-free entrance), Hoshi comes by jeep (commute). No planning doc holds any of these facts.
 
 #### Menu on cafe-first sites
 - Prices on the page win: Flora and Rustic Mornings print the menu with prices on Home, and Flora lists add-ons with their price, like Price Deltas [54, 64]. Nono's and Elephant Grounds still use PDFs [59, 69], which C-01 already rules out.

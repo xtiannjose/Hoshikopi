@@ -7,8 +7,10 @@ import { e2eQuery } from "./db";
 import { signIn } from "./sign-in";
 
 test("a seeded Manager signs in to /manage", async ({ page }) => {
-  await signIn(page, "hoshi@hoshikopi.example", "/manage");
-  await expect(page.getByText("Signed in as Hoshi (Manager).")).toBeVisible();
+  await signIn(page, "christian@hoshikopi.example", "/manage");
+  await expect(
+    page.getByText("Signed in as Christian (Manager).")
+  ).toBeVisible();
   await expectNoAxeViolations(page);
 });
 
@@ -20,7 +22,7 @@ test("a seeded Barista signs in to /manage", async ({ page }) => {
 // The check runs inside a streamed Suspense boundary, so the status is
 // already 200; the page shows not-found and is marked noindex.
 test("a Member gets not-found from /manage", async ({ page }) => {
-  await signIn(page, "christian@hoshikopi.example", "/");
+  await signIn(page, "hoshi@hoshikopi.example", "/");
   await page.goto("/manage");
   await expect(page.getByText(/could not be found/i)).toBeVisible();
   await expect(page.getByText(/Signed in as/)).toHaveCount(0);

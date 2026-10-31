@@ -55,7 +55,7 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "desktop task");
   test.setTimeout(240_000);
-  await signIn(page, "hoshi@hoshikopi.example", "/manage/events/new");
+  await signIn(page, "christian@hoshikopi.example", "/manage/events/new");
   await page.getByLabel("Title").fill("Cupping with Annika");
   await page.getByLabel("Web address").fill("cupping-with-annika");
   await page

@@ -13,7 +13,7 @@ const customer: Actor = { kind: "customer" };
 const webhook: Actor = { kind: "webhook" };
 const system: Actor = { kind: "system" };
 const annika: Actor = { kind: "staff", id: "seed-barista", role: "barista" };
-const hoshi: Actor = { kind: "staff", id: "seed-manager", role: "manager" };
+const christian: Actor = { kind: "staff", id: "seed-manager", role: "manager" };
 
 beforeEach(async () => {
   await resetDb(db);
@@ -38,8 +38,8 @@ async function placedOrder(paymentMethod: PaymentMethod = "pay_at_pickup") {
       serviceDay: new Date("2026-11-02"),
       code: `K-${Math.random().toString().slice(2, 8)}`,
       status: "placed",
-      customerName: "Christian",
-      customerEmail: "christian@hoshikopi.example",
+      customerName: "Hoshi",
+      customerEmail: "hoshi@hoshikopi.example",
       pickupKind: "scheduled",
       windowStart: WINDOW,
       paymentMethod,
@@ -159,7 +159,7 @@ describe("transition: cancelling (ORD-09)", () => {
     const order = await placedOrder();
     await transition(order.id, "accepted", annika);
     await transition(order.id, "preparing", annika);
-    expect(await transition(order.id, "cancelled", hoshi)).toEqual({
+    expect(await transition(order.id, "cancelled", christian)).toEqual({
       ok: false,
       reason: "reason_required",
       status: "preparing",
@@ -168,7 +168,7 @@ describe("transition: cancelling (ORD-09)", () => {
       (await transition(order.id, "cancelled", annika, "Out of milk")).ok
     ).toBe(false);
     expect(
-      (await transition(order.id, "cancelled", hoshi, "Out of milk")).ok
+      (await transition(order.id, "cancelled", christian, "Out of milk")).ok
     ).toBe(true);
     expect(
       (await db.order.findUniqueOrThrow({ where: { id: order.id } }))
@@ -193,7 +193,7 @@ describe("transition: Refunds", () => {
     await transition(order.id, "paid", webhook);
     await transition(order.id, "cancelled", customer);
     expect((await transition(order.id, "refunded", annika)).ok).toBe(false);
-    expect((await transition(order.id, "refunded", hoshi)).ok).toBe(true);
+    expect((await transition(order.id, "refunded", christian)).ok).toBe(true);
     expect(await usage()).toMatchObject({ drinks: 0, food: 0 });
     expect(await statusOf(order.id)).toBe("refunded");
   });
@@ -201,7 +201,7 @@ describe("transition: Refunds", () => {
   it("refuses refunding a cancelled Order that was never paid", async () => {
     const order = await placedOrder();
     await transition(order.id, "cancelled", customer);
-    expect((await transition(order.id, "refunded", hoshi)).ok).toBe(false);
+    expect((await transition(order.id, "refunded", christian)).ok).toBe(false);
   });
 
   it("refunds a Picked Up Order", async () => {
@@ -209,7 +209,7 @@ describe("transition: Refunds", () => {
     for (const to of ["accepted", "preparing", "ready", "picked_up"] as const) {
       await transition(order.id, to, annika);
     }
-    expect((await transition(order.id, "refunded", hoshi)).ok).toBe(true);
+    expect((await transition(order.id, "refunded", christian)).ok).toBe(true);
   });
 });
 

@@ -32,7 +32,7 @@ async function mailTo(address: string): Promise<string[]> {
 
 describe("Order emails (ORD-10)", () => {
   it("sends Order placed for Pay at Pickup and Ready for pickup", async () => {
-    const address = `christian-${Date.now()}@example.com`;
+    const address = `hoshi-${Date.now()}@example.com`;
     const owner = { guestTokenHash: address };
     const item = await db.menuItem.findUniqueOrThrow({
       where: { slug: "ube-pandesal" },
@@ -47,7 +47,7 @@ describe("Order emails (ORD-10)", () => {
       owner,
       memberId: null,
       seenTotalCents: (await getCart(owner)).totalCents,
-      customerName: "Christian",
+      customerName: "Hoshi",
       customerEmail: address,
       customerPhone: "",
       pickup: { kind: "asap" },

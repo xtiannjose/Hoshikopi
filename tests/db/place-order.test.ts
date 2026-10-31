@@ -43,8 +43,8 @@ async function input(
     owner,
     memberId: null,
     seenTotalCents: (await getCart(owner)).totalCents,
-    customerName: "Christian",
-    customerEmail: "christian@example.com",
+    customerName: "Hoshi",
+    customerEmail: "hoshi@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
     paymentMethod: "pay_at_pickup",
@@ -54,15 +54,15 @@ async function input(
 
 describe("placeOrder: a Guest pays at pickup (ORD-03 to ORD-08, PAY-02)", () => {
   it("snapshots the Lines, takes window room, codes the Order and empties the Cart", async () => {
-    const christian = guest();
-    await addLatte(christian, 2);
-    await addLine(christian, {
+    const hoshi = guest();
+    await addLatte(hoshi, 2);
+    await addLine(hoshi, {
       menuItemId: items["ube-pandesal"],
       optionIds: [],
       quantity: 1,
       note: "",
     });
-    const result = await placeOrder(await input(christian));
+    const result = await placeOrder(await input(hoshi));
     expect(result).toMatchObject({ ok: true, code: "K-001" });
     if (!result.ok) return;
 
@@ -99,21 +99,21 @@ describe("placeOrder: a Guest pays at pickup (ORD-03 to ORD-08, PAY-02)", () => 
         where: { windowStart: order.windowStart },
       })
     ).toMatchObject({ drinks: 2, food: 1 });
-    expect((await getCart(christian)).lines).toHaveLength(0);
+    expect((await getCart(hoshi)).lines).toHaveLength(0);
   });
 
   it("puts As Soon As Possible in the first window after now + Prep Time", async () => {
-    const christian = guest();
-    await addLatte(christian);
-    const result = await placeOrder(await input(christian));
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const result = await placeOrder(await input(hoshi));
     // Empty queue: Prep Time 5 minutes, ready 9:05, first window 9:15.
     expect(result.ok && result.windowStart).toEqual(at("09:15"));
   });
 
   it("keeps a later menu edit away from the placed Order", async () => {
-    const christian = guest();
-    await addLatte(christian);
-    const result = await placeOrder(await input(christian));
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const result = await placeOrder(await input(hoshi));
     await db.menuItem.update({
       where: { id: items["hoshi-latte"] },
       data: { name: "Hoshi Latte 2", baseCents: 99900 },
@@ -127,10 +127,10 @@ describe("placeOrder: a Guest pays at pickup (ORD-03 to ORD-08, PAY-02)", () => 
 
 describe("placeOrder refusals", () => {
   it("refuses when the cafe is closed or Ordering Paused (ORD-07)", async () => {
-    const christian = guest();
-    await addLatte(christian);
+    const hoshi = guest();
+    await addLatte(hoshi);
     freezeClock(at("20:45"));
-    expect(await placeOrder(await input(christian))).toEqual({
+    expect(await placeOrder(await input(hoshi))).toEqual({
       ok: false,
       reason: "closed",
     });
@@ -139,16 +139,16 @@ describe("placeOrder refusals", () => {
       where: { id: 1 },
       data: { orderingPausedUntil: at("10:00") },
     });
-    expect(await placeOrder(await input(christian))).toEqual({
+    expect(await placeOrder(await input(hoshi))).toEqual({
       ok: false,
       reason: "paused",
     });
   });
 
   it("refuses when the total changed since the Customer saw it", async () => {
-    const christian = guest();
-    await addLatte(christian);
-    const seen = await input(christian);
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const seen = await input(hoshi);
     await db.menuItem.update({
       where: { id: items["hoshi-latte"] },
       data: { baseCents: 19500 },
@@ -165,13 +165,13 @@ describe("placeOrder refusals", () => {
       ok: false,
       reason: "cart_problem",
     });
-    const christian = guest();
-    await addLatte(christian);
+    const hoshi = guest();
+    await addLatte(hoshi);
     await db.option.update({
       where: { id: ids["Oat milk"] },
       data: { soldOutOn: new Date("2026-11-02") },
     });
-    expect((await placeOrder(await input(christian))).ok).toBe(false);
+    expect((await placeOrder(await input(hoshi))).ok).toBe(false);
   });
 
   it("caps an Order at 15 drinks and a Guest's Pay at Pickup at 4", async () => {
@@ -193,10 +193,10 @@ describe("placeOrder refusals", () => {
   });
 
   it("needs a name and an email or phone (ORD-05)", async () => {
-    const christian = guest();
-    await addLatte(christian);
+    const hoshi = guest();
+    await addLatte(hoshi);
     const result = await placeOrder(
-      await input(christian, {
+      await input(hoshi, {
         customerName: " ",
         customerEmail: "",
         customerPhone: "",
@@ -206,11 +206,11 @@ describe("placeOrder refusals", () => {
   });
 
   it("refuses a Scheduled window that is past or full, naming the next free one (ORD-04)", async () => {
-    const christian = guest();
-    await addLatte(christian, 2);
+    const hoshi = guest();
+    await addLatte(hoshi, 2);
     expect(
       await placeOrder(
-        await input(christian, {
+        await input(hoshi, {
           pickup: { kind: "scheduled", windowStart: at("08:00") },
         })
       )
@@ -226,7 +226,7 @@ describe("placeOrder refusals", () => {
     });
     expect(
       await placeOrder(
-        await input(christian, {
+        await input(hoshi, {
           pickup: { kind: "scheduled", windowStart: at("10:00") },
         })
       )

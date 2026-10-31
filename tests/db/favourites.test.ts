@@ -15,7 +15,7 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const CHRISTIAN = "seed-member";
+const HOSHI = "seed-member";
 const ids: Record<string, string> = {};
 const items: Record<string, string> = {};
 
@@ -36,10 +36,10 @@ const oatLatte = () => ({
 
 describe("Favourites (ORD-11)", () => {
   it("saves a Menu Item with its Options once and prices it today", async () => {
-    expect(await saveFavourite(CHRISTIAN, oatLatte())).toEqual({ ok: true });
-    expect(await saveFavourite(CHRISTIAN, oatLatte())).toEqual({ ok: true });
+    expect(await saveFavourite(HOSHI, oatLatte())).toEqual({ ok: true });
+    expect(await saveFavourite(HOSHI, oatLatte())).toEqual({ ok: true });
 
-    const saved = await favouritesFor(CHRISTIAN);
+    const saved = await favouritesFor(HOSHI);
     expect(saved).toHaveLength(1);
     expect(saved[0]).toMatchObject({
       name: "Hoshi Latte",
@@ -52,41 +52,41 @@ describe("Favourites (ORD-11)", () => {
       where: { id: items["hoshi-latte"] },
       data: { soldOutOn: new Date("2026-11-02") },
     });
-    expect((await favouritesFor(CHRISTIAN))[0]).toMatchObject({
+    expect((await favouritesFor(HOSHI))[0]).toMatchObject({
       available: false,
     });
   });
 
   it("refuses a choice the Menu Item does not offer", async () => {
     expect(
-      await saveFavourite(CHRISTIAN, {
+      await saveFavourite(HOSHI, {
         menuItemId: items["hoshi-latte"],
         optionIds: [ids["Large"]],
       })
     ).toEqual({ ok: false, reason: "invalid_options" });
-    expect(await favouritesFor(CHRISTIAN)).toEqual([]);
+    expect(await favouritesFor(HOSHI)).toEqual([]);
   });
 
   it("are forgotten with the Member's Cart when the account is deleted", async () => {
-    await saveFavourite(CHRISTIAN, oatLatte());
-    await deleteMemberCart(CHRISTIAN);
-    expect(await favouritesFor(CHRISTIAN)).toEqual([]);
+    await saveFavourite(HOSHI, oatLatte());
+    await deleteMemberCart(HOSHI);
+    expect(await favouritesFor(HOSHI)).toEqual([]);
   });
 
   it("removes only the Member's own Favourite", async () => {
-    await saveFavourite(CHRISTIAN, oatLatte());
-    const [saved] = await favouritesFor(CHRISTIAN);
+    await saveFavourite(HOSHI, oatLatte());
+    const [saved] = await favouritesFor(HOSHI);
 
     await removeFavourite("seed-manager", saved.id);
-    expect(await favouritesFor(CHRISTIAN)).toHaveLength(1);
-    await removeFavourite(CHRISTIAN, saved.id);
-    expect(await favouritesFor(CHRISTIAN)).toEqual([]);
+    expect(await favouritesFor(HOSHI)).toHaveLength(1);
+    await removeFavourite(HOSHI, saved.id);
+    expect(await favouritesFor(HOSHI)).toEqual([]);
   });
 });
 
 describe("Order again (ORD-11)", () => {
-  async function christianOrder() {
-    const owner = { memberId: CHRISTIAN };
+  async function hoshiOrder() {
+    const owner = { memberId: HOSHI };
     await addLine(owner, { ...oatLatte(), quantity: 2, note: "less ice" });
     await addLine(owner, {
       menuItemId: items["ube-pandesal"],
@@ -96,10 +96,10 @@ describe("Order again (ORD-11)", () => {
     });
     const result = await placeOrder({
       owner,
-      memberId: CHRISTIAN,
+      memberId: HOSHI,
       seenTotalCents: (await getCart(owner)).totalCents,
-      customerName: "Christian",
-      customerEmail: "christian@hoshikopi.example",
+      customerName: "Hoshi",
+      customerEmail: "hoshi@hoshikopi.example",
       customerPhone: "",
       pickup: { kind: "asap" },
       paymentMethod: "pay_at_pickup",
@@ -109,13 +109,13 @@ describe("Order again (ORD-11)", () => {
   }
 
   it("puts a past Order's Lines back in the Cart with their Options", async () => {
-    const orderId = await christianOrder();
+    const orderId = await hoshiOrder();
 
-    expect(await orderAgain(orderId, CHRISTIAN)).toEqual({
+    expect(await orderAgain(orderId, HOSHI)).toEqual({
       added: 2,
       skipped: [],
     });
-    const cart = await getCart({ memberId: CHRISTIAN });
+    const cart = await getCart({ memberId: HOSHI });
     expect(
       cart.lines.map((line) => ({
         name: line.name,
@@ -136,20 +136,20 @@ describe("Order again (ORD-11)", () => {
   });
 
   it("leaves out what is Sold Out today and names it", async () => {
-    const orderId = await christianOrder();
+    const orderId = await hoshiOrder();
     await db.menuItem.update({
       where: { id: items["ube-pandesal"] },
       data: { soldOutOn: new Date("2026-11-02") },
     });
 
-    expect(await orderAgain(orderId, CHRISTIAN)).toEqual({
+    expect(await orderAgain(orderId, HOSHI)).toEqual({
       added: 1,
       skipped: ["Ube Pandesal"],
     });
   });
 
   it("is only for the Member who placed the Order", async () => {
-    const orderId = await christianOrder();
+    const orderId = await hoshiOrder();
     expect(await orderAgain(orderId, "seed-manager")).toBeNull();
     expect((await getCart({ memberId: "seed-manager" })).lines).toEqual([]);
   });
