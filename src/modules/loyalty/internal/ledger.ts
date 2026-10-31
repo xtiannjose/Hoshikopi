@@ -2,6 +2,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import { db, type Client } from "@/lib/db";
 import { audit } from "@/modules/identity";
 
+import { STARS_PER_REWARD } from "./rules";
+
 // The Star ledger (ADR 0008): every change is a star_entries row and the
 // balance is their sum. Changes lock the Member's row so two at once cannot
 // take the balance below zero.
@@ -116,5 +118,49 @@ export async function adjustStars(
       tx
     );
     return { ok: true };
+  });
+}
+
+/**
+ * Lock the Member's row and check they hold a Reward's worth of Stars. The
+ * lock holds until the caller's transaction ends, so a Redemption recorded
+ * in it cannot be spent twice (ADR 0008).
+ */
+export async function canRedeem(
+  tx: Prisma.TransactionClient,
+  memberId: string
+): Promise<boolean> {
+  await lockMember(tx, memberId);
+  return (await balance(memberId, tx)) >= STARS_PER_REWARD;
+}
+
+/** Reserve the Stars for a Reward in an Order (after canRedeem, LOY-03). */
+export async function reserveRedemption(
+  tx: Prisma.TransactionClient,
+  memberId: string,
+  orderId: string
+) {
+  await tx.starEntry.create({
+    data: { memberId, orderId, kind: "reserve", stars: -STARS_PER_REWARD },
+  });
+}
+
+/** Give a cancelled or expired Order's reserved Stars back, once. */
+export async function releaseRedemption(
+  tx: Prisma.TransactionClient,
+  orderId: string
+) {
+  const entries = await tx.starEntry.findMany({
+    where: { orderId, kind: { in: ["reserve", "release"] } },
+  });
+  const held = -entries.reduce((sum, e) => sum + e.stars, 0);
+  if (held <= 0) return;
+  await tx.starEntry.create({
+    data: {
+      memberId: entries[0].memberId,
+      orderId,
+      kind: "release",
+      stars: held,
+    },
   });
 }

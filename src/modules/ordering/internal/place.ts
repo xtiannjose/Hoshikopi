@@ -11,7 +11,17 @@ import {
   pickupWindows,
   type Counts,
 } from "@/modules/cafe";
-import { clearCart, getCart, type CartOwner } from "@/modules/cart";
+import {
+  clearCart,
+  getCart,
+  type CartOwner,
+  type CartView,
+} from "@/modules/cart";
+import {
+  canRedeem,
+  reserveRedemption,
+  STARS_PER_REWARD,
+} from "@/modules/loyalty";
 import { startPayment, type OnlineMethod } from "@/modules/payments";
 
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS, MAX_DRINKS_PER_ORDER } from "./rules";
@@ -34,6 +44,8 @@ export type PlaceOrderInput = {
   customerPhone: string;
   pickup: Pickup;
   paymentMethod: PaymentMethod;
+  /** Spend 9 Stars on a free drink (LOY-03). */
+  useReward?: boolean;
 };
 
 export type PlaceOrderResult =
@@ -52,9 +64,68 @@ export type PlaceOrderResult =
   | { ok: false; reason: "closed" | "paused" | "cart_problem" }
   | { ok: false; reason: "price_changed"; totalCents: number }
   | { ok: false; reason: "too_many_drinks" | "pay_at_pickup_limit" }
+  | { ok: false; reason: "not_enough_stars" | "reward_unavailable" }
   | { ok: false; reason: "payment_start_failed" }
   | { ok: false; reason: "window_unavailable" | "no_window" }
   | { ok: false; reason: "window_full"; nextWindow: Date | null };
+
+type Line = CartView["lines"][number];
+
+/** A Line's Base Price: its unit price less its Options' Price Deltas. */
+export const baseOf = (line: Line) =>
+  line.unitCents! - line.options.reduce((sum, o) => sum + o.deltaCents, 0);
+
+/** The drink a Reward makes free: the one with the highest Base Price. */
+export function rewardLineOf(cart: CartView): Line | undefined {
+  return [...cart.lines]
+    .filter((line) => line.isDrink && line.problem === null)
+    .sort((a, b) => baseOf(b) - baseOf(a))[0];
+}
+
+/**
+ * Snapshot Lines for the Order (names, Options, prices). The Reward's Line
+ * gives up one unit to a separate Reward Line priced at its Option deltas.
+ */
+function snapshotLines(lines: Line[], rewardLine: Line | undefined) {
+  return lines.flatMap((line) => {
+    const snapshot = {
+      menuItemId: line.menuItemId,
+      name: line.name,
+      options: line.options.map(({ group, name, deltaCents }) => ({
+        group,
+        name,
+        deltaCents,
+      })),
+      isDrink: line.isDrink,
+      note: line.note || null,
+    };
+    const unit = line.unitCents!;
+    const paid = line === rewardLine ? line.quantity - 1 : line.quantity;
+    return [
+      ...(paid > 0
+        ? [
+            {
+              ...snapshot,
+              unitCents: unit,
+              quantity: paid,
+              lineCents: unit * paid,
+            },
+          ]
+        : []),
+      ...(line === rewardLine
+        ? [
+            {
+              ...snapshot,
+              unitCents: unit - baseOf(line),
+              quantity: 1,
+              lineCents: unit - baseOf(line),
+              isReward: true,
+            },
+          ]
+        : []),
+    ];
+  });
+}
 
 /** "0917 123 4567" or "+63 917..." -> "+639171234567"; null if not a PH mobile. */
 export function normalizePhone(input: string): string | null {
@@ -118,12 +189,16 @@ export async function placeOrder(
       if (cart.lines.length === 0 || cart.blocked) {
         return { ok: false, reason: "cart_problem" };
       }
-      if (cart.totalCents !== input.seenTotalCents) {
-        return {
-          ok: false,
-          reason: "price_changed",
-          totalCents: cart.totalCents,
-        };
+      // A Reward makes one unit of the dearest drink free; its Options
+      // still charge their Price Delta (LOY-03, docs/03 section 5).
+      const rewardLine = input.useReward ? rewardLineOf(cart) : undefined;
+      if (input.useReward && (!input.memberId || !rewardLine)) {
+        return { ok: false, reason: "reward_unavailable" };
+      }
+      const totalCents =
+        cart.totalCents - (rewardLine ? baseOf(rewardLine) : 0);
+      if (totalCents !== input.seenTotalCents) {
+        return { ok: false, reason: "price_changed", totalCents };
       }
       if (cart.drinks > MAX_DRINKS_PER_ORDER) {
         return { ok: false, reason: "too_many_drinks" };
@@ -134,6 +209,11 @@ export async function placeOrder(
         cart.drinks > GUEST_PAY_AT_PICKUP_MAX_DRINKS
       ) {
         return { ok: false, reason: "pay_at_pickup_limit" };
+      }
+
+      // Lock the Member and check the Stars before taking any room.
+      if (rewardLine && !(await canRedeem(tx, input.memberId!))) {
+        return { ok: false, reason: "not_enough_stars" };
       }
 
       // Choose the Pickup Window from what is offered right now.
@@ -203,25 +283,11 @@ export async function placeOrder(
           pickupKind: input.pickup.kind,
           windowStart,
           paymentMethod: input.paymentMethod,
-          totalCents: cart.totalCents,
+          totalCents,
+          rewardStars: rewardLine ? STARS_PER_REWARD : 0,
           accessTokenHash: hashToken(accessToken),
           placedAt: at,
-          lines: {
-            create: cart.lines.map((line) => ({
-              menuItemId: line.menuItemId,
-              name: line.name,
-              options: line.options.map(({ group, name, deltaCents }) => ({
-                group,
-                name,
-                deltaCents,
-              })),
-              unitCents: line.unitCents!,
-              quantity: line.quantity,
-              lineCents: line.lineCents!,
-              isDrink: line.isDrink,
-              note: line.note || null,
-            })),
-          },
+          lines: { create: snapshotLines(cart.lines, rewardLine) },
           events: {
             create: {
               toStatus: "placed",
@@ -231,6 +297,7 @@ export async function placeOrder(
           },
         },
       });
+      if (rewardLine) await reserveRedemption(tx, input.memberId!, order.id);
       await clearCart(input.owner, tx);
       return {
         ok: true,

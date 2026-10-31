@@ -4,7 +4,10 @@ export { STARS_PER_REWARD } from "./internal/rules";
 export {
   adjustStars,
   balance,
+  canRedeem,
   earnForOrder,
+  releaseRedemption,
+  reserveRedemption,
   reverseForOrder,
   starHistory,
   type AdjustResult,

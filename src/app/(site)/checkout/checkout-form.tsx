@@ -1,6 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+
+import { formatPrice } from "@/lib/money";
 
 import { Field } from "@/components/fields";
 
@@ -35,7 +37,10 @@ export function CheckoutForm({
   totalText,
   payAtPickupAllowed,
   member,
+  reward,
 }: {
+  /** A free drink for 9 Stars, when the Member has them (LOY-03). */
+  reward: { name: string; discountCents: number } | null;
   payAtPickupAllowed: boolean;
   /** A signed-in Member is prefilled and collects Stars (ORD-05). */
   member: { name: string; email: string } | null;
@@ -49,9 +54,31 @@ export function CheckoutForm({
     {}
   );
   const error = (name: string) => state.errors?.[name];
+  const [useReward, setUseReward] = useState(false);
+  const total = totalCents - (useReward && reward ? reward.discountCents : 0);
   return (
     <form action={action} className="grid gap-8">
-      <input type="hidden" name="seenTotalCents" value={totalCents} />
+      <input type="hidden" name="seenTotalCents" value={total} />
+      {reward && (
+        <label className="border-star bg-muted rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 py-3">
+          <input
+            type="checkbox"
+            name="useReward"
+            checked={useReward}
+            onChange={(event) => setUseReward(event.target.checked)}
+            className="size-5"
+          />
+          <span>
+            <span className="font-semibold">
+              Use 9 Stars for a free {reward.name}
+            </span>
+            <span className="text-muted-foreground block text-sm">
+              Saves {formatPrice(reward.discountCents)}; options still add their
+              price.
+            </span>
+          </span>
+        </label>
+      )}
       <fieldset>
         <legend className="font-display text-2xl italic">Pickup Time</legend>
         <div className="mt-4 grid gap-3">
@@ -180,7 +207,9 @@ export function CheckoutForm({
           disabled={pending}
           className="bg-primary text-primary-foreground min-h-14 rounded-full px-8 text-lg font-semibold transition-transform active:scale-[0.98] disabled:opacity-60"
         >
-          {pending ? "Placing your order..." : `Place order, ${totalText}`}
+          {pending
+            ? "Placing your order..."
+            : `Place order, ${useReward ? formatPrice(total) : totalText}`}
         </button>
       </div>
     </form>

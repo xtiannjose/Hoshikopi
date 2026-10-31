@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { StarCard } from "@/components/star-card";
 import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { requireMember } from "@/modules/identity";
+import { balance } from "@/modules/loyalty";
 import { ordersForMember } from "@/modules/ordering";
 
 import { signOutAction } from "./actions";
@@ -38,7 +40,10 @@ export default function AccountPage() {
 
 async function Account() {
   const member = await requireMember("/account");
-  const orders = await ordersForMember(member.id);
+  const [orders, stars] = await Promise.all([
+    ordersForMember(member.id),
+    balance(member.id),
+  ]);
   return (
     <div className="grid gap-10 pt-8">
       <div>
@@ -49,6 +54,14 @@ async function Account() {
           Signed in as {member.email}.
         </p>
       </div>
+
+      <section aria-labelledby="star-card" className="grid gap-3">
+        <h2 id="star-card" className="sr-only">
+          Star Card
+        </h2>
+        <StarCard balance={stars} />
+        <Link href="/account/stars">Your Star history</Link>
+      </section>
 
       <section aria-labelledby="orders">
         <h2 id="orders" className="font-display text-3xl italic">

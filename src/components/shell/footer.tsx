@@ -15,7 +15,7 @@ export async function Footer() {
           <ul className="flex flex-wrap gap-x-7 gap-y-2">
             {[
               ...NAV_LINKS,
-              { href: "/sign-in", label: "Sign in" },
+              { href: "/account", label: "Your account" },
               { href: "/concept", label: "About this concept" },
             ].map((link) => (
               <li key={link.href}>

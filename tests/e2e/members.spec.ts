@@ -22,7 +22,9 @@ test("a first sign-in makes a Member who keeps the Guest Cart and sees past Orde
   const menu = page.getByRole("button", { name: "Open the menu" });
   if (await menu.isVisible()) await menu.click();
   await expect(
-    page.getByRole("link", { name: "Account" }).filter({ visible: true })
+    page
+      .getByRole("link", { name: "Account", exact: true })
+      .filter({ visible: true })
   ).toBeVisible();
   await expectNoAxeViolations(page);
 

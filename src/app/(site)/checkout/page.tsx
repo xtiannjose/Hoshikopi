@@ -140,6 +140,7 @@ async function Checkout() {
           totalText={formatPrice(cart.totalCents)}
           payAtPickupAllowed={view.payAtPickupAllowed}
           member={member ? { name: member.name, email: member.email } : null}
+          reward={view.reward}
         />
       )}
     </div>
