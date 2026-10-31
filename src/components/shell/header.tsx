@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { BagIcon, ListIcon, XIcon } from "@phosphor-icons/react/ssr";
+import { Suspense } from "react";
+import { ListIcon, XIcon } from "@phosphor-icons/react/ssr";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 
+import { CartButton, CartLink } from "./cart-button";
 import { Logo } from "./logo";
 import { MenuLink } from "./menu-link";
 import { NAV_LINKS } from "./nav-links";
@@ -34,13 +36,9 @@ export function Header() {
         >
           Sign in
         </Link>
-        <Link
-          href="/cart"
-          className="bg-primary text-primary-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 font-semibold no-underline shadow-sm transition-transform active:scale-[0.98]"
-        >
-          <BagIcon aria-hidden size={20} />
-          Cart
-        </Link>
+        <Suspense fallback={<CartLink />}>
+          <CartButton />
+        </Suspense>
         <button
           type="button"
           popoverTarget="site-menu"

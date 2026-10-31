@@ -104,6 +104,7 @@ async function MenuItemDetails({
           </p>
         ) : (
           <OptionPicker
+            menuItemId={item.id}
             name={item.name}
             baseCents={item.baseCents}
             groups={item.optionGroups}
