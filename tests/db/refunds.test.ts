@@ -17,8 +17,8 @@ import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
 const fake = fakeProvider(`fake-webhook:${process.env.BETTER_AUTH_SECRET}`);
-const kai = { kind: "staff", id: "seed-manager", role: "manager" } as const;
-const jomar = { kind: "staff", id: "seed-barista", role: "barista" } as const;
+const hoshi = { kind: "staff", id: "seed-manager", role: "manager" } as const;
+const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 
 beforeEach(async () => {
   await resetDb(db);
@@ -43,8 +43,8 @@ async function order(paymentMethod: PaymentMethod, pay = true) {
     owner,
     memberId: null,
     seenTotalCents: (await getCart(owner)).totalCents,
-    customerName: "Bea",
-    customerEmail: "bea@example.com",
+    customerName: "Christian",
+    customerEmail: "christian@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
     paymentMethod,
@@ -67,7 +67,7 @@ async function order(paymentMethod: PaymentMethod, pay = true) {
 
 async function pickUp(orderId: string) {
   for (const to of ["accepted", "preparing", "ready", "picked_up"] as const) {
-    await transition(orderId, to, jomar);
+    await transition(orderId, to, annika);
   }
 }
 
@@ -75,7 +75,7 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
   it("refunds a picked-up online Order in full through the provider", async () => {
     const placed = await order("card");
     await pickUp(placed.orderId);
-    expect(await refundOrder(placed.orderId, kai)).toEqual({ ok: true });
+    expect(await refundOrder(placed.orderId, hoshi)).toEqual({ ok: true });
     expect(
       (await db.order.findUniqueOrThrow({ where: { id: placed.orderId } }))
         .status
@@ -94,8 +94,8 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
     const placed = await order("gcash");
     await pickUp(placed.orderId);
     const results = await Promise.all([
-      refundOrder(placed.orderId, kai),
-      refundOrder(placed.orderId, kai),
+      refundOrder(placed.orderId, hoshi),
+      refundOrder(placed.orderId, hoshi),
     ]);
     expect(results.filter((r) => r.ok)).toHaveLength(1);
     expect(await db.refund.count()).toBe(1);
@@ -104,7 +104,7 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
   it("is for Managers only", async () => {
     const placed = await order("maya");
     await pickUp(placed.orderId);
-    expect(await refundOrder(placed.orderId, jomar)).toEqual({
+    expect(await refundOrder(placed.orderId, annika)).toEqual({
       ok: false,
       reason: "not_allowed",
     });
@@ -126,7 +126,7 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
   it("refunds Pay at Pickup at the counter, with no provider call", async () => {
     const placed = await order("pay_at_pickup");
     await pickUp(placed.orderId);
-    expect(await refundOrder(placed.orderId, kai)).toEqual({ ok: true });
+    expect(await refundOrder(placed.orderId, hoshi)).toEqual({ ok: true });
     expect(
       (await db.order.findUniqueOrThrow({ where: { id: placed.orderId } }))
         .status
@@ -148,7 +148,7 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
   it("refuses an Order that was never paid", async () => {
     const placed = await order("pay_at_pickup");
     await cancelByCustomer(placed.orderId, placed.accessToken);
-    expect(await refundOrder(placed.orderId, kai)).toEqual({
+    expect(await refundOrder(placed.orderId, hoshi)).toEqual({
       ok: false,
       reason: "not_allowed",
     });

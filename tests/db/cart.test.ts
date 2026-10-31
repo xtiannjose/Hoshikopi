@@ -12,7 +12,7 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const bea = { guestTokenHash: "bea-browser" };
+const christian = { guestTokenHash: "christian-browser" };
 const migs = { guestTokenHash: "migs-browser" };
 let ids: Record<string, string> = {};
 let items: Record<string, string> = {};
@@ -40,31 +40,34 @@ const latte = (
 
 describe("Cart (ORD-01, ORD-02)", () => {
   it("merges identical choices into one Line, whatever the Option order", async () => {
-    await addLine(bea, latte("Oat milk"));
+    await addLine(christian, latte("Oat milk"));
     const again = latte("Oat milk", { quantity: 2 });
-    await addLine(bea, { ...again, optionIds: [...again.optionIds].reverse() });
-    const cart = await getCart(bea);
+    await addLine(christian, {
+      ...again,
+      optionIds: [...again.optionIds].reverse(),
+    });
+    const cart = await getCart(christian);
     expect(cart.lines).toHaveLength(1);
     expect(cart.lines[0]).toMatchObject({ quantity: 3, unitCents: 22000 });
     expect(cart.totalCents).toBe(66000);
   });
 
   it("keeps a different note or different Options on separate Lines", async () => {
-    await addLine(bea, latte("Oat milk"));
-    await addLine(bea, latte("Oat milk", { note: "less ice please" }));
-    await addLine(bea, latte("Whole milk"));
-    expect((await getCart(bea)).lines).toHaveLength(3);
+    await addLine(christian, latte("Oat milk"));
+    await addLine(christian, latte("Oat milk", { note: "less ice please" }));
+    await addLine(christian, latte("Whole milk"));
+    expect((await getCart(christian)).lines).toHaveLength(3);
   });
 
   it("prices every Line on the server and counts drinks and food Lines", async () => {
-    await addLine(bea, latte("Whole milk", { quantity: 2 }));
-    await addLine(bea, {
+    await addLine(christian, latte("Whole milk", { quantity: 2 }));
+    await addLine(christian, {
       menuItemId: items["ube-pandesal"],
       optionIds: [],
       quantity: 3,
       note: "",
     });
-    expect(await getCart(bea)).toMatchObject({
+    expect(await getCart(christian)).toMatchObject({
       totalCents: 2 * 18500 + 3 * 7500,
       drinks: 2,
       foodLines: 1,
@@ -73,8 +76,8 @@ describe("Cart (ORD-01, ORD-02)", () => {
   });
 
   it("flags a Line whose Menu Item became Hidden and blocks checkout", async () => {
-    await addLine(bea, latte("Whole milk"));
-    await addLine(bea, {
+    await addLine(christian, latte("Whole milk"));
+    await addLine(christian, {
       menuItemId: items["ensaymada"],
       optionIds: [],
       quantity: 1,
@@ -84,7 +87,7 @@ describe("Cart (ORD-01, ORD-02)", () => {
       where: { id: items["ensaymada"] },
       data: { isHidden: true },
     });
-    const cart = await getCart(bea);
+    const cart = await getCart(christian);
     expect(cart.lines.find((l) => l.name === "Ensaymada")).toMatchObject({
       problem: "unavailable",
       lineCents: null,
@@ -94,46 +97,52 @@ describe("Cart (ORD-01, ORD-02)", () => {
 
   it("refuses choices the menu does not allow", async () => {
     expect(
-      await addLine(bea, {
+      await addLine(christian, {
         ...latte("Whole milk"),
         optionIds: [ids["Regular"]],
       })
     ).toEqual({ ok: false, reason: "invalid_options" });
-    expect(await addLine(bea, latte("Whole milk", { quantity: 21 }))).toEqual({
+    expect(
+      await addLine(christian, latte("Whole milk", { quantity: 21 }))
+    ).toEqual({
       ok: false,
       reason: "too_many",
     });
   });
 
   it("changes a quantity, removes at zero, and only touches its own Cart", async () => {
-    await addLine(bea, latte("Whole milk"));
-    const [line] = (await getCart(bea)).lines;
+    await addLine(christian, latte("Whole milk"));
+    const [line] = (await getCart(christian)).lines;
     await updateQuantity(migs, line.id, 5);
-    expect((await getCart(bea)).lines[0].quantity).toBe(1);
-    await updateQuantity(bea, line.id, 4);
-    expect((await getCart(bea)).lines[0].quantity).toBe(4);
-    await updateQuantity(bea, line.id, 0);
-    expect((await getCart(bea)).lines).toHaveLength(0);
-    await addLine(bea, latte("Whole milk"));
-    await removeLine(bea, (await getCart(bea)).lines[0].id);
-    expect((await getCart(bea)).lines).toHaveLength(0);
+    expect((await getCart(christian)).lines[0].quantity).toBe(1);
+    await updateQuantity(christian, line.id, 4);
+    expect((await getCart(christian)).lines[0].quantity).toBe(4);
+    await updateQuantity(christian, line.id, 0);
+    expect((await getCart(christian)).lines).toHaveLength(0);
+    await addLine(christian, latte("Whole milk"));
+    await removeLine(christian, (await getCart(christian)).lines[0].id);
+    expect((await getCart(christian)).lines).toHaveLength(0);
   });
 });
 
 describe("mergeGuestCart (sign-in, docs/03 section 5)", () => {
   it("moves a Guest's Lines into the Member's Cart, adding identical ones", async () => {
     await db.user.create({
-      data: { id: "seed-member", name: "Bea", email: "bea@hoshikopi.example" },
+      data: {
+        id: "seed-member",
+        name: "Christian",
+        email: "christian@hoshikopi.example",
+      },
     });
     const member = { memberId: "seed-member" };
     await addLine(member, latte("Oat milk", { quantity: 2 }));
-    await addLine(bea, latte("Oat milk", { quantity: 19 }));
-    await addLine(bea, latte("Whole milk"));
-    await mergeGuestCart(bea, "seed-member");
+    await addLine(christian, latte("Oat milk", { quantity: 19 }));
+    await addLine(christian, latte("Whole milk"));
+    await mergeGuestCart(christian, "seed-member");
     const cart = await getCart(member);
     expect(cart.lines.map((l) => l.quantity).sort((a, b) => a - b)).toEqual([
       1, 20,
     ]);
-    expect((await getCart(bea)).lines).toHaveLength(0);
+    expect((await getCart(christian)).lines).toHaveLength(0);
   });
 });

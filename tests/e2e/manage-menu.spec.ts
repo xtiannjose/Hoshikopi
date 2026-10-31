@@ -34,7 +34,7 @@ async function expectOnMenu(
 test("a Manager changes a price and the public menu shows it", async ({
   page,
 }) => {
-  await signIn(page, "kai@hoshikopi.example", "/manage/menu");
+  await signIn(page, "hoshi@hoshikopi.example", "/manage/menu");
   await expectNoAxeViolations(page);
   await page.getByRole("link", { name: "Spanish Latte" }).click();
   await page.getByLabel("Base Price (PHP)").fill("170");
@@ -45,7 +45,7 @@ test("a Manager changes a price and the public menu shows it", async ({
 });
 
 test("a Barista marks a Menu Item Sold Out and back", async ({ page }) => {
-  await signIn(page, "jomar@hoshikopi.example", "/manage/menu");
+  await signIn(page, "annika@hoshikopi.example", "/manage/menu");
   await page.getByRole("button", { name: "Sold out for Ensaymada" }).click();
   await expect(
     page.getByRole("button", { name: "Back on for Ensaymada" })
@@ -61,7 +61,7 @@ test("a Barista marks a Menu Item Sold Out and back", async ({ page }) => {
 });
 
 test("a Barista cannot edit a Menu Item", async ({ page }) => {
-  await signIn(page, "jomar@hoshikopi.example", "/manage/menu");
+  await signIn(page, "annika@hoshikopi.example", "/manage/menu");
   await expect(page.getByRole("link", { name: "Add a Menu Item" })).toHaveCount(
     0
   );

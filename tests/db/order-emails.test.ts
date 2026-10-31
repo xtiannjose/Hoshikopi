@@ -11,7 +11,7 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const jomar = { kind: "staff", id: "seed-barista", role: "barista" } as const;
+const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 
 beforeEach(async () => {
   await resetDb(db);
@@ -32,7 +32,7 @@ async function mailTo(address: string): Promise<string[]> {
 
 describe("Order emails (ORD-10)", () => {
   it("sends Order placed for Pay at Pickup and Ready for pickup", async () => {
-    const address = `bea-${Date.now()}@example.com`;
+    const address = `christian-${Date.now()}@example.com`;
     const owner = { guestTokenHash: address };
     const item = await db.menuItem.findUniqueOrThrow({
       where: { slug: "ube-pandesal" },
@@ -47,7 +47,7 @@ describe("Order emails (ORD-10)", () => {
       owner,
       memberId: null,
       seenTotalCents: (await getCart(owner)).totalCents,
-      customerName: "Bea",
+      customerName: "Christian",
       customerEmail: address,
       customerPhone: "",
       pickup: { kind: "asap" },
@@ -61,7 +61,7 @@ describe("Order emails (ORD-10)", () => {
     );
 
     for (const to of ["accepted", "preparing", "ready"] as const) {
-      await transition(result.orderId, to, jomar);
+      await transition(result.orderId, to, annika);
     }
     const all = await mailTo(address);
     expect(

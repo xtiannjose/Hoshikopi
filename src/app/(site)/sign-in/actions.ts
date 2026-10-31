@@ -25,7 +25,7 @@ export async function requestSignInLink(
   if (!EMAIL.test(email) || email.length > 254) {
     return {
       status: "error",
-      message: "Enter an email address, like bea@example.com.",
+      message: "Enter an email address, like christian@example.com.",
       email,
     };
   }

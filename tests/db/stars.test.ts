@@ -9,9 +9,9 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const jomar = { kind: "staff", id: "seed-barista", role: "barista" } as const;
-const kai = { kind: "staff", id: "seed-manager", role: "manager" } as const;
-const BEA = "seed-member";
+const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
+const hoshi = { kind: "staff", id: "seed-manager", role: "manager" } as const;
+const CHRISTIAN = "seed-member";
 
 beforeEach(async () => {
   await resetDb(db);
@@ -59,8 +59,8 @@ async function order(memberId: string | null) {
     owner,
     memberId,
     seenTotalCents: (await getCart(owner)).totalCents,
-    customerName: "Bea",
-    customerEmail: "bea@example.com",
+    customerName: "Christian",
+    customerEmail: "christian@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
     paymentMethod: "pay_at_pickup",
@@ -71,20 +71,20 @@ async function order(memberId: string | null) {
 
 async function pickUp(orderId: string) {
   for (const to of ["accepted", "preparing", "ready", "picked_up"] as const) {
-    await transition(orderId, to, jomar);
+    await transition(orderId, to, annika);
   }
 }
 
 describe("earning Stars (LOY-01)", () => {
   it("earns 1 Star per drink when a Member's Order is Picked Up", async () => {
-    const id = await order(BEA);
-    await transition(id, "accepted", jomar);
-    expect(await balance(BEA)).toBe(0);
-    await transition(id, "preparing", jomar);
-    await transition(id, "ready", jomar);
-    await transition(id, "picked_up", jomar);
-    expect(await balance(BEA)).toBe(2);
-    expect(await starHistory(BEA)).toEqual([
+    const id = await order(CHRISTIAN);
+    await transition(id, "accepted", annika);
+    expect(await balance(CHRISTIAN)).toBe(0);
+    await transition(id, "preparing", annika);
+    await transition(id, "ready", annika);
+    await transition(id, "picked_up", annika);
+    expect(await balance(CHRISTIAN)).toBe(2);
+    expect(await starHistory(CHRISTIAN)).toEqual([
       expect.objectContaining({ kind: "earn", stars: 2, orderId: id }),
     ]);
   });
@@ -95,11 +95,13 @@ describe("earning Stars (LOY-01)", () => {
   });
 
   it("takes the Stars back when a picked-up Order is Refunded", async () => {
-    const id = await order(BEA);
+    const id = await order(CHRISTIAN);
     await pickUp(id);
-    await refundOrder(id, kai);
-    expect(await balance(BEA)).toBe(0);
-    expect((await starHistory(BEA)).map((e) => [e.kind, e.stars])).toEqual([
+    await refundOrder(id, hoshi);
+    expect(await balance(CHRISTIAN)).toBe(0);
+    expect(
+      (await starHistory(CHRISTIAN)).map((e) => [e.kind, e.stars])
+    ).toEqual([
       ["reverse", -2],
       ["earn", 2],
     ]);
@@ -108,27 +110,29 @@ describe("earning Stars (LOY-01)", () => {
 
 describe("Manager adjustments (LOY-05)", () => {
   it("adds or removes Stars with a reason, never below zero", async () => {
-    expect(await adjustStars(BEA, 3, "Welcome gift", kai)).toEqual({
+    expect(await adjustStars(CHRISTIAN, 3, "Welcome gift", hoshi)).toEqual({
       ok: true,
     });
-    expect(await balance(BEA)).toBe(3);
-    expect(await adjustStars(BEA, -4, "Mistake", kai)).toEqual({
+    expect(await balance(CHRISTIAN)).toBe(3);
+    expect(await adjustStars(CHRISTIAN, -4, "Mistake", hoshi)).toEqual({
       ok: false,
       reason: "below_zero",
     });
-    expect(await adjustStars(BEA, 1, " ", kai)).toEqual({
+    expect(await adjustStars(CHRISTIAN, 1, " ", hoshi)).toEqual({
       ok: false,
       reason: "reason_required",
     });
-    expect(await adjustStars(BEA, -3, "Mistake", kai)).toEqual({ ok: true });
-    expect(await balance(BEA)).toBe(0);
+    expect(await adjustStars(CHRISTIAN, -3, "Mistake", hoshi)).toEqual({
+      ok: true,
+    });
+    expect(await balance(CHRISTIAN)).toBe(0);
     expect(
       await db.auditLog.count({ where: { action: "loyalty.adjust" } })
     ).toBe(2);
   });
 
   it("is for Managers only", async () => {
-    expect(await adjustStars(BEA, 3, "Hi", jomar)).toEqual({
+    expect(await adjustStars(CHRISTIAN, 3, "Hi", annika)).toEqual({
       ok: false,
       reason: "not_allowed",
     });

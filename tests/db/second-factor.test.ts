@@ -9,8 +9,8 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const KAI = "seed-manager";
-const EMAIL = "kai@hoshikopi.example";
+const HOSHI = "seed-manager";
+const EMAIL = "hoshi@hoshikopi.example";
 const AT = new Date("2026-11-02T01:00:00Z");
 
 /** What an authenticator app shows for `uri` at `at` (RFC 6238, SHA-1, 30 s). */
@@ -35,7 +35,7 @@ async function newSession(id: string) {
       id,
       token: `token-${id}`,
       expiresAt: new Date("2026-11-09T00:00:00Z"),
-      userId: KAI,
+      userId: HOSHI,
     },
   });
   return id;
@@ -58,53 +58,57 @@ afterAll(() => db.$disconnect());
 
 describe("Second Factor (ADR 0014)", () => {
   it("keeps the same setup key until a code confirms it", async () => {
-    const first = await secondFactorEnrolment(KAI, EMAIL);
-    const again = await secondFactorEnrolment(KAI, EMAIL);
-    expect(first?.uri).toMatch(/^otpauth:\/\/totp\/Hoshikopi:kai%40/);
+    const first = await secondFactorEnrolment(HOSHI, EMAIL);
+    const again = await secondFactorEnrolment(HOSHI, EMAIL);
+    expect(first?.uri).toMatch(/^otpauth:\/\/totp\/Hoshikopi:hoshi%40/);
     expect(again?.uri).toBe(first?.uri);
   });
 
   it("passes the session and confirms enrolment with the app's code", async () => {
     const session = await newSession("s1");
-    const { uri } = (await secondFactorEnrolment(KAI, EMAIL))!;
+    const { uri } = (await secondFactorEnrolment(HOSHI, EMAIL))!;
 
-    expect(await enterSecondFactor(KAI, session, appCode(uri, AT))).toBe("ok");
+    expect(await enterSecondFactor(HOSHI, session, appCode(uri, AT))).toBe(
+      "ok"
+    );
     expect(await passedAt(session)).toEqual(AT);
-    expect(await secondFactorEnrolment(KAI, EMAIL)).toBeNull();
+    expect(await secondFactorEnrolment(HOSHI, EMAIL)).toBeNull();
   });
 
   it("allows a phone clock 30 seconds off, not 90", async () => {
-    const { uri } = (await secondFactorEnrolment(KAI, EMAIL))!;
+    const { uri } = (await secondFactorEnrolment(HOSHI, EMAIL))!;
     const late = new Date(AT.getTime() - 30_000);
     const stale = new Date(AT.getTime() - 90_000);
 
     expect(
-      await enterSecondFactor(KAI, await newSession("s1"), appCode(uri, late))
+      await enterSecondFactor(HOSHI, await newSession("s1"), appCode(uri, late))
     ).toBe("ok");
     const s2 = await newSession("s2");
-    expect(await enterSecondFactor(KAI, s2, appCode(uri, stale))).toBe("wrong");
+    expect(await enterSecondFactor(HOSHI, s2, appCode(uri, stale))).toBe(
+      "wrong"
+    );
     expect(await passedAt(s2)).toBeNull();
   });
 
   it("refuses a wrong code and a code before any enrolment", async () => {
     const session = await newSession("s1");
-    expect(await enterSecondFactor(KAI, session, "123456")).toBe("wrong");
+    expect(await enterSecondFactor(HOSHI, session, "123456")).toBe("wrong");
 
-    const { uri } = (await secondFactorEnrolment(KAI, EMAIL))!;
+    const { uri } = (await secondFactorEnrolment(HOSHI, EMAIL))!;
     const right = appCode(uri, AT);
     const wrong = String((Number(right) + 1) % 1_000_000).padStart(6, "0");
-    expect(await enterSecondFactor(KAI, session, wrong)).toBe("wrong");
+    expect(await enterSecondFactor(HOSHI, session, wrong)).toBe("wrong");
     expect(await passedAt(session)).toBeNull();
-    expect(await secondFactorEnrolment(KAI, EMAIL)).not.toBeNull();
+    expect(await secondFactorEnrolment(HOSHI, EMAIL)).not.toBeNull();
   });
 
   it("refuses the 11th try in 15 minutes, even with the right code", async () => {
     const session = await newSession("s1");
-    const { uri } = (await secondFactorEnrolment(KAI, EMAIL))!;
+    const { uri } = (await secondFactorEnrolment(HOSHI, EMAIL))!;
     for (let i = 0; i < 10; i++) {
-      expect(await enterSecondFactor(KAI, session, "000000")).not.toBe("ok");
+      expect(await enterSecondFactor(HOSHI, session, "000000")).not.toBe("ok");
     }
-    expect(await enterSecondFactor(KAI, session, appCode(uri, AT))).toBe(
+    expect(await enterSecondFactor(HOSHI, session, appCode(uri, AT))).toBe(
       "too_many"
     );
     expect(await passedAt(session)).toBeNull();

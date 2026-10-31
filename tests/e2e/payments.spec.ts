@@ -9,8 +9,8 @@ test.beforeEach(openAllDayToday);
 async function checkoutOnline(page: import("@playwright/test").Page) {
   await page.goto("/checkout");
   await page.getByText("GCash", { exact: true }).click();
-  await page.getByLabel("Name").fill("Bea");
-  await page.getByLabel("Email").fill("bea@example.com");
+  await page.getByLabel("Name").fill("Christian");
+  await page.getByLabel("Email").fill("christian@example.com");
   await page.getByRole("button", { name: /Place order/ }).click();
   await expect(page).toHaveURL(/\/dev\/pay\/fake_cs_/);
 }

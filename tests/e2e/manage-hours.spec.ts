@@ -10,7 +10,7 @@ test.beforeEach(({}, testInfo) => {
 });
 
 test("a Manager pauses ordering and resumes it", async ({ page }) => {
-  await signIn(page, "kai@hoshikopi.example", "/manage/hours");
+  await signIn(page, "hoshi@hoshikopi.example", "/manage/hours");
   await expectNoAxeViolations(page);
   await page.getByLabel("Message for Customers").fill("Back in 15, salamat!");
   await page.getByRole("button", { name: "Pause ordering" }).click();
@@ -22,7 +22,7 @@ test("a Manager pauses ordering and resumes it", async ({ page }) => {
 });
 
 test("Special Hours show on the visit page", async ({ page }) => {
-  await signIn(page, "kai@hoshikopi.example", "/manage/hours");
+  await signIn(page, "hoshi@hoshikopi.example", "/manage/hours");
   const day = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
   await page.getByLabel("Date").fill(day);
   await page.getByLabel("Why (shown to Customers)").fill("Coffee festival");
@@ -37,7 +37,7 @@ test("Special Hours show on the visit page", async ({ page }) => {
 });
 
 test("Opening Hours refuse Last Order after closing", async ({ page }) => {
-  await signIn(page, "kai@hoshikopi.example", "/manage/hours");
+  await signIn(page, "hoshi@hoshikopi.example", "/manage/hours");
   await page.getByLabel("Monday last order").fill("21:30");
   await page.getByRole("button", { name: "Save Opening Hours" }).click();
   await expect(

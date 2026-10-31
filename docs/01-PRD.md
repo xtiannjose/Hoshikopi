@@ -41,15 +41,15 @@ Change a row here and every other document should follow. "Invented" rows are sh
 
 ## 3. Personas
 
-**Bea, 28, office worker in Ortigas (primary).** Orders her iced Spanish latte on the jeep ride in and wants it ready when she walks in. Pays by GCash. Will not wait in line if the app says "ready in 8 minutes" and it takes 20.
+**Christian, 28, office worker in Ortigas (primary).** Orders an iced Spanish latte on the jeep ride in and wants it ready on arrival. Pays by GCash. Will not wait in line if the app says "ready in 8 minutes" and it takes 20.
 
 **Migs, 21, student.** Studies at the cafe two afternoons a week, collects Stars, follows open-mic Events. Pays by Maya or at the counter.
 
 **Tita Lorna, 47, family buyer.** Orders a box of pastries and four drinks for the family on Saturday mornings, schedules pickup for 9:00, pays at pickup. Uses a large font size on her phone.
 
-**Jomar, barista.** Works the Bar Screen on a tablet with wet hands and a queue in front of him. Needs big targets, a clear order of what to make next, and a loud cue for a new Order.
+**Annika, barista.** Works the Bar Screen on a tablet with wet hands and a queue waiting. Needs big targets, a clear order of what to make next, and a loud cue for a new Order.
 
-**Kai, manager.** Sets prices, marks the croissants Sold Out at 2 pm, adds a latte art night, pauses ordering when the bar is swamped. Non-technical.
+**Hoshi, manager.** Sets prices, marks the croissants Sold Out at 2 pm, adds a latte art night, pauses ordering when the bar is swamped. Non-technical.
 
 ## 4. Scope by release
 

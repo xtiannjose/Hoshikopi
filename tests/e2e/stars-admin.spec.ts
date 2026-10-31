@@ -7,9 +7,9 @@ test("a Manager adjusts a Member's Stars with a reason (LOY-05)", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "desktop task");
-  await signIn(page, "kai@hoshikopi.example", "/manage/stars");
+  await signIn(page, "hoshi@hoshikopi.example", "/manage/stars");
   await expectNoAxeViolations(page);
-  await page.getByLabel("Member's email").fill("bea@hoshikopi.example");
+  await page.getByLabel("Member's email").fill("christian@hoshikopi.example");
   await page.getByLabel(/Stars to add/).fill("-5");
   await page.getByLabel("Reason").fill("Test");
   await page.getByRole("button", { name: "Save" }).click();
@@ -17,6 +17,6 @@ test("a Manager adjusts a Member's Stars with a reason (LOY-05)", async ({
   await page.getByLabel(/Stars to add/).fill("2");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("status")).toContainText(
-    "Saved for bea@hoshikopi.example."
+    "Saved for christian@hoshikopi.example."
   );
 });

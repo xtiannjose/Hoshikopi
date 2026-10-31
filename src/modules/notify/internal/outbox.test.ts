@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { send } from "./outbox";
 
 const email = {
-  to: "bea@example.com",
+  to: "christian@example.com",
   subject: "Your Hoshikopi sign-in link",
   text: "Sign in: https://hoshikopi.vercel.app/api/auth/magic-link/verify?token=secret-token",
 };

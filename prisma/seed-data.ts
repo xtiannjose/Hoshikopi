@@ -343,7 +343,7 @@ const STORY_MD = `Hoshikopi began as a coffee cart outside a friend's office in 
 
 Our beans come from farms in Benguet and Sagada, with a little barako from Batangas for body.
 
-The team: Lia (founder), Jomar (head barista) and Kai (manager). Every person named here is invented for this concept.`;
+The team: Lia (founder), Annika (head barista) and Hoshi (manager). Every person named here is invented for this concept.`;
 
 export async function seedDatabase(
   db: PrismaClient,
@@ -454,7 +454,7 @@ export async function seedDatabase(
         title: "Latte art night",
         startsAt: evening(7),
         endsAt: new Date(evening(7).getTime() + 2 * 60 * 60 * 1000),
-        summary: "Pour your first rosetta with Jomar. Milk and cups on us.",
+        summary: "Pour your first rosetta with Annika. Milk and cups on us.",
         bodyMd:
           "Bring a friend and learn the basics of milk texture and pouring. We start with hearts and work up to a rosetta. Eight seats at the bar.",
         priceCents: php(350),
@@ -511,22 +511,22 @@ export async function seedDatabase(
     data: [
       {
         id: "seed-manager",
-        name: "Kai",
-        email: "kai@hoshikopi.example",
+        name: "Hoshi",
+        email: "hoshi@hoshikopi.example",
         emailVerified: true,
         role: "manager",
       },
       {
         id: "seed-barista",
-        name: "Jomar",
-        email: "jomar@hoshikopi.example",
+        name: "Annika",
+        email: "annika@hoshikopi.example",
         emailVerified: true,
         role: "barista",
       },
       {
         id: "seed-member",
-        name: "Bea",
-        email: "bea@hoshikopi.example",
+        name: "Christian",
+        email: "christian@hoshikopi.example",
         emailVerified: true,
       },
     ],

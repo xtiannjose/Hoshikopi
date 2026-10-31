@@ -13,7 +13,7 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const kai = { id: "seed-manager", name: "Kai", role: "manager" as const };
+const hoshi = { id: "seed-manager", name: "Hoshi", role: "manager" as const };
 
 beforeEach(async () => {
   await resetDb(db);
@@ -67,7 +67,7 @@ describe("Events (EVT-01)", () => {
       signupUrl: "",
       isPublished: "on",
     };
-    expect(await saveEvent(null, input, kai)).toMatchObject({ ok: true });
+    expect(await saveEvent(null, input, hoshi)).toMatchObject({ ok: true });
     const event = await db.event.findUniqueOrThrow({
       where: { slug: "home-brewing-basics" },
     });
@@ -77,7 +77,7 @@ describe("Events (EVT-01)", () => {
       await saveEvent(
         null,
         { ...input, slug: "x", endsAt: "2026-11-12T18:00" },
-        kai
+        hoshi
       )
     ).toMatchObject({ ok: false, errors: { endsAt: expect.any(String) } });
   });
@@ -99,7 +99,7 @@ describe("Posts (NEWS-01)", () => {
         bodyMd: "Purple!",
         isPublished: undefined,
       },
-      kai
+      hoshi
     );
     expect(result.ok).toBe(true);
     expect((await readPosts()).map((p) => p.slug)).not.toContain("ube-season");

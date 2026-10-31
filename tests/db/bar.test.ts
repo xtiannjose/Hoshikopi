@@ -9,7 +9,7 @@ import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
 const at = (hhmm: string) => new Date(`2026-11-02T${hhmm}:00+08:00`);
-const jomar = { kind: "staff", id: "seed-barista", role: "barista" } as const;
+const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 let n = 0;
 
 beforeEach(async () => {
@@ -40,8 +40,8 @@ async function order(
       serviceDay: new Date("2026-11-02"),
       code: `K-${String(++n).padStart(3, "0")}`,
       status: "placed",
-      customerName: "Bea Santos",
-      customerEmail: "bea@example.com",
+      customerName: "Christian Santos",
+      customerEmail: "christian@example.com",
       pickupKind: "scheduled",
       windowStart: at(window),
       paymentMethod,
@@ -75,7 +75,7 @@ describe("barBoard (STAFF-02)", () => {
     expect(board.orders.map((o) => o.code)).toEqual(["K-002", "K-001"]);
     expect(board.orders[0]).toMatchObject({
       status: "placed",
-      firstName: "Bea",
+      firstName: "Christian",
       payAtPickup: true,
       lines: [
         {
@@ -102,12 +102,12 @@ describe("barBoard (STAFF-02)", () => {
   it("changes its version when an Order moves, and drops closed Orders", async () => {
     const first = await order("09:15");
     const before = await barBoard(at("09:00"));
-    await transition(first.id, "accepted", jomar);
+    await transition(first.id, "accepted", annika);
     const after = await barBoard(at("09:00"));
     expect(after.version).not.toBe(before.version);
-    await transition(first.id, "preparing", jomar);
-    await transition(first.id, "ready", jomar);
-    await transition(first.id, "picked_up", jomar);
+    await transition(first.id, "preparing", annika);
+    await transition(first.id, "ready", annika);
+    await transition(first.id, "picked_up", annika);
     expect((await barBoard(at("09:00"))).orders).toHaveLength(0);
   });
 });

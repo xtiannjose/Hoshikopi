@@ -15,8 +15,8 @@ import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
-const BEA = "seed-member";
-const jomar = { kind: "staff", id: "seed-barista", role: "barista" } as const;
+const CHRISTIAN = "seed-member";
+const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 const ids: Record<string, string> = {};
 const items: Record<string, string> = {};
 
@@ -32,10 +32,10 @@ afterAll(() => db.$disconnect());
 
 const giveStars = (stars: number) =>
   db.starEntry.create({
-    data: { memberId: BEA, kind: "adjust", stars, reason: "test" },
+    data: { memberId: CHRISTIAN, kind: "adjust", stars, reason: "test" },
   });
 
-/** Bea's Cart: 2 Large Oat Hoshi Lattes (250 each) and an Ube Pandesal (75). */
+/** Christian's Cart: 2 Large Oat Hoshi Lattes (250 each) and an Ube Pandesal (75). */
 async function fillCart(owner: CartOwner) {
   await addLine(owner, {
     menuItemId: items["hoshi-latte"],
@@ -56,16 +56,16 @@ async function order(
   paymentMethod: PaymentMethod = "pay_at_pickup",
   seen?: number
 ) {
-  const owner = { memberId: BEA };
+  const owner = { memberId: CHRISTIAN };
   await fillCart(owner);
   return placeOrder({
     owner,
-    memberId: BEA,
+    memberId: CHRISTIAN,
     // The Reward takes the Hoshi Latte's 185 Base Price off 575.
     seenTotalCents:
       seen ?? (await getCart(owner)).totalCents - (useReward ? 18500 : 0),
-    customerName: "Bea",
-    customerEmail: "bea@example.com",
+    customerName: "Christian",
+    customerEmail: "christian@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
     paymentMethod,
@@ -91,7 +91,7 @@ describe("redeeming a Reward (LOY-03)", () => {
       ["Ube Pandesal", 1, 7500, false],
       ["Hoshi Latte", 1, 6500, true],
     ]);
-    expect(await balance(BEA)).toBe(0);
+    expect(await balance(CHRISTIAN)).toBe(0);
   });
 
   it("refuses without 9 Stars", async () => {
@@ -107,12 +107,12 @@ describe("redeeming a Reward (LOY-03)", () => {
     const first = await order(true);
     if (!first.ok) throw new Error(first.reason);
     await cancelByCustomer(first.orderId, first.accessToken);
-    expect(await balance(BEA)).toBe(18);
+    expect(await balance(CHRISTIAN)).toBe(18);
 
     await order(true, "gcash");
-    expect(await balance(BEA)).toBe(9);
+    expect(await balance(CHRISTIAN)).toBe(9);
     await expireUnpaid(new Date("2026-11-02T01:20:00Z"));
-    expect(await balance(BEA)).toBe(18);
+    expect(await balance(CHRISTIAN)).toBe(18);
   });
 
   it("earns no Star for the free drink", async () => {
@@ -120,23 +120,23 @@ describe("redeeming a Reward (LOY-03)", () => {
     const result = await order(true);
     if (!result.ok) throw new Error(result.reason);
     for (const to of ["accepted", "preparing", "ready", "picked_up"] as const) {
-      await transition(result.orderId, to, jomar);
+      await transition(result.orderId, to, annika);
     }
     // Two Hoshi Lattes, one of them the Reward: 1 Star.
-    expect(await balance(BEA)).toBe(1);
+    expect(await balance(CHRISTIAN)).toBe(1);
   });
 
   it("lets only one of two tabs spend the same 9 Stars", async () => {
     await giveStars(9);
-    const owner = { memberId: BEA };
+    const owner = { memberId: CHRISTIAN };
     await fillCart(owner);
     const seen = (await getCart(owner)).totalCents - 18500;
     const base = {
       owner,
-      memberId: BEA,
+      memberId: CHRISTIAN,
       seenTotalCents: seen,
-      customerName: "Bea",
-      customerEmail: "bea@example.com",
+      customerName: "Christian",
+      customerEmail: "christian@example.com",
       customerPhone: "",
       pickup: { kind: "asap" as const },
       paymentMethod: "pay_at_pickup" as const,
@@ -144,6 +144,6 @@ describe("redeeming a Reward (LOY-03)", () => {
     };
     const results = await Promise.all([placeOrder(base), placeOrder(base)]);
     expect(results.filter((r) => r.ok)).toHaveLength(1);
-    expect(await balance(BEA)).toBe(0);
+    expect(await balance(CHRISTIAN)).toBe(0);
   });
 });

@@ -55,9 +55,9 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "desktop task");
   test.setTimeout(240_000);
-  await signIn(page, "kai@hoshikopi.example", "/manage/events/new");
-  await page.getByLabel("Title").fill("Cupping with Jomar");
-  await page.getByLabel("Web address").fill("cupping-with-jomar");
+  await signIn(page, "hoshi@hoshikopi.example", "/manage/events/new");
+  await page.getByLabel("Title").fill("Cupping with Annika");
+  await page.getByLabel("Web address").fill("cupping-with-annika");
   await page
     .getByLabel("One line about it")
     .fill("Taste three Benguet coffees side by side.");
@@ -67,24 +67,24 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
   ).toHaveText("Free");
   await page.getByLabel("Published on the site").check();
   // A refused save keeps what was typed (React 19 resets forms by default).
-  await page.getByLabel("Web address").fill("Cupping With Jomar");
+  await page.getByLabel("Web address").fill("Cupping With Annika");
   await page.getByRole("button", { name: "Add Event" }).click();
   await expect(page.getByText("Some fields need a fix.")).toBeVisible();
-  await expect(page.getByLabel("Title")).toHaveValue("Cupping with Jomar");
+  await expect(page.getByLabel("Title")).toHaveValue("Cupping with Annika");
   await expect(page.getByLabel("About the Event")).toHaveValue(
     "**Free**, eight seats."
   );
   await expect(page.getByLabel("Published on the site")).toBeChecked();
-  await page.getByLabel("Web address").fill("cupping-with-jomar");
+  await page.getByLabel("Web address").fill("cupping-with-annika");
   await page.getByRole("button", { name: "Add Event" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Cupping with Jomar"
+    "Cupping with Annika"
   );
   await expectNoAxeViolations(page);
   await expect(async () => {
     await page.goto("/events");
     await expect(
-      page.getByRole("heading", { name: "Cupping with Jomar" })
+      page.getByRole("heading", { name: "Cupping with Annika" })
     ).toBeVisible({ timeout: 1_000 });
   }).toPass({ timeout: 150_000 });
 });
