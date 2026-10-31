@@ -116,8 +116,8 @@ npm run db:studio
 | --- | --- |
 | `npm run dev` | Site at http://localhost:3000 |
 | `npm run qa` | Lint, Prettier check, type check, unit tests, production build, `npm audit --omit=dev` |
-| `npm run test:e2e` | Builds, serves on port 3100, runs Playwright with axe at 375 and 1280 px |
-| `npm run qa:full` | `qa` plus the browser tests on `qa`'s build |
+| `npm run test:e2e` | Resets and seeds `hoshikopi_e2e`, builds, serves on port 3100, runs Playwright with axe at 375 and 1280 px |
+| `npm run qa:full` | `qa` plus the browser tests (they build their own copy against `hoshikopi_e2e`) |
 | `npm run format` | Prettier writes every file it checks (Markdown is left alone) |
 | `npm run db:reset` | Drops, migrates and seeds the dev database (asks first) |
 | `npm run perf` | Lighthouse mobile on Home and the menu (as on the iOne website) |
