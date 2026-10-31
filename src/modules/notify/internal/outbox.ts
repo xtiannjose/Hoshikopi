@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -16,7 +17,11 @@ export async function send(email: Email): Promise<void> {
   await mkdir(dir, { recursive: true });
   const stamp = now().toISOString().replace(/[:.]/g, "-");
   await writeFile(
-    path.join(dir, `${stamp}-${email.to}.txt`),
+    // A random part: two emails to one address can share a millisecond.
+    path.join(
+      dir,
+      `${stamp}-${randomBytes(3).toString("hex")}-${email.to}.txt`
+    ),
     `To: ${email.to}\nSubject: ${email.subject}\n\n${email.text}\n`
   );
 }

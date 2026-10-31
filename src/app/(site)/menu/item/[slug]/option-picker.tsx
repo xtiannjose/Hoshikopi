@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useActionState, useState } from "react";
+import { MinusIcon, PlusIcon } from "@phosphor-icons/react";
 
 import { formatDelta, formatPrice } from "@/lib/money";
 import type { OptionGroupView } from "@/modules/menu";
+
+import { addToCartAction, type AddState } from "./actions";
+
+const MAX_QUANTITY = 20;
 
 type Picked = Record<string, string[]>;
 
@@ -25,20 +31,28 @@ function initialPicks(groups: OptionGroupView[]): Picked {
 
 /**
  * Option Groups as native radios and checkboxes with the running price
- * (MENU-02). The server prices again when the Line is added (ORD-06).
+ * (MENU-02); Add to order sends the choices only, and the server prices
+ * the Line (ORD-01, ORD-06).
  */
 export function OptionPicker({
+  menuItemId,
   name,
   baseCents,
   groups,
 }: {
+  menuItemId: string;
   name: string;
   baseCents: number;
   groups: OptionGroupView[];
 }) {
   const [picked, setPicked] = useState(() => initialPicks(groups));
+  const [quantity, setQuantity] = useState(1);
+  const [state, action, pending] = useActionState<AddState, FormData>(
+    addToCartAction,
+    { status: "idle" }
+  );
   const chosen = new Set(Object.values(picked).flat());
-  const total = groups
+  const unit = groups
     .flatMap((group) => group.options)
     .filter((option) => chosen.has(option.id))
     .reduce((sum, option) => sum + option.deltaCents, baseCents);
@@ -55,10 +69,11 @@ export function OptionPicker({
 
   return (
     <form
+      action={action}
       aria-label={`Choose your ${name}`}
       className="mt-8 grid gap-6"
-      onSubmit={(event) => event.preventDefault()}
     >
+      <input type="hidden" name="menuItemId" value={menuItemId} />
       {groups.map((group) =>
         group.maxSelect === 1 ? (
           <fieldset key={group.id}>
@@ -129,13 +144,78 @@ export function OptionPicker({
           </fieldset>
         )
       )}
-      <div className="border-border flex flex-wrap items-baseline justify-between gap-2 border-t pt-4">
+      <div className="grid gap-1.5">
+        <label htmlFor="note" className="font-semibold">
+          Note for the barista{" "}
+          <span className="text-muted-foreground font-normal">(optional)</span>
+        </label>
+        <input
+          id="note"
+          name="note"
+          maxLength={140}
+          placeholder="less ice please"
+          className="rounded-card border-input bg-background min-h-11 border px-3"
+        />
+      </div>
+      <div className="border-border grid gap-4 border-t pt-4">
         <p aria-live="polite" className="text-lg">
           Your {name}:{" "}
-          <span className="font-mono font-semibold">{formatPrice(total)}</span>
+          <span className="font-mono font-semibold">
+            {formatPrice(unit * quantity)}
+          </span>
         </p>
-        <p className="text-muted-foreground text-sm">
-          Ordering ahead opens soon.
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            role="group"
+            aria-label="Quantity"
+            className="flex items-center gap-1"
+          >
+            <button
+              type="button"
+              aria-label="One less"
+              disabled={quantity <= 1}
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              className="border-input grid size-11 place-items-center rounded-full border disabled:opacity-40"
+            >
+              <MinusIcon aria-hidden size={18} />
+            </button>
+            <span
+              aria-live="polite"
+              className="w-8 text-center font-mono text-lg"
+            >
+              {quantity}
+            </span>
+            <input type="hidden" name="quantity" value={quantity} />
+            <button
+              type="button"
+              aria-label="One more"
+              disabled={quantity >= MAX_QUANTITY}
+              onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
+              className="border-input grid size-11 place-items-center rounded-full border disabled:opacity-40"
+            >
+              <PlusIcon aria-hidden size={18} />
+            </button>
+          </div>
+          <button
+            type="submit"
+            disabled={pending}
+            className="bg-primary text-primary-foreground min-h-12 flex-1 rounded-full px-6 font-semibold transition-transform active:scale-[0.98] disabled:opacity-60 sm:flex-none"
+          >
+            {pending ? "Adding..." : "Add to order"}
+          </button>
+        </div>
+        <p role="status" className="min-h-6">
+          {state.status === "added" && (
+            <>
+              Added to your order. Salamat!{" "}
+              <Link href="/cart" className="font-semibold">
+                See your Cart
+              </Link>
+            </>
+          )}
+          {state.status === "error" && (
+            <span className="text-destructive">{state.message}</span>
+          )}
         </p>
       </div>
     </form>

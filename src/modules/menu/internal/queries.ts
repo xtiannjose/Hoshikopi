@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { allergenLine, containsNuts } from "./allergens";
 
 export type MenuItemCard = {
+  id: string;
   slug: string;
   name: string;
   description: string;
@@ -71,6 +72,7 @@ function soldOutToday(soldOutOn: Date | null, today: string): boolean {
 const visibleItem = { isHidden: false, category: { isHidden: false } };
 
 const cardSelect = {
+  id: true,
   slug: true,
   name: true,
   description: true,
@@ -85,6 +87,7 @@ const cardSelect = {
 } as const;
 
 type CardRow = {
+  id: string;
   slug: string;
   name: string;
   description: string;
@@ -100,6 +103,7 @@ type CardRow = {
 
 function toCard(row: CardRow, today: string): MenuItemCard {
   return {
+    id: row.id,
     slug: row.slug,
     name: row.name,
     description: row.description,

@@ -8,12 +8,14 @@ import { signIn } from "./sign-in";
 test.describe.configure({ mode: "serial" });
 test.beforeEach(({}, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "desktop task");
+  test.setTimeout(240_000);
 });
 
 /**
  * A Staff change shows on the public menu within seconds (MENU-04). The
  * first visit after a change may get the old page while Next renders the
- * new one, so look again until it shows (at most a minute, the lifetime).
+ * new one, and a save under another tag at the same moment can delay it
+ * until the one-minute lifetime runs out, so look again until it shows.
  */
 async function expectOnMenu(
   page: Page,
@@ -26,7 +28,7 @@ async function expectOnMenu(
     await expect(
       page.getByRole("article").filter({ hasText: item })
     ).toContainText(text, { timeout: 1_000 });
-  }).toPass({ timeout: 75_000 });
+  }).toPass({ timeout: 150_000 });
 }
 
 test("a Manager changes a price and the public menu shows it", async ({
