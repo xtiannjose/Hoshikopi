@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { Field, SaveBar } from "@/components/manage/fields";
+import { Field, SaveBar } from "@/components/fields";
 
 import { saveCategoryAction, type FormState } from "../actions";
 

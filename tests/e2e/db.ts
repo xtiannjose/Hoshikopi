@@ -1,0 +1,26 @@
+import { Client } from "pg";
+
+/** Runs one statement against the e2e database. */
+export async function e2eQuery(sql: string, values: unknown[] = []) {
+  const db = new Client({ connectionString: process.env.E2E_DATABASE_URL });
+  await db.connect();
+  try {
+    return await db.query(sql, values);
+  } finally {
+    await db.end();
+  }
+}
+
+/**
+ * The server reads the real clock, so tests that order open the cafe all
+ * day today (Manila) with Special Hours. Fails only from 23:45 Manila time.
+ */
+export async function openAllDayToday() {
+  const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10);
+  await e2eQuery(
+    `INSERT INTO special_hours (day, is_closed, opens_at, last_order_at, closes_at, note, updated_at)
+     VALUES ($1, false, '00:00', '23:45', '23:59', 'Open all day for tests', now())
+     ON CONFLICT (day) DO NOTHING`,
+    [today]
+  );
+}

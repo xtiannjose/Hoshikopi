@@ -8,7 +8,7 @@ import {
   Field,
   fieldClass,
   SaveBar,
-} from "@/components/manage/fields";
+} from "@/components/fields";
 
 import { saveMenuItemAction, type FormState } from "../../actions";
 

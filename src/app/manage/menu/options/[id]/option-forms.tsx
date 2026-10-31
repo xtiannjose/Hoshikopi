@@ -7,7 +7,7 @@ import {
   Checkboxes,
   Field,
   SaveBar,
-} from "@/components/manage/fields";
+} from "@/components/fields";
 
 import {
   saveOptionAction,
