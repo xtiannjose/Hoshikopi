@@ -1,13 +1,15 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { StarIcon, SunIcon, TimerIcon, type Icon } from "@phosphor-icons/react";
 
 import { THEME_KEY, type ThemeChoice } from "./theme";
 
-const CHOICES: { value: ThemeChoice; label: string }[] = [
-  { value: "auto", label: "Auto" },
-  { value: "day", label: "Day" },
-  { value: "night", label: "Night" },
+// Auto runs on the cafe's clock, hence the stopwatch.
+const CHOICES: { value: ThemeChoice; label: string; icon: Icon }[] = [
+  { value: "auto", label: "Auto", icon: TimerIcon },
+  { value: "day", label: "Day", icon: SunIcon },
+  { value: "night", label: "Night", icon: StarIcon },
 ];
 
 const listeners = new Set<() => void>();
@@ -52,10 +54,11 @@ export function ThemeSwitch({ name }: { name: string }) {
   return (
     <fieldset className="border-input inline-flex rounded-full border p-0.5">
       <legend className="sr-only">Colours</legend>
-      {CHOICES.map(({ value, label }) => (
+      {CHOICES.map(({ value, label, icon: ChoiceIcon }) => (
         <label
           key={value}
-          className="has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:focus-visible]:outline-ring relative grid min-h-9 min-w-14 cursor-pointer place-items-center rounded-full px-3 text-sm font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+          title={label}
+          className="has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:focus-visible]:outline-ring relative grid size-9 cursor-pointer place-items-center rounded-full has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
         >
           <input
             type="radio"
@@ -65,7 +68,8 @@ export function ThemeSwitch({ name }: { name: string }) {
             onChange={() => choose(value)}
             className="sr-only"
           />
-          {label}
+          <ChoiceIcon aria-hidden size={18} />
+          <span className="sr-only">{label}</span>
         </label>
       ))}
     </fieldset>
