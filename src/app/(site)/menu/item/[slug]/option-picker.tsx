@@ -7,7 +7,12 @@ import { MinusIcon, PlusIcon } from "@phosphor-icons/react";
 import { formatDelta, formatPrice } from "@/lib/money";
 import type { OptionGroupView } from "@/modules/menu";
 
-import { addToCartAction, type AddState } from "./actions";
+import {
+  addToCartAction,
+  saveFavouriteAction,
+  type AddState,
+  type FavouriteState,
+} from "./actions";
 
 const MAX_QUANTITY = 20;
 
@@ -51,6 +56,12 @@ export function OptionPicker({
     addToCartAction,
     { status: "idle" }
   );
+  const [favourite, saveFavourite, saving] = useActionState<
+    FavouriteState,
+    FormData
+  >(saveFavouriteAction, { status: "idle" });
+  // One status line: it speaks for the button pressed last.
+  const [last, setLast] = useState<"add" | "favourite">("add");
   const chosen = new Set(Object.values(picked).flat());
   const unit = groups
     .flatMap((group) => group.options)
@@ -198,14 +209,43 @@ export function OptionPicker({
           </div>
           <button
             type="submit"
+            onClick={() => setLast("add")}
             disabled={pending}
             className="bg-primary text-primary-foreground min-h-12 flex-1 rounded-full px-6 font-semibold transition-transform active:scale-[0.98] disabled:opacity-60 sm:flex-none"
           >
             {pending ? "Adding..." : "Add to order"}
           </button>
+          <button
+            type="submit"
+            formAction={saveFavourite}
+            onClick={() => setLast("favourite")}
+            disabled={saving}
+            className="border-input min-h-12 rounded-full border px-5 font-semibold disabled:opacity-60"
+          >
+            {saving ? "Saving..." : "Save as Favourite"}
+          </button>
         </div>
         <p role="status" className="min-h-6">
-          {state.status === "added" && (
+          {last === "favourite" && favourite.status === "saved" && (
+            <>
+              Saved to your Favourites.{" "}
+              <Link href="/account#favourites" className="font-semibold">
+                See them
+              </Link>
+            </>
+          )}
+          {last === "favourite" && favourite.status === "sign_in" && (
+            <>
+              <Link href="/sign-in?next=/account" className="font-semibold">
+                Sign in
+              </Link>{" "}
+              to save Favourites.
+            </>
+          )}
+          {last === "favourite" && favourite.status === "error" && (
+            <span className="text-destructive">{favourite.message}</span>
+          )}
+          {last === "add" && state.status === "added" && (
             <>
               Added to your order. Salamat!{" "}
               <Link href="/cart" className="font-semibold">
@@ -213,7 +253,7 @@ export function OptionPicker({
               </Link>
             </>
           )}
-          {state.status === "error" && (
+          {last === "add" && state.status === "error" && (
             <span className="text-destructive">{state.message}</span>
           )}
         </p>

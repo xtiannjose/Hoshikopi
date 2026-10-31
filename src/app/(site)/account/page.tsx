@@ -5,12 +5,16 @@ import { Suspense } from "react";
 import { StarCard } from "@/components/star-card";
 import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
+import { favouritesFor, type FavouriteView } from "@/modules/cart";
 import { memberProfile, requireMember } from "@/modules/identity";
 import { balance } from "@/modules/loyalty";
 import { ordersForMember } from "@/modules/ordering";
 
 import {
+  addFavouriteAction,
   deleteAccountAction,
+  orderAgainAction,
+  removeFavouriteAction,
   signOutAction,
   updateProfileAction,
 } from "./actions";
@@ -32,6 +36,13 @@ const STATUS: Record<string, string> = {
   refunded: "Refunded",
 };
 
+const CANT_ADD: Record<NonNullable<FavouriteView["problem"]>, string> = {
+  unavailable: "Off the menu now",
+  sold_out: "Sold out today",
+  option_sold_out: "A choice is sold out today",
+  invalid_options: "Its options changed; save it again",
+};
+
 export default function AccountPage() {
   return (
     <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 md:px-8">
@@ -44,10 +55,11 @@ export default function AccountPage() {
 
 async function Account() {
   const member = await requireMember("/account");
-  const [orders, stars, profile] = await Promise.all([
+  const [orders, stars, profile, favourites] = await Promise.all([
     ordersForMember(member.id),
     balance(member.id),
     memberProfile(member.id),
+    favouritesFor(member.id),
   ]);
   return (
     <div className="grid gap-10 pt-8">
@@ -99,6 +111,84 @@ async function Account() {
                   <span className="text-muted-foreground text-sm">
                     {STATUS[order.status]}
                   </span>
+                  <form action={orderAgainAction} className="mt-1">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <button
+                      type="submit"
+                      className="border-input min-h-11 rounded-full border px-4 text-sm font-semibold"
+                    >
+                      Order again
+                      <span className="sr-only"> ({order.code})</span>
+                    </button>
+                  </form>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="favourites">
+        <h2 id="favourites" className="font-display text-3xl italic">
+          Your Favourites
+        </h2>
+        {favourites.length === 0 ? (
+          <p className="mt-3">
+            Nothing saved yet. On a drink&apos;s page, choose it the way you
+            like it and tap Save as Favourite.
+          </p>
+        ) : (
+          <ul className="border-border mt-4 border-t">
+            {favourites.map((favourite) => (
+              <li
+                key={favourite.id}
+                className="border-border flex flex-wrap items-center justify-between gap-3 border-b py-3"
+              >
+                <span>
+                  <Link
+                    href={`/menu/item/${favourite.slug}`}
+                    className="font-semibold"
+                  >
+                    {favourite.name}
+                  </Link>
+                  {favourite.options.length > 0 && (
+                    <span className="text-muted-foreground block text-sm">
+                      {favourite.options.join(", ")}
+                    </span>
+                  )}
+                </span>
+                <span className="flex flex-wrap items-center gap-3">
+                  {favourite.problem ? (
+                    <span className="text-muted-foreground text-sm">
+                      {CANT_ADD[favourite.problem]}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="font-mono">
+                        {formatPrice(favourite.unitCents!)}
+                      </span>
+                      <form action={addFavouriteAction}>
+                        <input type="hidden" name="id" value={favourite.id} />
+                        <button
+                          type="submit"
+                          className="bg-primary text-primary-foreground min-h-11 rounded-full px-4 font-semibold"
+                        >
+                          Add
+                          <span className="sr-only"> {favourite.name}</span>
+                        </button>
+                      </form>
+                    </>
+                  )}
+                  <form action={removeFavouriteAction}>
+                    <input type="hidden" name="id" value={favourite.id} />
+                    <button
+                      type="submit"
+                      className="border-input min-h-11 rounded-full border px-4 font-semibold"
+                    >
+                      Remove
+                      <span className="sr-only"> {favourite.name}</span>
+                    </button>
+                  </form>
                 </span>
               </li>
             ))}

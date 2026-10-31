@@ -60,6 +60,14 @@ _Avoid_: Bag, basket, tray
 One entry in a Cart or Order: a Menu Item, its chosen Options, a quantity and an optional note ("less ice please"). Two identical choices merge into one Line.
 _Avoid_: Item (for the entry), row
 
+**Favourite**:
+A Menu Item with its chosen Options that a Member saved, to add to the Cart again in one tap. Priced at today's prices when added.
+_Avoid_: Saved item, bookmark, favorite (US spelling in code)
+
+**Order again**:
+Copying a Member's past Order's Lines into the Cart at today's prices; Lines that are Sold Out, Hidden or gone are left out, and the Cart says how many.
+_Avoid_: Repeat order, reorder (in UI copy)
+
 **Order**:
 A customer's confirmed request to prepare Lines for pickup. An Order snapshots every name, Option and price at checkout, so later menu edits never change it.
 _Avoid_: Transaction, ticket (for the customer side), purchase

@@ -56,13 +56,14 @@ audit_log, rate_limits (identity)
 | --- | --- | --- |
 | `carts` | `id`, `guest_token_hash` unique null, `member_id` unique null FK, `updated_at` | Exactly one of the two owners is set |
 | `cart_lines` | `id`, `cart_id` FK, `menu_item_id` FK, `option_ids` text[] (sorted), `quantity` int 1 to 20, `note` text ≤ 140, `choice_key` text; unique (`cart_id`, `choice_key`) | `choice_key` = item + sorted Options + note, so identical choices merge |
+| `favourites` (V1, cart) | `id`, `member_id` FK users (cascade), `menu_item_id` FK (cascade), `option_ids` text[] (sorted), `choice_key` text, `created_at`; unique (`member_id`, `choice_key`) | ORD-11; at most 20 per Member; priced today when shown or added; deleted with the Member's Cart on account deletion |
 
 ### Ordering (module `ordering`)
 
 | Table | Columns | Notes |
 | --- | --- | --- |
 | `orders` | `id`, `service_day` date, `code` text, `status` enum, `member_id` FK null, `customer_name`, `customer_email` null, `customer_phone` null, `pickup_kind` enum (`asap`, `scheduled`), `window_start` timestamptz, `payment_method` enum (`gcash`, `maya`, `card`, `pay_at_pickup`), `total_cents` int, `reward_stars` int default 0, `access_token_hash`, `paid_at_counter` bool, `cancel_reason` null, status timestamps (`placed_at`, `paid_at`, `accepted_at`, `ready_at`, `picked_up_at`, `cancelled_at`); unique (`service_day`, `code`) | Email or phone is required (check constraint) |
-| `order_lines` | `id`, `order_id` FK, `menu_item_id` FK null, `name` (snapshot), `options` jsonb (snapshot: group, name, `delta_cents`), `unit_cents`, `quantity`, `line_cents`, `is_drink` bool, `is_reward` bool, `note` | Never changes after placement |
+| `order_lines` | `id`, `order_id` FK, `menu_item_id` FK null, `name` (snapshot), `options` jsonb (snapshot: group, name, `delta_cents`), `option_ids` text[] (for Order again, V1), `unit_cents`, `quantity`, `line_cents`, `is_drink` bool, `is_reward` bool, `note` | Never changes after placement |
 | `order_events` | `id`, `order_id` FK, `from_status` null, `to_status`, `actor_kind` enum (`customer`, `staff`, `system`, `webhook`), `actor_id` null, `reason` null, `at` | Append-only history |
 | `pickup_window_usage` | `window_start` timestamptz (PK), `service_day` date, `drinks` int, `food` int | Locked and updated in `placeOrder` and when an Order closes |
 | `order_code_counters` | `service_day` date (PK), `last_number` int | Next code `K-043` by `UPDATE ... RETURNING` |

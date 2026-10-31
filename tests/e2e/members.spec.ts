@@ -62,3 +62,48 @@ test("a Guest is offered an account after ordering (ORD-05)", async ({
   await page.getByRole("button", { name: /Place order/ }).click();
   await expect(page.getByText("Collect Stars next time")).toBeVisible();
 });
+
+test("a Member saves a Favourite and orders a past Order again (ORD-11)", async ({
+  page,
+}) => {
+  await signIn(page, newMember(), "/menu/item/hoshi-latte");
+  await page.getByText("Large", { exact: true }).click();
+  await page.getByText("Oat milk", { exact: true }).click();
+  await page.getByRole("button", { name: "Save as Favourite" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Saved to your Favourites."
+  );
+
+  await page.goto("/account#favourites");
+  const favourites = page.getByRole("region", { name: "Your Favourites" });
+  await expect(favourites.getByText("Large, Oat milk, 100%")).toBeVisible();
+  await expect(favourites.getByText("PHP 250", { exact: true })).toBeVisible();
+  await expectNoAxeViolations(page);
+  await favourites.getByRole("button", { name: "Add Hoshi Latte" }).click();
+  await expect(page).toHaveURL(/\/cart$/);
+  await expect(
+    page.getByRole("main").getByText("Large, Oat milk")
+  ).toBeVisible();
+
+  await page.goto("/checkout");
+  await page.getByText("Pay at Pickup", { exact: true }).click();
+  await page.getByLabel("Name").fill("Migs");
+  await page.getByRole("button", { name: /Place order/ }).click();
+  await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
+  const code = await page.getByRole("heading", { level: 1 }).innerText();
+
+  await page.goto("/account");
+  await page.getByRole("button", { name: `Order again (${code})` }).click();
+  await expect(page).toHaveURL(/\/cart$/);
+  await expect(
+    page.getByRole("main").getByText("Large, Oat milk")
+  ).toBeVisible();
+});
+
+test("a Guest is asked to sign in to save a Favourite", async ({ page }) => {
+  await page.goto("/menu/item/hoshi-latte");
+  await page.getByRole("button", { name: "Save as Favourite" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Sign in to save Favourites."
+  );
+});
