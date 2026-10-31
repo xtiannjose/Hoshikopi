@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { Field, fieldClass, SaveBar } from "@/components/fields";
+import { useKeptForm } from "@/components/use-kept-form";
 import type { Hours } from "@/lib/hours";
 
 import {
@@ -26,8 +27,9 @@ const cell = `${fieldClass} min-w-28`;
 
 export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
   const [state, action, pending] = useActionState(saveWeeklyHoursAction, idle);
+  const form = useKeptForm(action, state);
   return (
-    <form action={action} className="grid gap-4">
+    <form {...form} className="grid gap-4">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[40rem] text-left">
           <caption className="sr-only">Opening Hours by day</caption>
@@ -112,8 +114,9 @@ export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
 
 export function SpecialHoursForm() {
   const [state, action, pending] = useActionState(saveSpecialHoursAction, idle);
+  const form = useKeptForm(action, state);
   return (
-    <form action={action} className="grid max-w-3xl gap-4">
+    <form {...form} className="grid max-w-3xl gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field name="day" label="Date" type="date" error={state.errors?.day} />
         <Field
@@ -167,8 +170,9 @@ export function CapacityForm({
   prep: { baseMinutes: number; perDrinkMinutes: number };
 }) {
   const [state, action, pending] = useActionState(saveCapacityAction, idle);
+  const form = useKeptForm(action, state);
   return (
-    <form action={action} className="grid gap-6">
+    <form {...form} className="grid gap-6">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[28rem] text-left">
           <caption className="sr-only">

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { Field, SaveBar } from "@/components/fields";
+import { useKeptForm } from "@/components/use-kept-form";
 
 import { saveCategoryAction, type FormState } from "../actions";
 
@@ -21,10 +22,11 @@ export function CategoryForm({
     saveCategoryAction,
     { status: "idle" }
   );
+  const form = useKeptForm(action, state);
   const key = category.id ?? "new";
   return (
     <form
-      action={action}
+      {...form}
       className="border-border grid gap-4 border-b pb-6 sm:grid-cols-[2fr_2fr_1fr] sm:items-end"
     >
       {category.id && <input type="hidden" name="id" value={category.id} />}

@@ -9,6 +9,7 @@ import {
   fieldClass,
   SaveBar,
 } from "@/components/fields";
+import { useKeptForm } from "@/components/use-kept-form";
 
 import { saveMenuItemAction, type FormState } from "../../actions";
 
@@ -50,9 +51,10 @@ export function ItemForm({
     saveMenuItemAction,
     { status: "idle" }
   );
+  const form = useKeptForm(action, state);
   const error = (name: string) => state.errors?.[name];
   return (
-    <form action={action} className="mt-8 grid max-w-3xl gap-6">
+    <form {...form} className="mt-8 grid max-w-3xl gap-6">
       {item.id && <input type="hidden" name="id" value={item.id} />}
       <Field name="categoryId" label="Category" error={error("categoryId")}>
         <select
