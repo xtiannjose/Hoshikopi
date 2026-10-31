@@ -1,6 +1,7 @@
 import { dayValue, manila } from "@/lib/clock";
 import { db } from "@/lib/db";
 import { getOrderingDay, prepMinutes } from "@/modules/cafe";
+import { closeCheckout } from "@/modules/payments";
 
 import { transition } from "./status";
 import { drinksQueuedAhead } from "./windows";
@@ -23,7 +24,10 @@ export async function expireUnpaid(at: Date): Promise<number> {
   });
   let expired = 0;
   for (const { id } of stale) {
-    if ((await transition(id, "expired", { kind: "system" })).ok) expired++;
+    if ((await transition(id, "expired", { kind: "system" })).ok) {
+      await closeCheckout(id);
+      expired++;
+    }
   }
   return expired;
 }

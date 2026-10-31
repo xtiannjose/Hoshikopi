@@ -120,3 +120,21 @@ export async function paymentForOrder(orderId: string, client: Client = db) {
 export async function paymentByCheckout(checkoutId: string) {
   return db.payment.findFirst({ where: { providerCheckoutId: checkoutId } });
 }
+
+/**
+ * An Order expired unpaid: close its checkout at the provider and mark the
+ * Payment expired, so a late payment is not taken (ADR 0003).
+ */
+export async function closeCheckout(orderId: string): Promise<void> {
+  const payment = await db.payment.findUnique({ where: { orderId } });
+  if (!payment || payment.status !== "pending") return;
+  await db.payment.update({
+    where: { id: payment.id },
+    data: { status: "expired" },
+  });
+  try {
+    await paymentProvider().expireCheckout(payment.providerCheckoutId);
+  } catch (error) {
+    console.error("[payments] checkout not expired at the provider:", error);
+  }
+}

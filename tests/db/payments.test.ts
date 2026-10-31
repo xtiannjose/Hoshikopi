@@ -2,7 +2,11 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
-import { placeOrder, receivePaymentWebhook } from "@/modules/ordering";
+import {
+  expireUnpaid,
+  placeOrder,
+  receivePaymentWebhook,
+} from "@/modules/ordering";
 import { fakeProvider, type ProviderEvent } from "@/modules/payments";
 
 import { seedDatabase } from "../../prisma/seed-data";
@@ -155,5 +159,36 @@ describe("receivePaymentWebhook (PAY-03)", () => {
       status: 404,
       result: "wrong_provider",
     });
+  });
+});
+
+describe("expiry (PAY-04)", () => {
+  it("expires an Order unpaid after 15 minutes, closing its checkout", async () => {
+    const order = await onlineOrder();
+    const window = (
+      await db.order.findUniqueOrThrow({ where: { id: order.orderId } })
+    ).windowStart;
+    expect(await expireUnpaid(new Date("2026-11-02T01:10:00Z"))).toBe(0);
+    expect(await expireUnpaid(new Date("2026-11-02T01:16:00Z"))).toBe(1);
+    expect(
+      (await db.order.findUniqueOrThrow({ where: { id: order.orderId } }))
+        .status
+    ).toBe("expired");
+    expect((await db.payment.findFirstOrThrow()).status).toBe("expired");
+    expect(
+      await db.pickupWindowUsage.findUniqueOrThrow({
+        where: { windowStart: window },
+      })
+    ).toMatchObject({ drinks: 0 });
+  });
+
+  it("ignores a payment webhook that comes after expiry", async () => {
+    const order = await onlineOrder();
+    await expireUnpaid(new Date("2026-11-02T01:16:00Z"));
+    expect((await webhook({ id: "evt_late" })).result).toBe("ignored");
+    expect(
+      (await db.order.findUniqueOrThrow({ where: { id: order.orderId } }))
+        .status
+    ).toBe("expired");
   });
 });
