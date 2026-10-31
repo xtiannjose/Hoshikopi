@@ -16,6 +16,6 @@ export async function placeGuestOrder(page: Page, name = "Bea") {
   await page.getByLabel("Name").fill(name);
   await page.getByLabel("Email").fill(`${name.toLowerCase()}@example.com`);
   await page.getByRole("button", { name: /Place order/ }).click();
-  await expect(page).toHaveURL(/\/orders\/\w+\?t=/);
+  await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
   return new URL(page.url()).pathname.split("/").at(-1)!;
 }

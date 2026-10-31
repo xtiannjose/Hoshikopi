@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import { z } from "zod";
 
@@ -14,6 +14,8 @@ import {
 import { clearCart, getCart, type CartOwner } from "@/modules/cart";
 
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS, MAX_DRINKS_PER_ORDER } from "./rules";
+import { emailOrderPlaced } from "./emails";
+import { hashToken, orderToken } from "./links";
 import { nextOrderCode } from "./status";
 import { offeredWindows } from "./windows";
 
@@ -79,9 +81,6 @@ const Contact = z
     message: "Give us an email or a mobile number for your Order.",
   });
 
-const hashToken = (token: string) =>
-  createHash("sha256").update(token).digest("hex");
-
 /**
  * Place an Order from the Cart in one transaction (docs/03 section 6): check
  * the cafe takes Orders, price the Cart again, check the caps, lock the
@@ -104,137 +103,141 @@ export async function placeOrder(
     return { ok: false, reason: "payment_unavailable" };
   }
 
-  return db.$transaction(async (tx): Promise<PlaceOrderResult> => {
-    const at = now();
-    const day = await getOrderingDay(at, tx);
-    const state = orderingState(at, day);
-    if (!state.canOrder) {
-      return {
-        ok: false,
-        reason: state.reason === "paused" ? "paused" : "closed",
-      };
-    }
+  const result = await db.$transaction(
+    async (tx): Promise<PlaceOrderResult> => {
+      const at = now();
+      const day = await getOrderingDay(at, tx);
+      const state = orderingState(at, day);
+      if (!state.canOrder) {
+        return {
+          ok: false,
+          reason: state.reason === "paused" ? "paused" : "closed",
+        };
+      }
 
-    const cart = await getCart(input.owner, tx);
-    if (cart.lines.length === 0 || cart.blocked) {
-      return { ok: false, reason: "cart_problem" };
-    }
-    if (cart.totalCents !== input.seenTotalCents) {
-      return {
-        ok: false,
-        reason: "price_changed",
-        totalCents: cart.totalCents,
-      };
-    }
-    if (cart.drinks > MAX_DRINKS_PER_ORDER) {
-      return { ok: false, reason: "too_many_drinks" };
-    }
-    if (
-      input.memberId === null &&
-      cart.drinks > GUEST_PAY_AT_PICKUP_MAX_DRINKS
-    ) {
-      return { ok: false, reason: "pay_at_pickup_limit" };
-    }
+      const cart = await getCart(input.owner, tx);
+      if (cart.lines.length === 0 || cart.blocked) {
+        return { ok: false, reason: "cart_problem" };
+      }
+      if (cart.totalCents !== input.seenTotalCents) {
+        return {
+          ok: false,
+          reason: "price_changed",
+          totalCents: cart.totalCents,
+        };
+      }
+      if (cart.drinks > MAX_DRINKS_PER_ORDER) {
+        return { ok: false, reason: "too_many_drinks" };
+      }
+      if (
+        input.memberId === null &&
+        cart.drinks > GUEST_PAY_AT_PICKUP_MAX_DRINKS
+      ) {
+        return { ok: false, reason: "pay_at_pickup_limit" };
+      }
 
-    // Choose the Pickup Window from what is offered right now.
-    const need: Counts = { drinks: cart.drinks, food: cart.foodLines };
-    const { prepMinutes: prep, windows: offered } = await offeredWindows(
-      tx,
-      at,
-      day,
-      need
-    );
-    let windowStart: Date;
-    if (input.pickup.kind === "asap") {
-      if (!offered[0]) return { ok: false, reason: "no_window" };
-      windowStart = offered[0].start;
-    } else {
-      windowStart = input.pickup.windowStart;
-      const valid = pickupWindows(at, day, {
-        prepMinutes: prep,
-        need: { drinks: 0, food: 0 },
-        used: new Map(),
-      }).some((w) => w.start.getTime() === windowStart.getTime());
-      if (!valid) return { ok: false, reason: "window_unavailable" };
-    }
-    const nextAfter = () =>
-      offered.find((w) => w.start.getTime() > windowStart.getTime())?.start ??
-      null;
+      // Choose the Pickup Window from what is offered right now.
+      const need: Counts = { drinks: cart.drinks, food: cart.foodLines };
+      const { prepMinutes: prep, windows: offered } = await offeredWindows(
+        tx,
+        at,
+        day,
+        need
+      );
+      let windowStart: Date;
+      if (input.pickup.kind === "asap") {
+        if (!offered[0]) return { ok: false, reason: "no_window" };
+        windowStart = offered[0].start;
+      } else {
+        windowStart = input.pickup.windowStart;
+        const valid = pickupWindows(at, day, {
+          prepMinutes: prep,
+          need: { drinks: 0, food: 0 },
+          used: new Map(),
+        }).some((w) => w.start.getTime() === windowStart.getTime());
+        if (!valid) return { ok: false, reason: "window_unavailable" };
+      }
+      const nextAfter = () =>
+        offered.find((w) => w.start.getTime() > windowStart.getTime())?.start ??
+        null;
 
-    // Lock the window's row and check Capacity under the lock (ADR 0007).
-    await tx.$executeRaw`
+      // Lock the window's row and check Capacity under the lock (ADR 0007).
+      await tx.$executeRaw`
       INSERT INTO pickup_window_usage (window_start, service_day, drinks, food, updated_at)
       VALUES (${windowStart}, ${dayValue(day.day)}::date, 0, 0, now())
       ON CONFLICT (window_start) DO NOTHING`;
-    const [locked] = await tx.$queryRaw<{ drinks: number; food: number }[]>`
+      const [locked] = await tx.$queryRaw<{ drinks: number; food: number }[]>`
       SELECT drinks, food FROM pickup_window_usage
       WHERE window_start = ${windowStart} FOR UPDATE`;
-    if (
-      locked.drinks + need.drinks > day.capacity.drinks ||
-      locked.food + need.food > day.capacity.food
-    ) {
-      return { ok: false, reason: "window_full", nextWindow: nextAfter() };
-    }
-    await tx.pickupWindowUsage.update({
-      where: { windowStart },
-      data: {
-        drinks: { increment: need.drinks },
-        food: { increment: need.food },
-      },
-    });
-
-    const settings = await tx.cafeSettings.findUniqueOrThrow({
-      where: { id: 1 },
-      select: { orderCodePrefix: true },
-    });
-    const code = await nextOrderCode(day.day, settings.orderCodePrefix, tx);
-    const accessToken = randomBytes(32).toString("base64url");
-    const order = await tx.order.create({
-      data: {
-        serviceDay: dayValue(day.day),
-        code,
-        status: "placed",
-        memberId: input.memberId,
-        customerName: contact.data.customerName,
-        customerEmail: contact.data.customerEmail || null,
-        customerPhone: normalizePhone(contact.data.customerPhone),
-        pickupKind: input.pickup.kind,
-        windowStart,
-        paymentMethod: input.paymentMethod,
-        totalCents: cart.totalCents,
-        accessTokenHash: hashToken(accessToken),
-        placedAt: at,
-        lines: {
-          create: cart.lines.map((line) => ({
-            menuItemId: line.menuItemId,
-            name: line.name,
-            options: line.options.map(({ group, name, deltaCents }) => ({
-              group,
-              name,
-              deltaCents,
-            })),
-            unitCents: line.unitCents!,
-            quantity: line.quantity,
-            lineCents: line.lineCents!,
-            isDrink: line.isDrink,
-            note: line.note || null,
-          })),
+      if (
+        locked.drinks + need.drinks > day.capacity.drinks ||
+        locked.food + need.food > day.capacity.food
+      ) {
+        return { ok: false, reason: "window_full", nextWindow: nextAfter() };
+      }
+      await tx.pickupWindowUsage.update({
+        where: { windowStart },
+        data: {
+          drinks: { increment: need.drinks },
+          food: { increment: need.food },
         },
-        events: {
-          create: {
-            toStatus: "placed",
-            actorKind: "customer",
-            actorId: input.memberId,
+      });
+
+      const settings = await tx.cafeSettings.findUniqueOrThrow({
+        where: { id: 1 },
+        select: { orderCodePrefix: true },
+      });
+      const code = await nextOrderCode(day.day, settings.orderCodePrefix, tx);
+      const id = randomUUID();
+      const accessToken = orderToken(id);
+      const order = await tx.order.create({
+        data: {
+          id,
+          serviceDay: dayValue(day.day),
+          code,
+          status: "placed",
+          memberId: input.memberId,
+          customerName: contact.data.customerName,
+          customerEmail: contact.data.customerEmail || null,
+          customerPhone: normalizePhone(contact.data.customerPhone),
+          pickupKind: input.pickup.kind,
+          windowStart,
+          paymentMethod: input.paymentMethod,
+          totalCents: cart.totalCents,
+          accessTokenHash: hashToken(accessToken),
+          placedAt: at,
+          lines: {
+            create: cart.lines.map((line) => ({
+              menuItemId: line.menuItemId,
+              name: line.name,
+              options: line.options.map(({ group, name, deltaCents }) => ({
+                group,
+                name,
+                deltaCents,
+              })),
+              unitCents: line.unitCents!,
+              quantity: line.quantity,
+              lineCents: line.lineCents!,
+              isDrink: line.isDrink,
+              note: line.note || null,
+            })),
+          },
+          events: {
+            create: {
+              toStatus: "placed",
+              actorKind: "customer",
+              actorId: input.memberId,
+            },
           },
         },
-      },
-    });
-    await clearCart(input.owner, tx);
-    return { ok: true, orderId: order.id, code, windowStart, accessToken };
-  });
-}
-
-/** True when `token` opens this Order's status page. */
-export function tokenMatches(token: string, hash: string): boolean {
-  return hashToken(token) === hash;
+      });
+      await clearCart(input.owner, tx);
+      return { ok: true, orderId: order.id, code, windowStart, accessToken };
+    }
+  );
+  // Pay at Pickup goes to the bar now; online Orders email once paid.
+  if (result.ok && input.paymentMethod === "pay_at_pickup") {
+    await emailOrderPlaced(result.orderId);
+  }
+  return result;
 }

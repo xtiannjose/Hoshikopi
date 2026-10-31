@@ -1,7 +1,7 @@
 import type { OrderStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
-import { tokenMatches } from "./place";
+import { tokenMatches } from "./links";
 import { transition, type TransitionResult } from "./status";
 
 async function orderWithToken(id: string, token: string) {

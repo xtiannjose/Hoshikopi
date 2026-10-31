@@ -9,7 +9,7 @@ import {
 } from "@/modules/cafe";
 import { getCart, type CartOwner, type CartView } from "@/modules/cart";
 
-import { tokenMatches } from "./place";
+import { tokenMatches } from "./links";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS } from "./rules";
 import { offeredWindows } from "./windows";
 

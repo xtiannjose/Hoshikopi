@@ -5,7 +5,7 @@ Status: draft v0.1, 2026-10-30. The tables behind `docs/03-ARCHITECTURE.md`, in 
 ## 1. Conventions
 
 - Table and column names in `snake_case`; Prisma models in `PascalCase` with `@@map` and `@map`.
-- Ids are `cuid` strings, except settings singletons and natural keys noted below.
+- Ids are `cuid` strings, except settings singletons, natural keys noted below, and `orders.id`, a random UUID made before insert so the status-link token (an HMAC of the id) can be stored as its hash in the same insert.
 - Money columns end in `_cents` and are integers, VAT included ([ADR 0002](adr/0002-money-as-integer-centavos.md)).
 - Times are `timestamptz` stored in UTC. `service_day` (a `date`) is the cafe's Manila calendar day. Opening times are `time` values in Manila time.
 - Every table has `created_at`; editable tables also have `updated_at`.

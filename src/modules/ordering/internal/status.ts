@@ -2,6 +2,8 @@ import type { Order, OrderStatus, Prisma } from "@/generated/prisma/client";
 import { dayValue, now } from "@/lib/clock";
 import { db, inTransaction, type Client } from "@/lib/db";
 
+import { emailOrderPlaced, emailOrderReady } from "./emails";
+
 // The Order Status machine (docs/03-ARCHITECTURE.md section 7). Order
 // Status changes only here; anything else is a bug (CLAUDE.md).
 
@@ -108,6 +110,22 @@ export async function transition(
   actor: Actor,
   reason?: string,
   client: Client = db
+): Promise<TransitionResult> {
+  const result = await move(orderId, to, actor, reason, client);
+  // Emails after commit; a caller's own transaction sends them itself.
+  if (result.ok && client === db) {
+    if (to === "ready") await emailOrderReady(orderId);
+    if (to === "paid") await emailOrderPlaced(orderId);
+  }
+  return result;
+}
+
+function move(
+  orderId: string,
+  to: OrderStatus,
+  actor: Actor,
+  reason: string | undefined,
+  client: Client
 ): Promise<TransitionResult> {
   return inTransaction(client, async (tx) => {
     await tx.$queryRaw`SELECT id FROM orders WHERE id = ${orderId} FOR UPDATE`;
