@@ -65,8 +65,8 @@ Add a library only when the platform and installed packages cannot do the job, a
 
 ## 6. References
 
-- Sibling projects with the same stack and habits: Hoshimono (`C:\Users\cjose\Documents\Projects\Personal\Hoshimono`, online supermarket) and the iOne Resources website (`C:\Users\cjose\IONE-WEBSITE`). Reuse their patterns (module results, centavos, rate limits, security headers, quality tools) rather than reinventing them; never edit them from this project.
-- Before adding any UI library, read `C:\Users\cjose\IONE-WEBSITE\docs\DESIGN-LIBS.md`: install recipes, licences and pitfalls for Kokonut, beUI, Animate UI, coss and Motion, tested on this stack. iOne later replaced most of them with native elements and CSS.
+- Sibling projects with the same stack and habits: Hoshimono (`D:\Coding\projects\Personal\Hoshimono`, online supermarket) and the iOne Resources website (`D:\Coding\projects\ione\IONE-WEBSITE`). Reuse their patterns (module results, centavos, rate limits, security headers, quality tools) rather than reinventing them; never edit them from this project.
+- Before adding any UI library, read `D:\Coding\projects\ione\IONE-WEBSITE\docs\DESIGN-LIBS.md`: install recipes, licences and pitfalls for Kokonut, beUI, Animate UI, coss and Motion, tested on this stack. iOne later replaced most of them with native elements and CSS.
 
 ## 7. Prompts that work
 
