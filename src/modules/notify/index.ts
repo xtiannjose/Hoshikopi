@@ -32,3 +32,33 @@ export async function sendOrderReady(order: OrderForEmail) {
 export async function sendOrderRefunded(order: OrderForEmail) {
   await send(orderRefundedEmail(order));
 }
+
+/** A new Inquiry for the Manager at the cafe's contact address (INFO-11). */
+export async function sendInquiry(
+  to: string,
+  inquiry: {
+    kind: "private_event" | "large_order";
+    name: string;
+    email: string;
+    wantedOn: string | null;
+    guests: number | null;
+    message: string;
+  }
+) {
+  const kind =
+    inquiry.kind === "private_event" ? "a private event" : "a large order";
+  await send({
+    to,
+    subject: `New inquiry: ${kind} from ${inquiry.name}`,
+    text: [
+      `${inquiry.name} asked about ${kind}.`,
+      `Reply to: ${inquiry.email}`,
+      `Date: ${inquiry.wantedOn ?? "not given"}`,
+      `Guests: ${inquiry.guests ?? "not given"}`,
+      "",
+      inquiry.message,
+      "",
+      "See every Inquiry in /manage/inquiries.",
+    ].join("\n"),
+  });
+}

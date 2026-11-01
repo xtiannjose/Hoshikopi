@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { EnvelopeIcon, MapPinIcon } from "@phosphor-icons/react/ssr";
 
 import { AmenityList } from "@/components/cafe/amenity-list";
 import { HoursList } from "@/components/cafe/hours-list";
 import { mapsUrl } from "@/components/cafe/maps";
 import { OpenStatus } from "@/components/cafe/open-status";
+import { WeeklyList } from "@/components/content/weekly-list";
 import { Markdown } from "@/components/markdown";
 import { Photo } from "@/components/photo";
 import { PickupLine } from "@/components/pickup-line";
@@ -19,6 +21,7 @@ import {
   GUEST_PAY_AT_PICKUP_MAX_DRINKS,
   MAX_DRINKS_PER_ORDER,
 } from "@/modules/ordering";
+import { getRecurringEvents } from "@/modules/content";
 import { STARS_PER_REWARD } from "@/modules/loyalty";
 
 export const metadata: Metadata = {
@@ -68,7 +71,7 @@ function faq(cafe: CafeDetails): [string, string][] {
     ],
     [
       "What about big orders?",
-      `Up to ${MAX_DRINKS_PER_ORDER} drinks online. For more, email ${cafe.contactEmail} a day ahead and we'll get it ready.`,
+      `Up to ${MAX_DRINKS_PER_ORDER} drinks online. For more, send an inquiry from this page a day ahead and we'll get it ready.`,
     ],
   ];
   return rows.filter((row) => row !== null);
@@ -141,7 +144,11 @@ function structuredData(cafe: CafeDetails, hours: Hours) {
 }
 
 export default async function CafePage() {
-  const [cafe, hours] = await Promise.all([getCafeDetails(), getHours()]);
+  const [cafe, hours, weekly] = await Promise.all([
+    getCafeDetails(),
+    getHours(),
+    getRecurringEvents(),
+  ]);
   const [hero, ...more] = ROOM_PHOTOS;
   return (
     <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
@@ -218,6 +225,19 @@ export default async function CafePage() {
         <div className="mt-5">
           <AmenityList amenities={cafe} />
         </div>
+      </section>
+
+      <WeeklyList events={weekly} className="mt-14 max-w-3xl" />
+
+      <section aria-labelledby="private-events" className="mt-14 max-w-3xl">
+        <h2 id="private-events" className="font-display pb-1 text-3xl italic">
+          Private events and big orders
+        </h2>
+        <p className="mt-3 text-lg">
+          Planning a party, a team meeting or an order of more than 15 drinks?{" "}
+          <Link href="/cafe/inquire">Send us an inquiry</Link> and the cafe will
+          email you back.
+        </p>
       </section>
 
       <section aria-labelledby="questions" className="mt-14 max-w-3xl">

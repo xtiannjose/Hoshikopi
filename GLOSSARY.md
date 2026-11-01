@@ -208,6 +208,14 @@ _Avoid_: Series, repeating event, weekly Event
 A message to the cafe about a private event or a large Order that the online Cart cannot take.
 _Avoid_: Booking, reservation, contact request
 
+**Recurring Event**:
+Something that happens at the cafe on the same weekday and time every week, with no date and no sign-up ("Open mic, Thursdays, 7 to 9 PM"). Listed on the Events and cafe pages, apart from dated Events.
+_Avoid_: Weekly event (in code), schedule
+
+**Inquiry**:
+A Customer's request about a private event or a large Order (name, email, date, guests, message), saved for the Manager, who answers by email.
+_Avoid_: Booking, reservation, quote request
+
 **Post**:
 A news article on the site: a new drink, a story about a supplier, a cafe update.
 _Avoid_: Blog, article (in code), news item

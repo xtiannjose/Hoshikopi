@@ -77,8 +77,8 @@ test("a full Pickup Window is never offered (ORD-04)", async ({ page }) => {
   const full = await offered.last().getAttribute("value");
   await e2eQuery(
     `INSERT INTO pickup_window_usage (window_start, service_day, drinks, food, updated_at)
-     VALUES ($1, ($1::timestamptz AT TIME ZONE 'Asia/Manila')::date, 12, 0, now())
-     ON CONFLICT (window_start) DO UPDATE SET drinks = 12`,
+     VALUES ($1, ($1::timestamptz AT TIME ZONE 'Asia/Manila')::date, 200, 0, now())
+     ON CONFLICT (window_start) DO UPDATE SET drinks = 200`,
     [full]
   );
   await page.reload();

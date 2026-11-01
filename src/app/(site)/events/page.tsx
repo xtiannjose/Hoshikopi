@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { EventCard, eventWhen } from "@/components/content/event-card";
-import { getEvents } from "@/modules/content";
+import { WeeklyList } from "@/components/content/weekly-list";
+import { getEvents, getRecurringEvents } from "@/modules/content";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -10,7 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default async function EventsPage() {
-  const { upcoming, past } = await getEvents();
+  const [{ upcoming, past }, weekly] = await Promise.all([
+    getEvents(),
+    getRecurringEvents(),
+  ]);
   return (
     <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
       <h1 className="font-display pt-8 pb-1 text-5xl italic md:text-6xl">
@@ -27,6 +32,11 @@ export default async function EventsPage() {
           ))}
         </div>
       )}
+      <WeeklyList events={weekly} className="mt-16 max-w-3xl" />
+      <p className="mt-10 text-lg">
+        Planning a private event?{" "}
+        <Link href="/cafe/inquire">Send us an inquiry</Link>.
+      </p>
       {past.length > 0 && (
         <details className="mt-16">
           <summary className="font-display min-h-11 cursor-pointer text-2xl italic">

@@ -20,7 +20,7 @@ const MESSAGES = {
   sold_out: "Sorry, this is sold out today.",
   option_sold_out: "One of your choices is sold out today. Pick another.",
   invalid_options: "Choose one of each required option.",
-  too_many: `That's more than ${MAX_LINE_QUANTITY} of one item. Email us for big orders.`,
+  too_many: `That's more than ${MAX_LINE_QUANTITY} of one item. Send us an inquiry for big orders.`,
 };
 
 const optionIdsOf = (form: FormData) =>

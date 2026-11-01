@@ -91,16 +91,24 @@ async function Event({ params }: Pick<PageProps<"/events/[slug]">, "params">) {
       <div className="mt-8 text-lg">
         <Markdown>{event.bodyMd}</Markdown>
       </div>
-      {event.signupUrl && (
-        <p className="mt-8">
+      <p className="mt-8 flex flex-wrap gap-3">
+        {event.signupUrl && (
           <a
             href={event.signupUrl}
             className="bg-primary text-primary-foreground inline-flex min-h-12 items-center rounded-full px-6 font-semibold no-underline"
           >
             Sign up
           </a>
-        </p>
-      )}
+        )}
+        {/* A calendar file for Google, Apple and Outlook (EVT-04). */}
+        <a
+          href={`/events/${event.slug}/calendar`}
+          download={`${event.slug}.ics`}
+          className="border-input inline-flex min-h-12 items-center rounded-full border px-6 font-semibold no-underline"
+        >
+          Add to calendar
+        </a>
+      </p>
       <p className="text-muted-foreground mt-10 font-mono text-sm">
         This Event is an example: Hoshikopi is a concept cafe.
       </p>
