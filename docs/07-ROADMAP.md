@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists); batches 5.1 to 5.3 done; 5.4 prepared and waiting for the owner's Neon, Vercel and Resend accounts. Batches 6.1 and 6.4 done; 6.5 dropped (English only). 6.8, 6.6, 6.7 and 6.9 done. **Next: 6.2, then 6.3** (the owner's order, 2026-11-01).
+- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists); batches 5.1 to 5.3 done; 5.4 prepared and waiting for the owner's Neon, Vercel and Resend accounts. Batches 6.1 and 6.4 done; 6.5 dropped (English only). 6.8, 6.6, 6.7, 6.9 and 6.2 done. **Next: 6.3** (Promos and seasonal Menu Items).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -131,7 +131,7 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 ## 11. Phase 6: V1 features (2 weeks)
 
 - [x] **6.1 Favourites and reorder** (ORD-11). Done 2026-10-31: Members save a Menu Item with its Options from its page (Guests are asked to sign in) and see them in `/account` priced today, with Add and Remove; each past Order has Order again, which puts its Lines back in the Cart through `addLine` (checked and priced today) and says how many were left out. Order Lines now keep their Option ids (`option_ids`) next to the snapshot; Favourites go with the Cart when an account is deleted.
-- [ ] **6.2 Event sign-up with a cap** (EVT-02).
+- [x] **6.2 Event sign-up with a cap** (EVT-02). Done 2026-11-01 (tests first): Events get optional Seats; the Event page shows seats left and a Sign-up form (name, email, 1 to 4 seats, paid at the door), counted under a row lock on the Event so two at once never oversell, one per email per Event, 10 per IP an hour, confirmed by email; the Manager sets Seats in the Event editor and sees the Sign-ups below it. Cancelling a Sign-up is by replying to the email for now.
 - [ ] **6.3 Promos and seasonal Menu Items** (time-boxed price changes on Menu Items; `available_until`, MENU-06).
 - [x] **6.4 "Order ready" alerts** (ORD-14). Done 2026-11-01: the Order page chimes, vibrates, retitles the tab and shows a browser notification (through a minimal service worker, `public/sw.js`, which Android needs) when the Order turns Ready; "Notify me when it's ready" asks for permission and unlocks the sound; a hidden tab keeps checking every 15 seconds. The installable app (PWA) with push notifications to a locked phone moves after V1 (section 13).
 - [x] **6.5 Filipino language.** Dropped 2026-11-01 by the owner: the site stays English only.

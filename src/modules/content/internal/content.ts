@@ -18,6 +18,9 @@ export type EventCard = {
   photoAlt: string | null;
   priceCents: number | null;
   signupUrl: string | null;
+  /** Seats for Sign-ups here and how many are left; null takes none (EVT-02). */
+  seats: number | null;
+  seatsLeft: number | null;
 };
 
 export type PostCard = {
@@ -41,7 +44,19 @@ const eventSelect = {
   photoAlt: true,
   priceCents: true,
   signupUrl: true,
+  seats: true,
+  signups: { select: { seats: true } },
 } as const;
+
+type EventRow = Omit<EventCard, "seatsLeft"> & { signups: { seats: number }[] };
+
+function toEventCard({ signups, ...event }: EventRow): EventCard {
+  const taken = signups.reduce((sum, signup) => sum + signup.seats, 0);
+  return {
+    ...event,
+    seatsLeft: event.seats === null ? null : Math.max(event.seats - taken, 0),
+  };
+}
 
 /** Published Events: upcoming soonest first, past latest first (EVT-01). */
 export async function readEvents(): Promise<{
@@ -62,7 +77,7 @@ export async function readEvents(): Promise<{
       select: eventSelect,
     }),
   ]);
-  return { upcoming, past };
+  return { upcoming: upcoming.map(toEventCard), past: past.map(toEventCard) };
 }
 
 /** Published Posts, newest first (NEWS-01). */
@@ -160,6 +175,14 @@ const EventInput = z
         (v) => v === "" || /^https:\/\//.test(v),
         "Use an https:// link."
       ),
+    seats: z
+      .string()
+      .trim()
+      .optional()
+      .refine(
+        (v) => !v || (/^\d+$/.test(v) && +v >= 1 && +v <= 500),
+        "Enter 1 to 500 seats, or leave it empty for no sign-up here."
+      ),
     isPublished: checkbox,
   })
   .refine((e) => e.endsAt > e.startsAt, {
@@ -197,11 +220,13 @@ export async function saveEvent(
 ): Promise<ContentResult> {
   const parsed = EventInput.safeParse(input);
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
-  const { price, signupUrl, ...rest } = parsed.data;
+  const { price, signupUrl, seats, ...rest } = parsed.data;
   const data = {
     ...rest,
     priceCents: price === "" ? null : parsePesos(price),
     signupUrl: signupUrl || null,
+    // Absent leaves it as it is; empty takes no Sign-ups here.
+    seats: seats === undefined ? undefined : Number(seats) || null,
   };
   try {
     const event = await db.$transaction(async (tx) => {

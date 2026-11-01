@@ -1,7 +1,12 @@
+import { readdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations, openIn } from "./axe";
 import { signIn } from "./sign-in";
+
+const MAIL = path.join(process.cwd(), "data", "mail");
 
 for (const palette of ["day", "night"] as const) {
   test(`Events and news in the ${palette} palette (EVT-01, NEWS-01)`, async ({
@@ -149,4 +154,44 @@ test("a Customer sends an Inquiry and the Manager answers it (INFO-11)", async (
   await expectNoAxeViolations(page);
   await item.getByRole("button", { name: `Mark answered (${name})` }).click();
   await expect(item).toContainText("Answered");
+});
+
+test("a visitor signs up for an Event and the Manager sees it (EVT-02)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  test.setTimeout(180_000);
+  const email = `signup-${Date.now()}@example.com`;
+  await page.goto("/events/latte-art-night");
+  const signup = page.getByRole("region", { name: "Sign up" });
+  await expect(signup).toContainText("of 12 seats left.");
+  await expect(signup).toContainText("Pay PHP 350 a seat at the door.");
+  await signup.getByLabel("Your name").fill("Annika");
+  await signup.getByLabel("Email").fill(email);
+  await signup.getByLabel("Seats").selectOption("2");
+  await signup.getByRole("button", { name: "Sign up" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    `You're in! We emailed ${email} with the details.`
+  );
+  await expect
+    .poll(async () => {
+      const files = await readdir(MAIL).catch(() => []);
+      return files.some((file) => file.endsWith(`${email}.txt`));
+    })
+    .toBe(true);
+
+  // The same email can't take more seats.
+  await page.reload();
+  await signup.getByLabel("Your name").fill("Annika");
+  await signup.getByLabel("Email").fill(email);
+  await signup.getByRole("button", { name: "Sign up" }).click();
+  await expect(
+    page.getByText("That email is already signed up for this Event.")
+  ).toBeVisible();
+
+  await signIn(page, "christian@hoshikopi.example", "/manage/events");
+  await page.getByRole("link", { name: "Latte art night" }).click();
+  const list = page.getByRole("region", { name: "Sign-ups" });
+  await expect(list).toContainText(email);
+  await expect(list).toContainText("2 seats");
 });

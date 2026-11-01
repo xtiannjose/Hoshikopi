@@ -6,7 +6,10 @@ import { Suspense } from "react";
 import { eventPrice, eventWhen } from "@/components/content/event-card";
 import { Markdown } from "@/components/markdown";
 import { Photo } from "@/components/photo";
+import { formatPrice } from "@/lib/money";
 import { getEvent, getEvents } from "@/modules/content";
+
+import { SignupForm } from "./signup-form";
 
 export async function generateStaticParams() {
   const { upcoming, past } = await getEvents();
@@ -91,6 +94,27 @@ async function Event({ params }: Pick<PageProps<"/events/[slug]">, "params">) {
       <div className="mt-8 text-lg">
         <Markdown>{event.bodyMd}</Markdown>
       </div>
+      {event.seats !== null && (
+        <section aria-labelledby="signup" className="mt-10">
+          <h2 id="signup" className="font-display pb-1 text-3xl italic">
+            Sign up
+          </h2>
+          {event.seatsLeft ? (
+            <>
+              <p className="mt-2">
+                {event.seatsLeft} of {event.seats} seats left.
+              </p>
+              <SignupForm
+                slug={event.slug}
+                seatsLeft={event.seatsLeft}
+                price={event.priceCents ? formatPrice(event.priceCents) : null}
+              />
+            </>
+          ) : (
+            <p className="mt-2 text-lg">Fully booked, sorry.</p>
+          )}
+        </section>
+      )}
       <p className="mt-8 flex flex-wrap gap-3">
         {event.signupUrl && (
           <a

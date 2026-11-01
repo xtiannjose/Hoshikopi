@@ -31,3 +31,9 @@ export {
   type InquiryResult,
   type InquiryView,
 } from "./internal/inquiries";
+export {
+  signUpForEvent,
+  signupsForEvent,
+  type SignupInput,
+  type SignupResult,
+} from "./internal/signups";

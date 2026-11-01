@@ -31,6 +31,7 @@ export async function saveEventAction(
       bodyMd: text(form, "bodyMd"),
       price: text(form, "price"),
       signupUrl: text(form, "signupUrl"),
+      seats: text(form, "seats"),
       isPublished: form.get("isPublished") ?? undefined,
     },
     staff

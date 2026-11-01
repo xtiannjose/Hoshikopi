@@ -197,24 +197,20 @@ A fact about visiting the cafe that is not about the menu: Wi-Fi, power outlets,
 _Avoid_: Facility, feature, perk
 
 **Event**:
-Something happening at the cafe on a date: a cupping, latte art night, open mic, market day. Has a start, an end and an optional sign-up link.
+Something happening at the cafe on a date: a cupping, latte art night, open mic, market day. Has a start, an end, and either Seats for Sign-ups here or an optional sign-up link elsewhere.
 _Avoid_: Activity, happening
 
-**Recurring Event**:
-Something that happens at the cafe on the same weekday every week ("Open mic, Thursdays 7 PM"). Shown as a weekly line, not as a dated Event.
-_Avoid_: Series, repeating event, weekly Event
-
-**Inquiry**:
-A message to the cafe about a private event or a large Order that the online Cart cannot take.
-_Avoid_: Booking, reservation, contact request
+**Sign-up**:
+A person's place at an Event: a name, an email and 1 to 4 Seats, confirmed by email. An Event with Seats takes Sign-ups until they run out; one Sign-up per email per Event. Paid at the door.
+_Avoid_: Booking, reservation, ticket, RSVP
 
 **Recurring Event**:
-Something that happens at the cafe on the same weekday and time every week, with no date and no sign-up ("Open mic, Thursdays, 7 to 9 PM"). Listed on the Events and cafe pages, apart from dated Events.
-_Avoid_: Weekly event (in code), schedule
+Something that happens at the cafe on the same weekday and time every week, with no date and no Sign-up ("Open mic, Thursdays, 7 to 9 PM"). Listed on the Events and cafe pages, apart from dated Events.
+_Avoid_: Series, repeating event, weekly Event, schedule
 
 **Inquiry**:
-A Customer's request about a private event or a large Order (name, email, date, guests, message), saved for the Manager, who answers by email.
-_Avoid_: Booking, reservation, quote request
+A Customer's request about a private event or a large Order the online Cart cannot take (name, email, date, guests, message), saved for the Manager, who answers by email.
+_Avoid_: Booking, reservation, contact request, quote request
 
 **Post**:
 A news article on the site: a new drink, a story about a supplier, a cafe update.

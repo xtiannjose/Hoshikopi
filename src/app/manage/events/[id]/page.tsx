@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 import { manilaInputValue, now } from "@/lib/clock";
 import { formatReceipt } from "@/lib/money";
-import { contentForStaff } from "@/modules/content";
+import { contentForStaff, signupsForEvent } from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
 import { EventForm, type EventFormData } from "../../content-forms";
@@ -43,6 +43,7 @@ async function Editor({
       bodyMd: "",
       price: "",
       signupUrl: "",
+      seats: "",
       isPublished: false,
     };
   } else {
@@ -58,6 +59,7 @@ async function Editor({
       bodyMd: row.bodyMd,
       price: row.priceCents ? formatReceipt(row.priceCents) : "",
       signupUrl: row.signupUrl ?? "",
+      seats: row.seats?.toString() ?? "",
       isPublished: row.isPublished,
     };
   }
@@ -67,6 +69,46 @@ async function Editor({
         {event.id ? event.title : "Add an Event"}
       </h1>
       <EventForm event={event} />
+      {event.id && <Signups eventId={event.id} />}
     </>
+  );
+}
+
+/** Who signed up (EVT-02). */
+async function Signups({ eventId }: { eventId: string }) {
+  const signups = await signupsForEvent(eventId);
+  const seats = signups.reduce((sum, signup) => sum + signup.seats, 0);
+  return (
+    <section aria-labelledby="signups" className="mt-12 max-w-3xl">
+      <h2 id="signups" className="font-display pb-1 text-2xl italic">
+        Sign-ups
+      </h2>
+      {signups.length === 0 ? (
+        <p className="mt-2">No Sign-ups yet.</p>
+      ) : (
+        <>
+          <p className="mt-2">
+            {signups.length} {signups.length === 1 ? "Sign-up" : "Sign-ups"},{" "}
+            {seats} {seats === 1 ? "seat" : "seats"}.
+          </p>
+          <ul className="border-border mt-3 border-t">
+            {signups.map((signup) => (
+              <li
+                key={signup.id}
+                className="border-border flex flex-wrap justify-between gap-3 border-b py-2"
+              >
+                <span>
+                  {signup.name}{" "}
+                  <a href={`mailto:${signup.email}`}>{signup.email}</a>
+                </span>
+                <span className="font-mono">
+                  {signup.seats} {signup.seats === 1 ? "seat" : "seats"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
   );
 }
