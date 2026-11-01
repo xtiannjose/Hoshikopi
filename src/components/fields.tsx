@@ -57,14 +57,16 @@ export function Checkboxes({
   name,
   options,
   checked,
+  error,
 }: {
   legend: string;
   name: string;
   options: readonly (readonly [value: string, label: string])[];
   checked: string[];
+  error?: string;
 }) {
   return (
-    <fieldset>
+    <fieldset aria-describedby={error ? `${name}-error` : undefined}>
       <legend className="font-semibold">{legend}</legend>
       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
         {options.map(([value, label]) => (
@@ -83,6 +85,11 @@ export function Checkboxes({
           </label>
         ))}
       </div>
+      {error && (
+        <p id={`${name}-error`} className="text-destructive text-sm">
+          {error}
+        </p>
+      )}
     </fieldset>
   );
 }

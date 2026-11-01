@@ -6,7 +6,7 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists); batches 5.1 to 5.3 done; 5.4 prepared and waiting for the owner's Neon, Vercel and Resend accounts. Batches 6.1 and 6.4 done; 6.5 dropped (English only). **Next: 6.8, then 6.6, 6.7, 6.9, 6.2 and 6.3** (the owner's order, 2026-11-01).
+- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists); batches 5.1 to 5.3 done; 5.4 prepared and waiting for the owner's Neon, Vercel and Resend accounts. Batches 6.1 and 6.4 done; 6.5 dropped (English only). 6.8 done. **Next: 6.6, then 6.7, 6.9, 6.2 and 6.3** (the owner's order, 2026-11-01).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -137,7 +137,7 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 - [x] **6.5 Filipino language.** Dropped 2026-11-01 by the owner: the site stays English only.
 - [ ] **6.6 Reports and Birthday Treat** (STAFF-08, LOY-04); menu search and dietary filters (MENU-05); Popular this week (MENU-09).
 - [ ] **6.7 Recurring Events and Inquiries** (EVT-03, INFO-11); ORD-12 then points to the Inquiry form; add to calendar on Event pages (EVT-04).
-- [ ] **6.8 Pairings and Day and Night Barista Picks** (MENU-08, INFO-13).
+- [x] **6.8 Pairings and Day and Night Barista Picks** (MENU-08, INFO-13). Done 2026-11-01: "Goes well with" on each Menu Item page adds the Pairing in one tap with the defaults its own page starts with (or links there when a required choice is Sold Out); the Manager sets it in the item editor. Day picks (`barista_pick`) and Night picks (`night_pick`), at most three each; Home and the menu's star badge show the current palette's set by CSS, so pages stay prerendered. The migration widens the badge CHECK and sets the seeded pairings and Night picks on databases seeded earlier.
 - [ ] **6.9 Calorie estimates** (MENU-10).
 
 **Exit criteria:** each V1 item works end to end with tests; budgets from Phase 5 still hold.

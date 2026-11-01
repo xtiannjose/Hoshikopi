@@ -4,15 +4,36 @@ import { Photo, type PhotoKind } from "@/components/photo";
 import { formatPrice } from "@/lib/money";
 import type { MenuItemCard } from "@/modules/menu";
 
-/** "Barista picks this week": one large, two small (INFO-08). */
-export function BaristaPicks({ picks }: { picks: MenuItemCard[] }) {
+const COPY = {
+  day: { heading: "Barista picks this week", note: "New picks every Monday." },
+  night: {
+    heading: "Barista picks for tonight",
+    note: "What we pour after 6 PM.",
+  },
+};
+
+/**
+ * Barista picks: one large, two small (INFO-08). One set per palette, shown
+ * only in its own (INFO-13); the page stays prerendered, so CSS chooses.
+ */
+export function BaristaPicks({
+  picks,
+  palette,
+}: {
+  picks: MenuItemCard[];
+  palette: "day" | "night";
+}) {
   if (picks.length === 0) return null;
+  const id = `picks-${palette}`;
   return (
-    <section aria-labelledby="picks">
-      <h2 id="picks" className="font-display pb-1 text-4xl italic">
-        Barista picks this week
+    <section
+      aria-labelledby={id}
+      className={palette === "day" ? "night:hidden" : "night:block hidden"}
+    >
+      <h2 id={id} className="font-display pb-1 text-4xl italic">
+        {COPY[palette].heading}
       </h2>
-      <p className="text-muted-foreground mt-2">New picks every Monday.</p>
+      <p className="text-muted-foreground mt-2">{COPY[palette].note}</p>
       <div className="mt-8 grid gap-8 md:grid-cols-2 md:grid-rows-2">
         {picks.slice(0, 3).map((item, index) => (
           <article

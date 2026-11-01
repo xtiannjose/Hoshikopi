@@ -25,13 +25,15 @@ export type ItemFormData = {
   badges: string[];
   allergens: string[];
   optionGroupIds: string[];
+  pairingId: string;
   photoUrl: string | null;
   photoAlt: string;
   sort: number;
 };
 
 const BADGES = [
-  ["barista_pick", "Barista Pick"],
+  ["barista_pick", "Day Barista Pick"],
+  ["night_pick", "Night Barista Pick"],
   ["new", "New"],
   ["best_seller", "Best seller"],
   ["vegan", "Vegan"],
@@ -42,10 +44,12 @@ export function ItemForm({
   item,
   categories,
   optionGroups,
+  menuItems,
 }: {
   item: ItemFormData;
   categories: { id: string; name: string }[];
   optionGroups: { id: string; name: string }[];
+  menuItems: { id: string; name: string }[];
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
     saveMenuItemAction,
@@ -131,6 +135,7 @@ export function ItemForm({
         name="badges"
         options={BADGES}
         checked={item.badges}
+        error={error("badges")}
       />
       <Checkboxes
         legend="Allergens it contains"
@@ -144,6 +149,29 @@ export function ItemForm({
         options={optionGroups.map((g) => [g.id, g.name] as const)}
         checked={item.optionGroupIds}
       />
+      <Field
+        name="pairingId"
+        label="Goes well with"
+        hint="Shown on its page with a one-tap Add."
+        error={error("pairingId")}
+      >
+        <select
+          id="pairingId"
+          name="pairingId"
+          defaultValue={item.pairingId}
+          aria-describedby="pairingId-hint"
+          className={fieldClass}
+        >
+          <option value="">Nothing</option>
+          {menuItems
+            .filter((other) => other.id !== item.id)
+            .map((other) => (
+              <option key={other.id} value={other.id}>
+                {other.name}
+              </option>
+            ))}
+        </select>
+      </Field>
       <Field
         name="photo"
         label="Photo"

@@ -12,8 +12,10 @@ export type MenuItemCard = {
   description: string;
   baseCents: number;
   isDrink: boolean;
-  /** Labels in display order, "Barista Pick" first. */
+  /** Labels in display order; Barista Picks are in `picks`. */
   badges: string[];
+  /** Barista Pick for the Day palette, the Night palette, or both (INFO-13). */
+  picks: { day: boolean; night: boolean };
   photoUrl: string | null;
   photoAlt: string;
   soldOut: boolean;
@@ -42,14 +44,17 @@ export type OptionGroupView = {
   options: OptionView[];
 };
 
+/** "Goes well with" (MENU-08); null `optionIds` means choose on its page. */
+export type Pairing = MenuItemCard & { optionIds: string[] | null };
+
 export type MenuItemDetail = MenuItemCard & {
   categoryName: string;
   allergenLine: string;
   optionGroups: OptionGroupView[];
+  pairing: Pairing | null;
 };
 
 const BADGES: [string, string][] = [
-  ["barista_pick", "Barista Pick"],
   ["new", "New"],
   ["best_seller", "Best seller"],
   ["vegan", "Vegan"],
@@ -110,6 +115,10 @@ function toCard(row: CardRow, today: string): MenuItemCard {
     baseCents: row.baseCents,
     isDrink: row.isDrink,
     badges: badgeLabels(row.badges, row.allergens),
+    picks: {
+      day: row.badges.includes("barista_pick"),
+      night: row.badges.includes("night_pick"),
+    },
     photoUrl: row.photoUrl,
     photoAlt: row.photoAlt ?? row.name,
     soldOut: soldOutToday(row.soldOutOn, today),
@@ -149,7 +158,93 @@ export async function getMenu(): Promise<MenuCategory[]> {
     }));
 }
 
-/** One visible Menu Item with its Option Groups, or null. */
+const detailSelect = {
+  ...cardSelect,
+  pairingId: true,
+  optionGroups: {
+    orderBy: { sort: "asc" },
+    select: {
+      optionGroup: {
+        select: {
+          id: true,
+          name: true,
+          minSelect: true,
+          maxSelect: true,
+          options: {
+            orderBy: { sort: "asc" },
+            select: {
+              id: true,
+              name: true,
+              deltaCents: true,
+              isDefault: true,
+              addsAllergens: true,
+              soldOutOn: true,
+            },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
+type DetailRow = CardRow & {
+  pairingId: string | null;
+  optionGroups: {
+    optionGroup: {
+      id: string;
+      name: string;
+      minSelect: number;
+      maxSelect: number;
+      options: {
+        id: string;
+        name: string;
+        deltaCents: number;
+        isDefault: boolean;
+        addsAllergens: string[];
+        soldOutOn: Date | null;
+      }[];
+    };
+  }[];
+};
+
+function groupViews(row: DetailRow, today: string): OptionGroupView[] {
+  return row.optionGroups.map(({ optionGroup: group }) => ({
+    id: group.id,
+    name: group.name,
+    minSelect: group.minSelect,
+    maxSelect: group.maxSelect,
+    options: group.options.map((option) => ({
+      id: option.id,
+      name: option.name,
+      deltaCents: option.deltaCents,
+      isDefault: option.isDefault,
+      soldOut: soldOutToday(option.soldOutOn, today),
+    })),
+  }));
+}
+
+/**
+ * The Options a one-tap add uses: each group's defaults, as its own page
+ * starts (a Sold Out default gives way to the first left); null when a
+ * required group has nothing left today.
+ */
+export function oneTapOptions(groups: OptionGroupView[]): string[] | null {
+  const ids: string[] = [];
+  for (const group of groups) {
+    const available = group.options.filter((option) => !option.soldOut);
+    let picked = available
+      .filter((option) => option.isDefault)
+      .slice(0, group.maxSelect);
+    if (picked.length < group.minSelect) {
+      picked = available.slice(0, group.minSelect);
+    }
+    if (picked.length < group.minSelect) return null;
+    ids.push(...picked.map((option) => option.id));
+  }
+  return ids;
+}
+
+/** One visible Menu Item with its Option Groups and Pairing, or null. */
 export async function getMenuItem(
   slug: string
 ): Promise<MenuItemDetail | null> {
@@ -159,53 +254,27 @@ export async function getMenuItem(
   const today = manila(now()).day;
   const row = await db.menuItem.findFirst({
     where: { slug, ...visibleItem },
-    select: {
-      ...cardSelect,
-      optionGroups: {
-        orderBy: { sort: "asc" },
-        select: {
-          optionGroup: {
-            select: {
-              id: true,
-              name: true,
-              minSelect: true,
-              maxSelect: true,
-              options: {
-                orderBy: { sort: "asc" },
-                select: {
-                  id: true,
-                  name: true,
-                  deltaCents: true,
-                  isDefault: true,
-                  addsAllergens: true,
-                  soldOutOn: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    select: detailSelect,
   });
   if (!row) return null;
-  const groups = row.optionGroups.map(({ optionGroup }) => optionGroup);
+  const pair = row.pairingId
+    ? await db.menuItem.findFirst({
+        where: { id: row.pairingId, ...visibleItem },
+        select: detailSelect,
+      })
+    : null;
   return {
     ...toCard(row, today),
     categoryName: row.category.name,
-    allergenLine: allergenLine(row.allergens, groups),
-    optionGroups: groups.map((group) => ({
-      id: group.id,
-      name: group.name,
-      minSelect: group.minSelect,
-      maxSelect: group.maxSelect,
-      options: group.options.map((option) => ({
-        id: option.id,
-        name: option.name,
-        deltaCents: option.deltaCents,
-        isDefault: option.isDefault,
-        soldOut: soldOutToday(option.soldOutOn, today),
-      })),
-    })),
+    allergenLine: allergenLine(
+      row.allergens,
+      row.optionGroups.map(({ optionGroup }) => optionGroup)
+    ),
+    optionGroups: groupViews(row, today),
+    pairing: pair && {
+      ...toCard(pair, today),
+      optionIds: oneTapOptions(groupViews(pair, today)),
+    },
   };
 }
 

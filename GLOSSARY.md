@@ -39,7 +39,7 @@ A Menu Item that does not appear on the menu at all (retired, or seasonal and of
 _Avoid_: Disabled, archived, deleted
 
 **Barista Pick**:
-One of the Menu Items the baristas recommend this week, a good start for a first-time visitor. Home shows three under "Barista picks this week"; the Manager changes them.
+One of the Menu Items the baristas recommend, a good start for a first-time visitor. There is a set of three for each palette: Day picks under "Barista picks this week", Night picks under "Barista picks for tonight"; Home and the menu show the current palette's set. The Manager changes them.
 _Avoid_: Featured, signature (as a type name), highlight
 
 **Allergens**:
@@ -47,7 +47,7 @@ The common allergens a Menu Item contains (milk, egg, wheat, soy, peanuts, tree 
 _Avoid_: Allergy info, dietary flags (for allergens)
 
 **Pairing**:
-A Menu Item suggested beside another on its page ("Goes well with Ube Pandesal").
+A Menu Item suggested beside another on its page ("Goes well with Ube Pandesal"), added to the Cart in one tap with the default Options its own page starts with.
 _Avoid_: Upsell, cross-sell (in UI copy), combo
 
 ### Ordering

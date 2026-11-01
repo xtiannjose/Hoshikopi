@@ -40,9 +40,19 @@ for (const palette of ["day", "night"] as const) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title, {
       useInnerText: true,
     });
-    await expect(
-      page.getByRole("heading", { name: "Barista picks this week" })
-    ).toBeVisible();
+    // Each palette shows its own three Barista Picks (INFO-13).
+    const picks = page.getByRole("region", {
+      name:
+        palette === "day"
+          ? "Barista picks this week"
+          : "Barista picks for tonight",
+    });
+    await expect(picks).toBeVisible();
+    await expect(picks.getByRole("heading", { level: 3 })).toHaveText(
+      palette === "day"
+        ? ["Hoshi Latte", "Tablea Tsokolate", "Ube Pandesal"]
+        : ["Cafe Mocha", "Tanglad Ginger Tea", "Banana Bread slice"]
+    );
     await expect(page.locator("#visit")).toContainText("Kapitolyo, Pasig");
     await expectNoAxeViolations(page);
   });
@@ -91,5 +101,7 @@ test("a Manager edits the parking note and /cafe shows it", async ({
 
 test("a Barista cannot open the cafe details", async ({ page }) => {
   await signIn(page, "annika@hoshikopi.example", "/manage/cafe");
-  await expect(page.getByText(/could not be found/i)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /could not be found/i })
+  ).toBeVisible();
 });

@@ -38,7 +38,7 @@ model MenuItem {
   description  String
   baseCents    Int                   @map("base_cents")
   isDrink      Boolean               @map("is_drink")
-  // new, best_seller, barista_pick, vegan, no_caffeine
+  // new, best_seller, barista_pick (Day), night_pick, vegan, no_caffeine
   badges       String[]              @default([])
   // milk, egg, wheat, soy, peanuts, tree_nuts, fish, shellfish, sesame
   allergens    String[]              @default([])
@@ -48,6 +48,10 @@ model MenuItem {
   soldOutOn    DateTime?             @map("sold_out_on") @db.Date
   isHidden     Boolean               @default(false) @map("is_hidden")
   sort         Int                   @default(0)
+  /// "Goes well with" on the Menu Item page (MENU-08).
+  pairingId    String?               @map("pairing_id")
+  pairing      MenuItem?             @relation("Pairing", fields: [pairingId], references: [id], onDelete: SetNull)
+  pairedWith   MenuItem[]            @relation("Pairing")
   optionGroups MenuItemOptionGroup[]
   cartLines    CartLine[]
   orderLines   OrderLine[]

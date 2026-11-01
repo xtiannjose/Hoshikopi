@@ -66,5 +66,7 @@ test("a Barista cannot edit a Menu Item", async ({ page }) => {
     0
   );
   await page.goto("/manage/menu/item/new");
-  await expect(page.getByText(/could not be found/i)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /could not be found/i })
+  ).toBeVisible();
 });
