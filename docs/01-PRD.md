@@ -56,7 +56,7 @@ Change a row here and every other document should follow. "Invented" rows are sh
 | Release | Contents |
 | --- | --- |
 | **MVP (Phases 0 to 5)** | Menu with Categories, photos and Option Groups; cafe info (hours, Special Hours, map, the space in photos, Amenities, visit FAQ, story); Home that opens with the room and both "Order ahead" and "Plan your visit"; share cards; an About this concept page; Allergens on every Menu Item; Day and Night copy; a Last Order countdown; Cart and checkout for As Soon As Possible or Scheduled Pickup with Capacity; Payment Methods GCash, Maya, Card (Test Mode) and Pay at Pickup; Order status page with live updates; Bar Screen; Manager pages for menu, Options, Sold Out, hours, Capacity, Ordering Paused, Refunds; Member accounts (email link, Google); Stars, Star Card and Rewards; Events and Posts; order emails; Concept Notice |
-| **V1 (Phase 6)** | Favourites and one-tap reorder; Event sign-up with a cap; Recurring Events; Inquiries for private events and large Orders; Pairings; Day and Night Barista Picks; time-boxed Promos and seasonal Menu Items; installable app (PWA) with "your order is ready" notifications; Filipino language; reports for the Manager (sales by day, top Menu Items) |
+| **V1 (Phase 6)** | Favourites and one-tap reorder; Event sign-up with a cap; Recurring Events; Inquiries for private events and large Orders; Pairings; Day and Night Barista Picks; time-boxed Promos and seasonal Menu Items; "your order is ready" alerts on the Order page; reports for the Manager (sales by day, top Menu Items); Popular this week; add to calendar for Events; calorie estimates per Menu Item. Decided 2026-11-01: the site stays English only (no Filipino language); the installable app (PWA) with push notifications waits until after V1; no Guest newsletter |
 | **Later** | More than one cafe; delivery through partners; gift cards; tiers in loyalty; table QR ordering; a real launch with a real business (see section 9) |
 
 ## 5. Functional requirements
@@ -75,6 +75,8 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | MENU-06 | Seasonal Menu Items: an optional last day after which the Menu Item is Hidden by itself, built with Promos. Until then the Manager hides them by hand (research C-47) | S |
 | MENU-07 | Every Menu Item page shows its Allergens ("Contains: milk"), what an Option adds ("Almond milk adds tree nuts"), and one line on the shared kitchen; "No common allergens" when there are none (research C-06) | M |
 | MENU-08 | A Pairing on the Menu Item page ("Goes well with Ube Pandesal"): one Menu Item with photo and price, added to the Cart in one tap | S |
+| MENU-09 | Popular this week on Home: the most ordered drinks in the last 7 days from real Orders, labelled as demo data, shown only once there are enough Orders (research C-57) | S |
+| MENU-10 | A calorie estimate on each Menu Item for its default version, labelled "concept estimate", edited by the Manager (research C-08; invented, like every detail, ADR 0006) | S |
 | INFO-01 | Cafe page: Opening Hours, today's hours with Special Hours applied, "open now" state, the neighbourhood, map link, how to get there, email | M |
 | INFO-02 | Structured data for the cafe (CafeOrCoffeeShop with hours, address, Amenities as `amenityFeature`, `smokingAllowed`, `acceptsReservations` false, a room `photo`, `hasMap`) and for Events | M |
 | INFO-03 | Concept Notice on every page footer and at checkout, linking to the About this concept page | M |
@@ -106,6 +108,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | ORD-11 | Favourites and one-tap reorder of a past Order | S |
 | ORD-12 | An Order holds at most 15 drinks; larger orders are asked to email the cafe, and to send an Inquiry once INFO-11 exists (research C-14, C-53) | M |
 | ORD-13 | In the 60 minutes before Last Order, the hero pickup card and checkout show "Last order in 25 min"; after Last Order they say when ordering opens again | M |
+| ORD-14 | When an open Order page sees the Order turn Ready: a short chime, a vibration, "Ready! <Order Code>" in the tab title, and a browser notification if the Customer tapped "Notify me when it's ready"; the page keeps checking every 15 seconds while the tab is hidden | S |
 
 ### 5.3 Payments
 
@@ -138,6 +141,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | EVT-01 | Events page: upcoming Events with date, time, description, photo, price if any; past Events archived | M |
 | EVT-02 | Event sign-up with a cap and a confirmation email | S |
 | EVT-03 | Recurring Events: a weekly list ("Open mic, Thursdays 7 PM") on the cafe page and the Events page, kept apart from dated Events (research C-52) | S |
+| EVT-04 | Add to calendar on each Event page: a calendar file for Google, Apple and Outlook calendars (research C-32) | S |
 | NEWS-01 | Posts page and Post pages with a cover photo, written by the Manager in a simple editor | M |
 | NEWS-02 | Home shows the next Event and the latest Post | M |
 

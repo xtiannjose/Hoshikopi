@@ -96,17 +96,18 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
   );
   return (
     <div className="pt-8">
-      <StatusPoller
-        id={order.id}
-        token={token}
-        status={order.status}
-        version={order.version}
-      />
       <p className="text-muted-foreground font-mono text-sm">Order Code</p>
       <h1 className="font-display pb-1 text-6xl italic">{order.code}</h1>
       <p role="status" className="mt-4 text-lg font-semibold">
         {message(order)}
       </p>
+      <StatusPoller
+        id={order.id}
+        token={token}
+        code={order.code}
+        status={order.status}
+        version={order.version}
+      />
       {order.status === "placed" && order.payment?.status === "pending" && (
         <a
           href={order.payment.checkoutUrl}

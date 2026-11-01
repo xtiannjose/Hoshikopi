@@ -5,7 +5,7 @@ date: 2026-10-30
 
 # Live updates by polling first
 
-The Bar Screen asks for changes every 3 seconds, sending the last Order version it saw; the server answers "no change" in a few bytes. The Customer's Order status page asks every 5 seconds until Ready, then every 30 seconds.
+The Bar Screen asks for changes every 3 seconds, sending the last Order version it saw; the server answers "no change" in a few bytes. The Customer's Order status page asks every 5 seconds until Ready (every 15 while its tab is hidden, so it can still alert; ORD-14), then every 30 seconds.
 
 ## Why
 

@@ -51,3 +51,59 @@ for (const palette of ["day", "night"] as const) {
     await expectNoAxeViolations(page);
   });
 }
+
+test("a Customer asks to be told, and Ready chimes in and notifies", async ({
+  page,
+}) => {
+  // Stands in for the browser's notifications, to record what is shown.
+  await page.addInitScript(() => {
+    const shown: string[] = [];
+    (window as unknown as { shown: string[] }).shown = shown;
+    const registration = {
+      showNotification: async (title: string, options?: { body?: string }) => {
+        shown.push(`${title}: ${options?.body}`);
+      },
+    };
+    const permission = { value: "default" };
+    Object.assign(window, {
+      Notification: {
+        get permission() {
+          return permission.value;
+        },
+        requestPermission: async () => (permission.value = "granted"),
+      },
+    });
+    Object.defineProperty(Navigator.prototype, "serviceWorker", {
+      get: () => ({
+        register: async () => registration,
+        ready: Promise.resolve(registration),
+      }),
+      configurable: true,
+    });
+  });
+  await addToCart(page, "spanish-latte");
+  const id = await placeGuestOrder(page);
+  const code = (
+    await page.getByRole("heading", { level: 1 }).innerText()
+  ).trim();
+
+  await page.getByRole("button", { name: "Notify me when it's ready" }).click();
+  await expect(
+    page.getByText("We'll let you know here when it's ready.")
+  ).toBeVisible();
+
+  await e2eQuery(
+    "UPDATE orders SET status = 'ready', accepted_at = now(), ready_at = now(), updated_at = now() WHERE id = $1",
+    [id]
+  );
+  await expect(page.getByRole("status")).toHaveText(
+    `Ready at the counter. Show code ${code}.`,
+    { timeout: 10_000 }
+  );
+  await expect(page).toHaveTitle(`Ready! ${code} · Hoshikopi`);
+  expect(
+    await page.evaluate(() => (window as unknown as { shown: string[] }).shown)
+  ).toEqual([
+    `Your order is ready: Salamat! Show code ${code} at the counter.`,
+  ]);
+});
