@@ -505,6 +505,37 @@ export async function seedDatabase(
   });
 
   const daysAgo = (days: number) => new Date(Date.now() - days * DAY);
+  // Recurring Events (EVT-03); the same rows a migration adds to databases
+  // seeded before them.
+  await db.recurringEvent.createMany({
+    data: [
+      {
+        id: "seed-weekly-latte-art",
+        title: "Latte art practice",
+        weekday: 3,
+        startsAt: "16:00",
+        endsAt: "17:00",
+        note: "Bring a friend; milk and cups on us.",
+      },
+      {
+        id: "seed-weekly-open-mic",
+        title: "Open mic",
+        weekday: 4,
+        startsAt: "19:00",
+        endsAt: "21:00",
+        note: "Sign up at the counter from 6 PM.",
+      },
+      {
+        id: "seed-weekly-cupping",
+        title: "Saturday cupping",
+        weekday: 6,
+        startsAt: "10:00",
+        endsAt: "11:00",
+        note: "Three beans from Benguet, side by side.",
+      },
+    ],
+  });
+
   await db.post.createMany({
     data: [
       {

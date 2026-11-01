@@ -462,6 +462,49 @@ model Event {
 }
 
 // Unpublished while published_at is null.
+/// Weekly, with no date or sign-up (EVT-03). Times are "HH:MM", Manila.
+model RecurringEvent {
+  id          String   @id @default(cuid())
+  title       String
+  weekday     Int      @db.SmallInt // 0 Sunday to 6 Saturday
+  startsAt    String   @map("starts_at")
+  endsAt      String   @map("ends_at")
+  note        String   @default("")
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("recurring_events")
+}
+
+enum InquiryKind {
+  private_event
+  large_order
+}
+
+enum InquiryStatus {
+  new
+  answered
+  closed
+}
+
+/// A private event or large Order request for the Manager (INFO-11).
+model Inquiry {
+  id        String        @id @default(cuid())
+  kind      InquiryKind
+  name      String
+  email     String
+  wantedOn  DateTime?     @map("wanted_on") @db.Date
+  guests    Int?          @db.SmallInt
+  message   String
+  status    InquiryStatus @default(new)
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+  @@map("inquiries")
+}
+
 model Post {
   id          String    @id @default(cuid())
   slug        String    @unique

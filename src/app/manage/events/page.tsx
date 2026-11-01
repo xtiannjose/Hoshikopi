@@ -25,9 +25,14 @@ async function List() {
   const { events } = await contentForStaff();
   return (
     <div className="mt-6 grid gap-4">
-      <Link href="/manage/events/new" className="font-semibold">
-        Add an Event
-      </Link>
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        <Link href="/manage/events/new" className="font-semibold">
+          Add an Event
+        </Link>
+        <Link href="/manage/events/weekly" className="font-semibold">
+          Recurring Events
+        </Link>
+      </div>
       <ul className="border-border border-t">
         {events.map((event) => (
           <li key={event.id} className="border-border border-b py-3">

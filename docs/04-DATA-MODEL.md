@@ -23,8 +23,8 @@ orders 1──* order_lines (snapshots)        orders 1──* order_events (app
    │──> pickup_window_usage (counts per 15-minute window)
    └──> users (Member, optional)  1──* star_entries (ledger)
 
-opening_hours, special_hours, capacity_rules, cafe_settings, inquiries (V1) (cafe)
-events, posts, recurring_events (V1) (content)        users, sessions, accounts, verifications (Better Auth); two_factors (identity, ADR 0014)
+opening_hours, special_hours, capacity_rules, cafe_settings (cafe)
+events, posts, recurring_events, inquiries (V1) (content)        users, sessions, accounts, verifications (Better Auth); two_factors (identity, ADR 0014)
 audit_log, rate_limits (identity)
 ```
 
@@ -48,7 +48,7 @@ audit_log, rate_limits (identity)
 | `special_hours` | `day` date (PK), `is_closed` bool, `opens_at`, `last_order_at`, `closes_at` (null when closed), `note` | Overrides one day |
 | `capacity_rules` | `weekday` (PK), `drinks_per_window` int, `food_per_window` int | Per 15-minute Pickup Window |
 | `cafe_settings` | `id` = 1, `ordering_paused_until` timestamptz null, `pause_message`, `prep_base_minutes` numeric, `prep_per_drink_minutes` numeric, `order_code_prefix` text; details: `area` text ("Kapitolyo, Pasig"), `map_lat` and `map_lng` numeric(8,5), `directions_md`, `contact_email`, `space_md`, `story_md`; Amenities: `wifi`, `power_outlets`, `pets_allowed`, `smoking_allowed`, `restroom`, `step_free_entrance`, `accessible_restroom` (bool null each), `laptop_note`, `pets_note`, `parking_note` (text null each) | Singleton row. No street, house number or phone (PRD section 2). A null Amenity is unknown and left off the page |
-| `inquiries` (V1) | `id`, `kind` enum (`private_event`, `large_order`), `name`, `email`, `wanted_on` date null, `guests` int null, `message` text ≤ 1000, `status` enum (`new`, `answered`, `closed`) | INFO-11; rate limited per IP |
+| `inquiries` (V1, content) | `id`, `kind` enum (`private_event`, `large_order`), `name`, `email`, `wanted_on` date null, `guests` smallint null (1 to 500), `message` text 1 to 1000, `status` enum (`new`, `answered`, `closed`), `created_at`, `updated_at`; index (`status`, `created_at`) | INFO-11; 5 per IP an hour; the cafe's contact address gets an email |
 
 ### Cart (module `cart`)
 
@@ -88,7 +88,7 @@ audit_log, rate_limits (identity)
 | --- | --- | --- |
 | `events` | `id`, `slug` unique, `title`, `starts_at`, `ends_at`, `summary`, `body_md`, `photo_url`, `photo_alt`, `price_cents` null, `signup_url` null, `is_published` | Sign-up with a cap comes in V1 (EVT-02) |
 | `posts` | `id`, `slug` unique, `title`, `excerpt` ≤ 180, `body_md`, `cover_url`, `cover_alt`, `published_at` null, `author_id` FK | Unpublished while `published_at` is null |
-| `recurring_events` (V1) | `id`, `title`, `weekday` smallint 0 to 6, `starts_at` time, `ends_at` time, `note` null, `sort`, `is_published` | EVT-03; Manila time; no sign-up and no structured data |
+| `recurring_events` (V1) | `id`, `title`, `weekday` smallint 0 to 6, `starts_at` and `ends_at` text `HH:MM` (CHECK, end after start), `note` text default '', `is_published` | EVT-03; Manila time; listed Monday first by time; no sign-up and no structured data |
 
 ### Identity (module `identity`)
 

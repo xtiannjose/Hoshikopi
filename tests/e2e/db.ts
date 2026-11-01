@@ -25,4 +25,9 @@ export async function openAllDayToday() {
   );
   // Every e2e Order comes from one IP, so reset the checkout limits.
   await e2eQuery("DELETE FROM rate_limits WHERE key LIKE 'checkout%'");
+  // Parallel specs order into the same windows; room for all of them, so
+  // only the test that fills a window on purpose ever sees one full.
+  await e2eQuery(
+    "UPDATE capacity_rules SET drinks_per_window = 200, food_per_window = 200"
+  );
 }

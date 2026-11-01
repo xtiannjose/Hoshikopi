@@ -170,8 +170,9 @@ async function Cart() {
 
       {tooManyDrinks && (
         <p className="bg-muted rounded-card p-4">
-          Orders hold up to {MAX_DRINKS_PER_ORDER} drinks. For a bigger order,
-          email us a day ahead and we&apos;ll get it ready.
+          Orders hold up to {MAX_DRINKS_PER_ORDER} drinks. For a bigger order,{" "}
+          <Link href="/cafe/inquire?kind=large_order">send us an inquiry</Link>{" "}
+          a day ahead and we&apos;ll get it ready.
         </p>
       )}
       {cart.blocked || tooManyDrinks ? (

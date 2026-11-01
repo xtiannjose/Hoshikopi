@@ -56,11 +56,12 @@ Rules:
 | `/concept` | Everyone | Static: About this concept (PRD INFO-10) |
 | `/cafe/inquire` (V1) | Everyone | Dynamic form; rate limited (PRD INFO-11) |
 | `/events`, `/events/[slug]`, `/news`, `/news/[slug]` | Everyone | Prerendered; tagged `content` |
+| `/events/[slug]/calendar` (V1) | Everyone | Route handler: the Event as an iCalendar file (PRD EVT-04) |
 | `/cart`, `/checkout` | Everyone | Dynamic (per Customer) |
 | `/orders/[id]` | The Customer (Order token in the link) or the Member | Dynamic; polls for status |
 | `/account`, `/account/stars`, `/account/orders` | Members | Dynamic |
 | `/bar` | Baristas, Managers | Dynamic; polls (section 11) |
-| `/manage/*` (menu, hours, capacity, cafe details, events, posts, orders, staff; inquiries in V1) | Managers | Dynamic |
+| `/manage/*` (menu, hours, capacity, cafe details, events and recurring events, posts, orders, stars; reports and inquiries in V1) | Managers | Dynamic |
 | `/api/webhooks/paymongo` | PayMongo | Route handler; verifies signature |
 | `/api/cron/daily` | Vercel Cron | Route handler; secret header |
 | `/api/auth/*` | Better Auth | Route handler |

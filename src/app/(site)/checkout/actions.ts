@@ -44,7 +44,7 @@ function messageFor(result: Exclude<PlaceOrderResult, { ok: true }>): string {
     case "price_changed":
       return `Prices changed: your total is now ${formatPrice(result.totalCents)}. Check it and place your order again.`;
     case "too_many_drinks":
-      return `Orders hold up to ${MAX_DRINKS_PER_ORDER} drinks. For more, email us a day ahead.`;
+      return `Orders hold up to ${MAX_DRINKS_PER_ORDER} drinks. For more, send us an inquiry from the Visit page a day ahead.`;
     case "pay_at_pickup_limit":
       return `Guests can pay at pickup for up to ${GUEST_PAY_AT_PICKUP_MAX_DRINKS} drinks. Pay online, or sign in to order more.`;
     case "not_enough_stars":

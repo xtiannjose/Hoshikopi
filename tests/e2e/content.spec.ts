@@ -88,3 +88,65 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
     ).toBeVisible({ timeout: 1_000 });
   }).toPass({ timeout: 150_000 });
 });
+
+test("Recurring Events list weekly and an Event adds to a calendar (EVT-03, EVT-04)", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/events");
+  const weekly = page.getByRole("region", { name: "Every week" });
+  await expect(weekly).toContainText("Open mic");
+  await expect(weekly).toContainText("Thursdays, 7:00 PM to 9:00 PM");
+  await page.goto("/cafe");
+  await expect(page.getByRole("region", { name: "Every week" })).toContainText(
+    "Saturday cupping"
+  );
+
+  await page.goto("/events/latte-art-night");
+  await expect(
+    page.getByRole("link", { name: "Add to calendar" })
+  ).toHaveAttribute("href", "/events/latte-art-night/calendar");
+  const ics = await request.get("/events/latte-art-night/calendar");
+  expect(ics.headers()["content-type"]).toBe("text/calendar; charset=utf-8");
+  const body = await ics.text();
+  expect(body).toContain("BEGIN:VEVENT");
+  expect(body).toContain("SUMMARY:Latte art night");
+});
+
+test("a Customer sends an Inquiry and the Manager answers it (INFO-11)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  test.setTimeout(180_000);
+  const name = `Lia ${Date.now()}`;
+  await page.goto("/cafe");
+  await page.getByRole("link", { name: "Send us an inquiry" }).click();
+  await expect(page.getByLabel("What is it about?")).toHaveValue(
+    "private_event"
+  );
+  await page.getByLabel("Your name").fill(name);
+  await page.getByLabel("Email").fill("lia@example.com");
+  await page.getByLabel("Guests or drinks (optional)").fill("0");
+  await page
+    .getByLabel("Tell us about it")
+    .fill("A small party, Friday night.");
+  await page.getByRole("button", { name: "Send inquiry" }).click();
+  // A refusal keeps what was typed.
+  await expect(
+    page.getByText("Enter a number of guests from 1 to 500.")
+  ).toBeVisible();
+  await expect(page.getByLabel("Your name")).toHaveValue(name);
+  await page.getByLabel("Guests or drinks (optional)").fill("20");
+  await page.getByRole("button", { name: "Send inquiry" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Salamat! Your inquiry is with the cafe."
+  );
+
+  await signIn(page, "christian@hoshikopi.example", "/manage/inquiries");
+  const item = page.getByRole("listitem").filter({ hasText: name });
+  await expect(item).toContainText(`Private event from ${name}`);
+  await expect(item).toContainText("20 guests or drinks");
+  await expectNoAxeViolations(page);
+  await item.getByRole("button", { name: `Mark answered (${name})` }).click();
+  await expect(item).toContainText("Answered");
+});
