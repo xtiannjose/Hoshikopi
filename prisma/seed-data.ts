@@ -444,6 +444,24 @@ export async function seedDatabase(
     });
   }
 
+  // A demo Promo and a seasonal drink (MENU-06), dated from today.
+  const dayFromNow = (days: number) =>
+    new Date(
+      new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10)
+    );
+  await db.menuItem.update({
+    where: { slug: "matcha-latte" },
+    data: {
+      promoCents: php(155),
+      promoFrom: dayFromNow(-1),
+      promoUntil: dayFromNow(30),
+    },
+  });
+  await db.menuItem.update({
+    where: { slug: "calamansi-honey-soda" },
+    data: { availableUntil: dayFromNow(60) },
+  });
+
   // "Goes well with" (MENU-08): each drink with a bite, each bite with a drink.
   for (const [slug, pairSlug] of PAIRINGS) {
     const pair = await db.menuItem.findUniqueOrThrow({

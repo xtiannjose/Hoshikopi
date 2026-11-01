@@ -27,6 +27,10 @@ export type ItemFormData = {
   optionGroupIds: string[];
   pairingId: string;
   calories: string;
+  promoPrice: string;
+  promoFrom: string;
+  promoUntil: string;
+  availableUntil: string;
   photoUrl: string | null;
   photoAlt: string;
   sort: number;
@@ -119,6 +123,44 @@ export function ItemForm({
           error={error("sort")}
         />
       </div>
+      <fieldset className="grid gap-4">
+        <legend className="font-semibold">Promo (optional)</legend>
+        <p className="text-muted-foreground -mt-2 text-sm">
+          A lower price on these Manila days; Option prices still add on top.
+          Leave all three empty for none.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field
+            name="promoPrice"
+            label="Promo price (PHP)"
+            inputMode="decimal"
+            defaultValue={item.promoPrice}
+            error={error("promoPrice")}
+          />
+          <Field
+            name="promoFrom"
+            label="First day"
+            type="date"
+            defaultValue={item.promoFrom}
+            error={error("promoFrom")}
+          />
+          <Field
+            name="promoUntil"
+            label="Last day"
+            type="date"
+            defaultValue={item.promoUntil}
+            error={error("promoUntil")}
+          />
+        </div>
+      </fieldset>
+      <Field
+        name="availableUntil"
+        label="On the menu until (optional)"
+        hint="For seasonal items: Hidden by itself after this day."
+        type="date"
+        defaultValue={item.availableUntil}
+        error={error("availableUntil")}
+      />
       <div className="flex flex-wrap gap-x-6">
         <label className="inline-flex min-h-11 items-center gap-2">
           <input

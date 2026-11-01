@@ -56,6 +56,10 @@ export async function saveMenuItemAction(
     optionGroupIds: all(form, "optionGroupIds"),
     pairingId: text(form, "pairingId"),
     calories: text(form, "calories"),
+    promoPrice: text(form, "promoPrice"),
+    promoFrom: text(form, "promoFrom"),
+    promoUntil: text(form, "promoUntil"),
+    availableUntil: text(form, "availableUntil"),
     photoAlt: text(form, "photoAlt"),
     sort: text(form, "sort") || "0",
   };

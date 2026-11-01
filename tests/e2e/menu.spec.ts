@@ -120,3 +120,27 @@ test("a Menu Item shows its calorie estimate (MENU-10)", async ({ page }) => {
     )
   ).toBeVisible();
 });
+
+test("a Promo and a seasonal drink show on the menu and price the Cart (MENU-06)", async ({
+  page,
+}) => {
+  await page.goto("/menu");
+  const matcha = page.getByRole("article").filter({ hasText: "Matcha Latte" });
+  await expect(matcha).toContainText("PHP 155");
+  await expect(matcha).toContainText("was PHP 175");
+  await expect(matcha.getByText(/^Promo until /)).toBeVisible();
+  await expect(
+    page
+      .getByRole("article")
+      .filter({ hasText: "Calamansi Honey Soda" })
+      .getByText(/^Until /)
+  ).toBeVisible();
+
+  await page.goto("/menu/item/matcha-latte");
+  await page.getByRole("button", { name: "Add to order" }).click();
+  await expect(page.getByRole("status")).toContainText("Added");
+  await page.goto("/cart");
+  await expect(
+    page.getByRole("main").getByText("PHP 155").first()
+  ).toBeVisible();
+});
