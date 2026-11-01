@@ -418,6 +418,7 @@ enum StarKind {
   release
   reverse
   adjust
+  birthday
 }
 
 // Balance = sum of stars (ADR 0008).

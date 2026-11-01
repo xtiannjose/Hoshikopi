@@ -24,12 +24,13 @@ export async function signOutAction() {
   redirect("/");
 }
 
-/** Your details: name and the marketing opt-in (ACC-03). */
+/** Your details: name, birth month and the marketing opt-in (ACC-03). */
 export async function updateProfileAction(form: FormData) {
   const member = await requireMember("/account");
   await updateProfile(member.id, {
     name: String(form.get("name") ?? ""),
     marketingOptIn: form.get("marketingOptIn") === "on",
+    birthMonth: Number(form.get("birthMonth")) || null,
   });
   refresh();
 }

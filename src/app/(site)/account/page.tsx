@@ -7,7 +7,7 @@ import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { favouritesFor, type FavouriteView } from "@/modules/cart";
 import { memberProfile, requireMember } from "@/modules/identity";
-import { balance } from "@/modules/loyalty";
+import { balance, birthdayTreat } from "@/modules/loyalty";
 import { ordersForMember } from "@/modules/ordering";
 
 import {
@@ -43,6 +43,21 @@ const CANT_ADD: Record<NonNullable<FavouriteView["problem"]>, string> = {
   invalid_options: "Its options changed; save it again",
 };
 
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 export default function AccountPage() {
   return (
     <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 md:px-8">
@@ -55,10 +70,12 @@ export default function AccountPage() {
 
 async function Account() {
   const member = await requireMember("/account");
-  const [orders, stars, profile, favourites] = await Promise.all([
+  const profile = await memberProfile(member.id);
+  // Lands before the balance is read, so the Star Card shows it (LOY-04).
+  const treat = await birthdayTreat(member.id, profile?.birthMonth ?? null);
+  const [orders, stars, favourites] = await Promise.all([
     ordersForMember(member.id),
     balance(member.id),
-    memberProfile(member.id),
     favouritesFor(member.id),
   ]);
   return (
@@ -71,6 +88,13 @@ async function Account() {
           Signed in as {member.email}.
         </p>
       </div>
+
+      {treat && (
+        <p role="status" className="bg-muted rounded-card p-4 text-lg">
+          Happy birthday month! We added 9 Stars to your card, so a drink is on
+          us.
+        </p>
+      )}
 
       <section aria-labelledby="star-card" className="grid gap-3">
         <h2 id="star-card" className="sr-only">
@@ -212,6 +236,28 @@ async function Account() {
               maxLength={60}
               className="rounded-card border-input bg-background min-h-11 border px-3"
             />
+          </div>
+          <div className="grid gap-1.5">
+            <label htmlFor="birthMonth" className="font-semibold">
+              Birthday month
+            </label>
+            <p id="birthMonth-hint" className="text-muted-foreground text-sm">
+              For a free drink once a year, in your birthday month.
+            </p>
+            <select
+              id="birthMonth"
+              name="birthMonth"
+              defaultValue={profile?.birthMonth ?? ""}
+              aria-describedby="birthMonth-hint"
+              className="rounded-card border-input bg-background min-h-11 border px-3"
+            >
+              <option value="">Not set</option>
+              {MONTHS.map((month, index) => (
+                <option key={month} value={index + 1}>
+                  {month}
+                </option>
+              ))}
+            </select>
           </div>
           <label className="flex min-h-11 items-start gap-3">
             <input

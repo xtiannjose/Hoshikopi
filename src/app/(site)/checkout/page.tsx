@@ -7,7 +7,8 @@ import { formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { getHours } from "@/modules/cafe";
 import { currentCartOwner } from "@/modules/cart";
-import { currentMember } from "@/modules/identity";
+import { currentMember, memberProfile } from "@/modules/identity";
+import { birthdayTreat } from "@/modules/loyalty";
 import { checkoutView } from "@/modules/ordering";
 
 import { CheckoutForm } from "./checkout-form";
@@ -35,6 +36,11 @@ export default function CheckoutPage() {
 async function Checkout() {
   const owner = await currentCartOwner();
   const member = await currentMember();
+  // The Birthday Treat lands before the Reward is offered (LOY-04).
+  if (member) {
+    const profile = await memberProfile(member.id);
+    await birthdayTreat(member.id, profile?.birthMonth ?? null);
+  }
   const view = await checkoutView(owner, member?.id ?? null);
   const { state, cart } = view;
 

@@ -72,3 +72,19 @@ test("Staff set up a Second Factor before /manage; the Bar Screen skips it (ADR 
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText("Signed in as Lia (Barista).")).toBeVisible();
 });
+
+test("a Manager reads the reports (STAFF-08)", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  await signIn(page, "christian@hoshikopi.example", "/manage/reports");
+  await expect(page.getByRole("heading", { name: "Reports" })).toBeVisible();
+  for (const name of ["Sales by day", "Top Menu Items", "Stars"]) {
+    await expect(
+      page.getByRole("heading", { name, exact: true })
+    ).toBeVisible();
+  }
+  await page.getByRole("link", { name: "Last 30 days" }).click();
+  await expect(
+    page.getByRole("link", { name: "Last 30 days" })
+  ).toHaveAttribute("aria-current", "page");
+  await expectNoAxeViolations(page);
+});

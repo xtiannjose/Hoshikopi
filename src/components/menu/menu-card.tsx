@@ -15,8 +15,19 @@ export function MenuCard({
   headingLevel?: 2 | 3 | 4;
 }) {
   const Heading = `h${headingLevel}` as const;
+  // What the menu's search and dietary filters read (MENU-05).
+  const tags = [
+    item.badges.includes("Vegan") && "vegan",
+    item.badges.includes("No caffeine") && "no-caffeine",
+    !item.badges.includes("Contains nuts") && "nut-free",
+  ].filter(Boolean);
   return (
-    <article className="group relative grid content-start gap-3">
+    <article
+      data-menu-item=""
+      data-search={`${item.name} ${item.description}`.toLowerCase()}
+      data-tags={tags.join(" ")}
+      className="group relative grid content-start gap-3"
+    >
       <Photo
         src={item.photoUrl}
         alt={item.photoAlt}

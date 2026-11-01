@@ -163,8 +163,12 @@ A Member's Star balance shown as a card of 9 spaces. Nine Stars can be redeemed 
 _Avoid_: Loyalty card, punch card, wallet
 
 **Reward**:
-What Stars buy: a free drink (any Size, Options at Base Price), or a Birthday Treat once a year. Applied at checkout as a Line priced at zero.
+What Stars buy: a free drink (any Size, Options at Base Price). Applied at checkout as a Line priced at zero.
 _Avoid_: Voucher, coupon, perk
+
+**Birthday Treat**:
+Nine Stars a Member gets once a year in their birthday month (Manila calendar), which is one free drink through the usual Reward. Given when the Member opens their account or checkout that month; the birth month is in Your details.
+_Avoid_: Birthday reward, birthday voucher
 
 **Redemption**:
 Spending Stars on a Reward in an Order. If the Order is Cancelled or Expired, the Stars come back.
