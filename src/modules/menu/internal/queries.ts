@@ -52,6 +52,8 @@ export type MenuItemDetail = MenuItemCard & {
   allergenLine: string;
   optionGroups: OptionGroupView[];
   pairing: Pairing | null;
+  /** For the default version; invented, shown as an estimate (MENU-10). */
+  calorieKcal: number | null;
 };
 
 const BADGES: [string, string][] = [
@@ -161,6 +163,7 @@ export async function getMenu(): Promise<MenuCategory[]> {
 const detailSelect = {
   ...cardSelect,
   pairingId: true,
+  calorieKcal: true,
   optionGroups: {
     orderBy: { sort: "asc" },
     select: {
@@ -189,6 +192,7 @@ const detailSelect = {
 
 type DetailRow = CardRow & {
   pairingId: string | null;
+  calorieKcal: number | null;
   optionGroups: {
     optionGroup: {
       id: string;
@@ -271,6 +275,7 @@ export async function getMenuItem(
       row.optionGroups.map(({ optionGroup }) => optionGroup)
     ),
     optionGroups: groupViews(row, today),
+    calorieKcal: row.calorieKcal,
     pairing: pair && {
       ...toCard(pair, today),
       optionIds: oneTapOptions(groupViews(pair, today)),

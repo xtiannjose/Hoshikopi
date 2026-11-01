@@ -96,6 +96,12 @@ async function MenuItemDetails({
             {item.allergenLine} {KITCHEN_NOTE}
           </span>
         </p>
+        {item.calorieKcal !== null && (
+          <p className="text-muted-foreground mt-2 font-mono text-sm">
+            About {item.calorieKcal} kcal with the choices it starts with. A
+            concept estimate.
+          </p>
+        )}
         <div className="mt-4">
           <PickupLine />
         </div>

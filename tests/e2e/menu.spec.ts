@@ -111,3 +111,12 @@ test("the menu filters by a word and by diet (MENU-05)", async ({ page }) => {
   // Categories with nothing left are hidden too.
   await expect(page.getByRole("heading", { name: "Pastries" })).toBeHidden();
 });
+
+test("a Menu Item shows its calorie estimate (MENU-10)", async ({ page }) => {
+  await page.goto("/menu/item/hoshi-latte");
+  await expect(
+    page.getByText(
+      "About 260 kcal with the choices it starts with. A concept estimate."
+    )
+  ).toBeVisible();
+});

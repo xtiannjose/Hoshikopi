@@ -26,6 +26,7 @@ export type ItemFormData = {
   allergens: string[];
   optionGroupIds: string[];
   pairingId: string;
+  calories: string;
   photoUrl: string | null;
   photoAlt: string;
   sort: number;
@@ -100,6 +101,14 @@ export function ItemForm({
           inputMode="decimal"
           defaultValue={item.basePrice}
           error={error("basePrice")}
+        />
+        <Field
+          name="calories"
+          label="Calories (kcal, optional)"
+          hint="For the choices it starts with. Shown as a concept estimate."
+          inputMode="numeric"
+          defaultValue={item.calories}
+          error={error("calories")}
         />
         <Field
           name="sort"

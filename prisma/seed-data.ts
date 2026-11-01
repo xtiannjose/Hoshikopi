@@ -347,6 +347,27 @@ Our beans come from farms in Benguet and Sagada, with a little barako from Batan
 
 The team: Lia (founder), Annika (head barista) and Christian (manager). Every person named here is invented for this concept.`;
 
+// Calorie estimates (MENU-10), invented like every detail (ADR 0006).
+const KCAL: Record<string, number> = {
+  "kopi-hitam": 90,
+  "hoshi-latte": 260,
+  "spanish-latte": 240,
+  "ube-latte": 250,
+  "cafe-mocha": 290,
+  "cold-brew": 80,
+  "matcha-latte": 210,
+  "tablea-tsokolate": 280,
+  "calamansi-honey-soda": 140,
+  "barako-chai": 220,
+  "tanglad-ginger-tea": 60,
+  "ube-pandesal": 210,
+  ensaymada: 340,
+  "butter-croissant": 270,
+  "banana-bread": 310,
+  "tapa-rice-bowl": 650,
+  "longganisa-pandesal": 420,
+};
+
 const PAIRINGS: [string, string][] = [
   ["kopi-hitam", "banana-bread"],
   ["hoshi-latte", "ube-pandesal"],
@@ -409,6 +430,7 @@ export async function seedDatabase(
             badges: item.badges ?? [],
             allergens: item.allergens ?? [],
             photoAlt: PHOTO_ALT[item.slug],
+            calorieKcal: KCAL[item.slug] ?? null,
             sort: itemSort,
             optionGroups: {
               create: (item.groups ?? []).map((group, groupSort) => ({
