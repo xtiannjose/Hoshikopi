@@ -510,6 +510,7 @@ export async function seedDatabase(
         bodyMd:
           "Bring a friend and learn the basics of milk texture and pouring. We start with hearts and work up to a rosetta. Eight seats at the bar.",
         priceCents: php(350),
+        seats: 12,
         isPublished: true,
       },
       {

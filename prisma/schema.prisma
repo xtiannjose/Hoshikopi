@@ -444,26 +444,43 @@ model StarEntry {
 // ---------- content ----------
 
 model Event {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String        @id @default(cuid())
+  slug        String        @unique
   title       String
-  startsAt    DateTime @map("starts_at") @db.Timestamptz(3)
-  endsAt      DateTime @map("ends_at") @db.Timestamptz(3)
+  startsAt    DateTime      @map("starts_at") @db.Timestamptz(3)
+  endsAt      DateTime      @map("ends_at") @db.Timestamptz(3)
   summary     String
-  bodyMd      String   @map("body_md")
-  photoUrl    String?  @map("photo_url")
-  photoAlt    String?  @map("photo_alt")
-  priceCents  Int?     @map("price_cents")
-  signupUrl   String?  @map("signup_url")
-  isPublished Boolean  @default(false) @map("is_published")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  bodyMd      String        @map("body_md")
+  photoUrl    String?       @map("photo_url")
+  photoAlt    String?       @map("photo_alt")
+  priceCents  Int?          @map("price_cents")
+  signupUrl   String?       @map("signup_url")
+  /// Seats for Sign-ups here (EVT-02); null takes none.
+  seats       Int?          @db.SmallInt
+  signups     EventSignup[]
+  isPublished Boolean       @default(false) @map("is_published")
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([startsAt])
   @@map("events")
 }
 
 // Unpublished while published_at is null.
+/// A person's place at an Event (EVT-02).
+model EventSignup {
+  id        String   @id @default(cuid())
+  eventId   String   @map("event_id")
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  seats     Int      @db.SmallInt
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([eventId, email])
+  @@map("event_signups")
+}
+
 /// Weekly, with no date or sign-up (EVT-03). Times are "HH:MM", Manila.
 model RecurringEvent {
   id          String   @id @default(cuid())

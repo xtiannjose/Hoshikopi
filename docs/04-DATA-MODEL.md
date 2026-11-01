@@ -86,7 +86,8 @@ audit_log, rate_limits (identity)
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `events` | `id`, `slug` unique, `title`, `starts_at`, `ends_at`, `summary`, `body_md`, `photo_url`, `photo_alt`, `price_cents` null, `signup_url` null, `is_published` | Sign-up with a cap comes in V1 (EVT-02) |
+| `events` | `id`, `slug` unique, `title`, `starts_at`, `ends_at`, `summary`, `body_md`, `photo_url`, `photo_alt`, `price_cents` null, `signup_url` null, `seats` smallint null 1 to 500, `is_published` | `seats` takes Sign-ups on the Event page until they run out (EVT-02); null takes none (an outside `signup_url` may still link elsewhere). Paid at the door |
+| `event_signups` (V1) | `id`, `event_id` FK (cascade), `name`, `email`, `seats` smallint 1 to 4, `created_at`; unique (`event_id`, `email`) | EVT-02; counted under a row lock on the Event, so two at once never oversell; 10 per IP an hour; confirmed by email |
 | `posts` | `id`, `slug` unique, `title`, `excerpt` ≤ 180, `body_md`, `cover_url`, `cover_alt`, `published_at` null, `author_id` FK | Unpublished while `published_at` is null |
 | `recurring_events` (V1) | `id`, `title`, `weekday` smallint 0 to 6, `starts_at` and `ends_at` text `HH:MM` (CHECK, end after start), `note` text default '', `is_published` | EVT-03; Manila time; listed Monday first by time; no sign-up and no structured data |
 

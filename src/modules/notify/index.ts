@@ -1,5 +1,8 @@
 // notify module: email templates and sending.
 // Other modules import only this file (docs/03-ARCHITECTURE.md section 3).
+import { formatDate, formatTime } from "@/lib/clock";
+import { formatPrice } from "@/lib/money";
+
 import { send } from "./internal/outbox";
 import {
   orderPlacedEmail,
@@ -59,6 +62,33 @@ export async function sendInquiry(
       inquiry.message,
       "",
       "See every Inquiry in /manage/inquiries.",
+    ].join("\n"),
+  });
+}
+
+/** A Sign-up's confirmation (EVT-02). */
+export async function sendEventSignup(signup: {
+  to: string;
+  name: string;
+  seats: number;
+  event: { title: string; startsAt: Date; priceCents: number | null };
+  link: string;
+}) {
+  const when = `${formatDate(signup.event.startsAt)} at ${formatTime(signup.event.startsAt)}`;
+  const seats = `${signup.seats} ${signup.seats === 1 ? "seat" : "seats"}`;
+  await send({
+    to: signup.to,
+    subject: `You're in: ${signup.event.title}, ${formatDate(signup.event.startsAt)}`,
+    text: [
+      `Salamat, ${signup.name}! You signed up for ${signup.event.title} on ${when}, ${seats}.`,
+      signup.event.priceCents
+        ? `Pay ${formatPrice(signup.event.priceCents)} a seat at the door.`
+        : "It's free. Just come by.",
+      "",
+      `About the Event: ${signup.link}`,
+      "Can't make it? Reply to this email so someone else can have your seat.",
+      "",
+      "Hoshikopi is a concept cafe: this Event is an example.",
     ].join("\n"),
   });
 }

@@ -25,6 +25,7 @@ export type EventFormData = {
   bodyMd: string;
   price: string;
   signupUrl: string;
+  seats: string;
   isPublished: boolean;
 };
 
@@ -87,6 +88,14 @@ export function EventForm({ event }: { event: EventFormData }) {
             error={error("signupUrl")}
           />
         </div>
+        <Field
+          name="seats"
+          label="Seats for Sign-ups here (optional)"
+          hint="People sign up on the Event page until these run out. Empty for no Sign-up here."
+          inputMode="numeric"
+          defaultValue={event.seats}
+          error={error("seats")}
+        />
       </div>
       <MarkdownField
         name="bodyMd"
