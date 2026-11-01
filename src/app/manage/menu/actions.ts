@@ -55,6 +55,7 @@ export async function saveMenuItemAction(
     allergens: all(form, "allergens") as MenuItemInput["allergens"],
     optionGroupIds: all(form, "optionGroupIds"),
     pairingId: text(form, "pairingId"),
+    calories: text(form, "calories"),
     photoAlt: text(form, "photoAlt"),
     sort: text(form, "sort") || "0",
   };

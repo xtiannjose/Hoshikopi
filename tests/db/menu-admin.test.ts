@@ -140,6 +140,36 @@ describe("Barista Picks and Pairings (INFO-13, MENU-08)", () => {
   });
 });
 
+describe("Calorie estimates (MENU-10)", () => {
+  it("saves whole kcal, clears on empty, keeps when absent", async () => {
+    const { id, input } = await latteInput({ calories: "275" });
+    expect(await saveMenuItem(id, input, christian)).toEqual({ ok: true, id });
+    const kcal = async () =>
+      (await db.menuItem.findUniqueOrThrow({ where: { id } })).calorieKcal;
+    expect(await kcal()).toBe(275);
+    await saveMenuItem(id, (await latteInput()).input, christian);
+    expect(await kcal()).toBe(275);
+    await saveMenuItem(
+      id,
+      (await latteInput({ calories: "" })).input,
+      christian
+    );
+    expect(await kcal()).toBeNull();
+    expect(
+      await saveMenuItem(
+        id,
+        (await latteInput({ calories: "2.5" })).input,
+        christian
+      )
+    ).toEqual({
+      ok: false,
+      errors: {
+        calories: "Enter a whole number of kcal up to 3000, or leave it empty.",
+      },
+    });
+  });
+});
+
 describe("saveOption", () => {
   it("keeps one default in a single-choice Option Group", async () => {
     const milk = await db.optionGroup.findFirstOrThrow({

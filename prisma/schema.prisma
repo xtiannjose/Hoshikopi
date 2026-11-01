@@ -48,6 +48,8 @@ model MenuItem {
   soldOutOn    DateTime?             @map("sold_out_on") @db.Date
   isHidden     Boolean               @default(false) @map("is_hidden")
   sort         Int                   @default(0)
+  /// A calorie estimate for the default version, invented (MENU-10).
+  calorieKcal  Int?                  @map("calorie_kcal") @db.SmallInt
   /// "Goes well with" on the Menu Item page (MENU-08).
   pairingId    String?               @map("pairing_id")
   pairing      MenuItem?             @relation("Pairing", fields: [pairingId], references: [id], onDelete: SetNull)

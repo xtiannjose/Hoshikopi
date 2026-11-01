@@ -126,6 +126,15 @@ const MenuItemInput = z.object({
   optionGroupIds: z.array(z.string()),
   /** "Goes well with" (MENU-08); empty for none. */
   pairingId: z.string().optional(),
+  /** A calorie estimate (MENU-10); empty for none. */
+  calories: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (v) => !v || (/^\d+$/.test(v) && Number(v) <= 3000),
+      "Enter a whole number of kcal up to 3000, or leave it empty."
+    ),
   photoAlt: z.string().trim().max(160),
   sort: z.coerce.number().int().min(0).max(999),
 });
@@ -147,7 +156,7 @@ export async function saveMenuItem(
 ): Promise<FormResult<{ id: string }>> {
   const parsed = MenuItemInput.safeParse(input);
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
-  const { optionGroupIds, basePrice, photoAlt, pairingId, ...data } =
+  const { optionGroupIds, basePrice, photoAlt, pairingId, calories, ...data } =
     parsed.data;
   if (pairingId && pairingId === id) {
     return {
@@ -171,6 +180,7 @@ export async function saveMenuItem(
     photoAlt: photoAlt || null,
     // Absent leaves it as it is; empty clears it.
     pairingId: pairingId === undefined ? undefined : pairingId || null,
+    calorieKcal: calories === undefined ? undefined : Number(calories) || null,
     ...(photoUrl ? { photoUrl } : {}),
   };
   try {
