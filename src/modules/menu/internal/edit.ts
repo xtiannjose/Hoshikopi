@@ -126,6 +126,12 @@ const MenuItemInput = z.object({
   optionGroupIds: z.array(z.string()),
   /** "Goes well with" (MENU-08); empty for none. */
   pairingId: z.string().optional(),
+  /** A Promo (MENU-06): price and Manila days; all empty for none. */
+  promoPrice: z.string().trim().optional(),
+  promoFrom: z.string().trim().optional(),
+  promoUntil: z.string().trim().optional(),
+  /** Seasonal: the last Manila day on the menu; empty for none. */
+  availableUntil: z.string().trim().optional(),
   /** A calorie estimate (MENU-10); empty for none. */
   calories: z
     .string()
@@ -147,6 +153,53 @@ const PICK_FULL = {
   night_pick: "Three Night Barista Picks already. Untick one of them first.",
 } as const;
 
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+type PromoFields = {
+  promoCents?: number | null;
+  promoFrom?: Date | null;
+  promoUntil?: Date | null;
+};
+
+/**
+ * A Promo's columns from the editor (MENU-06): all three or none, lower than
+ * the Base Price, last day on or after the first. Absent leaves them as they
+ * are; all empty clears them.
+ */
+function promoFields(
+  baseCents: number,
+  price: string | undefined,
+  from: string | undefined,
+  until: string | undefined
+): { fields: PromoFields } | { errors: Partial<Record<string, string>> } {
+  if (price === undefined) return { fields: {} };
+  if (!price && !from && !until) {
+    return { fields: { promoCents: null, promoFrom: null, promoUntil: null } };
+  }
+  const cents = parsePesos(price);
+  if (cents === null) {
+    return { errors: { promoPrice: "Enter pesos, like 150." } };
+  }
+  if (cents >= baseCents) {
+    return {
+      errors: { promoPrice: "A Promo price is lower than the Base Price." },
+    };
+  }
+  if (!from || !until || !DAY.test(from) || !DAY.test(until)) {
+    return { errors: { promoFrom: "Choose the Promo's first and last days." } };
+  }
+  if (until < from) {
+    return { errors: { promoUntil: "The last day is on or after the first." } };
+  }
+  return {
+    fields: {
+      promoCents: cents,
+      promoFrom: dayValue(from),
+      promoUntil: dayValue(until),
+    },
+  };
+}
+
 /** Create (no id) or edit a Menu Item; the photo URL is set separately. */
 export async function saveMenuItem(
   id: string | null,
@@ -156,8 +209,23 @@ export async function saveMenuItem(
 ): Promise<FormResult<{ id: string }>> {
   const parsed = MenuItemInput.safeParse(input);
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
-  const { optionGroupIds, basePrice, photoAlt, pairingId, calories, ...data } =
-    parsed.data;
+  const {
+    optionGroupIds,
+    basePrice,
+    photoAlt,
+    pairingId,
+    calories,
+    promoPrice,
+    promoFrom,
+    promoUntil,
+    availableUntil,
+    ...data
+  } = parsed.data;
+  const promo = promoFields(basePrice, promoPrice, promoFrom, promoUntil);
+  if ("errors" in promo) return { ok: false, errors: promo.errors };
+  if (availableUntil && !DAY.test(availableUntil)) {
+    return { ok: false, errors: { availableUntil: "Choose a date." } };
+  }
   if (pairingId && pairingId === id) {
     return {
       ok: false,
@@ -181,6 +249,13 @@ export async function saveMenuItem(
     // Absent leaves it as it is; empty clears it.
     pairingId: pairingId === undefined ? undefined : pairingId || null,
     calorieKcal: calories === undefined ? undefined : Number(calories) || null,
+    ...promo.fields,
+    availableUntil:
+      availableUntil === undefined
+        ? undefined
+        : availableUntil
+          ? dayValue(availableUntil)
+          : null,
     ...(photoUrl ? { photoUrl } : {}),
   };
   try {

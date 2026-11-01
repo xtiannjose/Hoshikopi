@@ -1,16 +1,20 @@
 import { cacheLife, cacheTag } from "next/cache";
 
-import { manila, now } from "@/lib/clock";
+import { dayValue, formatDate, manila, manilaInstant, now } from "@/lib/clock";
 import { db } from "@/lib/db";
 
 import { allergenLine, containsNuts } from "./allergens";
+import { todaysBase } from "./pricing";
 
 export type MenuItemCard = {
   id: string;
   slug: string;
   name: string;
   description: string;
+  /** Today's price: a running Promo's, else the Base Price (MENU-06). */
   baseCents: number;
+  /** The Base Price while a Promo runs, shown as "was"; else null. */
+  regularCents: number | null;
   isDrink: boolean;
   /** Labels in display order; Barista Picks are in `picks`. */
   badges: string[];
@@ -78,6 +82,14 @@ function soldOutToday(soldOutOn: Date | null, today: string): boolean {
 
 const visibleItem = { isHidden: false, category: { isHidden: false } };
 
+/** Seasonal Menu Items through their last Manila day (MENU-06). */
+const inSeasonWhere = (today: string) => ({
+  OR: [{ availableUntil: null }, { availableUntil: { gte: dayValue(today) } }],
+});
+
+const shortDay = (value: Date) =>
+  formatDate(manilaInstant(value.toISOString().slice(0, 10), 12 * 60));
+
 const cardSelect = {
   id: true,
   slug: true,
@@ -90,6 +102,10 @@ const cardSelect = {
   photoUrl: true,
   photoAlt: true,
   soldOutOn: true,
+  promoCents: true,
+  promoFrom: true,
+  promoUntil: true,
+  availableUntil: true,
   category: { select: { slug: true, name: true } },
 } as const;
 
@@ -105,18 +121,28 @@ type CardRow = {
   photoUrl: string | null;
   photoAlt: string | null;
   soldOutOn: Date | null;
+  promoCents: number | null;
+  promoFrom: Date | null;
+  promoUntil: Date | null;
+  availableUntil: Date | null;
   category: { slug: string; name: string };
 };
 
 function toCard(row: CardRow, today: string): MenuItemCard {
+  const base = todaysBase(row, today);
+  const badges = badgeLabels(row.badges, row.allergens);
+  if (base !== row.baseCents)
+    badges.unshift(`Promo until ${shortDay(row.promoUntil!)}`);
+  if (row.availableUntil) badges.push(`Until ${shortDay(row.availableUntil)}`);
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
     description: row.description,
-    baseCents: row.baseCents,
+    baseCents: base,
+    regularCents: base !== row.baseCents ? row.baseCents : null,
     isDrink: row.isDrink,
-    badges: badgeLabels(row.badges, row.allergens),
+    badges,
     picks: {
       day: row.badges.includes("barista_pick"),
       night: row.badges.includes("night_pick"),
@@ -145,7 +171,7 @@ export async function getMenu(): Promise<MenuCategory[]> {
       slug: true,
       name: true,
       items: {
-        where: { isHidden: false },
+        where: { isHidden: false, ...inSeasonWhere(today) },
         orderBy: { sort: "asc" },
         select: cardSelect,
       },
@@ -257,13 +283,13 @@ export async function getMenuItem(
   cacheLife("minutes");
   const today = manila(now()).day;
   const row = await db.menuItem.findFirst({
-    where: { slug, ...visibleItem },
+    where: { slug, ...visibleItem, ...inSeasonWhere(today) },
     select: detailSelect,
   });
   if (!row) return null;
   const pair = row.pairingId
     ? await db.menuItem.findFirst({
-        where: { id: row.pairingId, ...visibleItem },
+        where: { id: row.pairingId, ...visibleItem, ...inSeasonWhere(today) },
         select: detailSelect,
       })
     : null;

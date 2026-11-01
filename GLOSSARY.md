@@ -38,6 +38,14 @@ _Avoid_: Out of stock, unavailable (for Hidden items)
 A Menu Item that does not appear on the menu at all (retired, or seasonal and off-season).
 _Avoid_: Disabled, archived, deleted
 
+**Promo**:
+A lower price for a Menu Item on a run of Manila days, set by the Manager. It replaces the Base Price while it runs; Price Deltas still add on top. The menu shows the regular price struck through.
+_Avoid_: Sale, discount, coupon (a Promo needs no code)
+
+**Seasonal**:
+A Menu Item with a last day on the menu; after that Manila day it is Hidden by itself.
+_Avoid_: Limited (in code), temporary
+
 **Barista Pick**:
 One of the Menu Items the baristas recommend, a good start for a first-time visitor. There is a set of three for each palette: Day picks under "Barista picks this week", Night picks under "Barista picks for tonight"; Home and the menu show the current palette's set. The Manager changes them.
 _Avoid_: Featured, signature (as a type name), highlight

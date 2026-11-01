@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 import { Photo, type PhotoKind } from "@/components/photo";
-import { formatPrice } from "@/lib/money";
 import type { MenuItemCard } from "@/modules/menu";
 
 import { Badges } from "./badges";
+import { Price } from "./price";
 
 /** A Menu Item on /menu: photo, name, one line, price, badges. */
 export function MenuCard({
@@ -48,7 +48,7 @@ export function MenuCard({
           {item.soldOut ? (
             <span className="text-muted-foreground">Sold out today</span>
           ) : (
-            formatPrice(item.baseCents)
+            <Price cents={item.baseCents} regularCents={item.regularCents} />
           )}
         </p>
       </div>

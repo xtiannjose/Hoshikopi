@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ArrowLeftIcon, InfoIcon } from "@phosphor-icons/react/ssr";
 
 import { Badges } from "@/components/menu/badges";
+import { Price } from "@/components/menu/price";
 import { Photo, type PhotoKind } from "@/components/photo";
 import { PickupLine } from "@/components/pickup-line";
 import { formatPrice } from "@/lib/money";
@@ -83,7 +84,11 @@ async function MenuItemDetails({
             {item.name}
           </h1>
           <p className="shrink-0 font-mono text-lg">
-            {item.soldOut ? "Sold out today" : formatPrice(item.baseCents)}
+            {item.soldOut ? (
+              "Sold out today"
+            ) : (
+              <Price cents={item.baseCents} regularCents={item.regularCents} />
+            )}
           </p>
         </div>
         <div className="mt-3">

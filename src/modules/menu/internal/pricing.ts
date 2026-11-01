@@ -28,6 +28,37 @@ export type ChoiceRefusal = {
   reason: "unavailable" | "sold_out" | "option_sold_out" | "invalid_options";
 };
 
+const day = (value: Date | null) => value?.toISOString().slice(0, 10);
+
+/** Today's Base Price: a running Promo replaces it (MENU-06). */
+export function todaysBase(
+  item: {
+    baseCents: number;
+    promoCents: number | null;
+    promoFrom: Date | null;
+    promoUntil: Date | null;
+  },
+  today: string
+): number {
+  const from = day(item.promoFrom);
+  const until = day(item.promoUntil);
+  return item.promoCents !== null &&
+    from &&
+    until &&
+    from <= today &&
+    today <= until
+    ? item.promoCents
+    : item.baseCents;
+}
+
+/** Seasonal (MENU-06): on the menu through its last Manila day. */
+export function inSeason(
+  item: { availableUntil: Date | null },
+  today: string
+): boolean {
+  return !item.availableUntil || day(item.availableUntil)! >= today;
+}
+
 /**
  * Prices each choice on the server (ORD-06, docs/03 section 5): the Base
  * Price plus the chosen Options' Price Deltas, after checking the choice
@@ -58,7 +89,12 @@ export async function priceChoices(
 
   return choices.map((choice): PricedChoice | ChoiceRefusal => {
     const item = byId.get(choice.menuItemId);
-    if (!item || item.isHidden || item.category.isHidden) {
+    if (
+      !item ||
+      item.isHidden ||
+      item.category.isHidden ||
+      !inSeason(item, today)
+    ) {
       return { ok: false, reason: "unavailable" };
     }
     if (soldOut(item.soldOutOn)) return { ok: false, reason: "sold_out" };
@@ -94,18 +130,16 @@ export async function priceChoices(
     if (optionSoldOut) {
       return { ok: false, reason: "option_sold_out" };
     }
+    const base = todaysBase(item, today);
     return {
       ok: true,
       menuItemId: item.id,
       slug: item.slug,
       name: item.name,
       isDrink: item.isDrink,
-      baseCents: item.baseCents,
+      baseCents: base,
       options,
-      unitCents: addMoney(
-        item.baseCents,
-        ...options.map((option) => option.deltaCents)
-      ),
+      unitCents: addMoney(base, ...options.map((option) => option.deltaCents)),
     };
   });
 }
