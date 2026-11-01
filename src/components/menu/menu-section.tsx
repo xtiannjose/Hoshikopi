@@ -11,7 +11,11 @@ export function MenuSection({
 }) {
   const Heading = `h${headingLevel}` as const;
   return (
-    <section aria-labelledby={`cat-${category.slug}`} className="mt-12">
+    <section
+      data-menu-section=""
+      aria-labelledby={`cat-${category.slug}`}
+      className="mt-12"
+    >
       <Heading
         id={`cat-${category.slug}`}
         className="font-display pb-1 text-3xl italic md:text-4xl"

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { CategoryTabs } from "@/components/menu/category-tabs";
+import { MenuFilter } from "@/components/menu/menu-filter";
 import { MenuSection } from "@/components/menu/menu-section";
 import { PickupLine } from "@/components/pickup-line";
 import { getMenu } from "@/modules/menu";
@@ -20,6 +21,9 @@ export default async function MenuPage() {
       </h1>
       <div className="mt-3">
         <PickupLine />
+      </div>
+      <div className="mt-6">
+        <MenuFilter />
       </div>
       <div className="mt-6">
         <CategoryTabs categories={menu} />

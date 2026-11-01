@@ -86,3 +86,28 @@ test("a Menu Item suggests a Pairing that adds in one tap (MENU-08)", async ({
     page.getByRole("main").getByText("Regular, Whole milk, 100%, Normal")
   ).toBeVisible();
 });
+
+test("the menu filters by a word and by diet (MENU-05)", async ({ page }) => {
+  await page.goto("/menu");
+  const visibleNames = () =>
+    page
+      .locator("[data-menu-item]:visible h2, [data-menu-item]:visible h3")
+      .allInnerTexts();
+  await page.getByLabel("Search the menu").fill("ube");
+  await expect(page.getByText("2 items match.")).toBeVisible();
+  expect(await visibleNames()).toEqual(["Ube Latte", "Ube Pandesal"]);
+
+  await page.getByLabel("Search the menu").fill("");
+  const diet = page.getByRole("group", { name: "Dietary filters" });
+  await diet.getByText("Vegan", { exact: true }).click();
+  await diet.getByText("No caffeine", { exact: true }).click();
+  await expect(page.getByText("1 item matches.")).toBeVisible();
+  expect(await visibleNames()).toEqual(["Tanglad Ginger Tea"]);
+
+  await page.getByLabel("Search the menu").fill("croissant");
+  await expect(
+    page.getByText("Nothing matches. Try fewer filters or another word.")
+  ).toBeVisible();
+  // Categories with nothing left are hidden too.
+  await expect(page.getByRole("heading", { name: "Pastries" })).toBeHidden();
+});

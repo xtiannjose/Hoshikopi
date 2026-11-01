@@ -4,6 +4,7 @@ export { STARS_PER_REWARD } from "./internal/rules";
 export {
   adjustStars,
   balance,
+  birthdayTreat,
   canRedeem,
   earnForOrder,
   forgetStars,
@@ -11,5 +12,6 @@ export {
   reserveRedemption,
   reverseForOrder,
   starHistory,
+  starTotals,
   type AdjustResult,
 } from "./internal/ledger";

@@ -18,6 +18,7 @@ const KIND: Record<string, string> = {
   release: "Back from a cancelled order",
   reverse: "Taken back for a refund",
   adjust: "Changed by the cafe",
+  birthday: "Birthday Treat",
 };
 
 export default function StarsPage() {

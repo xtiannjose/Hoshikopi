@@ -60,16 +60,27 @@ async function hoshiOrders() {
 }
 
 describe("Your details (ACC-03)", () => {
-  it("saves a name and a separate marketing opt-in", async () => {
+  it("saves a name, a birth month and a separate marketing opt-in", async () => {
     await updateProfile(HOSHI, {
       name: "Hoshi S.",
       marketingOptIn: true,
+      birthMonth: 11,
     });
     expect(await memberProfile(HOSHI)).toMatchObject({
       name: "Hoshi S.",
       email: "hoshi@hoshikopi.example",
       marketingOptIn: true,
+      birthMonth: 11,
     });
+  });
+
+  it("keeps a birth month only from 1 to 12", async () => {
+    await updateProfile(HOSHI, {
+      name: "Hoshi",
+      marketingOptIn: false,
+      birthMonth: 13,
+    });
+    expect(await memberProfile(HOSHI)).toMatchObject({ birthMonth: null });
   });
 });
 

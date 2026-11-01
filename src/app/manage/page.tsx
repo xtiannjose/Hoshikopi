@@ -15,6 +15,7 @@ const AREAS: { href: string; label: string; roles: Staff["role"][] }[] = [
   { href: "/bar", label: "Bar Screen", roles: ["barista", "manager"] },
   { href: "/manage/menu", label: "Menu", roles: ["barista", "manager"] },
   { href: "/manage/orders", label: "Orders and Refunds", roles: ["manager"] },
+  { href: "/manage/reports", label: "Reports", roles: ["manager"] },
   { href: "/manage/hours", label: "Hours and Capacity", roles: ["manager"] },
   { href: "/manage/events", label: "Events", roles: ["manager"] },
   { href: "/manage/posts", label: "Posts", roles: ["manager"] },

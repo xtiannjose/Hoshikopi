@@ -5,6 +5,8 @@ export type MemberProfile = {
   name: string;
   email: string;
   marketingOptIn: boolean;
+  /** 1 to 12, for the Birthday Treat (LOY-04); null when not given. */
+  birthMonth: number | null;
   createdAt: Date;
 };
 
@@ -14,20 +16,29 @@ export async function memberProfile(
 ): Promise<MemberProfile | null> {
   return db.user.findFirst({
     where: { id: memberId, deletedAt: null },
-    select: { name: true, email: true, marketingOptIn: true, createdAt: true },
+    select: {
+      name: true,
+      email: true,
+      marketingOptIn: true,
+      birthMonth: true,
+      createdAt: true,
+    },
   });
 }
 
-/** A Member's name and their separate marketing opt-in (ACC-03). */
+/** A Member's name, birth month and separate marketing opt-in (ACC-03). */
 export async function updateProfile(
   memberId: string,
-  input: { name: string; marketingOptIn: boolean }
+  input: { name: string; marketingOptIn: boolean; birthMonth: number | null }
 ) {
+  const month = input.birthMonth;
   await db.user.update({
     where: { id: memberId },
     data: {
       name: input.name.trim().slice(0, 60),
       marketingOptIn: input.marketingOptIn,
+      birthMonth:
+        Number.isInteger(month) && month! >= 1 && month! <= 12 ? month : null,
     },
   });
 }

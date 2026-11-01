@@ -29,6 +29,12 @@ export {
   type OrderView,
 } from "./internal/reads";
 export { orderAgain } from "./internal/again";
+export {
+  getPopularDrinks,
+  popularDrinks,
+  salesReport,
+  type SalesReport,
+} from "./internal/reports";
 export { cancelByCustomer, orderVersion } from "./internal/customer";
 export { orderLink, tokenMatches } from "./internal/links";
 export {

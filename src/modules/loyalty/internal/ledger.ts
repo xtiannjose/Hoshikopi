@@ -1,5 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
+import { manila, manilaInstant, now } from "@/lib/clock";
 import { db, type Client } from "@/lib/db";
+import { addDays } from "@/lib/hours";
 import { audit } from "@/modules/identity";
 
 import { STARS_PER_REWARD } from "./rules";
@@ -168,4 +170,63 @@ export async function releaseRedemption(
 /** Deleting an account forgets its Star history (ACC-03). */
 export async function forgetStars(memberId: string) {
   await db.starEntry.deleteMany({ where: { memberId } });
+}
+
+/**
+ * The Birthday Treat (LOY-04): in the Member's birthday month (Manila
+ * calendar), once a year, 9 Stars, which is one free drink through the usual
+ * Reward. Granted when the Member opens their account or checkout that month;
+ * "given" when it already was this year; null outside the month.
+ */
+export async function birthdayTreat(
+  memberId: string,
+  birthMonth: number | null
+): Promise<"granted" | "given" | null> {
+  const at = now();
+  const [year, month] = manila(at).day.split("-").map(Number);
+  if (birthMonth !== month) return null;
+  return db.$transaction(async (tx) => {
+    await lockMember(tx, memberId);
+    const given = await tx.starEntry.findFirst({
+      where: {
+        memberId,
+        kind: "birthday",
+        createdAt: { gte: manilaInstant(`${year}-01-01`, 0) },
+      },
+    });
+    if (given) return "given";
+    await tx.starEntry.create({
+      data: {
+        memberId,
+        kind: "birthday",
+        stars: STARS_PER_REWARD,
+        reason: `Birthday Treat ${year}`,
+        createdAt: at,
+      },
+    });
+    return "granted";
+  });
+}
+
+/**
+ * Stars for the Manager's report (STAFF-08) over the last `days` days:
+ * earned on Orders, Birthday Treats, redeemed for free drinks (reserved less
+ * released), taken back on Refunds, and the Manager's adjustments.
+ */
+export async function starTotals(days: number) {
+  const since = manilaInstant(addDays(manila(now()).day, 1 - days), 0);
+  const rows = await db.starEntry.groupBy({
+    by: ["kind"],
+    where: { createdAt: { gte: since } },
+    _sum: { stars: true },
+  });
+  const sum = (kind: string) =>
+    rows.find((row) => row.kind === kind)?._sum.stars ?? 0;
+  return {
+    earned: sum("earn"),
+    birthday: sum("birthday"),
+    redeemed: -(sum("reserve") + sum("release")),
+    takenBack: -sum("reverse"),
+    adjusted: sum("adjust"),
+  };
 }

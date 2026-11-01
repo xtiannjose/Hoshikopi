@@ -80,7 +80,7 @@ audit_log, rate_limits (identity)
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `star_entries` | `id`, `member_id` FK, `order_id` FK null, `kind` enum (`earn`, `reserve`, `release`, `reverse`, `adjust`), `stars` int (signed), `reason` null, `actor_id` null, `created_at`; index (`member_id`) | Balance = sum of `stars` |
+| `star_entries` | `id`, `member_id` FK, `order_id` FK null, `kind` enum (`earn`, `reserve`, `release`, `reverse`, `adjust`, `birthday` (+9 once a year, LOY-04)), `stars` int (signed), `reason` null, `actor_id` null, `created_at`; index (`member_id`) | Balance = sum of `stars` |
 
 ### Content (module `content`)
 
