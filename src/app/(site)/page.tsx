@@ -18,15 +18,17 @@ export default async function Home() {
     getEvents(),
     getPosts(),
   ]);
-  const picks = menu
-    .flatMap((category) => category.items)
-    .filter((item) => item.badges.includes("Barista Pick"));
+  const items = menu.flatMap((category) => category.items);
   const [windowDusk, , , tables] = ROOM_PHOTOS;
   return (
     <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
       <Hero cafe={cafe} hours={hours} photo={windowDusk} />
       <Divider />
-      <BaristaPicks picks={picks} />
+      <BaristaPicks picks={items.filter((i) => i.picks.day)} palette="day" />
+      <BaristaPicks
+        picks={items.filter((i) => i.picks.night)}
+        palette="night"
+      />
       <div className="mt-24">
         <PrintedMenu menu={menu} priced={priced} />
       </div>

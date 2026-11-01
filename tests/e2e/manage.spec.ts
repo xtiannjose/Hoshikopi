@@ -24,7 +24,9 @@ test("a seeded Barista signs in to /manage", async ({ page }) => {
 test("a Member gets not-found from /manage", async ({ page }) => {
   await signIn(page, "hoshi@hoshikopi.example", "/");
   await page.goto("/manage");
-  await expect(page.getByText(/could not be found/i)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /could not be found/i })
+  ).toBeVisible();
   await expect(page.getByText(/Signed in as/)).toHaveCount(0);
 });
 

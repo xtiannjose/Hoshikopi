@@ -44,6 +44,7 @@ async function Editor({
       badges: [],
       allergens: [],
       optionGroupIds: [],
+      pairingId: "",
       photoUrl: null,
       photoAlt: "",
       sort: 0,
@@ -63,6 +64,7 @@ async function Editor({
       badges: row.badges,
       allergens: row.allergens,
       optionGroupIds: row.optionGroups.map((g) => g.optionGroupId),
+      pairingId: row.pairingId ?? "",
       photoUrl: row.photoUrl,
       photoAlt: row.photoAlt ?? "",
       sort: row.sort,
@@ -77,6 +79,7 @@ async function Editor({
         item={item}
         categories={categories}
         optionGroups={optionGroups}
+        menuItems={categories.flatMap((category) => category.items)}
       />
     </>
   );

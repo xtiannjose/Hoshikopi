@@ -148,6 +148,7 @@ const CATEGORIES: {
         name: "Cafe Mocha",
         pesos: 175,
         description: "Espresso, Davao chocolate and steamed milk.",
+        badges: ["night_pick"],
         allergens: ["milk", "soy"],
         groups: MILK_DRINK,
       },
@@ -215,7 +216,7 @@ const CATEGORIES: {
         pesos: 120,
         description:
           "Lemongrass and ginger, brewed fresh. Good for rainy days.",
-        badges: ["vegan", "no_caffeine"],
+        badges: ["vegan", "no_caffeine", "night_pick"],
         groups: ["size", "sugar"],
       },
     ],
@@ -253,6 +254,7 @@ const CATEGORIES: {
         name: "Banana Bread slice",
         pesos: 90,
         description: "Lakatan banana bread with toasted walnuts.",
+        badges: ["night_pick"],
         allergens: ["wheat", "milk", "egg", "tree_nuts"],
       },
     ],
@@ -345,6 +347,26 @@ Our beans come from farms in Benguet and Sagada, with a little barako from Batan
 
 The team: Lia (founder), Annika (head barista) and Christian (manager). Every person named here is invented for this concept.`;
 
+const PAIRINGS: [string, string][] = [
+  ["kopi-hitam", "banana-bread"],
+  ["hoshi-latte", "ube-pandesal"],
+  ["spanish-latte", "ensaymada"],
+  ["ube-latte", "ube-pandesal"],
+  ["cafe-mocha", "banana-bread"],
+  ["cold-brew", "butter-croissant"],
+  ["matcha-latte", "butter-croissant"],
+  ["tablea-tsokolate", "ensaymada"],
+  ["calamansi-honey-soda", "tapa-rice-bowl"],
+  ["barako-chai", "banana-bread"],
+  ["tanglad-ginger-tea", "ensaymada"],
+  ["ube-pandesal", "hoshi-latte"],
+  ["ensaymada", "tablea-tsokolate"],
+  ["butter-croissant", "kopi-hitam"],
+  ["banana-bread", "cold-brew"],
+  ["tapa-rice-bowl", "calamansi-honey-soda"],
+  ["longganisa-pandesal", "kopi-hitam"],
+];
+
 export async function seedDatabase(
   db: PrismaClient,
   { people = true } = {}
@@ -398,6 +420,14 @@ export async function seedDatabase(
         },
       },
     });
+  }
+
+  // "Goes well with" (MENU-08): each drink with a bite, each bite with a drink.
+  for (const [slug, pairSlug] of PAIRINGS) {
+    const pair = await db.menuItem.findUniqueOrThrow({
+      where: { slug: pairSlug },
+    });
+    await db.menuItem.update({ where: { slug }, data: { pairingId: pair.id } });
   }
 
   for (let weekday = 0; weekday < 7; weekday++) {

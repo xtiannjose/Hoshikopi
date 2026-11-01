@@ -95,7 +95,9 @@ test("an Order page needs its link token", async ({ page }) => {
   await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
   const url = new URL(page.url());
   await page.goto(url.pathname + "?t=wrong");
-  await expect(page.getByText(/could not be found/i)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /could not be found/i })
+  ).toBeVisible();
 });
 
 test("checkout refuses an 11th try from one Cart in 15 minutes", async ({

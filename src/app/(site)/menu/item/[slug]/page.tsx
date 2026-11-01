@@ -8,9 +8,10 @@ import { Badges } from "@/components/menu/badges";
 import { Photo, type PhotoKind } from "@/components/photo";
 import { PickupLine } from "@/components/pickup-line";
 import { formatPrice } from "@/lib/money";
-import { getMenuItem, menuSlugs } from "@/modules/menu";
+import { getMenuItem, menuSlugs, type Pairing } from "@/modules/menu";
 
 import { OptionPicker } from "./option-picker";
+import { PairingAdd } from "./pairing-add";
 
 export async function generateStaticParams() {
   const { items } = await menuSlugs();
@@ -86,7 +87,7 @@ async function MenuItemDetails({
           </p>
         </div>
         <div className="mt-3">
-          <Badges labels={item.badges} />
+          <Badges labels={item.badges} picks={item.picks} />
         </div>
         <p className="mt-4 text-lg">{item.description}</p>
         <p className="text-muted-foreground mt-4 flex gap-2 font-mono text-sm">
@@ -110,7 +111,50 @@ async function MenuItemDetails({
             groups={item.optionGroups}
           />
         )}
+        {item.pairing && <PairingCard pairing={item.pairing} />}
       </div>
     </>
+  );
+}
+
+/** "Goes well with" (MENU-08). */
+function PairingCard({ pairing }: { pairing: Pairing }) {
+  return (
+    <section
+      aria-labelledby="pairing"
+      className="border-border mt-10 grid grid-cols-[6rem_1fr] gap-x-4 gap-y-3 border-t pt-6"
+    >
+      <h2
+        id="pairing"
+        className="font-display col-span-2 pb-1 text-2xl leading-[1.1] italic"
+      >
+        Goes well with
+      </h2>
+      <Photo
+        src={pairing.photoUrl}
+        alt={pairing.photoAlt}
+        kind={pairing.categorySlug as PhotoKind}
+        sizes="6rem"
+        className="rounded-card aspect-square"
+      />
+      <div className="grid content-start gap-1">
+        <Link href={`/menu/item/${pairing.slug}`} className="font-semibold">
+          {pairing.name}
+        </Link>
+        <span className="font-mono">
+          {pairing.soldOut ? "Sold out today" : formatPrice(pairing.baseCents)}
+        </span>
+        {!pairing.soldOut &&
+          (pairing.optionIds ? (
+            <PairingAdd
+              menuItemId={pairing.id}
+              name={pairing.name}
+              optionIds={pairing.optionIds}
+            />
+          ) : (
+            <Link href={`/menu/item/${pairing.slug}`}>Choose yours</Link>
+          ))}
+      </div>
+    </section>
   );
 }

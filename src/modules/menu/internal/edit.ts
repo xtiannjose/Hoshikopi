@@ -13,6 +13,7 @@ export const BADGE_KEYS = [
   "new",
   "best_seller",
   "barista_pick",
+  "night_pick",
   "vegan",
   "no_caffeine",
 ] as const;
@@ -123,11 +124,19 @@ const MenuItemInput = z.object({
   badges: z.array(z.enum(BADGE_KEYS)),
   allergens: z.array(z.enum(ALLERGEN_KEYS)),
   optionGroupIds: z.array(z.string()),
+  /** "Goes well with" (MENU-08); empty for none. */
+  pairingId: z.string().optional(),
   photoAlt: z.string().trim().max(160),
   sort: z.coerce.number().int().min(0).max(999),
 });
 
 export type MenuItemInput = z.input<typeof MenuItemInput>;
+
+const PICKS_PER_PALETTE = 3;
+const PICK_FULL = {
+  barista_pick: "Three Day Barista Picks already. Untick one of them first.",
+  night_pick: "Three Night Barista Picks already. Untick one of them first.",
+} as const;
 
 /** Create (no id) or edit a Menu Item; the photo URL is set separately. */
 export async function saveMenuItem(
@@ -138,11 +147,30 @@ export async function saveMenuItem(
 ): Promise<FormResult<{ id: string }>> {
   const parsed = MenuItemInput.safeParse(input);
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
-  const { optionGroupIds, basePrice, photoAlt, ...data } = parsed.data;
+  const { optionGroupIds, basePrice, photoAlt, pairingId, ...data } =
+    parsed.data;
+  if (pairingId && pairingId === id) {
+    return {
+      ok: false,
+      errors: { pairingId: "Choose a different Menu Item." },
+    };
+  }
+  // INFO-13: the Manager picks three for each palette.
+  for (const pick of ["barista_pick", "night_pick"] as const) {
+    if (!data.badges.includes(pick)) continue;
+    const others = await db.menuItem.count({
+      where: { badges: { has: pick }, ...(id ? { id: { not: id } } : {}) },
+    });
+    if (others >= PICKS_PER_PALETTE) {
+      return { ok: false, errors: { badges: PICK_FULL[pick] } };
+    }
+  }
   const fields = {
     ...data,
     baseCents: basePrice,
     photoAlt: photoAlt || null,
+    // Absent leaves it as it is; empty clears it.
+    pairingId: pairingId === undefined ? undefined : pairingId || null,
     ...(photoUrl ? { photoUrl } : {}),
   };
   try {

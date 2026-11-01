@@ -25,9 +25,12 @@ beforeEach(async () => {
 afterEach(unfreezeClock);
 afterAll(() => db.$disconnect());
 
-async function latteInput(change: Partial<MenuItemInput> = {}) {
+const latteInput = (change: Partial<MenuItemInput> = {}) =>
+  itemInput("hoshi-latte", change);
+
+async function itemInput(slug: string, change: Partial<MenuItemInput> = {}) {
   const latte = await db.menuItem.findUniqueOrThrow({
-    where: { slug: "hoshi-latte" },
+    where: { slug },
     include: { optionGroups: true },
   });
   return {
@@ -37,8 +40,8 @@ async function latteInput(change: Partial<MenuItemInput> = {}) {
       name: latte.name,
       slug: latte.slug,
       description: latte.description,
-      basePrice: "185",
-      isDrink: "on",
+      basePrice: String(latte.baseCents / 100),
+      isDrink: latte.isDrink ? "on" : undefined,
       isHidden: undefined,
       badges: latte.badges,
       allergens: latte.allergens,
@@ -92,6 +95,47 @@ describe("saveMenuItem", () => {
     expect(await saveMenuItem(id, input, christian)).toEqual({
       ok: false,
       errors: { slug: "Another Menu Item uses this." },
+    });
+  });
+});
+
+describe("Barista Picks and Pairings (INFO-13, MENU-08)", () => {
+  it("allows three Barista Picks per palette", async () => {
+    // The seed picks three for Day and three for Night.
+    const coldBrew = await itemInput("cold-brew", {
+      badges: ["barista_pick"],
+    });
+    expect(await saveMenuItem(coldBrew.id, coldBrew.input, christian)).toEqual({
+      ok: false,
+      errors: {
+        badges: "Three Day Barista Picks already. Untick one of them first.",
+      },
+    });
+    const night = await itemInput("cold-brew", { badges: ["night_pick"] });
+    expect((await saveMenuItem(night.id, night.input, christian)).ok).toBe(
+      false
+    );
+    // An item already picked saves as before.
+    const { id, input } = await latteInput();
+    expect(await saveMenuItem(id, input, christian)).toEqual({ ok: true, id });
+  });
+
+  it("sets a Pairing, keeps it when the field is absent, never itself", async () => {
+    const croissant = await db.menuItem.findUniqueOrThrow({
+      where: { slug: "butter-croissant" },
+    });
+    const { id, input } = await latteInput({ pairingId: croissant.id });
+    expect(await saveMenuItem(id, input, christian)).toEqual({ ok: true, id });
+    const without = await latteInput();
+    await saveMenuItem(id, without.input, christian);
+    expect(
+      (await db.menuItem.findUniqueOrThrow({ where: { id } })).pairingId
+    ).toBe(croissant.id);
+    expect(
+      await saveMenuItem(id, { ...input, pairingId: id }, christian)
+    ).toEqual({
+      ok: false,
+      errors: { pairingId: "Choose a different Menu Item." },
     });
   });
 });

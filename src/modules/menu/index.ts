@@ -10,6 +10,7 @@ export {
   type MenuItemDetail,
   type OptionGroupView,
   type OptionView,
+  type Pairing,
 } from "./internal/queries";
 export {
   ALLERGEN_KEYS,

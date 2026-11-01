@@ -42,7 +42,7 @@ export function MenuCard({
         </p>
       </div>
       <p className="text-muted-foreground line-clamp-2">{item.description}</p>
-      <Badges labels={item.badges} />
+      <Badges labels={item.badges} picks={item.picks} />
     </article>
   );
 }
