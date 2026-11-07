@@ -5,6 +5,7 @@ export {
   clearCart,
   deleteMemberCart,
   getCart,
+  lockCart,
   mergeGuestCart,
   MAX_LINE_QUANTITY,
   MAX_NOTE_LENGTH,

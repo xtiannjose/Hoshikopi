@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 import { currentMember } from "@/modules/identity";
 
@@ -18,17 +19,19 @@ const hash = (token: string) =>
 /**
  * The current Cart owner: the signed-in Member, whose Cart takes in any Guest
  * Cart left in this browser; otherwise the Guest, or null before anything
- * was added.
+ * was added. Once per request: the header and the page both ask.
  */
-export async function currentCartOwner(): Promise<CartOwner | null> {
+export const currentCartOwner = cache(async (): Promise<CartOwner | null> => {
   const token = (await cookies()).get(COOKIE)?.value;
   const member = await currentMember();
   if (member) {
-    if (token) await mergeGuestCart({ guestTokenHash: hash(token) }, member.id);
+    if (token) {
+      await mergeGuestCart({ guestTokenHash: hash(token) }, member.id);
+    }
     return { memberId: member.id };
   }
   return token ? { guestTokenHash: hash(token) } : null;
-}
+});
 
 /** The owner for a write; sets the cookie first if needed (Server Actions). */
 export async function cartOwnerForWrite(): Promise<CartOwner> {

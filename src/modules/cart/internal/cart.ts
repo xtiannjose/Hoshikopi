@@ -186,6 +186,21 @@ export async function clearCart(owner: CartOwner, client: Client = db) {
 }
 
 /**
+ * Lock the owner's Cart row until the transaction ends, so a second request
+ * on the same Cart (a double tap, two tabs, two renders after sign-in) waits
+ * and then sees what the first one left. False when there is no Cart.
+ */
+export async function lockCart(owner: CartOwner, tx: Client): Promise<boolean> {
+  const rows =
+    "memberId" in owner
+      ? await tx.$queryRaw<{ id: string }[]>`
+          SELECT id FROM carts WHERE member_id = ${owner.memberId} FOR UPDATE`
+      : await tx.$queryRaw<{ id: string }[]>`
+          SELECT id FROM carts WHERE guest_token_hash = ${owner.guestTokenHash} FOR UPDATE`;
+  return rows.length > 0;
+}
+
+/**
  * On sign-in, a Guest's Cart joins the Member's: identical choices add up
  * (at most 20 a Line), then the Guest Cart is gone (docs/03 section 5).
  */
@@ -194,6 +209,9 @@ export async function mergeGuestCart(
   memberId: string
 ): Promise<void> {
   await db.$transaction(async (tx) => {
+    // A merge already running for this Guest Cart finishes first; this one
+    // then finds the Guest Cart gone.
+    if (!(await lockCart(guest, tx))) return;
     const from = await tx.cart.findUnique({
       where: ownerWhere(guest),
       include: { lines: true },

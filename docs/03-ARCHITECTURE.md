@@ -72,7 +72,7 @@ Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night pale
 
 ## 5. Cart and pricing
 
-- A Cart belongs to a Guest (a random id in an HTTP-only cookie) or a Member. Signing in merges the Guest Cart into the Member's.
+- A Cart belongs to a Guest (a random id in an HTTP-only cookie) or a Member. Signing in merges the Guest Cart into the Member's. The merge locks the Guest Cart row first, so two requests signing in at once merge it once.
 - `priceLine(itemId, optionIds)` validates the choice against the Menu Item's Option Groups (required groups present, min and max picks, no Sold Out or Hidden Option) and returns `base_cents + sum(delta_cents)`. The Cart stores choices, never prices.
 - `priceCart` prices every Line, applies at most one Reward (a drink Line at zero; its Options charge their Price Delta), and returns Line totals and the Order total. VAT is included in prices; the receipt shows the VAT part with one rounding rule ([ADR 0002](adr/0002-money-as-integer-centavos.md)).
 - A Line whose Menu Item became Sold Out or Hidden is flagged in the Cart and blocks checkout until removed.
@@ -82,7 +82,7 @@ Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night pale
 `placeOrder(input)` runs in one transaction:
 
 1. Reject when the cafe is closed for the chosen Pickup Time or Ordering Paused (`cafe`).
-2. Price the Cart again on the server (`cart`, `menu`). Reject if anything changed since the Customer last saw it, and show the new total.
+2. Lock the Cart row (`lockCart`, `SELECT ... FOR UPDATE`), so a second Place order on the same Cart (a double tap, a retry, two tabs) waits and then finds it empty. Price the Cart again on the server (`cart`, `menu`). Reject if anything changed since the Customer last saw it, and show the new total.
 3. Lock the chosen Pickup Window's usage row (`SELECT ... FOR UPDATE`), check Capacity for drinks and food, and add this Order's counts. A full window returns `{ ok: false, reason: "window_full" }` with the next free window.
 4. Reserve the Reward's Stars, if any (`loyalty`).
 5. Create the Order with snapshot Lines (name, Options, prices), the next Order Code for the day, and a random access token for the status link.

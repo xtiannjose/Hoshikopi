@@ -28,6 +28,8 @@ export type CheckoutState = {
     customerName: string;
     customerEmail: string;
     customerPhone: string;
+    pickup: string;
+    paymentMethod: string;
   };
 };
 
@@ -75,6 +77,10 @@ export async function placeOrderAction(
     customerEmail: String(form.get("customerEmail") ?? ""),
     customerPhone: String(form.get("customerPhone") ?? ""),
   };
+  const pickup = String(form.get("pickup") ?? "asap");
+  const method = String(form.get("paymentMethod")) as PaymentMethod;
+  // The Pickup Time and Payment Method come back too, so a refusal keeps them.
+  const kept = { ...values, pickup, paymentMethod: method };
   // Every try counts, so nobody can hold Pickup Windows with a flood of Orders.
   const cartKey = "memberId" in owner ? owner.memberId : owner.guestTokenHash;
   const allowed =
@@ -87,11 +93,9 @@ export async function placeOrderAction(
   if (!allowed) {
     return {
       message: "Too many tries. Wait 15 minutes, then place your order.",
-      values,
+      values: kept,
     };
   }
-  const pickup = String(form.get("pickup") ?? "asap");
-  const method = String(form.get("paymentMethod")) as PaymentMethod;
   const result = await placeOrder({
     owner,
     memberId: (await currentMember())?.id ?? null,
@@ -116,6 +120,6 @@ export async function placeOrderAction(
   return {
     message: messageFor(result),
     errors: result.reason === "invalid" ? result.errors : undefined,
-    values,
+    values: kept,
   };
 }

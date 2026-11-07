@@ -55,6 +55,18 @@ export function CheckoutForm({
     {}
   );
   const error = (name: string) => state.errors?.[name];
+  // After a refusal React resets the form, so the choices come back from the
+  // action; one no longer offered falls back to the first.
+  const keptPickup = state.values?.pickup;
+  const pickupKept = windows.some((w) => w.value === keptPickup);
+  const payments = PAYMENTS.filter(
+    (p) => p.value !== "pay_at_pickup" || payAtPickupAllowed
+  );
+  const keptPayment = payments.some(
+    (p) => p.value === state.values?.paymentMethod
+  )
+    ? state.values?.paymentMethod
+    : payments[0]?.value;
   const [useReward, setUseReward] = useState(false);
   const total = totalCents - (useReward && reward ? reward.discountCents : 0);
   return (
@@ -89,7 +101,7 @@ export function CheckoutForm({
                 type="radio"
                 name="pickup"
                 value="asap"
-                defaultChecked
+                defaultChecked={!pickupKept}
                 className="size-5"
               />
               <span>
@@ -115,6 +127,7 @@ export function CheckoutForm({
                       type="radio"
                       name="pickup"
                       value={w.value}
+                      defaultChecked={w.value === keptPickup}
                       className="sr-only"
                     />
                     {w.label}
@@ -163,9 +176,7 @@ export function CheckoutForm({
       <fieldset>
         <legend className="font-display text-2xl italic">Payment</legend>
         <div className="mt-4 grid gap-3">
-          {PAYMENTS.filter(
-            (p) => p.value !== "pay_at_pickup" || payAtPickupAllowed
-          ).map((p, index) => (
+          {payments.map((p) => (
             <label
               key={p.value}
               className="border-input has-[:checked]:border-primary has-[:checked]:bg-muted has-[:focus-visible]:outline-ring rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
@@ -174,7 +185,7 @@ export function CheckoutForm({
                 type="radio"
                 name="paymentMethod"
                 value={p.value}
-                defaultChecked={index === 0}
+                defaultChecked={p.value === keptPayment}
                 className="size-5"
               />
               <span className="flex-1">
