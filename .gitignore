@@ -40,3 +40,6 @@ Thumbs.db
 
 # Google OAuth client downloads hold the client secret: keep them out of git
 client_secret_*.json
+
+# Claude Code agent worktrees: separate checkouts, never part of this one
+.claude/worktrees/

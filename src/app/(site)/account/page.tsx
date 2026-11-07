@@ -6,6 +6,7 @@ import {
   CakeIcon,
   CaretRightIcon,
   CoffeeIcon,
+  MonitorIcon,
   DownloadSimpleIcon,
   HeartIcon,
   IdentificationCardIcon,
@@ -14,6 +15,7 @@ import {
   ShieldCheckIcon,
   SignOutIcon,
   StarIcon,
+  StorefrontIcon,
   TrashIcon,
   XIcon,
 } from "@phosphor-icons/react/ssr";
@@ -22,7 +24,7 @@ import { StarCard } from "@/components/star-card";
 import { formatDate, formatMonthYear, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { favouritesFor, type FavouriteView } from "@/modules/cart";
-import { memberProfile, requireMember } from "@/modules/identity";
+import { currentStaff, memberProfile, requireMember } from "@/modules/identity";
 import { balance, birthdayTreat } from "@/modules/loyalty";
 import { ordersForMember } from "@/modules/ordering";
 
@@ -98,10 +100,11 @@ async function Account() {
   const profile = await memberProfile(member.id);
   // Lands before the balance is read, so the Star Card shows it (LOY-04).
   const treat = await birthdayTreat(member.id, profile?.birthMonth ?? null);
-  const [orders, stars, favourites] = await Promise.all([
+  const [orders, stars, favourites, staff] = await Promise.all([
     ordersForMember(member.id),
     balance(member.id),
     favouritesFor(member.id),
+    currentStaff("barista"),
   ]);
   return (
     <div className="grid gap-8 pt-8">
@@ -146,6 +149,24 @@ async function Account() {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-start">
         <aside className="grid gap-4 lg:sticky lg:top-6">
+          {staff && (
+            // The staff screens are not in the public header; Staff find
+            // them here (members never see this box).
+            <nav
+              aria-label="For Staff"
+              className="rounded-card border-primary divide-border divide-y border-2"
+            >
+              <p className="text-muted-foreground px-4 pt-3 pb-2 text-sm font-semibold">
+                For Staff ({staff.role === "manager" ? "Manager" : "Barista"})
+              </p>
+              <RowLink href="/manage" icon={<StorefrontIcon size={20} />}>
+                Manage the cafe
+              </RowLink>
+              <RowLink href="/bar" icon={<MonitorIcon size={20} />}>
+                Bar Screen
+              </RowLink>
+            </nav>
+          )}
           <section aria-labelledby="star-card">
             <h2 id="star-card" className="sr-only">
               Star Card
