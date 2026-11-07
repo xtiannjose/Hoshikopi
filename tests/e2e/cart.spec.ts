@@ -10,9 +10,13 @@ test("a Guest adds customized drinks and the Cart merges and prices them", async
   await page.getByText("Large", { exact: true }).click();
   await page.getByRole("button", { name: "One more" }).click();
   await expect(page.getByText("Your Hoshi Latte:")).toContainText("PHP 500");
+  // The Cart count bumps when it goes up, never on page load (docs/05 s7).
+  const bump = page.getByRole("banner").locator(".animate-bump");
+  await expect(bump).toHaveCount(0);
   await page.getByRole("button", { name: "Add to order" }).click();
   await expect(page.getByRole("status")).toContainText("Added to your order");
   await expect(page.getByRole("link", { name: /Cart 2 items/ })).toBeVisible();
+  await expect(bump).toHaveCount(1);
 
   // The same choices again merge into the same Line.
   await page.getByText("Oat milk", { exact: true }).click();

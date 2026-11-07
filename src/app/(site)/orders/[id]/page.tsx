@@ -99,7 +99,10 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
       <p className="text-muted-foreground font-mono text-sm">Order Code</p>
       <h1 className="font-display pb-1 text-6xl italic">{order.code}</h1>
       <p role="status" className="mt-4 text-lg font-semibold">
-        {message(order)}
+        {/* The live region stays; only its words rise in when they change. */}
+        <span key={order.status} className="animate-rise block">
+          {message(order)}
+        </span>
       </p>
       <StatusPoller
         id={order.id}
@@ -136,6 +139,10 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
           {timeline.map((step, index) => {
             const done = index < currentIndex;
             const now = index === currentIndex;
+            const ready = now && step.label === "Ready";
+            // Marks appear in step order, on load and when the poll moves
+            // the Order on; a mark that stays put does not replay.
+            const delay = { animationDelay: `${index * 60}ms` };
             return (
               <li
                 key={step.label}
@@ -144,22 +151,37 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
               >
                 <span
                   aria-hidden
-                  className={`grid size-8 shrink-0 place-items-center rounded-full ${done ? "bg-primary text-primary-foreground" : now ? "bg-muted" : "border-input border border-dashed"}`}
+                  className={`relative grid size-8 shrink-0 place-items-center rounded-full ${done ? "bg-primary text-primary-foreground" : now ? "bg-muted" : "border-input border border-dashed"}`}
                 >
-                  {done && <CheckIcon size={16} weight="bold" />}
+                  {done && (
+                    <CheckIcon
+                      size={16}
+                      weight="bold"
+                      className="animate-pop"
+                      style={delay}
+                    />
+                  )}
                   {now && (
-                    <svg viewBox="0 0 24 24" className="size-5">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className={`size-5 ${ready ? "animate-ready" : "animate-pop"}`}
+                      style={delay}
+                    >
                       {/* Ready is the gold star moment (docs/05 section 6). */}
                       <path
                         d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
                         className={
-                          step.label === "Ready"
-                            ? "fill-star stroke-star-edge"
-                            : "fill-primary"
+                          ready ? "fill-star stroke-star-edge" : "fill-primary"
                         }
                         strokeWidth="1"
                       />
                     </svg>
+                  )}
+                  {ready && (
+                    <span
+                      className="border-star animate-ring absolute inset-0 rounded-full border-2"
+                      style={{ animationDelay: `${index * 60 + 200}ms` }}
+                    />
                   )}
                 </span>
                 <span

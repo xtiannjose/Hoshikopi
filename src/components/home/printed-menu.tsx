@@ -128,7 +128,7 @@ function ViewChoice({
         <svg
           viewBox="0 0 24 24"
           aria-hidden
-          className="absolute size-5 scale-0 transition-transform group-has-[:checked]/choice:scale-100 motion-reduce:transition-none"
+          className="ease-pop absolute size-5 scale-0 -rotate-72 transition-transform duration-350 group-has-[:checked]/choice:scale-100 group-has-[:checked]/choice:rotate-0 motion-reduce:transition-none"
         >
           <path
             d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"

@@ -44,7 +44,7 @@ export function Hero({
         <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
           <Link
             href="/menu"
-            className="bg-primary text-primary-foreground inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-8 text-lg font-semibold no-underline transition-transform active:scale-[0.98]"
+            className="bg-primary text-primary-foreground inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-8 text-lg font-semibold no-underline"
           >
             Order ahead
             <ArrowRightIcon aria-hidden size={20} />

@@ -313,7 +313,7 @@ function Card({
   return (
     <article
       aria-label={`Order ${order.code}`}
-      className={`bg-background rounded-card grid gap-3 border p-4 ${fresh ? "border-star motion-safe:animate-pulse" : "border-border"}`}
+      className={`bg-background rounded-card grid gap-3 border p-4 ${fresh ? "border-star animate-arrive" : "border-border"}`}
     >
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-display text-4xl italic">{order.code}</p>
@@ -353,7 +353,7 @@ function Card({
       <button
         type="button"
         onClick={onAdvance}
-        className="bg-primary text-primary-foreground min-h-16 rounded-full text-xl font-semibold transition-transform active:scale-[0.98]"
+        className="bg-primary text-primary-foreground min-h-16 rounded-full text-xl font-semibold"
       >
         {order.status === "ready" && order.payAtPickup
           ? "Paid and picked up"

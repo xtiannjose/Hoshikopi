@@ -26,7 +26,7 @@ export function MenuCard({
       data-menu-item=""
       data-search={`${item.name} ${item.description}`.toLowerCase()}
       data-tags={tags.join(" ")}
-      className="group relative grid content-start gap-3"
+      className="group lift reveal relative grid content-start gap-3"
     >
       <Photo
         src={item.photoUrl}

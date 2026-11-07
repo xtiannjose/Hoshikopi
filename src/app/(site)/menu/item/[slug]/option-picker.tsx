@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { MinusIcon, PlusIcon } from "@phosphor-icons/react";
+import { CheckIcon, MinusIcon, PlusIcon } from "@phosphor-icons/react";
 
 import { formatDelta, formatPrice } from "@/lib/money";
 import type { OptionGroupView } from "@/modules/menu";
@@ -211,9 +211,21 @@ export function OptionPicker({
             type="submit"
             onClick={() => setLast("add")}
             disabled={pending}
-            className="bg-primary text-primary-foreground min-h-12 flex-1 rounded-full px-6 font-semibold transition-transform active:scale-[0.98] disabled:opacity-60 sm:flex-none"
+            className="bg-primary text-primary-foreground relative min-h-12 flex-1 rounded-full px-6 font-semibold disabled:opacity-60 sm:flex-none"
           >
             {pending ? "Adding..." : "Add to order"}
+            {/* A short "Added" on the button itself; the status line below
+                is what screen readers hear. A new add restarts it. */}
+            {last === "add" && state.status === "added" && (
+              <span
+                key={state.at}
+                aria-hidden
+                className="animate-confirm bg-primary pointer-events-none absolute inset-0 flex items-center justify-center gap-2 rounded-full"
+              >
+                <CheckIcon size={18} weight="bold" />
+                Added
+              </span>
+            )}
           </button>
           <button
             type="submit"

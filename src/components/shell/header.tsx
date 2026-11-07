@@ -49,7 +49,7 @@ export function Header() {
       <div
         id="site-menu"
         popover="auto"
-        className="bg-background text-foreground m-0 ml-auto h-dvh w-[min(22rem,100vw)] p-6 shadow-xl backdrop:bg-black/40"
+        className="drawer bg-background text-foreground m-0 ml-auto h-dvh w-[min(22rem,100vw)] p-6 shadow-xl backdrop:bg-black/40"
       >
         <div className="flex items-center justify-between">
           <Logo />

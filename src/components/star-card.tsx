@@ -27,6 +27,8 @@ const EDGES: [number, number][] = [
 ];
 const STAR =
   "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z";
+// Nine Stars light within about 750 ms (docs/05 section 7).
+const lightAt = (index: number) => `${index * 50}ms`;
 
 /** The Star Card: "Nine Stars make a cup" (LOY-02). */
 export function StarCard({ balance }: { balance: number }) {
@@ -53,19 +55,26 @@ export function StarCard({ balance }: { balance: number }) {
               y2={POINTS[b][1]}
               strokeWidth={on ? 1.6 : 1}
               strokeDasharray={on ? undefined : "2 2"}
-              className={on ? "stroke-lit" : "stroke-input"}
+              className={on ? "stroke-lit animate-fade-in" : "stroke-input"}
+              // A lit line draws in once both of its Stars are lit.
+              style={on ? { animationDelay: lightAt(Math.max(a, b)) } : {}}
             />
           );
         })}
         {POINTS.map(([x, y], index) =>
           index < lit ? (
-            <path
+            <g
               key={index}
-              d={STAR}
               transform={`translate(${x - 6} ${y - 6}) scale(0.5)`}
-              className="fill-star stroke-star-edge"
-              strokeWidth={1.2}
-            />
+            >
+              {/* The Stars light one by one, in the order they draw the cup. */}
+              <path
+                d={STAR}
+                className="fill-star stroke-star-edge animate-pop origin-center [transform-box:fill-box]"
+                strokeWidth={1.2}
+                style={{ animationDelay: lightAt(index) }}
+              />
+            </g>
           ) : (
             <circle
               key={index}

@@ -38,7 +38,7 @@ export function BaristaPicks({
         {picks.slice(0, 3).map((item, index) => (
           <article
             key={item.slug}
-            className={`grid content-start gap-3 ${index === 0 ? "md:row-span-2" : "md:grid-cols-[2fr_3fr] md:gap-5"}`}
+            className={`reveal grid content-start gap-3 ${index === 0 ? "md:row-span-2" : "md:grid-cols-[2fr_3fr] md:gap-5"}`}
           >
             <Photo
               src={item.photoUrl}
