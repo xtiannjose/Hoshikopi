@@ -22,3 +22,9 @@ Better Auth (the library Hoshimono uses) handles sessions in HTTP-only cookies.
 - Sign-in email sends are rate-limited per address and IP in a Postgres-backed limiter, as in Hoshimono (Better Auth's own limiter does not see Server Action calls).
 - Until Resend is set up, sign-in links print to the terminal in development only. On Vercel, real people's links are never logged; the seeded demo accounts (`@hoshikopi.example`, a reserved domain that receives no mail) always have their links written to the Vercel logs, which only the project's owner can read, so the owner can sign in as them on the live demo.
 - Google sign-in is off until `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` exist.
+
+## Update 2026-11-07
+
+Google sign-in is on for the live demo: an OAuth client "Hoshikopi web" in the Google Cloud project "Hoshikopi", published (In production) with only the basic name and email scopes, so it needs no Google review. Its keys are set in Vercel for Production only. Visitors can now sign in without the seeded demo accounts or Resend.
+
+Mobile number sign-in (SMS codes) was considered again and stays deferred: every text costs money and Philippine senders must be registered, and without a provider the codes would only reach the logs, so visitors still could not use it. The owner chose Google instead. Adding phone sign-in later needs a new ADR.
