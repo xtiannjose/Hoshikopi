@@ -31,11 +31,16 @@ function choose(choice: ThemeChoice) {
     // shortcut: with storage blocked a pinned choice lasts until the next
     // minute's clock check; fine for private windows.
   }
-  if (choice === "auto") {
-    (window as { hoshikopiTheme?: () => void }).hoshikopiTheme?.();
-  } else {
-    document.documentElement.dataset.theme = choice;
-  }
+  const apply = () => {
+    if (choice === "auto") {
+      (window as { hoshikopiTheme?: () => void }).hoshikopiTheme?.();
+    } else {
+      document.documentElement.dataset.theme = choice;
+    }
+  };
+  // Day and Night crossfade where the browser can (reduced motion: at once).
+  if (document.startViewTransition) document.startViewTransition(apply);
+  else apply();
   listeners.forEach((listener) => listener());
 }
 

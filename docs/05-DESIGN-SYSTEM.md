@@ -1,6 +1,6 @@
 # Design System
 
-Status: v0.2, 2026-10-31. The look and feel of Hoshikopi. Built with native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)); library parts (the old Sample B) were not built.
+Status: v0.3, 2026-11-07 (motion, section 7). The look and feel of Hoshikopi. Built with native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)); library parts (the old Sample B) were not built.
 
 ## 1. Design read
 
@@ -133,10 +133,30 @@ Native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)). 
 
 ## 7. Motion
 
-- CSS only: transitions, `@starting-style` for entering elements, View Transitions for the menu-to-item navigation where supported. No animation library ([ADR 0011](adr/0011-native-elements-and-css.md)).
-- Durations 150 to 250 ms for UI, up to 600 ms for the Star Card fill; ease-out curves.
-- The only "delight" moments: a Star lighting up on the Star Card after pickup, the Ready step on the status page, and the ring turning into a star when a Pickup Window or the menu View is picked (350 ms). All are skipped with reduced motion.
-- Nothing animates while the Customer is choosing Options or paying.
+Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still, so every state change now moves a little. Still calm, still CSS first.
+
+- **CSS and the platform only:** transitions, keyframes, `@starting-style`, scroll-driven animations (`animation-timeline: view()`) behind `@supports`, and React's `<ViewTransition>` for page changes. No animation library ([ADR 0011](adr/0011-native-elements-and-css.md)); the only new JavaScript is the Cart count remembering its first value.
+- **Only transform and opacity move** (`translate`, `scale`, `rotate`, `opacity`), so nothing shifts the layout and CLS stays at 0. Colours change at once.
+- **Timing:** 150 ms for press feedback; 200 to 250 ms for UI (page fade, drawer, disclosures, crossfades); 350 to 500 ms for the delight moments; about 750 ms for a full Star Card. Easing: `--ease-calm` (`cubic-bezier(0.22, 1, 0.36, 1)`) for everything, `--ease-pop` (a small overshoot) for the delight moments only. Tokens, keyframes and the `.lift`, `.reveal` and `.drawer` classes live in `src/app/globals.css`.
+
+| What moves | Where | How |
+| --- | --- | --- |
+| Press | Every button, pill link and chip | Shrinks to 0.97 under the finger, 150 ms (a global rule) |
+| Lift | Menu Item, Event and Post cards (the whole card is a link) | Rises 4 px on hover or keyboard focus, 200 ms |
+| Reveal | The same cards and the Barista picks | Rise 2 rem and fade in as they scroll into view, tied to the scroll; still in browsers without scroll timelines |
+| Page change | Every customer page (`src/app/(site)/template.tsx`) | The old page fades out in 120 ms, the new one rises 8 px and fades in over 250 ms. Only navigation animates: `router.refresh()` and Server Actions never move the page |
+| Phone menu | The header popover | Slides in from the right while the backdrop fades, 250 ms; slides back out |
+| Disclosures | Every `details` (Visit FAQ, Later today, Cancel) | The answer rises in, 250 ms |
+| Day and Night | The theme switch | The palettes crossfade, 250 ms (a View Transition) |
+| Add to order | Menu Item page | "Added" with a check on the button for 1.6 s; the Cart count bumps (to 1.3, 300 ms) when it goes up, never on page load |
+| Star Card (delight) | Home and the account page | The Stars light one by one in the order they draw the cup (350 ms each, 50 ms apart); each lit line fades in after its Stars |
+| View switch (delight) | Home menu | The ring turns into a star with a small turn, 350 ms |
+| Order status (delight) | Order page | Marks pop in step order (60 ms apart) on load and when the poll moves the Order on; the message rises in. Ready: the gold star spins in (500 ms) and a gold ring spreads once |
+| New Order | Bar Screen | Slides in from above with a gold edge and one small pulse, 700 ms (it used to blink for 4 seconds) |
+
+- **Quiet zones:** nothing moves on its own while the Customer chooses Options or pays (the Options on a Menu Item, the Cart, checkout, the fake payment page); there is only press feedback under the finger. The Pickup Time chips at checkout stay plain chips until batch 8.3 replaces them.
+- **Never animated:** the hero, because it holds the LCP (batch 7.6); loops of any kind; parallax and scroll-jacking.
+- **Reduced motion:** `prefers-reduced-motion: reduce` turns all of it off. Animations and transitions land on their final state at once, View Transitions are skipped and scroll reveals are not applied. Browser tests run this way (`playwright.config.ts`), so axe checks the settled page and never a frame mid-fade.
 
 ## 8. Imagery, icons, copy
 
@@ -155,7 +175,7 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 - Columns by Order Status: New (Placed and Paid), Making (Accepted and Preparing), Ready. Within a column, sorted by Pickup Time, then placement time.
 - Each card: the Order Code in 32 px+, the Pickup Time, the Customer's first name, Lines with Options as short tags ("L · Oat · 50% · Less ice"), notes highlighted, a Pay at Pickup tag.
 - One big button per card for the next step (64 px tall); cancel sits behind a confirm.
-- A new Order plays a short sound (with a mute toggle) and pulses its card once.
+- A new Order plays a short sound (with a mute toggle); its card slides in with a gold edge and pulses once (section 7).
 - Shows "Ordering Paused" and a one-tap pause and resume for Managers.
 
 ## 10. Accessibility checklist (per component and per page)

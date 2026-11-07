@@ -218,7 +218,7 @@ export function CheckoutForm({
         <button
           type="submit"
           disabled={pending}
-          className="bg-primary text-primary-foreground min-h-14 rounded-full px-8 text-lg font-semibold transition-transform active:scale-[0.98] disabled:opacity-60"
+          className="bg-primary text-primary-foreground min-h-14 rounded-full px-8 text-lg font-semibold disabled:opacity-60"
         >
           {pending
             ? "Placing your order..."

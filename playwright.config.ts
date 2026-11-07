@@ -16,6 +16,9 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     trace: "on-first-retry",
+    // Motion off (docs/05 section 7): axe checks the settled page, never a
+    // card halfway through a fade.
+    reducedMotion: "reduce",
   },
   projects: [
     {

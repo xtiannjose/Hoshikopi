@@ -4,8 +4,10 @@ import { BagIcon } from "@phosphor-icons/react/ssr";
 import { formatPrice } from "@/lib/money";
 import { currentCartOwner, getCart } from "@/modules/cart";
 
+import { CartCount } from "./cart-count";
+
 const linkClass =
-  "bg-primary text-primary-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 font-semibold no-underline shadow-sm transition-transform active:scale-[0.98]";
+  "bg-primary text-primary-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 font-semibold no-underline shadow-sm";
 
 /** The Cart button before the count arrives (and on prerendered pages).
  * Under 360 px the word is for screen readers only, so the header fits 320 px. */
@@ -18,25 +20,29 @@ export function CartLink() {
   );
 }
 
-/** Cart with its count and total, read per browser (inside Suspense). */
+/** Cart with its count and total, read per browser (inside Suspense). An
+ * empty Cart keeps an empty CartCount, so the first Add to order bumps. */
 export async function CartButton() {
   const owner = await currentCartOwner();
   const cart = owner ? await getCart(owner) : null;
   const count = cart?.lines.reduce((sum, line) => sum + line.quantity, 0) ?? 0;
-  if (!cart || count === 0) return <CartLink />;
   return (
     <Link href="/cart" className={linkClass}>
       <BagIcon aria-hidden size={20} />
       <span className="max-[359px]:sr-only">Cart</span>
-      <span className="font-mono text-sm font-normal whitespace-nowrap">
-        {count}
-        <span className="sr-only"> {count === 1 ? "item" : "items"},</span>
-        {/* The total shows from 640 px; phones keep the pill on one line. */}
-        <span className="sr-only sm:not-sr-only">
-          <span aria-hidden> · </span>
-          {formatPrice(cart.totalCents)}
-        </span>
-      </span>
+      <CartCount count={count}>
+        {cart && count > 0 && (
+          <span className="font-mono text-sm font-normal whitespace-nowrap">
+            {count}
+            <span className="sr-only"> {count === 1 ? "item" : "items"},</span>
+            {/* The total shows from 640 px; phones keep the pill on one line. */}
+            <span className="sr-only sm:not-sr-only">
+              <span aria-hidden> · </span>
+              {formatPrice(cart.totalCents)}
+            </span>
+          </span>
+        )}
+      </CartCount>
     </Link>
   );
 }

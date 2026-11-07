@@ -14,7 +14,7 @@ export function PostCard({
 }) {
   const Heading = `h${headingLevel}` as const;
   return (
-    <article className="group relative grid content-start gap-3">
+    <article className="group lift reveal relative grid content-start gap-3">
       <Photo
         src={post.coverUrl}
         alt={post.coverAlt ?? post.title}

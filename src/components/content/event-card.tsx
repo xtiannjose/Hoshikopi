@@ -22,7 +22,7 @@ export function EventCard({
 }) {
   const Heading = `h${headingLevel}` as const;
   return (
-    <article className="group relative grid content-start gap-3">
+    <article className="group lift reveal relative grid content-start gap-3">
       <Photo
         src={event.photoUrl}
         alt={event.photoAlt ?? event.title}

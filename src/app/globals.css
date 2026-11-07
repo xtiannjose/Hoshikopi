@@ -29,6 +29,19 @@
   --font-mono: var(--font-courier), ui-monospace, monospace;
 
   --radius-card: 12px;
+
+  /* Motion (docs/05-DESIGN-SYSTEM.md section 7): calm for UI, pop only for
+     the delight moments. Keyframes are below, outside @theme. */
+  --ease-calm: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-rise: rise 250ms var(--ease-calm) both;
+  --animate-fade-in: fade-in 250ms var(--ease-calm) both;
+  --animate-pop: pop 350ms var(--ease-pop) both;
+  --animate-bump: bump 300ms var(--ease-calm);
+  --animate-ready: ready 500ms var(--ease-pop) both;
+  --animate-ring: ring 700ms var(--ease-calm) both;
+  --animate-arrive: arrive 700ms var(--ease-calm) both;
+  --animate-confirm: confirm 1600ms var(--ease-calm) both;
 }
 
 [data-theme="night"] {
@@ -63,5 +76,196 @@
   a {
     text-decoration-line: underline;
     text-underline-offset: 0.2em;
+  }
+
+  /* Press feedback on every button, pill link and chip, under the finger
+     only. scale, not transform, so it never fights a lift or a reveal. */
+  :where(button, a.rounded-full, label.rounded-full) {
+    transition: scale 150ms var(--ease-calm);
+  }
+  :where(
+    button:not(:disabled),
+    a.rounded-full,
+    label.rounded-full:not(:has(:disabled))
+  ):active {
+    scale: 0.97;
+  }
+
+  /* Disclosures (FAQ, Later today) fade their answer in. */
+  details[open] > :not(summary) {
+    animation: var(--animate-rise);
+  }
+}
+
+/* Motion. Only transform (translate, scale, rotate) and opacity move, so
+   nothing shifts the layout. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+@keyframes rise-far {
+  from {
+    opacity: 0;
+    translate: 0 2rem;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+@keyframes bump {
+  40% {
+    scale: 1.3;
+  }
+}
+@keyframes ready {
+  from {
+    scale: 0;
+    rotate: -72deg;
+  }
+  60% {
+    scale: 1.2;
+  }
+}
+@keyframes ring {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 0;
+    scale: 2.2;
+  }
+}
+@keyframes arrive {
+  from {
+    opacity: 0;
+    translate: 0 -1rem;
+  }
+  45% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+  70% {
+    scale: 1.02;
+  }
+}
+@keyframes confirm {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+  12%,
+  80% {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@layer components {
+  /* A card that is one big link rises a little under the pointer or focus. */
+  .lift {
+    transition: transform 200ms var(--ease-calm);
+  }
+  @media (hover: hover) {
+    .lift:hover {
+      transform: translateY(-4px);
+    }
+  }
+  .lift:has(:focus-visible) {
+    transform: translateY(-4px);
+  }
+
+  /* Cards rise in as they scroll into view, on the compositor, no
+     JavaScript. Browsers without scroll timelines show them still. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal {
+        animation-name: rise-far;
+        animation-fill-mode: both;
+        animation-timing-function: var(--ease-calm);
+        animation-timeline: view();
+        animation-range: entry 0% entry 70%;
+      }
+    }
+  }
+
+  /* The phone menu slides in from the right and back out. */
+  .drawer {
+    translate: 100% 0;
+    transition:
+      translate 250ms var(--ease-calm),
+      overlay 250ms allow-discrete,
+      display 250ms allow-discrete;
+  }
+  .drawer:popover-open {
+    translate: 0 0;
+  }
+  .drawer::backdrop {
+    opacity: 0;
+    transition:
+      opacity 250ms var(--ease-calm),
+      overlay 250ms allow-discrete,
+      display 250ms allow-discrete;
+  }
+  .drawer:popover-open::backdrop {
+    opacity: 1;
+  }
+  @starting-style {
+    .drawer:popover-open {
+      translate: 100% 0;
+    }
+    .drawer:popover-open::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+/* Page to page: the old page fades out fast, the new one rises in
+   (template.tsx). Clicks pass through to the live page meanwhile. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(.page) {
+  animation: fade-out 120ms ease-in both;
+}
+::view-transition-new(.page) {
+  animation: var(--animate-rise);
+  animation-delay: 80ms;
+}
+
+/* Reduced motion: every state arrives at once. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
