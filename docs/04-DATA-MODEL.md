@@ -105,7 +105,7 @@ audit_log, rate_limits (identity)
 
 1. Prices are non-negative: `base_cents ≥ 0`, `delta_cents ≥ 0` (check constraints).
 2. `orders.total_cents` equals the sum of its `order_lines.line_cents`, and `line_cents = unit_cents × quantity` (enforced in `placeOrder`; covered by a test).
-3. An Order has at most one Payment, and a `paid` Payment only for an Order in `paid` or later.
+3. An Order has at most one Payment, and a `paid` Payment only for an Order in `paid` or later; a payment that lands after its Order Expired or was Cancelled is refunded right after it is recorded (`refunded`).
 4. `payment_events` is unique per (`provider`, `provider_event_id`): a repeated webhook changes nothing.
 5. A Member's Star balance never goes below zero: reservation checks it inside the transaction that writes the entry, with the Member row locked.
 6. `order_events` rows are never updated or deleted.

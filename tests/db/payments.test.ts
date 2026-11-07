@@ -182,13 +182,46 @@ describe("expiry (PAY-04)", () => {
     ).toMatchObject({ drinks: 0 });
   });
 
-  it("ignores a payment webhook that comes after expiry", async () => {
+  // The Customer was still paying when the 15 minutes ran out: the money is
+  // taken, so it goes back on its own and leaves a Refund row (audit, 7.2).
+  it("refunds a payment that lands after the Order expired", async () => {
     const order = await onlineOrder();
     await expireUnpaid(new Date("2026-11-02T01:16:00Z"));
-    expect((await webhook({ id: "evt_late" })).result).toBe("ignored");
+    expect((await webhook({ id: "evt_late" })).result).toBe("refunded_late");
     expect(
       (await db.order.findUniqueOrThrow({ where: { id: order.orderId } }))
         .status
     ).toBe("expired");
+    const payment = await db.payment.findFirstOrThrow();
+    expect(payment).toMatchObject({
+      status: "refunded",
+      providerPaymentId: "fake_pay_1",
+    });
+    expect(await db.refund.count({ where: { paymentId: payment.id } })).toBe(1);
+  });
+
+  it("still pays the Order when a retry succeeds after a failed attempt", async () => {
+    const order = await onlineOrder();
+    expect((await webhook({ id: "evt_fail", type: "failed" })).result).toBe(
+      "failed"
+    );
+    expect((await webhook({ id: "evt_retry" })).result).toBe("paid");
+    expect(
+      (await db.order.findUniqueOrThrow({ where: { id: order.orderId } }))
+        .status
+    ).toBe("paid");
+  });
+
+  it("keeps the first payment when two paid events arrive for one checkout", async () => {
+    await onlineOrder();
+    const [first, second] = await Promise.all([
+      webhook({ id: "evt_a", paymentId: "fake_pay_a" }),
+      webhook({ id: "evt_b", paymentId: "fake_pay_b" }),
+    ]);
+    expect([first.result, second.result].sort()).toEqual(["ignored", "paid"]);
+    const winner = first.result === "paid" ? "fake_pay_a" : "fake_pay_b";
+    expect((await db.payment.findFirstOrThrow()).providerPaymentId).toBe(
+      winner
+    );
   });
 });
