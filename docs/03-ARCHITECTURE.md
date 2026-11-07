@@ -157,7 +157,7 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 ## 14. Content and images
 
 - Events and Posts live in the database with a Markdown body, written in `/manage` with a plain editor and preview; rendered with `react-markdown` (no raw HTML).
-- Photos upload to Vercel Blob through a signed upload; `next/image` serves them in AVIF or WebP. Stand-in photos are listed with their source and licence in `docs/ASSETS.md` (created in Phase 1).
+- Menu photos upload through a Server Action that checks the role, the size (2 MB) and the real image type, then `put`s them to Vercel Blob under `menu/` (`BLOB_STORE_ID` with Vercel's OIDC token; `public/menu/` when there is no store, as in local runs); `next/image` serves them in AVIF or WebP. Stand-in photos are listed with their source and licence in `docs/ASSETS.md` (created in Phase 1).
 - Room photos are static files in the repo, not uploads: the room rarely changes. Each is labelled "Concept image" (PRD section 2). The space paragraph, directions and story are Markdown on `cafe_settings`, rendered like Posts.
 - Share cards (PRD INFO-09): Menu Item, Event and Post pages share their own photo and alt text; every other page shares one static branded image. Read the metadata guide in `node_modules/next/dist/docs/` before building them.
 
