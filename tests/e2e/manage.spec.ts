@@ -99,7 +99,9 @@ test("a Manager makes a Member a Barista, then takes the role back (STAFF-10)", 
   await signIn(member, email, "/account");
 
   await signIn(page, "christian@hoshikopi.example", "/manage/staff");
-  await expect(page.getByRole("heading", { name: "Staff", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Staff", exact: true })
+  ).toBeVisible();
   await page.getByLabel("Email they signed in with").fill(email);
   await page.getByLabel("Role", { exact: true }).selectOption("barista");
   await page.getByRole("button", { name: "Give role" }).click();

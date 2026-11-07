@@ -41,6 +41,8 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     "test-results/**",
     "src/generated/**",
+    // Claude Code agent worktrees are separate checkouts.
+    ".claude/worktrees/**",
   ]),
 ]);
 
