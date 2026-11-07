@@ -19,24 +19,24 @@ It is a portfolio project: the cafe, its address and its people are invented and
 
 ## 2. Assumptions
 
-Change a row here and every other document should follow. "Invented" rows are shown to visitors with the Concept Notice. "Confirm" rows need a decision before the phase named in `docs/07-ROADMAP.md`.
+Change a row here and every other document should follow. "Invented" rows are shown to visitors with the Concept Notice. "Built" rows name the phase that built them; "confirmed" and "decided" rows carry the date the owner settled them.
 
 | Topic | Assumption | Status |
 | --- | --- | --- |
 | What it is | A concept cafe for a portfolio; no real business | confirmed 2026-10-30 |
 | Market | Metro Manila, Philippines | confirmed 2026-10-30 |
 | Cafe location | One invented cafe in Kapitolyo, Pasig. The site shows the neighbourhood only, with no street or house number, and the map pin sits on a public spot, so the address can never lead anyone to a real home (research C-54) | invented |
-| Contact details | No phone number is shown; questions and large Orders go by email, to an address the owner controls. No social links until the owner runs real accounts (research C-54) | confirmed 2026-10-30 |
+| Contact details | No phone number is shown; questions and large Orders go by email, to an address the owner controls; until the owner has a domain it is the reserved `hello@hoshikopi.example`, which receives no mail (roadmap section 4, batch 2.6). No social links until the owner runs real accounts (research C-54) | confirmed 2026-10-30 |
 | Room and menu photos | AI-generated concept images of one consistent room and menu, labelled "Concept image" (research C-43, [ADR 0012](adr/0012-concept-images-with-stand-ins.md)); stand-in panels until they are made | confirmed 2026-10-31 |
 | Look | The Night wireframe's layout; the Day palette from 6:00 AM and the Night palette from 6:00 PM, Manila time; visitors can pin one (ADR 0010) | confirmed 2026-10-30 |
-| Locale and time | `en-PH`, Filipino-English voice; Manila time (`Asia/Manila`) | confirm (Phase 0) |
-| Currency | PHP, prices include VAT, shown as `PHP 165` (no centavos on the menu) | confirm (Phase 1) |
+| Locale and time | English (`lang="en"`; numbers as `en-PH`), Filipino-English voice; Manila time (`Asia/Manila`) | built (Phase 0) |
+| Currency | PHP, prices include VAT, shown as `PHP 165` (no centavos on the menu) | built (Phases 0 and 1) |
 | Opening Hours | 7:00 to 21:00 daily; orders accepted until 20:30 | invented |
 | Fulfilment | Online Orders are pickup only, at the counter. The cafe also takes walk-in Dine-in, with no table bookings (research C-45) | confirmed 2026-10-30 |
-| Payment Methods | GCash, Maya, Card through PayMongo in Test Mode; Pay at Pickup | confirm (Phase 3) |
-| Loyalty | 1 Star per drink; 9 Stars for a free drink; a Birthday Treat once a year | confirm (Phase 4) |
+| Payment Methods | GCash, Maya, Card in Test Mode, through the `fake` provider while PayMongo has paused sign-ups (ADR 0003); Pay at Pickup | decided 2026-11-07 |
+| Loyalty | 1 Star per drink; 9 Stars for a free drink; a Birthday Treat once a year | built (Phases 4 and 6) |
 | Menu size | About 40 Menu Items in 6 Categories, with invented names, prices and stand-in photos | invented |
-| Stack | Same as Hoshimono: Next.js 16, TypeScript, Tailwind, PostgreSQL with Prisma, Better Auth, Vercel | confirmed 2026-10-30 |
+| Stack | Next.js 16, TypeScript, Tailwind, PostgreSQL with Prisma, Better Auth, Vercel (ADR 0001, 0004, 0005) | confirmed 2026-10-30 |
 | Brand name | "Hoshikopi" (hoshi, Japanese for star; kopi, coffee in Malay and Indonesian, close to Filipino kape) | confirmed 2026-10-30 |
 
 ## 3. Personas
@@ -130,7 +130,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | ACC-03 | A Member can download and delete their data (Data Privacy Act) | M |
 | LOY-01 | A Member earns 1 Star per drink in an Order when it is Picked Up; Stars from a Refunded Order are taken back | M |
 | LOY-02 | The Star Card shows the balance as 9 spaces and the Rewards available | M |
-| LOY-03 | Redeem 9 Stars for a free drink at checkout (the drink Line at zero, Options at their Base Price); Stars return if the Order is Cancelled or Expired | M |
+| LOY-03 | Redeem 9 Stars for a free drink at checkout (one unit of the dearest drink at zero; its Options still add their Price Delta); Stars return if the Order is Cancelled or Expired | M |
 | LOY-04 | A Birthday Treat once a year in the Member's birthday month | S |
 | LOY-05 | Every Star change is a row in a ledger with its reason; the balance is the ledger sum | M |
 
@@ -188,7 +188,7 @@ Portfolio targets, measured in the Phase 9 review:
 1. End-to-end order in under 60 seconds in a Playwright run on a throttled phone profile.
 2. Mobile Lighthouse performance 90 or more on Home and the menu; zero axe violations on every page.
 3. Every price, Reward, Capacity and Order Status rule covered by a test that fails without it.
-4. A two-minute demo script: order as a Guest, pay with a PayMongo test card, watch it move on the Bar Screen, collect a Star as a Member.
+4. A two-minute demo script: order as a Guest, pay in the Test Mode checkout, watch it move on the Bar Screen, collect a Star as a Member.
 5. A case-study write-up in `docs/` with the decisions (ADRs) and the numbers.
 
 ## 9. Risks and open questions
@@ -196,8 +196,8 @@ Portfolio targets, measured in the Phase 9 review:
 | Topic | Risk or question | Plan |
 | --- | --- | --- |
 | Photos | Concept images are still to be generated (`docs/ASSETS.md`) | Stand-in panels until then (ADR 0012) |
-| PayMongo account | Test keys need a PayMongo account | The `fake` provider runs everything until then (PAY-06) |
+| PayMongo account | PayMongo paused new sign-ups (November 2026), so there are no test keys | The demo stays on the `fake` provider (PAY-06, ADR 0003 update) |
 | Realtime | Bar Screen and status page need near-live updates on serverless hosting | Polling every few seconds first; revisit Server-Sent Events if needed (`docs/03-ARCHITECTURE.md`) |
-| Email sender | Order emails need a sending service and a domain | Resend with its test sender until a domain exists |
-| Design direction | "Star coffee" could tip into a theme park | Direction chosen (ADR 0010); batch 1.1 still builds two quick prototypes of it, native and with library parts (`docs/05-DESIGN-SYSTEM.md`) |
+| Email sender | Resend's test sender reaches only the owner's own address until a domain is verified | Resend is skipped until a domain exists; visitors sign in with Google (`docs/07-ROADMAP.md` section 4) |
+| Design direction | "Star coffee" could tip into a theme park | Direction chosen (ADR 0010) and built with native elements and CSS (ADR 0011) |
 | Becoming real | A real cafe would need a business, BIR receipts, Internet Transactions Act duties, live PayMongo keys, real photos | Out of scope; listed so nothing in the build blocks it |

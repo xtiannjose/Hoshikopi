@@ -8,11 +8,11 @@ A concept cafe in Metro Manila, and the website that runs it. The site sells the
 
 ## Status
 
-Planning is complete (2026-10-30). The app is built phase by phase; the next step is Phase 0, batch 0.1 (scaffold). See [docs/07-ROADMAP.md](docs/07-ROADMAP.md).
+Phases 0 to 6 are built and the demo is live at https://hoshikopi.vercel.app (Vercel and Neon, Test Mode payments on the `fake` provider). Now: Phase 7, audit fixes. See [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
 
 ## Stack
 
-Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS 4, PostgreSQL with Prisma, Better Auth, PayMongo (test mode) behind a payment interface, Resend, Vercel. Tests: Vitest, Playwright with axe, Lighthouse.
+Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS 4, PostgreSQL with Prisma (Docker locally, Neon hosted), Better Auth (email link, Google), a payment interface with a `fake` Test Mode checkout and a PayMongo adapter, email through Resend's API when a key is set, Vercel with Vercel Blob. Tests: Vitest, Playwright with axe, Lighthouse.
 
 ## Documents
 
@@ -25,10 +25,12 @@ Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS 4,
 | [docs/03-ARCHITECTURE.md](docs/03-ARCHITECTURE.md) | Modules, routes, ordering, Order Status, payments, Pickup Windows, Stars, live updates, security, testing | Writing code |
 | [docs/04-DATA-MODEL.md](docs/04-DATA-MODEL.md) | Tables, columns, invariants, seed data, migration policy | Touching the database |
 | [docs/05-DESIGN-SYSTEM.md](docs/05-DESIGN-SYSTEM.md) | The "star coffee" look: colours, type, components, motion, Bar Screen, accessibility, budgets | Any UI work |
-| [docs/06-SETUP.md](docs/06-SETUP.md) | Prerequisites, accounts, scaffold, env vars, database, commands, Google Drive copy | Setting up or moving to a new computer |
-| [docs/07-ROADMAP.md](docs/07-ROADMAP.md) | Phases 0 to 7, batches with checkboxes, exit criteria, decisions due, definition of done | Picking the next piece of work |
+| [docs/06-SETUP.md](docs/06-SETUP.md) | Prerequisites, accounts, getting the code, libraries, env vars, database, commands, GitHub, demo deploy | Setting up or moving to a new computer |
+| [docs/07-ROADMAP.md](docs/07-ROADMAP.md) | Phases 0 to 9, batches with checkboxes, exit criteria, decisions, definition of done | Picking the next piece of work |
 | [docs/08-TOOLING.md](docs/08-TOOLING.md) | Which skill fits which job, agents, ports, libraries, machine facts, prompts | Choosing how to work |
-| [docs/adr/](docs/adr/) | Decisions and why (0001 to 0010) | Before changing a decision |
+| [docs/ASSETS.md](docs/ASSETS.md) | Every shipped file that is not code, its source and licence; the concept images still to make | Adding a font, image or other asset |
+| [docs/audit/](docs/audit/) | The November audit: findings and how it was run | Working on Phase 7 |
+| [docs/adr/](docs/adr/) | Decisions and why (0001 to 0014) | Before changing a decision |
 
 ## Getting started
 
@@ -36,4 +38,4 @@ Follow [docs/06-SETUP.md](docs/06-SETUP.md). Every outside account (Neon, Vercel
 
 ## Project copy
 
-The project is on GitHub: https://github.com/xtiannjose/Hoshikopi. A git bundle on Google Drive is the backup: `G:\My Drive\Coding Projects\Personal\Hoshikopi\hoshikopi.bundle` (how to refresh and restore it: [docs/06-SETUP.md](docs/06-SETUP.md) section 8).
+The project lives on GitHub: https://github.com/xtiannjose/Hoshikopi.

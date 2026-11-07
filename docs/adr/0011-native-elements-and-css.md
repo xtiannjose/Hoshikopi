@@ -22,3 +22,7 @@ Hoshikopi's pages are built with native HTML elements (radios, checkboxes, `deta
 - Motion is CSS only: transitions, `@starting-style`, View Transitions where supported, all off under `prefers-reduced-motion`.
 - The typewriter mono (Courier Prime) stays as the third family for prices in the printed menu, notes, dates and small labels.
 - Icons come from Phosphor (`@phosphor-icons/react`, regular weight).
+
+## Update 2026-11-07
+
+`docs/08-TOOLING.md` no longer has a references section, so the pointer to its section 6 in the third Why bullet is out of date (section 6 is now Prompts that work). The reason stands without the other project: a site built on the same stack later replaced most of its library parts with native elements and CSS, so starting native avoids that rework.

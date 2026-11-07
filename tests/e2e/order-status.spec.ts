@@ -14,7 +14,7 @@ test("the Order page follows the bar live (ORD-08)", async ({ page }) => {
   );
   await expect(page.locator('[aria-current="step"]')).toContainText("Placed");
 
-  // Stands in for the Bar Screen (batch 2.7) moving the Order on.
+  // Moves the Order on directly; bar.spec.ts drives the real Bar Screen.
   await e2eQuery(
     "UPDATE orders SET status = 'preparing', accepted_at = now(), updated_at = now() WHERE id = $1",
     [id]

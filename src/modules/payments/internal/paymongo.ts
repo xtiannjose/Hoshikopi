@@ -9,7 +9,7 @@ const METHOD = { gcash: "gcash", maya: "paymaya", card: "card" } as const;
  * PayMongo hosted checkout in Test Mode only (ADR 0003): plain fetch to the
  * REST API; providerFor() refuses anything but an sk_test_ key.
  * shortcut: request and event shapes follow the public docs but were not run
- * against a sandbox (no account yet); check them when batch 3.4 runs.
+ * against a sandbox (PayMongo paused sign-ups, ADR 0003); check them if batch 3.4 runs.
  */
 export function payMongoProvider(
   secretKey: string,

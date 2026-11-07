@@ -22,3 +22,7 @@ A Member earns 1 Star per drink in an Order when it is Picked Up, and redeems 9 
 ## Consequences
 
 - An index on `star_entries(member_id)` keeps the sum fast; a cached balance can be added later if a Member ever has thousands of rows.
+
+## Update 2026-11-07
+
+Batch 6.6 (2026-11-01) added a sixth kind, `birthday`: 9 Stars once a year in the Member's birthday month (LOY-04).

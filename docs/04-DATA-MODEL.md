@@ -35,7 +35,7 @@ audit_log, rate_limits (identity)
 | Table | Columns | Notes |
 | --- | --- | --- |
 | `categories` | `id`, `slug` unique, `name`, `sort` int, `is_hidden` bool | Coffee, Non-coffee, Tea, Pastries, All-day food, Beans and merch |
-| `menu_items` | `id`, `category_id` FK, `slug` unique, `name`, `description`, `base_cents` int ≥ 0, `is_drink` bool, `badges` text[] (`new`, `best_seller`, `barista_pick` (Day), `night_pick`, `vegan`, `no_caffeine`; at most three of each pick), `allergens` text[] (`milk`, `egg`, `wheat`, `soy`, `peanuts`, `tree_nuts`, `fish`, `shellfish`, `sesame`), `photo_url`, `photo_alt`, `sold_out_on` date null, `is_hidden` bool, `sort` int, `pairing_id` FK menu_items null (set null on delete; MENU-08), `calorie_kcal` smallint null 0 to 3000 (an invented estimate for the default version, MENU-10) | `sold_out_on = service_day` means Sold Out today; it clears itself the next day. Home shows the current palette's picks by `sort`: `barista_pick` by day, `night_pick` by night (INFO-13). The "contains nuts" badge shows when `allergens` has `peanuts` or `tree_nuts` (MENU-07). V1 adds (as built): `available_until` date null, Hidden after that Manila day (Seasonal, MENU-06); `promo_cents`, `promo_from`, `promo_until` (a Promo: all three or none, lower than `base_cents`, CHECK; it replaces the Base Price on those Manila days); `pairing_id` FK null (MENU-08); and the badge `night_pick` beside `barista_pick` for Day (INFO-13) |
+| `menu_items` | `id`, `category_id` FK, `slug` unique, `name`, `description`, `base_cents` int ≥ 0, `is_drink` bool, `badges` text[] (`new`, `best_seller`, `barista_pick` (Day), `night_pick`, `vegan`, `no_caffeine`; at most three of each pick), `allergens` text[] (`milk`, `egg`, `wheat`, `soy`, `peanuts`, `tree_nuts`, `fish`, `shellfish`, `sesame`), `photo_url`, `photo_alt`, `sold_out_on` date null, `is_hidden` bool, `sort` int, `pairing_id` FK menu_items null (set null on delete; MENU-08), `calorie_kcal` smallint null 0 to 3000 (an invented estimate for the default version, MENU-10) | `sold_out_on = service_day` means Sold Out today; it clears itself the next day. Home shows the current palette's picks by `sort`: `barista_pick` by day, `night_pick` by night (INFO-13). The "contains nuts" badge shows when `allergens` has `peanuts` or `tree_nuts` (MENU-07). V1 adds (as built): `available_until` date null, Hidden after that Manila day (Seasonal, MENU-06); `promo_cents`, `promo_from`, `promo_until` (a Promo: all three or none, lower than `base_cents`, CHECK; it replaces the Base Price on those Manila days) |
 | `option_groups` | `id`, `name` (Size, Milk, Sugar Level, Ice Level, Extra Shots, Add-ons), `min_select` int ≥ 0, `max_select` int ≥ `min_select`, `sort` | Shared by many Menu Items |
 | `menu_item_option_groups` | `menu_item_id` FK, `option_group_id` FK, `sort`; PK both | Which groups a Menu Item offers |
 | `options` | `id`, `option_group_id` FK, `name`, `delta_cents` int ≥ 0, `is_default` bool, `adds_allergens` text[] (same values as `menu_items.allergens`), `sold_out_on` date null, `sort` | At most one default per single-choice group. Almond milk adds `tree_nuts` |
@@ -48,7 +48,6 @@ audit_log, rate_limits (identity)
 | `special_hours` | `day` date (PK), `is_closed` bool, `opens_at`, `last_order_at`, `closes_at` (null when closed), `note` | Overrides one day |
 | `capacity_rules` | `weekday` (PK), `drinks_per_window` int, `food_per_window` int | Per 15-minute Pickup Window |
 | `cafe_settings` | `id` = 1, `ordering_paused_until` timestamptz null, `pause_message`, `prep_base_minutes` numeric, `prep_per_drink_minutes` numeric, `order_code_prefix` text; details: `area` text ("Kapitolyo, Pasig"), `map_lat` and `map_lng` numeric(8,5), `directions_md`, `contact_email`, `space_md`, `story_md`; Amenities: `wifi`, `power_outlets`, `pets_allowed`, `smoking_allowed`, `restroom`, `step_free_entrance`, `accessible_restroom` (bool null each), `laptop_note`, `pets_note`, `parking_note` (text null each) | Singleton row. No street, house number or phone (PRD section 2). A null Amenity is unknown and left off the page |
-| `inquiries` (V1, content) | `id`, `kind` enum (`private_event`, `large_order`), `name`, `email`, `wanted_on` date null, `guests` smallint null (1 to 500), `message` text 1 to 1000, `status` enum (`new`, `answered`, `closed`), `created_at`, `updated_at`; index (`status`, `created_at`) | INFO-11; 5 per IP an hour; the cafe's contact address gets an email |
 
 ### Cart (module `cart`)
 
@@ -90,6 +89,7 @@ audit_log, rate_limits (identity)
 | `event_signups` (V1) | `id`, `event_id` FK (cascade), `name`, `email`, `seats` smallint 1 to 4, `created_at`; unique (`event_id`, `email`) | EVT-02; counted under a row lock on the Event, so two at once never oversell; 10 per IP an hour; confirmed by email |
 | `posts` | `id`, `slug` unique, `title`, `excerpt` ≤ 180, `body_md`, `cover_url`, `cover_alt`, `published_at` null, `author_id` FK | Unpublished while `published_at` is null |
 | `recurring_events` (V1) | `id`, `title`, `weekday` smallint 0 to 6, `starts_at` and `ends_at` text `HH:MM` (CHECK, end after start), `note` text default '', `is_published` | EVT-03; Manila time; listed Monday first by time; no sign-up and no structured data |
+| `inquiries` (V1) | `id`, `kind` enum (`private_event`, `large_order`), `name`, `email`, `wanted_on` date null, `guests` smallint null (1 to 500), `message` text 1 to 1000, `status` enum (`new`, `answered`, `closed`), `created_at`, `updated_at`; index (`status`, `created_at`) | INFO-11; 5 per IP an hour; the cafe's contact address gets an email |
 
 ### Identity (module `identity`)
 
@@ -99,7 +99,7 @@ audit_log, rate_limits (identity)
 | `sessions`, `accounts`, `verifications` | As Better Auth defines them; `sessions` adds `second_factor_at` timestamptz null | Generated by the Better Auth CLI; `second_factor_at` is ours (ADR 0014) |
 | `two_factors` | `user_id` PK FK users (cascade), `secret` text (encrypted with `BETTER_AUTH_SECRET`), `confirmed_at` timestamptz null, `created_at` | Staff Second Factor; pending until the first code matches (ADR 0014) |
 | `audit_log` | `id`, `actor_id`, `action`, `target_type`, `target_id`, `data` jsonb, `at` | Every Staff write |
-| `rate_limits` | `key`, `window_start`, `count`; PK (`key`, `window_start`) | Postgres-backed limiter, as in Hoshimono |
+| `rate_limits` | `key`, `window_start`, `count`; PK (`key`, `window_start`) | Postgres-backed limiter |
 
 ## 4. Invariants the schema and code must enforce
 
@@ -130,11 +130,11 @@ Option Groups: Size (Regular +0, Large +30), Milk (Whole +0, Oat +35, Almond +35
 
 Barista Pick badge on Hoshi Latte, Tablea Tsokolate and Ube Pandesal. Allergens on every seeded Menu Item (for example Hoshi Latte: milk; Ube Pandesal: wheat, milk, egg).
 
-Also seeded: Opening Hours 7:00 to 21:00 (last order 20:30) every day, Capacity 12 drinks and 8 food Lines per window, the cafe's details and Amenities (invented, `area` Kapitolyo, Pasig, map pin on a public spot), two Events, three Posts, and in dev and test only: one Manager (Christian, `seed-manager`), one Barista (Annika, `seed-barista`) and one Member (Hoshi, `seed-member`); their emails are in `docs/06-SETUP.md` section 6.
+Also seeded: Opening Hours 7:00 to 21:00 (last order 20:30) every day, Capacity 12 drinks and 8 food Lines per window, the cafe's details and Amenities (invented, `area` Kapitolyo, Pasig, map pin on a public spot), two Events, three Posts, and one Manager (Christian, `seed-manager`), one Barista (Annika, `seed-barista`) and one Member (Hoshi, `seed-member`), on dev, test and the live demo; their emails are in `docs/06-SETUP.md` section 6.
 
 ## 6. Migration policy
 
 - Prisma Migrate; one migration per change, named for what it does.
 - Never edit an applied migration; add a new one.
 - Destructive changes (dropping or renaming a column with data) go in two steps: add and backfill, then drop in a later migration.
-- Seed data loads on dev and test databases only.
+- Seed data loads on dev and test databases; a remote database (the demo on Neon) is seeded once by hand with `ALLOW_REMOTE_SEED=1` (`docs/06-SETUP.md` section 9, step 4).

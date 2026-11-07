@@ -51,8 +51,6 @@ export async function getMenuForStaff() {
   };
 }
 
-export type StaffMenu = Awaited<ReturnType<typeof getMenuForStaff>>;
-
 export async function getMenuItemForEdit(id: string) {
   return db.menuItem.findUnique({
     where: { id },
@@ -64,7 +62,3 @@ export async function getMenuItemForEdit(id: string) {
     },
   });
 }
-
-export type MenuItemForEdit = NonNullable<
-  Awaited<ReturnType<typeof getMenuItemForEdit>>
->;

@@ -1,5 +1,5 @@
 /** The gold star mark and the wordmark in the italic serif. */
-export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
+export function Logo() {
   return (
     <span className="inline-flex items-center gap-2">
       <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
@@ -10,9 +10,7 @@ export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
           strokeLinejoin="round"
         />
       </svg>
-      <span
-        className={`font-display pb-0.5 leading-[1.1] italic ${size === "lg" ? "text-3xl" : "text-[1.7rem]"}`}
-      >
+      <span className="font-display pb-0.5 text-[1.7rem] leading-[1.1] italic">
         Hoshikopi
       </span>
     </span>

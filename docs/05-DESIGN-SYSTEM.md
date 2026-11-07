@@ -10,7 +10,7 @@ Status: v0.3, 2026-11-07 (motion, section 7). The look and feel of Hoshikopi. Bu
 
 Reference mood: paper stamp cards, a window seat at dusk, a well-designed cafe you would photograph.
 
-### 1.1 Reference sites (shortlist, owner to pick before batch 1.1)
+### 1.1 Reference sites (shortlist; the owner picked Flora Café)
 
 Checked live on 2026-10-30. We borrow layout ideas and feel only, never names, copy, photos or code.
 
@@ -32,7 +32,7 @@ Checked live on 2026-10-30. We borrow layout ideas and feel only, never names, c
 
 Owner's decisions on Flora (2026-10-30):
 - **Accent: Hoshikopi's gold star and night ink, not Flora's red.** Where Flora puts red on cream (label buttons, line drawings, dividers), we use night ink or kopi brown; gold stays for star moments (principle 2, and gold is never text on cream).
-- **Fonts: try a typewriter mono as a third family** (section 4); batch 1.1 shows it in both samples.
+- **Fonts: a typewriter mono as a third family** (section 4): Courier Prime, kept in batch 1.1 (ADR 0011).
 - **Menu: both.** Home gets a printed-menu section; `/menu` keeps photo cards (section 6).
 
 We redraw everything ourselves: no Flora photos, drawings, copy or logo.
@@ -46,20 +46,20 @@ Each has the same twelve boards, with labelled photo slots: Home at 1280 and 390
 | Day | https://claude.ai/artifact/2NM1a1FXU6wKkuxcTGMrag | The chosen layout (next row) in the Day palette, 6 AM to 6 PM: cream paper with grain, espresso text, kopi buttons, latte cards, kopi line art. The earlier Flora-style Day layout is in this canvas's version history. |
 | Night | https://claude.ai/artifact/Q8W4V38NB5JdyH3m8sFJC7 | The chosen layout in the Night palette, 6 PM to 6 AM. Both canvases hold the same boards and a Theme setting (Day, Night, or Auto by Manila time). The layout: Hoshikopi's own, with Day's type (section 4: italic serif headings, Plus Jakarta Sans, Courier Prime), pickup times in the hero, Barista picks this week right after it, Day's hand-drawn dividers in slate, a menu the Customer switches (with a List and Photos switch drawn as two stars on a dashed thread) between a full list (default) and photo cards by Category, the Star Card as a nine-star constellation that draws a cup, and Day's upcoming Event with a Latest post column, both with photos. |
 
-**Owner's decision (2026-10-30):** Night's layout and content, with Day's colours and paper grain by day and Night's colours by night ([ADR 0010](adr/0010-theme-follows-manila-time.md)). Section 3 holds both palettes; the batch 1.1 samples build this.
+**Owner's decision (2026-10-30):** Night's layout and content, with Day's colours and paper grain by day and Night's colours by night ([ADR 0010](adr/0010-theme-follows-manila-time.md)). Section 3 holds both palettes; it is built with native elements and CSS ([ADR 0011](adr/0011-native-elements-and-css.md)).
 
 ## 2. Principles
 
 1. **The menu is the product.** Big photos, clear prices, Options one tap away. Nothing decorative stands between a Customer and "Add to order".
 2. **One accent.** Gold appears in at most one place per screen. Stars are earned, not sprinkled.
 3. **Phone first, thumb first.** Primary actions sit in the bottom third; the Cart is reachable from every page.
-4. **Native where it works.** Native radio buttons, checkboxes, selects and date inputs, styled, before custom widgets (a lesson from the iOne website).
+4. **Native where it works.** Native radio buttons, checkboxes, selects and date inputs, styled, before custom widgets ([ADR 0011](adr/0011-native-elements-and-css.md)).
 5. **Calm motion.** Short, meaningful transitions; nothing loops on screen while ordering; all motion respects reduced motion.
 6. **Words do the work.** Plain, warm, Filipino-English where natural ("Salamat! We're making your Hoshi Latte."). No em dashes in UI copy.
 
 ## 3. Colour tokens
 
-Values are starting points for the Phase 1 prototypes; they must pass the contrast checks in section 10. Two palettes share every token: **Day** (cream paper, kopi brown, paper grain) and **Night** (night ink, moonlight). The Day column comes from the Day wireframe, the Night column from the main wireframe.
+Values match `src/app/globals.css` (checked 2026-11-07); they must pass the contrast checks in section 10. Two palettes share every token: **Day** (cream paper, kopi brown, paper grain) and **Night** (night ink, moonlight). The Day column comes from the Day wireframe, the Night column from the main wireframe.
 
 | Token | Day | Night | Use |
 | --- | --- | --- | --- |
@@ -74,7 +74,7 @@ Values are starting points for the Phase 1 prototypes; they must pass the contra
 | `--star` | gold `#E8B74A` | gold `#E8B74A` | Logo star, Star Card stars; never for text on cream |
 | `--star-edge` | kopi `#5A3420` | none | Thin outline that keeps gold stars visible on cream |
 | `--lit` | kopi `#5A3420` | gold `#E8B74A` | Lit lines of the Star Card constellation |
-| `--night`, `--night-foreground` | ink, moonlight | ink, moonlight | Bar Screen, in both palettes |
+| `--night` | ink | ink | Ink that stays the same in both palettes: text on the Line note badge on the Bar Screen |
 | `--ring` | `#2F6FD6` | `#2F6FD6` | Focus ring (visible on cream and on ink) |
 | `--success` | `#256B42` | `#6FCF97` | Paid, Picked Up, "Open now" (4.5:1 on `--muted` too) |
 | `--warning` | `#8A4F00` | `#F0A35E` | Preparing, Ordering Paused, the Last Order countdown (4.5:1 on `--muted` too) |
@@ -91,7 +91,7 @@ Values are starting points for the Phase 1 prototypes; they must pass the contra
 | Order Codes and prices in tables | Plus Jakarta Sans with tabular figures | `font-variant-numeric: tabular-nums` |
 | Typewriter accents | Courier Prime, regular only | Prices in the printed-menu section, short notes under items, dates, small label buttons (the Flora feel, section 1.1); never body text; open font licence |
 
-Self-hosted through `next/font`, `display: swap`: two variable families, plus the mono at one weight if batch 1.1 keeps it. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for Posts.
+Self-hosted through `next/font`, `display: swap`: two variable families plus the mono at one weight. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for Posts.
 
 ## 5. Shape, space, elevation
 
@@ -160,7 +160,7 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 
 ## 8. Imagery, icons, copy
 
-- Photos: warm natural light, close crops of cups and pastries, people's hands rather than faces. Every stand-in photo has a row in `docs/ASSETS.md` with its source and licence (stock, own shots or AI-generated, decided in Phase 1).
+- Photos: warm natural light, close crops of cups and pastries, people's hands rather than faces. Every stand-in photo has a row in `docs/ASSETS.md` with its source and licence (AI-generated concept images, ADR 0012).
 - Room photos: AI-generated, one consistent room (the counter, window seats, evening light), empty or with hands only, each captioned "Concept image".
 - Alt text describes the item as a menu would ("Iced Spanish latte with a layer of milk over espresso").
 - Icons: Phosphor, one weight (regular), 20 or 24 px.

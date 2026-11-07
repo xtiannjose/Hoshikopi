@@ -13,5 +13,4 @@ export {
   reverseForOrder,
   starHistory,
   starTotals,
-  type AdjustResult,
 } from "./internal/ledger";

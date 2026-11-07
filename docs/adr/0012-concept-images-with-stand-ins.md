@@ -23,3 +23,7 @@ Menu Item photos follow the room photos (PRD section 2): AI-generated, in one co
 - Menu pictures are 4:3 WebP files at `public/menu/<slug>.webp` (1200 by 900, under 80 kB at card size); room pictures are at `public/room/<name>.webp`. A Menu Item shows its picture once `photo_url` is set (by seed or in `/manage/menu`, batch 1.5).
 - Every seeded Menu Item has alt text now, written as a menu would describe the item, ready for its picture.
 - Pictures are captioned "Concept image" on `/cafe` and Home; menu cards carry the Concept Notice in the footer instead of a caption on every card.
+
+## Update 2026-11-07
+
+Menu pictures go in `public/menu-concept/<slug>.webp`, not `public/menu/`. `public/menu/` is git-ignored because local uploads from `/manage/menu` land there, so a picture saved in it would never reach GitHub or Vercel. The decision stands; only the folder moved (`docs/ASSETS.md`).

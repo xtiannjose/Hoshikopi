@@ -25,26 +25,26 @@ Status: draft v0.1, 2026-10-30. How Hoshikopi is built. Scope comes from `docs/0
  Google sign-in ──┘                         └── Vercel Blob: menu, Event and Post photos
 ```
 
-No other services. Search, analytics and error tracking are added only when a phase needs them (`docs/07-ROADMAP.md`).
+No other services. Search, analytics and error tracking are added only when a phase needs them (`docs/07-ROADMAP.md`). Today the demo runs the `fake` provider in place of PayMongo (ADR 0003 update) and sends no email through Resend until a domain exists (`docs/07-ROADMAP.md` section 4).
 
 ## 3. Module map
 
 | Module | Owns | Public interface (examples) |
 | --- | --- | --- |
-| `menu` | Categories, Menu Items, Option Groups, Options, Sold Out, Hidden | `getMenu()`, `getMenuItem(slug)`, `priceLine(itemId, optionIds)`, `setSoldOut(...)` |
-| `cafe` | Opening Hours, Special Hours, Capacity, Ordering Paused, the cafe's details and Amenities; Inquiries (V1) | `isOpen(at)`, `pickupWindows(day)`, `setOrderingPaused(...)`, `getCafeDetails()` |
-| `cart` | Carts and Lines | `getCart(owner)`, `addLine(...)`, `updateLine(...)`, `priceCart(cart)` |
+| `menu` | Categories, Menu Items, Option Groups, Options, Sold Out, Hidden | `getMenu()`, `getMenuItem(slug)`, `priceChoices(...)`, `setMenuItemSoldOut(...)` |
+| `cafe` | Opening Hours, Special Hours, Capacity, Ordering Paused, the cafe's details and Amenities | `getOrderingDay(...)`, `pickupWindows(...)`, `pauseOrdering(...)`, `getCafeDetails()` |
+| `cart` | Carts and Lines; Favourites (V1) | `getCart(owner)`, `addLine(...)`, `updateQuantity(...)`, `lockCart(...)` |
 | `ordering` | Orders, Order Lines, Order Codes, Order Status, Pickup Window use | `placeOrder(input)`, `transition(orderId, to, actor)`, `getOrderForCustomer(id, token)` |
-| `payments` | Payments, provider events, Refunds | `startPayment(order)`, `handleWebhook(req)`, `refund(orderId, actor)` |
-| `loyalty` | Star ledger, Rewards, Redemptions | `balance(memberId)`, `earnForOrder(order)`, `reserveRedemption(...)`, `release(...)` |
-| `content` | Events and Posts; Recurring Events (V1) | `upcomingEvents()`, `getPost(slug)`, `saveEvent(...)` |
+| `payments` | Payments, provider events, Refunds | `startPayment(...)`, `verifyWebhookEvent(...)`, `recordPaymentEvent(...)`, `refundPayment(...)` |
+| `loyalty` | Star ledger, Rewards, Redemptions | `balance(memberId)`, `earnForOrder(order)`, `reserveRedemption(...)`, `releaseRedemption(...)` |
+| `content` | Events and Posts; Sign-ups, Recurring Events and Inquiries (V1) | `getEvents()`, `getPost(slug)`, `saveEvent(...)`, `submitInquiry(...)` |
 | `identity` | Members, Staff roles, sessions, audit log (wraps Better Auth) | `requireMember()`, `requireStaff("barista" \| "manager")`, `audit(actor, action, target)`, `staffMembers()`, `setRole(actor, email, role)`, `endSessions(actor, userId)` |
 | `notify` | Email templates and sending | `sendOrderPlaced(order)`, `sendOrderReady(order)` |
 
 Rules:
 - A module touches only its own tables. Another module's data comes through its `index.ts`. An ESLint import rule blocks `src/modules/*/internal/**` from outside the module.
-- Modules return results the way Hoshimono does: reads return `null` when missing; business refusals return `{ ok: false, reason }`; form checks return `{ ok: false, errors }`; bugs throw and are caught at the edge.
-- `placeOrder` coordinates `menu`, `cafe`, `cart`, `loyalty` and `payments` inside one database transaction (section 6).
+- Modules return results the same way: reads return `null` when missing; business refusals return `{ ok: false, reason }`; form checks return `{ ok: false, errors }`; bugs throw and are caught at the edge.
+- `placeOrder` coordinates `cafe`, `cart` (which prices through `menu`) and `loyalty` inside one database transaction; an online Order starts its `payments` checkout after the commit (section 6).
 
 ## 4. Routes and rendering
 
@@ -54,27 +54,33 @@ Rules:
 | `/menu`, `/menu/[category]`, `/menu/item/[slug]` | Everyone | Prerendered; tagged `menu` |
 | `/cafe` | Everyone | Prerendered; tagged `hours`: the space, Amenities, visit FAQ, story, directions. The "open now" badge is a tiny client island that reads the clock. Edits to the cafe's details also revalidate `hours` |
 | `/concept` | Everyone | Static: About this concept (PRD INFO-10) |
+| `/privacy`, `/sign-in` | Everyone | Privacy notice; email link and Google sign-in |
 | `/cafe/inquire` (V1) | Everyone | Dynamic form; rate limited (PRD INFO-11) |
 | `/events`, `/events/[slug]`, `/news`, `/news/[slug]` | Everyone | Prerendered; tagged `content` |
 | `/events/[slug]/calendar` (V1) | Everyone | Route handler: the Event as an iCalendar file (PRD EVT-04) |
 | `/cart`, `/checkout` | Everyone | Dynamic (per Customer) |
 | `/orders/[id]` | The Customer (Order token in the link) or the Member | Dynamic; polls for status |
-| `/account`, `/account/stars`, `/account/orders` | Members | Dynamic |
+| `/dev/pay/[id]` | The Customer | The `fake` checkout; not found unless the provider is `fake` (section 8) |
+| `/account`, `/account/stars` | Members | Dynamic |
 | `/bar` | Baristas, Managers | Dynamic; polls (section 11) |
-| `/manage/*` (menu, hours, capacity, cafe details, events and recurring events, posts, orders, stars; reports and inquiries in V1) | Managers | Dynamic |
-| `/api/webhooks/paymongo` | PayMongo | Route handler; verifies signature |
+| `/manage/*` (menu, hours, capacity, cafe details, events and recurring events, posts, orders, stars, staff; reports and inquiries in V1) | Managers; Baristas open `/manage` (Today) and `/manage/menu` for Sold Out (STAFF-03) | Dynamic |
+| `/manage/two-factor` | Staff | Dynamic: sets up or asks for the Second Factor (ADR 0014) |
+| `/api/webhooks/[provider]` | The payment provider (`paymongo` or `fake`) | Route handler; verifies the signature |
 | `/api/cron/daily` | Vercel Cron | Route handler; secret header |
+| `/api/bar` | Baristas, Managers | Route handler; the Bar Screen polls it (section 11) |
+| `/api/orders/[id]/status` | The Customer (Order token) | Route handler; the Order status page polls it |
+| `/api/account/export` | Members | Route handler: "Download my data" as JSON (ACC-03) |
 | `/api/auth/*` | Better Auth | Route handler |
 
-Cache Components (Next.js 16): public data loads through `"use cache"` functions with `cacheTag("menu")`, `cacheTag("hours")` or `cacheTag("content")`; Popular this week (MENU-09) reads Orders under `cacheTag("orders")` with an hourly lifetime and is never updated by tag. Every Staff change calls `updateTag` for its tag (Server Actions; route handlers use `revalidateTag(tag, "max")`), so the menu shows a Sold Out mark within seconds while pages stay static. Public reads use `cacheLife("minutes")`: if two saves a moment apart race a cache refill and the old data is stored as fresh, it heals within a minute (MENU-04). A dynamic route such as `/menu/[category]` may also serve its old page once after a save and the new one a few seconds later; the end-to-end tests look again until the change shows. Dynamic routes read `params` inside Suspense, as Partial Prefetching needs. Read the guides in `node_modules/next/dist/docs/` before using a Next API; rules learned on the iOne website and Hoshimono carry over (dynamic routes list their params in `generateStaticParams`; no `Date.now()`, `new Date()` or `Math.random()` while rendering, except inside cached functions or client islands).
+Cache Components (Next.js 16): public data loads through `"use cache"` functions with `cacheTag("menu")`, `cacheTag("hours")` or `cacheTag("content")`; Popular this week (MENU-09) reads Orders under `cacheTag("orders")` with an hourly lifetime and is never updated by tag. Every Staff change calls `updateTag` for its tag (Server Actions; route handlers use `revalidateTag(tag, "max")`), so the menu shows a Sold Out mark within seconds while pages stay static. Public reads use `cacheLife("minutes")`: if two saves a moment apart race a cache refill and the old data is stored as fresh, it heals within a minute (MENU-04). A dynamic route such as `/menu/[category]` may also serve its old page once after a save and the new one a few seconds later; the end-to-end tests look again until the change shows. Dynamic routes read `params` inside Suspense, as Partial Prefetching needs. Read the guides in `node_modules/next/dist/docs/` before using a Next API, and keep two rules: dynamic routes list their params in `generateStaticParams`; no `Date.now()`, `new Date()` or `Math.random()` while rendering, except inside cached functions or client islands.
 
 Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night palette is picked in the browser before first paint by a small inline script in the root layout (Manila hour plus any saved choice), so the server output is the same at every hour and stays cacheable. Copy that differs by palette (PRD INFO-12) is rendered in both versions and the palette shows one. The "open now" badge and the Last Order countdown (ORD-13) are tiny client islands that read the clock.
 
 ## 5. Cart and pricing
 
 - A Cart belongs to a Guest (a random id in an HTTP-only cookie) or a Member. Signing in merges the Guest Cart into the Member's. The merge locks the Guest Cart row first, so two requests signing in at once merge it once.
-- `priceLine(itemId, optionIds)` validates the choice against the Menu Item's Option Groups (required groups present, min and max picks, no Sold Out or Hidden Option) and returns `base_cents + sum(delta_cents)`. The Cart stores choices, never prices.
-- `priceCart` prices every Line, applies at most one Reward (a drink Line at zero; its Options charge their Price Delta), and returns Line totals and the Order total. VAT is included in prices; the receipt shows the VAT part with one rounding rule ([ADR 0002](adr/0002-money-as-integer-centavos.md)).
+- `priceChoices` (menu) validates the choice against the Menu Item's Option Groups (required groups present, min and max picks, no Sold Out or Hidden Option) and returns the Base Price (or today's Promo) plus the Price Deltas. The Cart stores choices, never prices.
+- `getCart` prices every Line on each read and returns Line totals and the Order total. `placeOrder` applies at most one Reward (one unit of the dearest drink at zero; its Options still charge their Price Delta). VAT is included in prices; the receipt shows the VAT part with one rounding rule ([ADR 0002](adr/0002-money-as-integer-centavos.md)).
 - A Line whose Menu Item became Sold Out or Hidden is flagged in the Cart and blocks checkout until removed.
 
 ## 6. Checkout and order placement
@@ -85,17 +91,17 @@ Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night pale
 2. Lock the Cart row (`lockCart`, `SELECT ... FOR UPDATE`), so a second Place order on the same Cart (a double tap, a retry, two tabs) waits and then finds it empty. Price the Cart again on the server (`cart`, `menu`). Reject if anything changed since the Customer last saw it, and show the new total.
 3. Lock the chosen Pickup Window's usage row (`SELECT ... FOR UPDATE`), check Capacity for drinks and food, and add this Order's counts. A full window returns `{ ok: false, reason: "window_full" }` with the next free window.
 4. Reserve the Reward's Stars, if any (`loyalty`).
-5. Create the Order with snapshot Lines (name, Options, prices), the next Order Code for the day, and a random access token for the status link.
-6. Online payment: create a Payment and a PayMongo checkout session (`payments`), commit, then redirect. Pay at Pickup: commit and show the status page.
+5. Create the Order with snapshot Lines (name, Options, prices), the next Order Code for the day, and the hash of its status-link token (an HMAC of the Order id, `docs/04-DATA-MODEL.md` section 1).
+6. Online payment: commit, then start the provider checkout (`payments`) and redirect. Pay at Pickup: commit and show the status page.
 
-Expired, cancelled and refunded Orders give back their Pickup Window counts and reserved Stars in the same transaction as their transition.
+Expired and cancelled Orders give back their Pickup Window counts and reserved Stars in the same transaction as their transition. A Refund gives nothing more back: the Order was already Cancelled, or was Picked Up and its earned Stars are taken back (section 10).
 
 ## 7. Order lifecycle
 
 | From | To | Who or what | Side effects |
 | --- | --- | --- | --- |
 | (none) | `placed` | `placeOrder` | Window counts taken; Stars reserved; "Order placed" email for Pay at Pickup |
-| `placed` (online) | `paid` | Verified PayMongo webhook | "Order placed" email |
+| `placed` (online) | `paid` | Verified provider webhook | "Order placed" email |
 | `placed` (online) | `expired` | 15 minutes unpaid (section 12) | Window and Stars released; checkout session expired |
 | `placed` (Pay at Pickup), `paid` | `accepted` | Barista | Prep Time starts |
 | `accepted` | `preparing` | Barista | None |
@@ -112,7 +118,7 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 - Business code talks to a `PaymentProvider` interface: `createCheckout`, `expireCheckout`, `refund`, `verifyWebhook`, `parseEvent` ([ADR 0003](adr/0003-payments-paymongo-test-mode.md)). Adapters: `paymongo` and `fake`.
 - **PayMongo in Test Mode only.** The adapter refuses to start if its secret key is not a test key (`sk_test_`), on every environment.
 - **`fake`** has a hosted checkout at `/dev/pay/[id]` whose Pay button sends a signed webhook, so demos and tests run without a PayMongo account. It refuses to run when `NODE_ENV=production` and the host is not a preview or local address.
-- The webhook route verifies the `Paymongo-Signature` header over the raw body, then inserts the event under a unique `(provider, provider_event_id)`; a repeat is acknowledged and ignored. Only then does it transition the Order. The Payment row is locked while an event is decided, so two events for one checkout never overwrite each other. A paid event still counts after a failed attempt (a retry in the same checkout) and after the Order Expired or was Cancelled: the money was taken, so the Order is refunded in full right after the commit (a Refund row with actor `webhook`). Closing a checkout marks the Payment `expired` only after the provider confirms; a checkout with a payment going through stays open. The browser's return page reads the Order, never the URL, to decide what to show.
+- The webhook route has the provider verify its signature header (`Paymongo-Signature`, or `fake-signature` for `fake`) over the raw body, then inserts the event under a unique `(provider, provider_event_id)`; a repeat is acknowledged and ignored. Only then does it transition the Order. The Payment row is locked while an event is decided, so two events for one checkout never overwrite each other. A paid event still counts after a failed attempt (a retry in the same checkout) and after the Order Expired or was Cancelled: the money was taken, so the Order is refunded in full right after the commit (a Refund row with actor `webhook`). Closing a checkout marks the Payment `expired` only after the provider confirms; a checkout with a payment going through stays open. The browser's return page reads the Order, never the URL, to decide what to show.
 - Refunds are full only (PRD PAY-05); the Refund row records the provider refund id.
 
 ## 9. Pickup Windows, Capacity and Prep Time
@@ -128,9 +134,9 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 
 ([ADR 0008](adr/0008-stars-ledger.md))
 
-- Every change is a `star_entries` row: `earn` (Order Picked Up, +1 per drink unit), `reserve` (Redemption at placement, -9), `release` (Order Cancelled or Expired, +9), `reverse` (Refund after Picked Up, minus what was earned), `adjust` (Manager, with a reason).
+- Every change is a `star_entries` row: `earn` (Order Picked Up, +1 per drink unit), `reserve` (Redemption at placement, -9), `release` (Order Cancelled or Expired, +9), `reverse` (Refund after Picked Up, minus what was earned), `adjust` (Manager, with a reason), `birthday` (the Birthday Treat, +9).
 - Balance is the sum of entries. Reserving checks the balance inside the same transaction that writes the entry, with the Member row locked, so two tabs cannot spend the same Stars.
-- The Birthday Treat (V1) is a Reward with its own yearly check, not a Star entry.
+- The Birthday Treat (V1) adds 9 Stars once a year in the Member's birthday month (Manila calendar), when they open their account or checkout.
 
 ## 11. Live updates
 
@@ -142,14 +148,14 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 
 ## 12. Jobs and time
 
-- Vercel Hobby runs cron once a day, so time-critical work does not wait for cron: unpaid online Orders older than 15 minutes are expired **on read** whenever Pickup Windows, the Bar Screen or an Order are loaded, in the same transaction style as section 6. The daily cron (`/api/cron/daily`, before opening) sweeps anything left, resets Sold Out, and starts the day's Order Code sequence.
+- Vercel Hobby runs cron once a day, so time-critical work does not wait for cron: unpaid online Orders older than 15 minutes are expired **on read** whenever Pickup Windows, the Bar Screen or an Order are loaded, in the same transaction style as section 6. The daily cron (`/api/cron/daily`, before opening) sweeps anything left and refreshes the `menu` tag so yesterday's Sold Out marks clear; Order Codes restart by themselves each service day.
 - All "now" values come from one `clock` helper so tests can freeze time.
 
 ## 13. Accounts, Staff and security
 
-- **Better Auth** ([ADR 0005](adr/0005-better-auth-members-and-staff.md)): Members sign in with an email link (sent through Resend) or Google. Staff are users with a `role` of `barista` or `manager`, created by a Manager invite; Staff sign in with the email link and must enter a Second Factor (TOTP) once per session before using `/manage`, checked by `requireStaff()` rather than Better Auth's plugin ([ADR 0014](adr/0014-staff-second-factor-in-identity.md)).
+- **Better Auth** ([ADR 0005](adr/0005-better-auth-members-and-staff.md)): Members sign in with an email link (sent through Resend) or Google. Staff are users with a `role` of `barista` or `manager`, given a role by a Manager at `/manage/staff` once they have signed in (STAFF-10); Staff sign in like Members (email link or Google) and must enter a Second Factor (TOTP) once per session before using `/manage`, checked by `requireStaff()` rather than Better Auth's plugin ([ADR 0014](adr/0014-staff-second-factor-in-identity.md)).
 - `requireMember()` and `requireStaff(role)` guard pages, Server Actions and route handlers; every Staff write goes through `audit()`.
-- Rate limits (Postgres-backed, as in Hoshimono): sign-in emails per address (3 per 15 minutes) and IP (30), checkout tries per Cart (10 per 15 minutes) and IP (20), webhook calls per IP (120 a minute), Second Factor tries per Staff member (10 per 15 minutes), Inquiries per IP (V1).
+- Rate limits (Postgres-backed): sign-in emails per address (3 per 15 minutes) and IP (30), checkout tries per Cart (10 per 15 minutes) and IP (20), webhook calls per IP (120 a minute), Second Factor tries per Staff member (10 per 15 minutes), Inquiries per IP (V1).
 - Security headers: a Content-Security-Policy locked to this site (PayMongo's checkout is a redirect, so no third-party scripts on our pages); scripts need `'unsafe-inline'` because prerendered pages carry Next's inline RSC scripts, which take no nonce or hash ([ADR 0013](adr/0013-csp-allows-inline-scripts.md)); HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
 - Every input is parsed with zod at the edge (Server Action or route handler).
 - Privacy (Data Privacy Act): a privacy notice, marketing email only with a separate opt-in, Member data export and deletion (orders are kept, de-identified, for the cafe's records).

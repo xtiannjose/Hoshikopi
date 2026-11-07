@@ -52,7 +52,7 @@ export function todaysBase(
 }
 
 /** Seasonal (MENU-06): on the menu through its last Manila day. */
-export function inSeason(
+function inSeason(
   item: { availableUntil: Date | null },
   today: string
 ): boolean {
