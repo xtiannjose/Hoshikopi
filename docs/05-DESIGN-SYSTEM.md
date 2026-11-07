@@ -122,6 +122,8 @@ Self-hosted through `next/font`, `display: swap`: two variable families, plus th
 | Payment Method list | Radio cards: GCash, Maya, Card, Pay at Pickup, each with its logo or icon and a one-line note; a "Test Mode" tag on online methods |
 | Order status timeline | Placed, Paid, Accepted, Preparing, Ready, Picked Up; the current step is announced politely; Ready uses the gold star |
 | Star Card | "Nine Stars make a cup": a constellation of nine points that draws a cup. Earned Stars are gold stars (with `--star-edge` by day) joined by `--lit` lines; the rest are small rings on dashed `--input` lines. A Reward appears when all nine are lit |
+| Account button | A 44 px round icon button beside the Cart, like the menu button: an outlined person for Sign in, a filled person on `--muted` for Account (accessible names "Sign in" and "Account"). From sm up; on phones Account sits in the menu so the Cart keeps its room |
+| Account page | Greeting with "Signed in as" and a "Member since" pill (a gold star); Sign out at the top. From lg up two columns: the Star Card and a list of links (Star history, Download my data, Privacy) on the left, kept in view; Your orders, Your Favourites and Your details as outlined panels on the right, each with an icon in a `--muted` circle. Orders show a status pill (Ready in `--success`); Favourites are `--muted` tiles with Add and a corner Remove; empty panels offer the next step |
 | Event card, Post card | Date block, photo, title, one line; Events show "Free" or a price |
 | Concept Notice | A slim footer line and a short note on checkout: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration." It links to `/concept` |
 | Bar Screen card | See section 9 |

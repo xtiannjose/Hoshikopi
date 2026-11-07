@@ -1,9 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
+import {
+  ArrowsClockwiseIcon,
+  CakeIcon,
+  CaretRightIcon,
+  CoffeeIcon,
+  DownloadSimpleIcon,
+  HeartIcon,
+  IdentificationCardIcon,
+  PlusIcon,
+  ReceiptIcon,
+  ShieldCheckIcon,
+  SignOutIcon,
+  StarIcon,
+  TrashIcon,
+  XIcon,
+} from "@phosphor-icons/react/ssr";
 
 import { StarCard } from "@/components/star-card";
-import { formatDate, formatTime } from "@/lib/clock";
+import { formatDate, formatMonthYear, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { favouritesFor, type FavouriteView } from "@/modules/cart";
 import { memberProfile, requireMember } from "@/modules/identity";
@@ -36,6 +52,8 @@ const STATUS: Record<string, string> = {
   refunded: "Refunded",
 };
 
+const LIVE = ["placed", "paid", "accepted", "preparing"];
+
 const CANT_ADD: Record<NonNullable<FavouriteView["problem"]>, string> = {
   unavailable: "Off the menu now",
   sold_out: "Sold out today",
@@ -58,9 +76,16 @@ const MONTHS = [
   "December",
 ];
 
+const FIELD =
+  "rounded-card border-input bg-background min-h-11 w-full border px-3";
+const OUTLINE_BUTTON =
+  "border-input hover:bg-muted inline-flex min-h-11 items-center gap-2 rounded-full border px-4 font-semibold";
+const PRIMARY_BUTTON =
+  "bg-primary text-primary-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-5 font-semibold hover:opacity-90";
+
 export default function AccountPage() {
   return (
-    <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 md:px-8">
+    <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 md:px-8">
       <Suspense fallback={<p className="pt-8">Opening your account...</p>}>
         <Account />
       </Suspense>
@@ -79,238 +104,393 @@ async function Account() {
     favouritesFor(member.id),
   ]);
   return (
-    <div className="grid gap-10 pt-8">
-      <div>
-        <h1 className="font-display pb-1 text-5xl italic">
-          Hi{member.name ? `, ${member.name}` : ""}!
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Signed in as {member.email}.
-        </p>
-      </div>
+    <div className="grid gap-8 pt-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display pb-1 text-5xl italic">
+            Hi{member.name ? `, ${member.name}` : ""}!
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Signed in as {member.email}.
+          </p>
+          {profile?.createdAt && (
+            <p className="border-border mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm">
+              <StarIcon
+                aria-hidden
+                size={14}
+                weight="fill"
+                className="text-star"
+              />
+              Member since {formatMonthYear(profile.createdAt)}
+            </p>
+          )}
+        </div>
+        <form action={signOutAction}>
+          <button type="submit" className={OUTLINE_BUTTON}>
+            <SignOutIcon aria-hidden size={18} />
+            Sign out
+          </button>
+        </form>
+      </header>
 
       {treat && (
-        <p role="status" className="bg-muted rounded-card p-4 text-lg">
+        <p
+          role="status"
+          className="bg-muted rounded-card flex items-center gap-3 p-4 text-lg"
+        >
+          <CakeIcon aria-hidden size={28} className="shrink-0" />
           Happy birthday month! We added 9 Stars to your card, so a drink is on
           us.
         </p>
       )}
 
-      <section aria-labelledby="star-card" className="grid gap-3">
-        <h2 id="star-card" className="sr-only">
-          Star Card
-        </h2>
-        <StarCard balance={stars} />
-        <Link href="/account/stars">Your Star history</Link>
-      </section>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-start">
+        <aside className="grid gap-4 lg:sticky lg:top-6">
+          <section aria-labelledby="star-card">
+            <h2 id="star-card" className="sr-only">
+              Star Card
+            </h2>
+            <StarCard balance={stars} />
+          </section>
+          <nav
+            aria-label="More for your account"
+            className="rounded-card border-border divide-border divide-y border"
+          >
+            <RowLink href="/account/stars" icon={<StarIcon size={20} />}>
+              Your Star history
+            </RowLink>
+            <RowLink
+              href="/api/account/export"
+              download
+              icon={<DownloadSimpleIcon size={20} />}
+            >
+              Download my data
+            </RowLink>
+            <RowLink href="/privacy" icon={<ShieldCheckIcon size={20} />}>
+              Privacy
+            </RowLink>
+          </nav>
+        </aside>
 
-      <section aria-labelledby="orders">
-        <h2 id="orders" className="font-display text-3xl italic">
-          Your orders
-        </h2>
-        {orders.length === 0 ? (
-          <p className="mt-3">
-            No orders yet. <Link href="/menu">See the menu</Link>
-          </p>
-        ) : (
-          <ul className="border-border mt-4 border-t">
-            {orders.map((order) => (
-              <li
-                key={order.id}
-                className="border-border flex flex-wrap items-baseline justify-between gap-3 border-b py-3"
-              >
-                <span>
-                  <Link href={order.link} className="font-mono font-semibold">
-                    {order.code}
-                  </Link>{" "}
-                  <span className="text-muted-foreground text-sm">
-                    {formatDate(order.placedAt)}, {formatTime(order.placedAt)}
-                  </span>
-                  <span className="block">{order.summary}</span>
-                </span>
-                <span className="text-right">
-                  <span className="block font-mono whitespace-nowrap">
-                    {formatPrice(order.totalCents)}
-                  </span>
-                  <span className="text-muted-foreground text-sm">
-                    {STATUS[order.status]}
-                  </span>
-                  <form action={orderAgainAction} className="mt-1">
-                    <input type="hidden" name="orderId" value={order.id} />
-                    <button
-                      type="submit"
-                      className="border-input min-h-11 rounded-full border px-4 text-sm font-semibold"
-                    >
-                      Order again
-                      <span className="sr-only"> ({order.code})</span>
-                    </button>
-                  </form>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section aria-labelledby="favourites">
-        <h2 id="favourites" className="font-display text-3xl italic">
-          Your Favourites
-        </h2>
-        {favourites.length === 0 ? (
-          <p className="mt-3">
-            Nothing saved yet. On a drink&apos;s page, choose it the way you
-            like it and tap Save as Favourite.
-          </p>
-        ) : (
-          <ul className="border-border mt-4 border-t">
-            {favourites.map((favourite) => (
-              <li
-                key={favourite.id}
-                className="border-border flex flex-wrap items-center justify-between gap-3 border-b py-3"
-              >
-                <span>
-                  <Link
-                    href={`/menu/item/${favourite.slug}`}
-                    className="font-semibold"
+        <div className="grid gap-8">
+          <Panel
+            id="orders"
+            title="Your orders"
+            icon={<ReceiptIcon size={20} />}
+          >
+            {orders.length === 0 ? (
+              <Empty icon={<CoffeeIcon size={24} />}>
+                <p>No orders yet. Your first kopi is a few taps away.</p>
+                <Link href="/menu" className={`${PRIMARY_BUTTON} no-underline`}>
+                  See the menu
+                </Link>
+              </Empty>
+            ) : (
+              <ul className="divide-border -my-3 divide-y">
+                {orders.map((order) => (
+                  <li
+                    key={order.id}
+                    className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
                   >
-                    {favourite.name}
-                  </Link>
-                  {favourite.options.length > 0 && (
-                    <span className="text-muted-foreground block text-sm">
-                      {favourite.options.join(", ")}
-                    </span>
-                  )}
-                </span>
-                <span className="flex flex-wrap items-center gap-3">
-                  {favourite.problem ? (
-                    <span className="text-muted-foreground text-sm">
-                      {CANT_ADD[favourite.problem]}
-                    </span>
-                  ) : (
-                    <>
-                      <span className="font-mono">
-                        {formatPrice(favourite.unitCents!)}
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={order.link}
+                          className="font-mono font-semibold"
+                        >
+                          {order.code}
+                        </Link>
+                        <StatusPill status={order.status} />
+                      </div>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {formatDate(order.placedAt)},{" "}
+                        {formatTime(order.placedAt)}
+                      </p>
+                      <p className="mt-1">{order.summary}</p>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
+                      <span className="font-mono whitespace-nowrap">
+                        {formatPrice(order.totalCents)}
                       </span>
-                      <form action={addFavouriteAction}>
+                      <form action={orderAgainAction}>
+                        <input type="hidden" name="orderId" value={order.id} />
+                        <button
+                          type="submit"
+                          className={`${OUTLINE_BUTTON} text-sm`}
+                        >
+                          <ArrowsClockwiseIcon aria-hidden size={16} />
+                          Order again
+                          <span className="sr-only"> ({order.code})</span>
+                        </button>
+                      </form>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel
+            id="favourites"
+            title="Your Favourites"
+            icon={<HeartIcon size={20} />}
+          >
+            {favourites.length === 0 ? (
+              <Empty icon={<HeartIcon size={24} />}>
+                <p>
+                  Nothing saved yet. On a drink&apos;s page, choose it the way
+                  you like it and tap Save as Favourite.
+                </p>
+              </Empty>
+            ) : (
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {favourites.map((favourite) => (
+                  <li
+                    key={favourite.id}
+                    className="bg-muted rounded-card flex flex-col justify-between gap-4 p-4"
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/menu/item/${favourite.slug}`}
+                          className="font-semibold"
+                        >
+                          {favourite.name}
+                        </Link>
+                        {favourite.options.length > 0 && (
+                          <p className="text-muted-foreground mt-1 text-sm">
+                            {favourite.options.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                      <form action={removeFavouriteAction}>
                         <input type="hidden" name="id" value={favourite.id} />
                         <button
                           type="submit"
-                          className="bg-primary text-primary-foreground min-h-11 rounded-full px-4 font-semibold"
+                          title="Remove"
+                          className="text-muted-foreground hover:bg-background hover:text-foreground -mt-2 -mr-2 grid size-11 place-items-center rounded-full"
                         >
-                          Add
-                          <span className="sr-only"> {favourite.name}</span>
+                          <XIcon aria-hidden size={18} />
+                          <span className="sr-only">
+                            Remove {favourite.name}
+                          </span>
                         </button>
                       </form>
-                    </>
-                  )}
-                  <form action={removeFavouriteAction}>
-                    <input type="hidden" name="id" value={favourite.id} />
-                    <button
-                      type="submit"
-                      className="border-input min-h-11 rounded-full border px-4 font-semibold"
-                    >
-                      Remove
-                      <span className="sr-only"> {favourite.name}</span>
-                    </button>
-                  </form>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {favourite.problem ? (
+                        <span className="text-muted-foreground mr-auto text-sm">
+                          {CANT_ADD[favourite.problem]}
+                        </span>
+                      ) : (
+                        <>
+                          <span className="mr-auto font-mono">
+                            {formatPrice(favourite.unitCents!)}
+                          </span>
+                          <form action={addFavouriteAction}>
+                            <input
+                              type="hidden"
+                              name="id"
+                              value={favourite.id}
+                            />
+                            <button type="submit" className={PRIMARY_BUTTON}>
+                              <PlusIcon aria-hidden size={16} />
+                              Add
+                              <span className="sr-only"> {favourite.name}</span>
+                            </button>
+                          </form>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
 
-      <section aria-labelledby="details" className="grid gap-4">
-        <h2 id="details" className="font-display text-3xl italic">
-          Your details
-        </h2>
-        <form action={updateProfileAction} className="grid max-w-md gap-4">
-          <div className="grid gap-1.5">
-            <label htmlFor="name" className="font-semibold">
-              Name for your orders
-            </label>
-            <input
-              id="name"
-              name="name"
-              defaultValue={profile?.name ?? ""}
-              maxLength={60}
-              className="rounded-card border-input bg-background min-h-11 border px-3"
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <label htmlFor="birthMonth" className="font-semibold">
-              Birthday month
-            </label>
-            <p id="birthMonth-hint" className="text-muted-foreground text-sm">
-              For a free drink once a year, in your birthday month.
-            </p>
-            <select
-              id="birthMonth"
-              name="birthMonth"
-              defaultValue={profile?.birthMonth ?? ""}
-              aria-describedby="birthMonth-hint"
-              className="rounded-card border-input bg-background min-h-11 border px-3"
-            >
-              <option value="">Not set</option>
-              {MONTHS.map((month, index) => (
-                <option key={month} value={index + 1}>
-                  {month}
-                </option>
-              ))}
-            </select>
-          </div>
-          <label className="flex min-h-11 items-start gap-3">
-            <input
-              type="checkbox"
-              name="marketingOptIn"
-              defaultChecked={profile?.marketingOptIn}
-              className="mt-1 size-5"
-            />
-            <span>
-              Email me about new drinks and Events. Separate from order emails;
-              untick any time.
-            </span>
-          </label>
-          <button
-            type="submit"
-            className="border-input min-h-11 justify-self-start rounded-full border px-5 font-semibold"
+          <Panel
+            id="details"
+            title="Your details"
+            icon={<IdentificationCardIcon size={20} />}
           >
-            Save my details
-          </button>
-        </form>
-        <p className="flex flex-wrap gap-x-6 gap-y-2">
-          <a href="/api/account/export" download>
-            Download my data
-          </a>
-          <Link href="/privacy">Privacy</Link>
-        </p>
-        <details className="max-w-md">
-          <summary className="text-destructive min-h-11 cursor-pointer py-2 font-semibold">
-            Delete my account
-          </summary>
-          <form action={deleteAccountAction} className="grid gap-3 py-2">
-            <p>
-              Your Stars and sign-in go for good. Your orders stay as the
-              cafe&apos;s records, without your name, email or phone.
-            </p>
-            <button
-              type="submit"
-              className="border-destructive text-destructive min-h-11 justify-self-start rounded-full border px-5 font-semibold"
-            >
-              Yes, delete my account
-            </button>
-          </form>
-        </details>
-      </section>
+            <form action={updateProfileAction} className="grid gap-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="grid content-start gap-1.5">
+                  <label htmlFor="name" className="font-semibold">
+                    Name for your orders
+                  </label>
+                  <input
+                    id="name"
+                    name="name"
+                    defaultValue={profile?.name ?? ""}
+                    maxLength={60}
+                    className={FIELD}
+                  />
+                </div>
+                <div className="grid content-start gap-1.5">
+                  <label htmlFor="birthMonth" className="font-semibold">
+                    Birthday month
+                  </label>
+                  <select
+                    id="birthMonth"
+                    name="birthMonth"
+                    defaultValue={profile?.birthMonth ?? ""}
+                    aria-describedby="birthMonth-hint"
+                    className={FIELD}
+                  >
+                    <option value="">Not set</option>
+                    {MONTHS.map((month, index) => (
+                      <option key={month} value={index + 1}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                  <p
+                    id="birthMonth-hint"
+                    className="text-muted-foreground text-sm"
+                  >
+                    For a free drink once a year, in your birthday month.
+                  </p>
+                </div>
+              </div>
+              <label className="flex min-h-11 items-start gap-3">
+                <input
+                  type="checkbox"
+                  name="marketingOptIn"
+                  defaultChecked={profile?.marketingOptIn}
+                  className="mt-1 size-5"
+                />
+                <span>
+                  Email me about new drinks and Events. Separate from order
+                  emails; untick any time.
+                </span>
+              </label>
+              <button
+                type="submit"
+                className={`${PRIMARY_BUTTON} justify-self-start`}
+              >
+                Save my details
+              </button>
+            </form>
 
-      <form action={signOutAction}>
-        <button
-          type="submit"
-          className="border-input min-h-11 rounded-full border px-5"
-        >
-          Sign out
-        </button>
-      </form>
+            <details className="border-border mt-6 border-t pt-4">
+              <summary className="text-destructive inline-flex min-h-11 cursor-pointer items-center gap-2 font-semibold">
+                <TrashIcon aria-hidden size={18} />
+                Delete my account
+              </summary>
+              <form action={deleteAccountAction} className="grid gap-3 py-2">
+                <p>
+                  Your Stars and sign-in go for good. Your orders stay as the
+                  cafe&apos;s records, without your name, email or phone.
+                </p>
+                <button
+                  type="submit"
+                  className="border-destructive text-destructive min-h-11 justify-self-start rounded-full border px-5 font-semibold"
+                >
+                  Yes, delete my account
+                </button>
+              </form>
+            </details>
+          </Panel>
+        </div>
+      </div>
     </div>
+  );
+}
+
+/** A section of the account page: an icon, its heading, then the content. */
+function Panel({
+  id,
+  title,
+  icon,
+  children,
+}: {
+  id: string;
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      aria-labelledby={id}
+      className="rounded-card border-border border p-5 md:p-6"
+    >
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden
+          className="bg-muted grid size-10 shrink-0 place-items-center rounded-full"
+        >
+          {icon}
+        </span>
+        <h2 id={id} className="font-display text-3xl italic">
+          {title}
+        </h2>
+      </div>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+function Empty({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <div className="bg-muted rounded-card flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center">
+      <span
+        aria-hidden
+        className="bg-background grid size-12 shrink-0 place-items-center rounded-full"
+      >
+        {icon}
+      </span>
+      <div className="grid justify-items-start gap-3">{children}</div>
+    </div>
+  );
+}
+
+function StatusPill({ status }: { status: string }) {
+  const tone =
+    status === "ready"
+      ? "border-success text-success"
+      : LIVE.includes(status)
+        ? "border-input"
+        : "border-border text-muted-foreground";
+  return (
+    <span
+      className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${tone}`}
+    >
+      {STATUS[status]}
+    </span>
+  );
+}
+
+function RowLink({
+  href,
+  icon,
+  download,
+  children,
+}: {
+  href: string;
+  icon: ReactNode;
+  download?: boolean;
+  children: ReactNode;
+}) {
+  const className =
+    "hover:bg-muted first:rounded-t-card last:rounded-b-card flex min-h-12 items-center gap-3 px-4 no-underline";
+  const inner = (
+    <>
+      <span aria-hidden className="text-muted-foreground shrink-0">
+        {icon}
+      </span>
+      <span className="flex-1 font-medium">{children}</span>
+      <CaretRightIcon aria-hidden size={16} className="text-muted-foreground" />
+    </>
+  );
+  // A file download is a plain link, not a client-side navigation.
+  return download ? (
+    <a href={href} download className={className}>
+      {inner}
+    </a>
+  ) : (
+    <Link href={href} className={className}>
+      {inner}
+    </Link>
   );
 }
