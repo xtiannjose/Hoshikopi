@@ -88,3 +88,39 @@ test("a Manager reads the reports (STAFF-08)", async ({ page }, testInfo) => {
   ).toHaveAttribute("aria-current", "page");
   await expectNoAxeViolations(page);
 });
+
+test("a Manager makes a Member a Barista, then takes the role back (STAFF-10)", async ({
+  page,
+  browser,
+}) => {
+  // A fresh Member: the account exists once they have signed in.
+  const email = `migs-${Date.now()}@example.com`;
+  const member = await (await browser.newContext()).newPage();
+  await signIn(member, email, "/account");
+
+  await signIn(page, "christian@hoshikopi.example", "/manage/staff");
+  await expect(page.getByRole("heading", { name: "Staff", exact: true })).toBeVisible();
+  await page.getByLabel("Email they signed in with").fill(email);
+  await page.getByLabel("Role", { exact: true }).selectOption("barista");
+  await page.getByRole("button", { name: "Give role" }).click();
+  await expect(page.getByRole("status").first()).toContainText(
+    "is now a Barista."
+  );
+
+  const row = page.getByRole("listitem").filter({ hasText: email });
+  await expect(row).toContainText("Barista");
+  await expectNoAxeViolations(page);
+  await row.getByRole("combobox").selectOption("customer");
+  await row.getByRole("button", { name: /^Save role for/ }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "is now a Member" })
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("listitem").filter({ hasText: email })
+  ).toHaveCount(0);
+  // The Manager's own row has no controls.
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "(you)" }).getByRole("button")
+  ).toHaveCount(0);
+});
