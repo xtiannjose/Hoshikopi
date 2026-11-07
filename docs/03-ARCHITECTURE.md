@@ -38,7 +38,7 @@ No other services. Search, analytics and error tracking are added only when a ph
 | `payments` | Payments, provider events, Refunds | `startPayment(order)`, `handleWebhook(req)`, `refund(orderId, actor)` |
 | `loyalty` | Star ledger, Rewards, Redemptions | `balance(memberId)`, `earnForOrder(order)`, `reserveRedemption(...)`, `release(...)` |
 | `content` | Events and Posts; Recurring Events (V1) | `upcomingEvents()`, `getPost(slug)`, `saveEvent(...)` |
-| `identity` | Members, Staff roles, sessions, audit log (wraps Better Auth) | `requireMember()`, `requireStaff("barista" \| "manager")`, `audit(actor, action, target)` |
+| `identity` | Members, Staff roles, sessions, audit log (wraps Better Auth) | `requireMember()`, `requireStaff("barista" \| "manager")`, `audit(actor, action, target)`, `staffMembers()`, `setRole(actor, email, role)`, `endSessions(actor, userId)` |
 | `notify` | Email templates and sending | `sendOrderPlaced(order)`, `sendOrderReady(order)` |
 
 Rules:

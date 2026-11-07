@@ -33,3 +33,10 @@ export {
   updateProfile,
   type MemberProfile,
 } from "./internal/privacy";
+export {
+  endSessions,
+  setRole,
+  staffMembers,
+  type RoleResult,
+  type StaffMember,
+} from "./internal/staff";

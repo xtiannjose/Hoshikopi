@@ -158,6 +158,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | STAFF-07 | Managers issue Refunds and see a day's Orders and totals | M |
 | STAFF-08 | Reports: sales by day, top Menu Items, Stars issued and redeemed | S |
 | STAFF-09 | Managers edit the cafe's details: neighbourhood, map pin, directions, email, Amenities, the space paragraph and the story | M |
+| STAFF-10 | Managers give and take Staff roles (Barista, Manager) by the email someone signed in with, see the team, and sign a person out everywhere; a Manager cannot change their own role, so one Manager always stays; taking a role away signs the person out | S |
 
 ## 6. What makes Hoshikopi different
 

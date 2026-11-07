@@ -37,3 +37,6 @@ Thumbs.db
 
 # Menu photos saved locally (batch 1.5); on Vercel they go to Blob (5.4)
 /public/menu/
+
+# Google OAuth client downloads hold the client secret: keep them out of git
+client_secret_*.json

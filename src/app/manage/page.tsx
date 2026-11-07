@@ -22,6 +22,7 @@ const AREAS: { href: string; label: string; roles: Staff["role"][] }[] = [
   { href: "/manage/posts", label: "Posts", roles: ["manager"] },
   { href: "/manage/stars", label: "Adjust Stars", roles: ["manager"] },
   { href: "/manage/cafe", label: "Cafe details", roles: ["manager"] },
+  { href: "/manage/staff", label: "Staff", roles: ["manager"] },
 ];
 
 export default function ManagePage() {
