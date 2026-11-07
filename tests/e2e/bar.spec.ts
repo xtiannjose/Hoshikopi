@@ -95,3 +95,17 @@ test("the daily cron needs its secret", async ({ request }) => {
   expect(ok.status()).toBe(200);
   expect(await ok.json()).toMatchObject({ expired: 0 });
 });
+
+test("the Bar Screen says it stopped when its session ends (audit, 7.4)", async ({
+  page,
+  context,
+}) => {
+  await signIn(page, "annika@hoshikopi.example", "/bar");
+  await expect(page.getByRole("heading", { name: "Bar Screen" })).toBeVisible();
+  await context.clearCookies();
+  const alert = page.getByRole("alert").filter({ hasText: "signed out" });
+  await expect(alert).toBeVisible({ timeout: 10_000 });
+  await expect(
+    alert.getByRole("link", { name: "Sign in again" })
+  ).toHaveAttribute("href", "/sign-in?next=%2Fbar");
+});

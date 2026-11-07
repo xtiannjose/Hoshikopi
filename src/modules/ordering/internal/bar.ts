@@ -81,27 +81,31 @@ export async function barBoard(at: Date): Promise<BarBoard> {
     (max, o) => Math.max(max, o.updatedAt.getTime()),
     0
   );
-  return {
-    version: `${rows.length}:${latest}:${paused?.until.getTime() ?? 0}`,
-    paused,
-    orders: rows.map((order) => ({
-      id: order.id,
-      code: order.code,
-      status: order.status as BarOrder["status"],
-      firstName: order.customerName.trim().split(/\s+/)[0],
-      pickupKind: order.pickupKind,
-      windowStart: order.windowStart,
-      placedAt: order.placedAt,
-      payAtPickup: order.paymentMethod === "pay_at_pickup",
-      makeNext:
-        order.pickupKind === "asap" ||
-        order.windowStart.getTime() - prep * 60_000 <= at.getTime(),
-      lines: order.lines.map((line) => ({
-        quantity: line.quantity,
-        name: line.name,
-        options: (line.options as { name: string }[]).map((o) => o.name),
-        note: line.note,
-      })),
+  const orders = rows.map((order): BarOrder => ({
+    id: order.id,
+    code: order.code,
+    status: order.status as BarOrder["status"],
+    firstName: order.customerName.trim().split(/\s+/)[0],
+    pickupKind: order.pickupKind,
+    windowStart: order.windowStart,
+    placedAt: order.placedAt,
+    payAtPickup: order.paymentMethod === "pay_at_pickup",
+    makeNext:
+      order.pickupKind === "asap" ||
+      order.windowStart.getTime() - prep * 60_000 <= at.getTime(),
+    lines: order.lines.map((line) => ({
+      quantity: line.quantity,
+      name: line.name,
+      options: (line.options as { name: string }[]).map((o) => o.name),
+      note: line.note,
     })),
+  }));
+  // makeNext turns with the clock and Prep Time, not with a row change, so
+  // both are in the version the Bar Screen compares (audit, 7.4).
+  const due = orders.filter((o) => o.makeNext).length;
+  return {
+    version: `${rows.length}:${latest}:${paused?.until.getTime() ?? 0}:${prep}:${due}`,
+    paused,
+    orders,
   };
 }

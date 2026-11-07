@@ -79,6 +79,7 @@ export function BarScreen({
   const [board, setBoard] = useState(initial);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [muted, setMuted] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
   const [pending, startTransition] = useTransition();
   const known = useRef(new Set(initial.orders.map((o) => o.id)));
   const version = useRef(initial.version);
@@ -102,9 +103,16 @@ export function BarScreen({
         cache: "no-store",
       }
     ).catch(() => null);
-    if (!response?.ok) return;
-    const data = (await response.json()) as Board | { same: true };
-    if ("same" in data) return;
+    // Offline for a moment: the next tick tries again.
+    if (!response) return;
+    if (response.status === 401) {
+      setSignedOut(true);
+      return;
+    }
+    if (!response.ok) return;
+    const data = (await response.json().catch(() => null)) as
+      Board | { same: true } | null;
+    if (!data || "same" in data) return;
     const arrived = data.orders.filter((o) => !known.current.has(o.id));
     data.orders.forEach((o) => known.current.add(o.id));
     version.current = data.version;
@@ -117,11 +125,12 @@ export function BarScreen({
   }, []);
 
   useEffect(() => {
+    if (signedOut) return undefined;
     const timer = setInterval(() => {
       if (!document.hidden) void poll();
     }, 3_000);
     return () => clearInterval(timer);
-  }, [poll]);
+  }, [poll, signedOut]);
 
   const act = (run: () => Promise<unknown>) =>
     startTransition(async () => {
@@ -163,6 +172,17 @@ export function BarScreen({
 
   return (
     <div className="grid gap-4">
+      {signedOut && (
+        <p
+          role="alert"
+          className="border-destructive bg-muted rounded-card border-2 px-4 py-3 font-semibold"
+        >
+          You&apos;re signed out, so the board stopped updating.{" "}
+          <a href="/sign-in?next=%2Fbar" className="underline">
+            Sign in again
+          </a>
+        </p>
+      )}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-3xl italic">Bar Screen</h1>
         <div className="flex flex-wrap items-center gap-3">

@@ -50,6 +50,23 @@ export async function requireStaff(
 }
 
 /**
+ * The signed-in Staff member with at least `role`, or null: for routes that
+ * answer JSON (the Bar Screen's poll), where a redirect to the sign-in page
+ * would come back as HTML. /manage routes still use requireStaff.
+ */
+export async function currentStaff(
+  role: "barista" | "manager"
+): Promise<Staff | null> {
+  const user = await currentUser();
+  if (!user) return null;
+  const allowed =
+    user.role === "manager" || (role === "barista" && user.role === "barista");
+  return allowed
+    ? { id: user.id, name: user.name, role: user.role as Staff["role"] }
+    : null;
+}
+
+/**
  * Staff on /manage/two-factor: signed in, Second Factor not yet entered in
  * this session. `next` is kept to /manage pages; already entered goes there.
  */
