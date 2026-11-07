@@ -72,6 +72,26 @@ test("checkout asks for an email or a mobile number", async ({ page }) => {
   await expect(page.getByLabel("Name")).toHaveValue("Migs");
 });
 
+test("a refused checkout keeps the chosen Pickup Time and Payment Method (audit, 7.1)", async ({
+  page,
+}) => {
+  await addToCart(page, "kopi-hitam");
+  await page.goto("/checkout");
+  const later = page.locator('input[name="pickup"]:not([value="asap"])').last();
+  const time = await later.getAttribute("value");
+  await later.locator("xpath=..").click();
+  await page.getByText("Pay at Pickup", { exact: true }).click();
+  await page.getByLabel("Email").fill("migs@example.com");
+  await page.getByRole("button", { name: /Place order/ }).click();
+  await expect(page.getByText("Check the details above.")).toBeVisible();
+  await expect(
+    page.locator(`input[name="pickup"][value="${time}"]`)
+  ).toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: /Pay at Pickup/ })
+  ).toBeChecked();
+});
+
 test("a Guest can't pay at pickup for more than 4 drinks (PAY-02)", async ({
   page,
 }) => {

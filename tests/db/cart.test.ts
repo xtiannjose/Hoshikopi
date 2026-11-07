@@ -145,4 +145,23 @@ describe("mergeGuestCart (sign-in, docs/03 section 5)", () => {
     ]);
     expect((await getCart(hoshi)).lines).toHaveLength(0);
   });
+
+  // The header and the page both ask for the Cart in the first render after
+  // the email link, so two merges can start at once (audit, 7.1).
+  it("merges once when two requests sign in with the same Guest Cart at once", async () => {
+    await db.user.create({
+      data: { id: "new-member", name: "Migs", email: "migs@example.com" },
+    });
+    await addLine(hoshi, latte("Oat milk", { quantity: 2 }));
+    await addLine(hoshi, latte("Whole milk"));
+    await Promise.all([
+      mergeGuestCart(hoshi, "new-member"),
+      mergeGuestCart(hoshi, "new-member"),
+    ]);
+    const cart = await getCart({ memberId: "new-member" });
+    expect(cart.lines.map((l) => l.quantity).sort((a, b) => a - b)).toEqual([
+      1, 2,
+    ]);
+    expect((await getCart(hoshi)).lines).toHaveLength(0);
+  });
 });

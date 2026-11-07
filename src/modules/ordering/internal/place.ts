@@ -14,6 +14,7 @@ import {
 import {
   clearCart,
   getCart,
+  lockCart,
   type CartOwner,
   type CartView,
 } from "@/modules/cart";
@@ -186,6 +187,9 @@ export async function placeOrder(
         };
       }
 
+      // A second Place order on the same Cart (double tap, retry, two tabs)
+      // waits here and then finds the Cart already emptied.
+      await lockCart(input.owner, tx);
       const cart = await getCart(input.owner, tx);
       if (cart.lines.length === 0 || cart.blocked) {
         return { ok: false, reason: "cart_problem" };

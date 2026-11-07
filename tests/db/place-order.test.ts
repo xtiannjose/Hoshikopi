@@ -262,3 +262,21 @@ describe("placeOrder refusals", () => {
     ).toMatchObject({ drinks: 12 });
   });
 });
+
+describe("placeOrder: one Order per Cart (audit, 7.1)", () => {
+  it("places one Order when the same Cart is submitted twice at once", async () => {
+    const hoshi = guest();
+    await addLatte(hoshi, 2);
+    const order = await input(hoshi);
+    const results = await Promise.all([placeOrder(order), placeOrder(order)]);
+
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(results.find((r) => !r.ok)).toMatchObject({
+      reason: "cart_problem",
+    });
+    expect(await db.order.count()).toBe(1);
+    expect(
+      await db.pickupWindowUsage.findMany({ select: { drinks: true } })
+    ).toEqual([{ drinks: 2 }]);
+  });
+});
