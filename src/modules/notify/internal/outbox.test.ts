@@ -1,3 +1,6 @@
+import { readdir } from "node:fs/promises";
+import path from "node:path";
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { send } from "./outbox";
@@ -39,5 +42,23 @@ describe("send without RESEND_API_KEY (ADR 0005)", () => {
 
     expect(fetch).not.toHaveBeenCalled();
     expect(log.mock.calls.flat().join(" ")).toContain("secret-token");
+  });
+});
+
+describe("send to data/mail (local, no key)", () => {
+  // An Event Sign-up email only needs an @ and a dot, so it can hold "../"
+  // (audit, 7.3): the file must still land inside data/mail.
+  it("keeps the file inside data/mail whatever the address holds", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("VERCEL", "");
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const marker = `escaped-${Date.now()}`;
+    const data = path.join(process.cwd(), "data");
+
+    await send({ ...email, to: `a/../../../${marker}@example.com` });
+
+    expect((await readdir(data)).some((f) => f.includes(marker))).toBe(false);
+    const inMail = await readdir(path.join(data, "mail"));
+    expect(inMail.some((f) => f.includes(marker))).toBe(true);
   });
 });

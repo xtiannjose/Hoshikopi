@@ -53,12 +53,12 @@ export async function send(email: Email): Promise<void> {
   const dir = path.join(process.cwd(), "data", "mail");
   await mkdir(dir, { recursive: true });
   const stamp = now().toISOString().replace(/[:.]/g, "-");
+  // Only these characters reach the file name, so no address (an Event
+  // Sign-up email holding "../", say) can write outside data/mail.
+  const to = email.to.replace(/[^\w@.+-]/g, "_");
   await writeFile(
     // A random part: two emails to one address can share a millisecond.
-    path.join(
-      dir,
-      `${stamp}-${randomBytes(3).toString("hex")}-${email.to}.txt`
-    ),
+    path.join(dir, `${stamp}-${randomBytes(3).toString("hex")}-${to}.txt`),
     `To: ${email.to}\nSubject: ${email.subject}\n\n${email.text}\n`
   );
 }
