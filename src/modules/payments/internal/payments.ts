@@ -74,7 +74,9 @@ export type RecordedEvent =
 
 /**
  * Store the event once under (provider, provider_event_id); a repeat changes
- * nothing (ADR 0003). A paid event marks its pending Payment paid.
+ * nothing (ADR 0003). A paid event marks its Payment paid, even after a
+ * failed attempt or after the Order expired: the money was taken, so the
+ * caller pays the Order or refunds it, never drops it.
  */
 export async function recordPaymentEvent(
   tx: Prisma.TransactionClient,
@@ -89,26 +91,30 @@ export async function recordPaymentEvent(
     RETURNING id`;
   if (inserted.length === 0) return { kind: "duplicate" };
   if (!event.checkoutId || event.type === "other") return { kind: "ignored" };
-  const payment = await tx.payment.findFirst({
-    where: {
-      provider,
-      providerCheckoutId: event.checkoutId,
-      status: "pending",
-    },
-  });
+  // Locked, so two events for one checkout decide one at a time.
+  const [payment] = await tx.$queryRaw<
+    { id: string; status: string; order_id: string }[]
+  >`
+    SELECT id, status::text AS status, order_id FROM payments
+    WHERE provider = ${provider} AND provider_checkout_id = ${event.checkoutId}
+    FOR UPDATE`;
   if (!payment) return { kind: "ignored" };
   if (event.type === "failed") {
+    if (payment.status !== "pending") return { kind: "ignored" };
     await tx.payment.update({
       where: { id: payment.id },
       data: { status: "failed" },
     });
     return { kind: "failed" };
   }
+  if (payment.status === "paid" || payment.status === "refunded") {
+    return { kind: "ignored" };
+  }
   await tx.payment.update({
     where: { id: payment.id },
     data: { status: "paid", providerPaymentId: event.paymentId },
   });
-  return { kind: "paid", orderId: payment.orderId };
+  return { kind: "paid", orderId: payment.order_id };
 }
 
 /** The online Payment of an Order, if any. */
@@ -122,21 +128,25 @@ export async function paymentByCheckout(checkoutId: string) {
 }
 
 /**
- * An Order expired unpaid: close its checkout at the provider and mark the
- * Payment expired, so a late payment is not taken (ADR 0003).
+ * An Order expired or was cancelled unpaid: close its checkout at the
+ * provider, then mark the Payment expired (ADR 0003). A checkout with a
+ * payment going through refuses to close; the Payment stays open, and if the
+ * payment lands the webhook refunds it.
  */
 export async function closeCheckout(orderId: string): Promise<void> {
   const payment = await db.payment.findUnique({ where: { orderId } });
-  if (!payment || payment.status !== "pending") return;
-  await db.payment.update({
-    where: { id: payment.id },
-    data: { status: "expired" },
-  });
+  if (!payment || !["pending", "failed"].includes(payment.status)) return;
   try {
     await paymentProvider().expireCheckout(payment.providerCheckoutId);
   } catch (error) {
     console.error("[payments] checkout not expired at the provider:", error);
+    return;
   }
+  // Only if no webhook paid it meanwhile.
+  await db.payment.updateMany({
+    where: { id: payment.id, status: { in: ["pending", "failed"] } },
+    data: { status: "expired" },
+  });
 }
 
 export type RefundOutcome =
