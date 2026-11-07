@@ -4,23 +4,23 @@ A deep check of the whole project as a senior web developer, a security reviewer
 
 ## Status (2026-11-06)
 
-In progress. Two runs stopped on Claude usage limits before the double-check and ranking steps.
+In progress. Three runs stopped (two on Claude usage limits, one when the session ended) before the double-check and ranking steps.
 
 | File | What it holds |
 | --- | --- |
-| [2026-11-06-interim.md](2026-11-06-interim.md) | 182 findings from 6 of 16 areas, readable, **not yet verified** |
+| [2026-11-06-interim.md](2026-11-06-interim.md) | 236 findings from 9 of 16 areas, readable, **not yet verified** |
 | [findings-2026-11-06.json](findings-2026-11-06.json) | The same findings as data, read by the next run |
 | [workflow.md](workflow.md) | The workflow script that finishes the audit |
 
 **Done**
 
 - Quality gates on 2026-11-05, all passing: lint, Prettier, type check, Vitest (193 tests in 36 files), production build, `npm audit --omit=dev` (0 vulnerabilities), Playwright (159 passed, 35 skipped). `npm audit` with dev dependencies exits 1; not looked at yet.
-- Areas reviewed: ordering core, payments, identity and access (2 passes), web security (2 passes), performance, UI (2 passes).
+- Areas reviewed: ordering core, payments, identity and access (2 passes), web security (2 passes), performance, UI (2 passes), data model, docs, product features and competitor research.
 
 **Still to do**
 
-1. Review the 10 remaining areas: accessibility, architecture and code quality, data model, tests, docs, product features and competitor research, motion, ops and deploy readiness (batch 5.4), Staff tools (`/manage`, `/bar`), customer journeys.
-2. Double-check every finding, the 182 above included.
+1. Review the 7 remaining areas: accessibility, architecture and code quality, tests, ops and deploy readiness (batch 5.4), Staff tools (`/manage`, `/bar`), customer journeys, and motion. The motion reviewer returned nothing on 2026-11-06: its MotionScore method lives on the Motion+ MCP server, which is not signed in, so rerun it with the free `motion` skill or after signing in to Motion+.
+2. Double-check every finding, the 236 above included.
 3. Merge duplicates and rank everything into the final backlog: `docs/audit/2026-11-XX.md`, which replaces the interim file.
 
 ## How to continue
@@ -37,6 +37,6 @@ On this computer, in a Claude Code session in the Hoshikopi folder:
    ```
 
 3. Re-run the quality gates if the code changed since 2026-11-05 (`npm run qa`, `npm run test:e2e`) and save their output where the workflow's `gates` argument points.
-4. Ask Claude to run the workflow in [workflow.md](workflow.md) with the arguments listed there. It skips the 6 reviewed areas, reads their findings from the JSON file, and verifies and ranks everything.
+4. Ask Claude to run the workflow in [workflow.md](workflow.md) with the arguments listed there. It skips the reviewed areas, reads their findings from the JSON file, and verifies and ranks everything.
 
-A cheaper fallback when usage is tight: skip step 4's new areas and only verify and rank the 182 findings (pass an empty `todo` list).
+A cheaper fallback when usage is tight: skip step 4's new areas and only verify and rank the saved findings (pass an empty `todo` list).

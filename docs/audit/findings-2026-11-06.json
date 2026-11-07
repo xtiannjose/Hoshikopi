@@ -1,6 +1,6 @@
 {
   "generated": "2026-11-06",
-  "note": "Unverified findings from the first audit reviewers; see docs/audit/README.md",
+  "note": "Unverified findings from the audit reviewers; see docs/audit/README.md",
   "areas": [
     {
       "key": "ordering",
@@ -370,6 +370,297 @@
           "recommendation": "Allow Scheduled Pickup for the next open day from the evening before: build windows from getOrderingDay for that day, store service_day for the pickup day, and keep Capacity and Order Code per pickup day. Online payment only for those Orders (no Pay at Pickup no-shows).",
           "effort": "L",
           "confidence": 0.6
+        }
+      ]
+    },
+    {
+      "key": "payments",
+      "passes": 1,
+      "summaries": [
+        "The payments core is mostly sound. The webhook route reads the raw body with request.text() and verifies it before parsing. The HMAC input for PayMongo is `t.rawBody`, compared against `te` only, which is correct with test keys. The comparison is timing-safe (sign.ts). Dedupe runs on a DB unique (provider, provider_event_id) inside the same transaction as the Order transition. The return URL never decides payment state, sk_live_ keys are refused, /dev/pay returns 404 under PayMongo, and fakePayAction throws unless the fake provider is active. Live probes on :3300 got 401 bad_signature for unsigned or tampered fake events, 404 wrong_provider for /api/webhooks/paymongo and /other, and 401 from /api/cron/daily without the secret.\n\nThe serious gap is how payments arriving at the wrong moment are handled. recordPaymentEvent only acts on a Payment that is still `pending`. Some sequences leave a Payment in another state when its money arrives: the Order expires, the Customer cancels, a payment attempt fails and the Customer retries, or the expire call to PayMongo is refused because a payment is in progress. In all of these the paid webhook is stored and then silently ignored. The Customer is charged, the Order stays Expired, Cancelled or Placed, and no code path refunds it. I reproduced this live with the fake provider: after a failed attempt, a second tab paid, and the paid event was stored but the Order stayed placed with the Payment marked failed.\n\nOther findings:\n- Payment rows are updated read-then-write with no status guard. Three concurrent Pay clicks overwrote providerPaymentId and logged a false \"paid after the Order closed\". Reproduced live.\n- PayMongo payment.failed events can never match, because their resource is a `pay_` id, not a `cs_` id.\n- A checkout that fails to start loses the Cart and holds the Pickup Window and any reserved Stars.\n- Refunds are not atomic with the Order transition, and the claim is reverted on errors whose outcome is unknown.\n- Refund failures are invisible to Customers and Managers.\n- Smaller items: no amount, currency, reference or livemode check on paid events; no timestamp tolerance; billing details (PII) kept in payment_events; the fake-provider guard checks the configured address rather than the domain actually serving the page."
+      ],
+      "coverage": [
+        "src/modules/payments/index.ts, internal/payments.ts, provider.ts, paymongo.ts, fake.ts, sign.ts, types.ts, provider.test.ts (all read in full)",
+        "src/modules/ordering/internal/webhook.ts, refund.ts, status.ts (transition table and side effects), place.ts (startPayment call, cart clearing), customer.ts, links.ts, bar.ts expireUnpaid, reads.ts sweep call sites and refundable flag",
+        "src/app/api/webhooks/[provider]/route.ts, src/app/api/cron/daily/route.ts, vercel.json cron schedule",
+        "src/app/(site)/dev/pay/[id]/page.tsx and actions.ts; src/app/(site)/checkout/actions.ts; src/app/(site)/orders/[id]/page.tsx, actions.ts, status-poller.tsx; src/app/manage/orders/actions.ts and page.tsx refund UI; src/app/bar/actions.ts cancel",
+        "prisma/schema.prisma Payment, PaymentEvent, Refund models and the init migration indexes",
+        "tests/db/payments.test.ts, tests/db/refunds.test.ts, tests/e2e/payments.spec.ts; e2e.log and build.log route table",
+        "ADR 0003, ADR 0006, docs/03-ARCHITECTURE.md sections 4, 6, 7, 8 and 12, docs/04-DATA-MODEL.md payments tables and invariants, PRD PAY-01..06, docs/06-SETUP.md env vars, .env.example",
+        "PayMongo docs (docs.paymongo.com): webhook event list and payloads (payment.failed resource is pay_), checkout session resource ('A session does not expire on its own', at most one successful payment), expire endpoint (400 when the session has an ongoing payment), webhook best practices (dedupe by event id, 12 retries)",
+        "Live probes against http://localhost:3300: unsigned, tampered and wrong-provider webhooks; cron without auth; /dev/pay with an unknown id (soft 404, status 200); fail-then-pay in two tabs (Order K-003); three concurrent Pay submits (Order K-004). Both probe Orders were cancelled afterwards (K-004 refunded) and DB state was checked with psql. Probe scripts are in C:/Users/cjose/AppData/Local/Temp/claude/c--Users-cjose-Documents-Projects-Personal-Hoshikopi/6359509a-4fad-46a1-9519-5b159e2f3110/scratchpad/audit/payments/",
+        "Not covered: the PayMongo adapter against a real sandbox (no keys); clientIp spoofing for rate limits (left to the website security area)"
+      ],
+      "findings": [
+        {
+          "pass": 1,
+          "title": "Paid webhooks for a Payment that is no longer pending are silently dropped: Customer charged, Order stays Expired/Cancelled/Placed, no refund path",
+          "kind": "bug",
+          "severity": "high",
+          "locations": [
+            "src/modules/payments/internal/payments.ts:92-99",
+            "src/modules/payments/internal/payments.ts:128-140",
+            "src/modules/ordering/internal/webhook.ts:46-53",
+            "src/modules/ordering/internal/refund.ts:27-30",
+            "tests/db/payments.test.ts:185-193"
+          ],
+          "evidence": "recordPaymentEvent only looks up `status: \"pending\"` Payments: `if (!payment) return { kind: \"ignored\" };`. closeCheckout first sets the Payment to `expired` and then calls the provider. A provider error is only logged: `console.error(\"[payments] checkout not expired at the provider:\", error)`. PayMongo docs say a checkout session 'does not expire on its own', and the expire endpoint returns 400 when the session 'has ongoing payment'. So a Customer who is mid-GCash at the 15-minute sweep, or who cancels while paying, can still complete payment. That webhook then returns `ignored`. The same happens after a `failed` event: the Payment is marked failed, and a retry in the still-active session is dropped. Live repro with the fake provider (Order K-003): I opened the checkout in two tabs, clicked Fail in tab A, then Pay in tab B. payment_events holds both events (`failed`, then `paid`), but the Order stays `placed`, the Payment stays `failed`, and provider_payment_id is empty. The paid_late branch in webhook.ts only fires in a narrow race. Its comment says a late payment 'is logged for a Manager to refund by hand', but refundOrder accepts only `picked_up` Orders, or `cancelled` Orders with `paidAt !== null`. An Expired Order, or one Cancelled while unpaid, can never be refunded in the app. The DB test 'ignores a payment webhook that comes after expiry' locks in this behaviour. It also breaks the data-model invariant 'a paid Payment only for an Order in paid or later' (docs/04 section invariants 3).",
+          "impact": "Money integrity: a Customer can be charged for an Order the cafe treats as let go. Nothing tells a Manager, and no in-app refund is possible. Reachable without an attacker: a payment in flight at the 15-minute mark, a cancel during payment, a refused or failed expire call, or a retry after a failed attempt.",
+          "recommendation": "In recordPaymentEvent, handle a paid event for any matching Payment not already paid or refunded: set status paid and providerPaymentId, and return the orderId. If transition(paid) is refused because the Order is closed, refund automatically through the provider in the same flow (or queue it), record a Refund row, and surface it in /manage/orders. Do not mark a Payment `failed` on one failed attempt while the session is still active. In closeCheckout, set `expired` only after the provider confirms, or keep it pending when the provider refuses. Replace the 'ignored after expiry' test with 'refunded after expiry'. Build it test-first per CLAUDE.md.",
+          "effort": "M",
+          "confidence": 0.85,
+          "refs": [
+            "ADR 0003",
+            "PRD PAY-03, PAY-04, PAY-05",
+            "docs/04-DATA-MODEL.md invariant 3",
+            "https://docs.paymongo.com/reference/checkout-session-resource.md",
+            "https://docs.paymongo.com/reference/create_checkout_sessions_id_expire.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Payment rows are updated read-then-write with no status guard: closeCheckout can overwrite paid with expired, and concurrent paid events clobber providerPaymentId",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/modules/payments/internal/payments.ts:92-111",
+            "src/modules/payments/internal/payments.ts:129-134"
+          ],
+          "evidence": "recordPaymentEvent reads with findFirst `status: \"pending\"` (no lock), then calls `tx.payment.update({ where: { id: payment.id }, data: { status: \"paid\", providerPaymentId: event.paymentId } })`. closeCheckout reads the Payment, then calls `db.payment.update({ where: { id: payment.id }, data: { status: \"expired\" } })`. Neither write has a status condition. Live repro (Order K-004): three tabs clicked Pay on the same /dev/pay page at once. The Order went placed→paid once. The Payment ended with provider_payment_id `fake_pay_b4b0...` from the 2nd event, not `fake_pay_1df8...`, which paid the Order. server.log printed `[payments] paid after the Order closed: 8c77c674-...` for an Order that was not closed. The same pattern lets this interleaving overwrite paid with expired: closeCheckout reads pending; the webhook updates to paid, gets paid_late, and commits; closeCheckout's blocked update then writes `expired`.",
+          "impact": "The audit trail of a captured payment can be lost: Payment shows expired although money was taken. Refunds could target the wrong provider payment id. False 'paid after the Order closed' alarms appear.",
+          "recommendation": "Use guarded updates: `updateMany({ where: { id, status: \"pending\" }, data: ... })` and act only when count === 1. Or lock the payment row (`SELECT ... FOR UPDATE`) before deciding. Make closeCheckout's write conditional on `status: \"pending\"` as well.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "ADR 0003"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "When the checkout fails to start, the Cart is already emptied and the Order keeps holding the Pickup Window and reserved Stars",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/modules/ordering/internal/place.ts:301-302",
+            "src/modules/ordering/internal/place.ts:320-333",
+            "src/app/(site)/checkout/actions.ts:54-55"
+          ],
+          "evidence": "placeOrder commits the Order and runs `await clearCart(input.owner, tx);` inside the transaction. Only after commit does it call startPayment. On error it returns `{ ok: false, reason: \"payment_start_failed\" }` with no orderId. Its comment reads 'The Order stays Placed and Expires in 15 minutes, freeing its window'. The Customer is told \"We couldn't open the payment page. Try again, or choose Pay at Pickup.\" Their Cart is empty, so they cannot try again, and they have no link to the Placed Order. Its window counts and any 9 reserved Stars stay held until a sweep expires it.",
+          "impact": "Any PayMongo outage or timeout loses the Customer's Cart. It also blocks Capacity and the Member's Reward for 15+ minutes, and leaves an orphan Placed Order on the day view.",
+          "recommendation": "On startPayment failure, close the Order straight away through transition(expired or cancelled, system), which releases the window and Stars in the same transaction. Then restore the Cart from the snapshot Lines, or create the checkout before clearing the Cart. Add a DB test with a provider whose createCheckout throws.",
+          "effort": "M",
+          "confidence": 0.9,
+          "refs": [
+            "ADR 0007",
+            "ADR 0008",
+            "PRD PAY-01, PAY-04"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "PayMongo payment.failed events can never match a Payment (the resource id is pay_, not the checkout session id)",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "src/modules/payments/internal/paymongo.ts:101-113"
+          ],
+          "evidence": "parseEvent sets `checkoutId: resource?.id ?? null` for every event type. For `payment.failed`, PayMongo's event reference says data.attributes.data is a Payment (`pay_...`) and carries no checkout session id. recordPaymentEvent looks up `providerCheckoutId: event.checkoutId`, finds nothing and returns `ignored`. The adapter's own comment says shapes 'were not run against a sandbox'. provider.test.ts only tests the paid shape.",
+          "impact": "Under PayMongo, failed attempts are never recorded, and the Order page's 'Your payment didn't go through' message never shows. That is mostly harmless, because the session stays payable. But fixing only the mapping would turn on the drop-after-failure bug in the first finding.",
+          "recommendation": "Treat only `checkout_session.payment.paid` as decisive. Map `payment.failed` to `other`, or match it through payment_intent_id stored at checkout creation, and never make it terminal while the session is active. Add a parseEvent test for the real payment.failed payload.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": [
+            "https://docs.paymongo.com/docs/developer-tools-webhooks-events.md",
+            "ADR 0003"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Refunds are not atomic with the Order transition, and the claim is reverted on errors whose outcome is unknown; both can leave Orders stuck",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/modules/payments/internal/payments.ts:150-187",
+            "src/modules/ordering/internal/refund.ts:32-49",
+            "prisma/schema.prisma:407-419"
+          ],
+          "evidence": "refundPayment claims paid→refunded, calls the provider, then creates the Refund row. Any throw, including a network timeout after PayMongo processed the refund or a failed `db.refund.create`, runs `status: \"paid\"`. A retry then asks the provider to refund again: PayMongo refuses, so the Order stays refundable forever while money was in fact returned. refundOrder runs transition(refunded) as a separate step after refundPayment. A crash or a refused transition leaves the Payment `refunded` with the Order still `picked_up`/`cancelled`. Every retry then gets `already_refunded` → `{ ok: false, reason: \"not_allowed\" }`, so the Order can never reach Refunded and Stars are never reversed. PayMongo refunds are asynchronous (pending → succeeded/failed), but refund events map to `other` and are ignored, so a refund that later fails is never seen. refunds.payment_id has no unique index, although refunds are full only. Separately, a Payment that exists in a non-paid state returns `no_online_payment`, which refundOrder treats like cash: it marks the Order Refunded and emails 'refunded in full' without moving money. That case is latent today.",
+          "impact": "Refund state can drift from the provider and Orders can get stuck. Refund failures at the provider go unnoticed.",
+          "recommendation": "Keep the claim when the outcome is unknown, and reconcile through the provider's refund webhooks (payment.refunded, payment.refund.updated). Let refundOrder continue to transition when refundPayment returns already_refunded and the Order is not yet Refunded, so the operation is idempotent end to end. Add a unique index on refunds.payment_id. Return a distinct outcome for an online Payment that is not paid.",
+          "effort": "M",
+          "confidence": 0.75,
+          "refs": [
+            "PRD PAY-05",
+            "ADR 0003"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Refund failures are invisible: refundAction and cancelOrder throw away the RefundResult",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "src/app/manage/orders/actions.ts:14-17",
+            "src/modules/ordering/internal/refund.ts:62-71",
+            "src/app/(site)/orders/[id]/actions.ts:8-14"
+          ],
+          "evidence": "refundAction calls `await refundOrder(...)` and then `refresh()` without reading `{ ok: false, reason: \"provider_failed\" }`. cancelOrder calls `await refundOrder(orderId, ...)` for a paid Order and returns only the cancel's TransitionResult. When the provider refuses, a Customer who cancels a paid Order sees 'This order was cancelled.' and gets no refund email. The only trace is `console.error(\"[payments] refund refused by the provider:\", error)`. The Manager sees the same Refund button again with no message.",
+          "impact": "A Customer's money may never come back after a cancel, and nobody is told. A Manager pressing Refund cannot tell success from failure.",
+          "recommendation": "Return the RefundResult to the Server Actions and show a message ('The refund didn't go through. Try again in a minute.'). Flag cancelled-but-paid Orders that have no Refund row on /manage/orders. Have the Customer page say the refund is pending, not finished.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "PRD PAY-05, ORD-09"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "A webhook can mark an Order Paid long after its 15 minutes when no expiry sweep has run",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "src/modules/ordering/internal/webhook.ts:31-45",
+            "src/modules/ordering/internal/bar.ts:16-33",
+            "src/modules/ordering/internal/customer.ts:30-41"
+          ],
+          "evidence": "Expiry happens only in sweeps: checkoutView, getOrderForCustomer, barBoard, and the daily cron at 06:00 Manila. The status poller's orderVersion does not sweep. receivePaymentWebhook never checks placedAt + PAYMENT_MINUTES. PayMongo sessions never expire on their own. If nothing triggers a sweep (no Bar Screen open, no checkout views; common on the demo deploy, or after the Bar Screen closes at 21:00), a payment 40 minutes later turns the Order Paid for a Pickup Window that has passed.",
+          "impact": "Paid Orders can appear for past windows or after closing. This is the reverse of PAY-04 ('unpaid after 15 minutes Expires').",
+          "recommendation": "In the webhook transaction, compare the Order's placedAt with now() through lib/clock. Past the deadline, treat it as a late payment and use the same refund path as the first finding.",
+          "effort": "S",
+          "confidence": 0.7,
+          "refs": [
+            "PRD PAY-04",
+            "docs/03-ARCHITECTURE.md section 12"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Paid events are not checked for amount, currency, reference number or livemode",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/modules/payments/internal/paymongo.ts:88-114",
+            "src/modules/payments/internal/payments.ts:100-111"
+          ],
+          "evidence": "parseEvent keeps only id, type, checkout id and `payments?.[0]?.id`. The payload's payments[].attributes.amount/currency, `reference_number` (set to the Payment id at creation, paymongo.ts:47) and `livemode` are never compared with payments.amount_cents, PHP, payment.id or false. It also takes `payments[0]` without checking that its status is paid; a session's payments list could include failed attempts (unconfirmed).",
+          "impact": "Defence in depth only: amounts are set server-side at session creation, so tampering needs the webhook secret. A wrong payments[0] would make later refunds target the wrong payment id.",
+          "recommendation": "Carry amount, currency, reference and livemode in ProviderEvent. Refuse to mark paid on a mismatch (log and return 200). Pick the payment whose status is `paid`.",
+          "effort": "S",
+          "confidence": 0.6,
+          "refs": [
+            "ADR 0003",
+            "ADR 0006"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "PayMongo signature check has no timestamp tolerance, and the whole unauthenticated body is read before verification",
+          "kind": "security",
+          "severity": "low",
+          "locations": [
+            "src/modules/payments/internal/paymongo.ts:75-87",
+            "src/app/api/webhooks/[provider]/route.ts:17"
+          ],
+          "evidence": "verifyWebhook checks `parts.t` exists but never compares it with now(). PayMongo docs suggest rejecting old timestamps. Exact replays are still stopped by the (provider, provider_event_id) unique constraint, so the risk is small. `await request.text()` reads any size of body before the HMAC check (Vercel caps it at 4.5 MB; self-hosting does not).",
+          "impact": "Replay protection rests entirely on the dedupe table, and the endpoint accepts large unauthenticated bodies. Low risk.",
+          "recommendation": "Reject when |now() - t| exceeds about 5 minutes, using lib/clock. Refuse bodies over a small limit (for example check Content-Length below 256 KB) before reading.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": [
+            "ADR 0003"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Raw PayMongo payloads, which include customer billing details, are kept forever and skipped by Member deletion",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/modules/payments/internal/payments.ts:85-89",
+            "src/modules/ordering/internal/reads.ts:233-243"
+          ],
+          "evidence": "Every verified event body is stored as `payload` jsonb. PayMongo checkout session and payment resources carry billing name, email and phone. deidentifyOrders scrubs orders.customer_* but nothing touches payment_events, which no code ever reads back. The status link with its access token is also sent to PayMongo as success_url and cancel_url (paymongo.ts:48-49).",
+          "impact": "Personal data survives a Member's deletion request (Data Privacy Act duty in docs/03 section 13). This matters once PayMongo test events contain real tester details.",
+          "recommendation": "Store only the fields needed (event id, type, checkout id, payment id, amount), or null out the payload after processing or on deletion.",
+          "effort": "S",
+          "confidence": 0.6,
+          "refs": [
+            "docs/03-ARCHITECTURE.md section 13 (Privacy)"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Fake-provider guard checks the configured NEXT_PUBLIC_SITE_URL, not the domain actually serving requests",
+          "kind": "security",
+          "severity": "low",
+          "locations": [
+            "src/modules/payments/internal/provider.ts:25-44"
+          ],
+          "evidence": "`const host = new URL(env.NEXT_PUBLIC_SITE_URL).hostname; const allowed = LOCAL.includes(host) || host.endsWith(\".vercel.app\") || env.VERCEL_ENV === \"preview\";`. Vercel serves the same production deployment on <project>.vercel.app and on any custom domain added later. If NEXT_PUBLIC_SITE_URL is left at the vercel.app address, /dev/pay and the fake webhook work on the custom domain too, against ADR 0003 ('refuses to run on a production domain'). The check is also lazy: it runs at the first payment call, not at startup.",
+          "impact": "A misconfiguration would let anyone mark Orders paid on a production-looking domain. There is no real money (ADR 0006), so the risk is low.",
+          "recommendation": "In /dev/pay and fakePayAction, also check the request Host (headers()) against the same allowlist. Call providerFor(process.env) once at startup (instrumentation.ts) so a bad config fails the deploy.",
+          "effort": "S",
+          "confidence": 0.6,
+          "refs": [
+            "ADR 0003",
+            "ADR 0006",
+            "PRD PAY-06"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "fakePayAction ignores the webhook response, and /dev/pay for an unknown id answers 200",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/dev/pay/[id]/actions.ts:26-32",
+            "src/app/(site)/dev/pay/[id]/page.tsx:39-41"
+          ],
+          "evidence": "The action calls `await fetch(`${site}/api/webhooks/fake`, ...)` and redirects without checking `response.ok`. A 429, a 500, or a 401 from Vercel Deployment Protection on preview deploys (the self-fetch carries no bypass) leaves the Customer on a 'Finish paying' page with no reason given. `curl /dev/pay/fake_cs_nope` returns HTTP 200 with 'This page could not be found': notFound() fires inside Suspense after the shell has streamed.",
+          "impact": "Demo payments can silently fail to record on protected preview deploys, which makes them hard to debug.",
+          "recommendation": "Check response.ok and show a short error on the fake page. For previews, document the Vercel protection bypass header or call receivePaymentWebhook in-process with the signed event.",
+          "effort": "S",
+          "confidence": 0.6,
+          "refs": [
+            "PRD PAY-06"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "An online Order can be placed with a total of PHP 0.00 (Reward covers the whole Cart)",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/modules/ordering/internal/place.ts:199-203",
+            "src/modules/ordering/internal/place.ts:320-327"
+          ],
+          "evidence": "placeOrder has no rule against `totalCents === 0` with an online paymentMethod. A Member with 9 Stars and one drink with no Price Deltas gets an online checkout for 0 centavos. The fake page shows 'Pay PHP 0.00'. PayMongo would probably refuse a zero line item, which leads to payment_start_failed (finding 3). I could not confirm PayMongo's minimum amount.",
+          "impact": "Confusing flow; with PayMongo it likely fails and loses the Cart.",
+          "recommendation": "When the total is 0, place it like Pay at Pickup (no Payment), or hide online methods.",
+          "effort": "S",
+          "confidence": 0.5,
+          "refs": [
+            "PRD LOY-03, PAY-01"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Tests miss late payment, provider failure and PayMongo payload paths",
+          "kind": "test-gap",
+          "severity": "low",
+          "locations": [
+            "tests/db/payments.test.ts",
+            "tests/db/refunds.test.ts",
+            "src/modules/payments/internal/provider.test.ts"
+          ],
+          "evidence": "No tests cover: a paid event after the Customer cancels or after a failed event; the paid_late branch; a provider refund that throws (claim revert); a createCheckout that throws (payment_start_failed); PayMongo payment.failed or refund event shapes; a PayMongo header missing `te` or with only `li`; /api/cron/daily auth; /dev/pay and fakePayAction refusing when the provider is paymongo. payments.test.ts:185-193 asserts the questionable 'ignored after expiry' behaviour.",
+          "impact": "The bugs above went unnoticed, and the existing test would resist the fix.",
+          "recommendation": "Add DB tests for each path, test-first per CLAUDE.md (webhook handlers are on the tdd list), using a stub provider that throws.",
+          "effort": "M",
+          "confidence": 0.9,
+          "refs": [
+            "CLAUDE.md test discipline"
+          ]
         }
       ]
     },
@@ -3038,292 +3329,1174 @@
       ]
     },
     {
-      "key": "payments",
+      "key": "data",
       "passes": 1,
       "summaries": [
-        "The payments core is mostly sound. The webhook route reads the raw body with request.text() and verifies it before parsing. The HMAC input for PayMongo is `t.rawBody`, compared against `te` only, which is correct with test keys. The comparison is timing-safe (sign.ts). Dedupe runs on a DB unique (provider, provider_event_id) inside the same transaction as the Order transition. The return URL never decides payment state, sk_live_ keys are refused, /dev/pay returns 404 under PayMongo, and fakePayAction throws unless the fake provider is active. Live probes on :3300 got 401 bad_signature for unsigned or tampered fake events, 404 wrong_provider for /api/webhooks/paymongo and /other, and 401 from /api/cron/daily without the secret.\n\nThe serious gap is how payments arriving at the wrong moment are handled. recordPaymentEvent only acts on a Payment that is still `pending`. Some sequences leave a Payment in another state when its money arrives: the Order expires, the Customer cancels, a payment attempt fails and the Customer retries, or the expire call to PayMongo is refused because a payment is in progress. In all of these the paid webhook is stored and then silently ignored. The Customer is charged, the Order stays Expired, Cancelled or Placed, and no code path refunds it. I reproduced this live with the fake provider: after a failed attempt, a second tab paid, and the paid event was stored but the Order stayed placed with the Payment marked failed.\n\nOther findings:\n- Payment rows are updated read-then-write with no status guard. Three concurrent Pay clicks overwrote providerPaymentId and logged a false \"paid after the Order closed\". Reproduced live.\n- PayMongo payment.failed events can never match, because their resource is a `pay_` id, not a `cs_` id.\n- A checkout that fails to start loses the Cart and holds the Pickup Window and any reserved Stars.\n- Refunds are not atomic with the Order transition, and the claim is reverted on errors whose outcome is unknown.\n- Refund failures are invisible to Customers and Managers.\n- Smaller items: no amount, currency, reference or livemode check on paid events; no timestamp tolerance; billing details (PII) kept in payment_events; the fake-provider guard checks the configured address rather than the domain actually serving the page."
+        "The data layer is mostly sound. All 11 migrations apply cleanly to an empty database. `prisma migrate diff` from the migrated scratch database to schema.prisma returns \"This is an empty migration\", and the dev database's constraints, indexes and trigger match a fresh migrate exactly, so there is no drift. Every money column is an integer `*_cents` column. Every instant is TIMESTAMPTZ(3), service days are DATE and opening times are TIME(0). Order Lines snapshot name, Options and prices, and their FKs use SET NULL. order_events is append-only through a trigger plus ON DELETE RESTRICT. The enum change for `birthday` sits in its own migration. Data-only migrations are guarded so they are no-ops on fresh databases. Hot-path indexes are adequate at cafe scale: orders(status, window_start), (service_day, code), member_id, star_entries(member_id), payments(provider_checkout_id). Reports scan placed_at with no index, and the FK columns that lack an index only matter for deletes the app never does.\n\nThe biggest risk is in deployment, not the schema. `placeOrder` runs 26 sequential statements in one interactive transaction with Prisma's default 5 s timeout. Vercel Functions default to iad1 while ADR 0004 puts Neon in Singapore, so checkout will likely time out on the demo.\n\nOther confirmed problems:\n- Several hand-written CHECKs pass NULL rows they claim to refuse: a Promo with no end date, Promo dates with no price, an open Special Hours day with no times, NULL badge or allergen arrays.\n- The Manager's Inquiry list takes the 200 newest rows before sorting by status, so an older unanswered Inquiry disappears (reproduced).\n- The Stars ledger has no database-level backstop against a duplicate earn, reserve or release, or a second Birthday Treat.\n- The seed is relative to its run date and cannot be re-run, so the live demo loses its Events, Promo and seasonal drink within 3 to 8 weeks.\n- Only 3 of about 25 hand-written constraints are tested.\n\nRetention of personal data (rate_limits keys, payment_events payloads, Sign-ups, Inquiries, Guest Carts) and the preview-migration risk overlap with interim findings SEC1-03, SEC2-06, PAY-10, ID2-08 and ORD-21. They are restated once here from the data-model angle.\n\nAll scratch work used hoshikopi_audit_scratch, which already existed from an earlier run. I dropped and recreated it, then dropped it again at the end. git status is clean."
       ],
       "coverage": [
-        "src/modules/payments/index.ts, internal/payments.ts, provider.ts, paymongo.ts, fake.ts, sign.ts, types.ts, provider.test.ts (all read in full)",
-        "src/modules/ordering/internal/webhook.ts, refund.ts, status.ts (transition table and side effects), place.ts (startPayment call, cart clearing), customer.ts, links.ts, bar.ts expireUnpaid, reads.ts sweep call sites and refundable flag",
-        "src/app/api/webhooks/[provider]/route.ts, src/app/api/cron/daily/route.ts, vercel.json cron schedule",
-        "src/app/(site)/dev/pay/[id]/page.tsx and actions.ts; src/app/(site)/checkout/actions.ts; src/app/(site)/orders/[id]/page.tsx, actions.ts, status-poller.tsx; src/app/manage/orders/actions.ts and page.tsx refund UI; src/app/bar/actions.ts cancel",
-        "prisma/schema.prisma Payment, PaymentEvent, Refund models and the init migration indexes",
-        "tests/db/payments.test.ts, tests/db/refunds.test.ts, tests/e2e/payments.spec.ts; e2e.log and build.log route table",
-        "ADR 0003, ADR 0006, docs/03-ARCHITECTURE.md sections 4, 6, 7, 8 and 12, docs/04-DATA-MODEL.md payments tables and invariants, PRD PAY-01..06, docs/06-SETUP.md env vars, .env.example",
-        "PayMongo docs (docs.paymongo.com): webhook event list and payloads (payment.failed resource is pay_), checkout session resource ('A session does not expire on its own', at most one successful payment), expire endpoint (400 when the session has an ongoing payment), webhook best practices (dedupe by event id, 12 retries)",
-        "Live probes against http://localhost:3300: unsigned, tampered and wrong-provider webhooks; cron without auth; /dev/pay with an unknown id (soft 404, status 200); fail-then-pay in two tabs (Order K-003); three concurrent Pay submits (Order K-004). Both probe Orders were cancelled afterwards (K-004 refunded) and DB state was checked with psql. Probe scripts are in C:/Users/cjose/AppData/Local/Temp/claude/c--Users-cjose-Documents-Projects-Personal-Hoshikopi/6359509a-4fad-46a1-9519-5b159e2f3110/scratchpad/audit/payments/",
-        "Not covered: the PayMongo adapter against a real sandbox (no keys); clientIp spoofing for rate limits (left to the website security area)"
+        "prisma/schema.prisma (all 667 lines, every model, relation, onDelete, index, enum, @db type)",
+        "All 11 migrations under prisma/migrations read in full, plus migration_lock.toml",
+        "Applied all migrations with psql to a fresh hoshikopi_audit_scratch; ran `prisma migrate diff --from-config-datasource --to-schema` with a scratch config: empty diff",
+        "Compared pg_constraint, pg_indexes and pg_trigger between dev `hoshikopi` and the fresh scratch DB: identical except _prisma_migrations",
+        "Read-only checks on dev DB: _prisma_migrations status (11 applied, none rolled back), table counts, rate_limits keys, payment_events payloads, carts, events and promo dates, order total vs line sums (0 mismatches of 13)",
+        "Probed CHECK and unique constraints with inserts on the scratch DB (promo, special_hours, NULL arrays, empty email, payments vs order status, refunds, duplicate star entries, case-variant sign-up emails, users email)",
+        "prisma/seed.ts, prisma/seed-data.ts (full), prisma.config.ts, src/lib/db.ts",
+        "Counted DB statements inside placeOrder on the scratch DB with a pg query hook (scratchpad/audit/data/dm/count-tx.mts)",
+        "Reproduced the Inquiry list cap with inquiriesForStaff on the scratch DB (scratchpad/audit/data/dm/inquiries-cap.mts)",
+        "docs/04-DATA-MODEL.md (full), ADR 0002, 0004, 0007, 0008, docs/06-SETUP.md sections 6 and 9, vercel.json, .env.example, .gitignore",
+        "DB-touching code checked against the schema: ordering place.ts, status.ts, bar.ts, windows.ts, reads.ts (deidentifyOrders), reports.ts, webhook.ts; payments.ts recordPaymentEvent; loyalty ledger.ts; identity privacy.ts and auth.ts; cart.ts and favourites.ts; content signups.ts and inquiries.ts; menu edit.ts and pricing.ts and queries.ts; cafe save-hours.ts; lib/rate-limit.ts; notify outbox.ts; account actions and export route; privacy page; cron daily route",
+        "tests/db/seed.test.ts, helpers.ts, global-setup.ts, tests/e2e/reset-db.mts, playwright.config.ts webServer, vitest.config.mts",
+        "Better Auth magic-link verification storage (node_modules/better-auth/dist/plugins/magic-link/index.mjs:91-99) and email lowercasing",
+        "Vercel docs on the default Functions region (iad1)",
+        "Read docs/audit/2026-11-06-interim.md to avoid repeating earlier findings"
       ],
       "findings": [
         {
           "pass": 1,
-          "title": "Paid webhooks for a Payment that is no longer pending are silently dropped: Customer charged, Order stays Expired/Cancelled/Placed, no refund path",
+          "title": "Checkout will likely time out on the hosted demo: 26 sequential statements in placeOrder's transaction, Vercel's default iad1 region, Neon in Singapore, and Prisma's 5 s default timeout",
           "kind": "bug",
           "severity": "high",
           "locations": [
-            "src/modules/payments/internal/payments.ts:92-99",
-            "src/modules/payments/internal/payments.ts:128-140",
-            "src/modules/ordering/internal/webhook.ts:46-53",
-            "src/modules/ordering/internal/refund.ts:27-30",
-            "tests/db/payments.test.ts:185-193"
+            "vercel.json:1-5",
+            "src/lib/db.ts:58-62",
+            "src/lib/db.ts:75-80",
+            "src/modules/ordering/internal/place.ts:177-305",
+            "docs/06-SETUP.md:166-183",
+            "docs/adr/0004-postgres-prisma-neon.md"
           ],
-          "evidence": "recordPaymentEvent only looks up `status: \"pending\"` Payments: `if (!payment) return { kind: \"ignored\" };`. closeCheckout first sets the Payment to `expired` and then calls the provider. A provider error is only logged: `console.error(\"[payments] checkout not expired at the provider:\", error)`. PayMongo docs say a checkout session 'does not expire on its own', and the expire endpoint returns 400 when the session 'has ongoing payment'. So a Customer who is mid-GCash at the 15-minute sweep, or who cancels while paying, can still complete payment. That webhook then returns `ignored`. The same happens after a `failed` event: the Payment is marked failed, and a retry in the still-active session is dropped. Live repro with the fake provider (Order K-003): I opened the checkout in two tabs, clicked Fail in tab A, then Pay in tab B. payment_events holds both events (`failed`, then `paid`), but the Order stays `placed`, the Payment stays `failed`, and provider_payment_id is empty. The paid_late branch in webhook.ts only fires in a narrow race. Its comment says a late payment 'is logged for a Manager to refund by hand', but refundOrder accepts only `picked_up` Orders, or `cancelled` Orders with `paidAt !== null`. An Expired Order, or one Cancelled while unpaid, can never be refunded in the app. The DB test 'ignores a payment webhook that comes after expiry' locks in this behaviour. It also breaks the data-model invariant 'a paid Payment only for an Order in paid or later' (docs/04 section invariants 3).",
-          "impact": "Money integrity: a Customer can be charged for an Order the cafe treats as let go. Nothing tells a Manager, and no in-app refund is possible. Reachable without an attacker: a payment in flight at the 15-minute mark, a cancel during payment, a refused or failed expire call, or a retry after a failed attempt.",
-          "recommendation": "In recordPaymentEvent, handle a paid event for any matching Payment not already paid or refunded: set status paid and providerPaymentId, and return the orderId. If transition(paid) is refused because the Order is closed, refund automatically through the provider in the same flow (or queue it), record a Refund row, and surface it in /manage/orders. Do not mark a Payment `failed` on one failed attempt while the session is still active. In closeCheckout, set `expired` only after the provider confirms, or keep it pending when the provider refuses. Replace the 'ignored after expiry' test with 'refunded after expiry'. Build it test-first per CLAUDE.md.",
-          "effort": "M",
-          "confidence": 0.85,
-          "refs": [
-            "ADR 0003",
-            "PRD PAY-03, PAY-04, PAY-05",
-            "docs/04-DATA-MODEL.md invariant 3",
-            "https://docs.paymongo.com/reference/checkout-session-resource.md",
-            "https://docs.paymongo.com/reference/create_checkout_sessions_id_expire.md"
-          ]
-        },
-        {
-          "pass": 1,
-          "title": "Payment rows are updated read-then-write with no status guard: closeCheckout can overwrite paid with expired, and concurrent paid events clobber providerPaymentId",
-          "kind": "bug",
-          "severity": "medium",
-          "locations": [
-            "src/modules/payments/internal/payments.ts:92-111",
-            "src/modules/payments/internal/payments.ts:129-134"
-          ],
-          "evidence": "recordPaymentEvent reads with findFirst `status: \"pending\"` (no lock), then calls `tx.payment.update({ where: { id: payment.id }, data: { status: \"paid\", providerPaymentId: event.paymentId } })`. closeCheckout reads the Payment, then calls `db.payment.update({ where: { id: payment.id }, data: { status: \"expired\" } })`. Neither write has a status condition. Live repro (Order K-004): three tabs clicked Pay on the same /dev/pay page at once. The Order went placed→paid once. The Payment ended with provider_payment_id `fake_pay_b4b0...` from the 2nd event, not `fake_pay_1df8...`, which paid the Order. server.log printed `[payments] paid after the Order closed: 8c77c674-...` for an Order that was not closed. The same pattern lets this interleaving overwrite paid with expired: closeCheckout reads pending; the webhook updates to paid, gets paid_late, and commits; closeCheckout's blocked update then writes `expired`.",
-          "impact": "The audit trail of a captured payment can be lost: Payment shows expired although money was taken. Refunds could target the wrong provider payment id. False 'paid after the Order closed' alarms appear.",
-          "recommendation": "Use guarded updates: `updateMany({ where: { id, status: \"pending\" }, data: ... })` and act only when count === 1. Or lock the payment row (`SELECT ... FOR UPDATE`) before deciding. Make closeCheckout's write conditional on `status: \"pending\"` as well.",
+          "evidence": "I hooked pg's Client/Pool query and called the real placeOrder (Guest, Pay at Pickup, 2 lattes plus 1 pastry) against a freshly migrated and seeded scratch DB. It reported {\"ok\":true,\"total\":30,\"inTx\":26,\"ms\":240}. The trace has 26 statements from BEGIN to COMMIT: special_hours, opening_hours, capacity_rules, cafe_settings, carts, cart_lines, menu_items x2, categories, menu_item_option_groups, option_groups, options, pickup_window_usage, SUM(order_lines), the INSERT ... ON CONFLICT, SELECT ... FOR UPDATE, UPDATE usage, cafe_settings, the order_code_counters upsert, INSERT orders, order_lines, order_events, SELECT orders and DELETE cart_lines. A Reward Order adds the member lock and the balance aggregate. One pg connection runs them one after another. db.ts builds `new PrismaClient({ adapter: new PrismaPg({ connectionString }) })` with no transactionOptions, and placeOrder calls `db.$transaction(async (tx) => ...)` with no timeout, so Prisma's default 5000 ms applies. vercel.json has no `regions` key, and Vercel's docs say Functions \"execute in Washington, D.C., USA (iad1) for all new projects\". ADR 0004 and setup step 1 put Neon in Singapore (aws-ap-southeast-1). At the usual round trip of about 200 to 230 ms between US East and Singapore, 26 round trips take about 5.2 to 6 s. Not observed on Vercel (batch 5.4 is not deployed).",
+          "impact": "Most checkouts on the live demo would fail with P2028 (transaction timeout) or come close to it. The whole time, the transaction holds the Pickup Window row lock and the day's single order_code_counters row lock, so all placements for the day queue behind one another. The Bar Screen poll (about 9 queries) and other dynamic reads would also take seconds each. The two-minute demo script (PRD section 8) depends on this flow.",
+          "recommendation": "Add `\"regions\": [\"sin1\"]` to vercel.json (Hobby may pick one region) and add it to docs/06-SETUP.md section 9. Also give placeOrder an explicit `{ timeout: 10_000, maxWait: 5_000 }`. Optionally cut round trips: read hours, capacity and settings once outside the transaction and re-check only the window and counter under the lock, and fold the second cafe_settings read into the first. Measure on the deployed preview with the query hook used here.",
           "effort": "S",
-          "confidence": 0.85,
+          "confidence": 0.6,
           "refs": [
-            "ADR 0003"
+            "https://vercel.com/docs/functions/configuring-functions/region",
+            "docs/adr/0004-postgres-prisma-neon.md",
+            "scratchpad/audit/data/dm/count-tx.mts"
           ]
         },
         {
           "pass": 1,
-          "title": "When the checkout fails to start, the Cart is already emptied and the Order keeps holding the Pickup Window and reserved Stars",
+          "title": "The Manager's Inquiry list fetches the 200 newest rows and only then puts New first, so older unanswered Inquiries vanish",
           "kind": "bug",
           "severity": "medium",
           "locations": [
-            "src/modules/ordering/internal/place.ts:301-302",
-            "src/modules/ordering/internal/place.ts:320-333",
-            "src/app/(site)/checkout/actions.ts:54-55"
+            "src/modules/content/internal/inquiries.ts:99-106",
+            "src/app/manage/inquiries/page.tsx:42",
+            "prisma/schema.prisma:529",
+            "prisma/migrations/20261101120000_recurring_events_inquiries/migration.sql:43"
           ],
-          "evidence": "placeOrder commits the Order and runs `await clearCart(input.owner, tx);` inside the transaction. Only after commit does it call startPayment. On error it returns `{ ok: false, reason: \"payment_start_failed\" }` with no orderId. Its comment reads 'The Order stays Placed and Expires in 15 minutes, freeing its window'. The Customer is told \"We couldn't open the payment page. Try again, or choose Pay at Pickup.\" Their Cart is empty, so they cannot try again, and they have no link to the Placed Order. Its window counts and any 9 reserved Stars stay held until a sweep expires it.",
-          "impact": "Any PayMongo outage or timeout loses the Customer's Cart. It also blocks Capacity and the Member's Reward for 15+ minutes, and leaves an orphan Placed Order on the day view.",
-          "recommendation": "On startPayment failure, close the Order straight away through transition(expired or cancelled, system), which releases the window and Stars in the same transaction. Then restore the Cart from the snapshot Lines, or create the checkout before clearing the Cart. Add a DB test with a provider whose createCheckout throws.",
-          "effort": "M",
+          "evidence": "`const rows = await db.inquiry.findMany({ orderBy: [{ createdAt: \"desc\" }], take: 200 }); ... return rows.map(toView).sort((a, b) => order[a.status] - order[b.status]);` The page has no pagination. Reproduced on the scratch DB with the real inquiriesForStaff: one 'new' Inquiry from Nov 1 plus 200 newer answered or closed ones gave {\"listed\":200,\"newListed\":0,\"realShown\":false}. The (status, created_at) index the migration creates cannot serve this query, which has no status filter and orders by created_at only.",
+          "impact": "Once 200 Inquiries exist, a private-event or large-order request that is still New no longer appears for the Manager. The public form allows 5 per IP an hour, so steady spam pushes real requests out of view within days. The index is dead weight.",
+          "recommendation": "Query New ones first and cap the rest: `orderBy: [{ status: \"asc\" }, { createdAt: \"desc\" }]` (the enum order is new, answered, closed), or fetch `where: { status: \"new\" }` in full plus the latest 100 others. Either one uses the existing (status, created_at) index. Add a test with more than 200 rows.",
+          "effort": "S",
           "confidence": 0.9,
           "refs": [
-            "ADR 0007",
-            "ADR 0008",
-            "PRD PAY-01, PAY-04"
+            "scratchpad/audit/data/dm/inquiries-cap.mts"
           ]
         },
         {
           "pass": 1,
-          "title": "PayMongo payment.failed events can never match a Payment (the resource id is pay_, not the checkout session id)",
-          "kind": "bug",
-          "severity": "low",
-          "locations": [
-            "src/modules/payments/internal/paymongo.ts:101-113"
-          ],
-          "evidence": "parseEvent sets `checkoutId: resource?.id ?? null` for every event type. For `payment.failed`, PayMongo's event reference says data.attributes.data is a Payment (`pay_...`) and carries no checkout session id. recordPaymentEvent looks up `providerCheckoutId: event.checkoutId`, finds nothing and returns `ignored`. The adapter's own comment says shapes 'were not run against a sandbox'. provider.test.ts only tests the paid shape.",
-          "impact": "Under PayMongo, failed attempts are never recorded, and the Order page's 'Your payment didn't go through' message never shows. That is mostly harmless, because the session stays payable. But fixing only the mapping would turn on the drop-after-failure bug in the first finding.",
-          "recommendation": "Treat only `checkout_session.payment.paid` as decisive. Map `payment.failed` to `other`, or match it through payment_intent_id stored at checkout creation, and never make it terminal while the session is active. Add a parseEvent test for the real payment.failed payload.",
-          "effort": "S",
-          "confidence": 0.8,
-          "refs": [
-            "https://docs.paymongo.com/docs/developer-tools-webhooks-events.md",
-            "ADR 0003"
-          ]
-        },
-        {
-          "pass": 1,
-          "title": "Refunds are not atomic with the Order transition, and the claim is reverted on errors whose outcome is unknown; both can leave Orders stuck",
-          "kind": "bug",
+          "title": "The seed's dates count from the day it runs, and it cannot be re-run, so the hosted demo loses its Events, Promo and seasonal drink within weeks",
+          "kind": "improvement",
           "severity": "medium",
           "locations": [
-            "src/modules/payments/internal/payments.ts:150-187",
-            "src/modules/ordering/internal/refund.ts:32-49",
-            "prisma/schema.prisma:407-419"
+            "prisma/seed-data.ts:447-463",
+            "prisma/seed-data.ts:514-546",
+            "prisma/seed.ts:25-28",
+            "docs/06-SETUP.md:182"
           ],
-          "evidence": "refundPayment claims paid→refunded, calls the provider, then creates the Refund row. Any throw, including a network timeout after PayMongo processed the refund or a failed `db.refund.create`, runs `status: \"paid\"`. A retry then asks the provider to refund again: PayMongo refuses, so the Order stays refundable forever while money was in fact returned. refundOrder runs transition(refunded) as a separate step after refundPayment. A crash or a refused transition leaves the Payment `refunded` with the Order still `picked_up`/`cancelled`. Every retry then gets `already_refunded` → `{ ok: false, reason: \"not_allowed\" }`, so the Order can never reach Refunded and Stars are never reversed. PayMongo refunds are asynchronous (pending → succeeded/failed), but refund events map to `other` and are ignored, so a refund that later fails is never seen. refunds.payment_id has no unique index, although refunds are full only. Separately, a Payment that exists in a non-paid state returns `no_online_payment`, which refundOrder treats like cash: it marks the Order Refunded and emails 'refunded in full' without moving money. That case is latent today.",
-          "impact": "Refund state can drift from the provider and Orders can get stuck. Refund failures at the provider go unnoticed.",
-          "recommendation": "Keep the claim when the outcome is unknown, and reconcile through the provider's refund webhooks (payment.refunded, payment.refund.updated). Let refundOrder continue to transition when refundPayment returns already_refunded and the Order is not yet Refunded, so the operation is idempotent end to end. Add a unique index on refunds.payment_id. Return a distinct outcome for an online Payment that is not paid.",
+          "evidence": "The seed computes `evening(7)` and `evening(21)` for the two Events, `promoUntil: dayFromNow(30)` for the Matcha Latte Promo, and `availableUntil: dayFromNow(60)` for Calamansi Honey Soda. Dev DB today: latte-art-night 2026-11-12, open-mic 2026-11-26, matcha promo 2026-11-04 to 2026-12-05, calamansi available_until 2027-01-04. Setup step 4 seeds the live demo \"once\". seed.ts refuses a second run: `if (await db.category.count()) { console.log(\"Already seeded; run npm run db:reset ...\"); return; }`. db:reset would wipe Orders and Members.",
+          "impact": "About 3 weeks after deploy, the Events page shows nothing upcoming and the Sign-up flow (EVT-02) cannot be shown. After 30 days the Promo badge and price are gone. After 60 days Calamansi Honey Soda is Hidden for good, so the Tapa Rice Bowl pairing points at an item that is off the menu. Portfolio reviewers who arrive later see a thinner product.",
+          "recommendation": "Add an idempotent `refreshDemo` step, run by the daily cron or a script with ALLOW_REMOTE_SEED: move seeded Events (by slug) forward when they are past, roll the seeded Promo and the seasonal date forward, and leave everything a Manager changed alone (match on the seeded values). Or seed weekly-relative dates and document a monthly refresh in docs/06-SETUP.md section 9.",
           "effort": "M",
-          "confidence": 0.75,
-          "refs": [
-            "PRD PAY-05",
-            "ADR 0003"
-          ]
+          "confidence": 0.85
         },
         {
           "pass": 1,
-          "title": "Refund failures are invisible: refundAction and cancelOrder throw away the RefundResult",
-          "kind": "gap",
+          "title": "No database backstop for Star integrity: duplicate earn, reserve or release per Order and repeat Birthday Treats are all accepted",
+          "kind": "improvement",
           "severity": "medium",
           "locations": [
-            "src/app/manage/orders/actions.ts:14-17",
-            "src/modules/ordering/internal/refund.ts:62-71",
-            "src/app/(site)/orders/[id]/actions.ts:8-14"
+            "prisma/migrations/20261031054051_init/migration.sql:643-648",
+            "prisma/migrations/20261101100100_birthday_sign_check/migration.sql:1-7",
+            "src/modules/loyalty/internal/ledger.ts:44-57",
+            "src/modules/loyalty/internal/ledger.ts:150-168",
+            "src/modules/loyalty/internal/ledger.ts:181-209"
           ],
-          "evidence": "refundAction calls `await refundOrder(...)` and then `refresh()` without reading `{ ok: false, reason: \"provider_failed\" }`. cancelOrder calls `await refundOrder(orderId, ...)` for a paid Order and returns only the cancel's TransitionResult. When the provider refuses, a Customer who cancels a paid Order sees 'This order was cancelled.' and gets no refund email. The only trace is `console.error(\"[payments] refund refused by the provider:\", error)`. The Manager sees the same Refund button again with no message.",
-          "impact": "A Customer's money may never come back after a cancel, and nobody is told. A Manager pressing Refund cannot tell success from failure.",
-          "recommendation": "Return the RefundResult to the Server Actions and show a message ('The refund didn't go through. Try again in a minute.'). Flag cancelled-but-paid Orders that have no Refund row on /manage/orders. Have the Customer page say the refund is pending, not finished.",
+          "evidence": "star_entries has only a sign CHECK and non-unique indexes on member_id and order_id. On the scratch DB, `insert into star_entries ... ('s1','u1','o1','earn',3),('s2','u1','o1','earn',3),('s3','u1','o1','birthday',500)` succeeded: two earns for one Order, and a 500-Star birthday. Today only code keeps each kind to once per Order (the transition() row lock and the net-sum logic in releaseRedemption and reverseForOrder) and the Birthday Treat to once a year (member lock plus findFirst). earnForOrder inserts with no existence check.",
+          "impact": "Any future caller that calls earnForOrder or reserveRedemption outside transition(), or a retry after a partial failure, silently mints or double-holds Stars. The schema gives no second line of defence, though Stars are one of the project's integrity rules (ADR 0008, critical class in this audit).",
+          "recommendation": "Add a migration with: `CREATE UNIQUE INDEX star_entries_order_kind_key ON star_entries(order_id, kind) WHERE order_id IS NOT NULL AND kind IN ('earn','reserve','release','reverse');` and `CREATE UNIQUE INDEX star_entries_birthday_key ON star_entries(member_id, reason) WHERE kind = 'birthday';` (reason is 'Birthday Treat <year>'). Optionally add `CHECK (kind <> 'birthday' OR stars = 9)` and `CHECK (kind <> 'reserve' OR stars = -9)`. Map P2002 to a no-op in the callers.",
           "effort": "S",
           "confidence": 0.85,
           "refs": [
-            "PRD PAY-05, ORD-09"
+            "docs/adr/0008-stars-ledger.md"
           ]
         },
         {
           "pass": 1,
-          "title": "A webhook can mark an Order Paid long after its 15 minutes when no expiry sweep has run",
-          "kind": "bug",
-          "severity": "low",
-          "locations": [
-            "src/modules/ordering/internal/webhook.ts:31-45",
-            "src/modules/ordering/internal/bar.ts:16-33",
-            "src/modules/ordering/internal/customer.ts:30-41"
-          ],
-          "evidence": "Expiry happens only in sweeps: checkoutView, getOrderForCustomer, barBoard, and the daily cron at 06:00 Manila. The status poller's orderVersion does not sweep. receivePaymentWebhook never checks placedAt + PAYMENT_MINUTES. PayMongo sessions never expire on their own. If nothing triggers a sweep (no Bar Screen open, no checkout views; common on the demo deploy, or after the Bar Screen closes at 21:00), a payment 40 minutes later turns the Order Paid for a Pickup Window that has passed.",
-          "impact": "Paid Orders can appear for past windows or after closing. This is the reverse of PAY-04 ('unpaid after 15 minutes Expires').",
-          "recommendation": "In the webhook transaction, compare the Order's placedAt with now() through lib/clock. Past the deadline, treat it as a late payment and use the same refund path as the first finding.",
-          "effort": "S",
-          "confidence": 0.7,
-          "refs": [
-            "PRD PAY-04",
-            "docs/03-ARCHITECTURE.md section 12"
-          ]
-        },
-        {
-          "pass": 1,
-          "title": "Paid events are not checked for amount, currency, reference number or livemode",
-          "kind": "gap",
-          "severity": "low",
-          "locations": [
-            "src/modules/payments/internal/paymongo.ts:88-114",
-            "src/modules/payments/internal/payments.ts:100-111"
-          ],
-          "evidence": "parseEvent keeps only id, type, checkout id and `payments?.[0]?.id`. The payload's payments[].attributes.amount/currency, `reference_number` (set to the Payment id at creation, paymongo.ts:47) and `livemode` are never compared with payments.amount_cents, PHP, payment.id or false. It also takes `payments[0]` without checking that its status is paid; a session's payments list could include failed attempts (unconfirmed).",
-          "impact": "Defence in depth only: amounts are set server-side at session creation, so tampering needs the webhook secret. A wrong payments[0] would make later refunds target the wrong payment id.",
-          "recommendation": "Carry amount, currency, reference and livemode in ProviderEvent. Refuse to mark paid on a mismatch (log and return 200). Pick the payment whose status is `paid`.",
-          "effort": "S",
-          "confidence": 0.6,
-          "refs": [
-            "ADR 0003",
-            "ADR 0006"
-          ]
-        },
-        {
-          "pass": 1,
-          "title": "PayMongo signature check has no timestamp tolerance, and the whole unauthenticated body is read before verification",
+          "title": "Preview deploys run `prisma migrate deploy` against the production database, though ADR 0004 promises separate preview databases",
           "kind": "security",
-          "severity": "low",
+          "severity": "medium",
           "locations": [
-            "src/modules/payments/internal/paymongo.ts:75-87",
-            "src/app/api/webhooks/[provider]/route.ts:17"
+            "vercel.json:3",
+            "docs/06-SETUP.md:166-175",
+            "docs/adr/0004-postgres-prisma-neon.md"
           ],
-          "evidence": "verifyWebhook checks `parts.t` exists but never compares it with now(). PayMongo docs suggest rejecting old timestamps. Exact replays are still stopped by the (provider, provider_event_id) unique constraint, so the risk is small. `await request.text()` reads any size of body before the HMAC check (Vercel caps it at 4.5 MB; self-hosting does not).",
-          "impact": "Replay protection rests entirely on the dedupe table, and the endpoint accepts large unauthenticated bodies. Low risk.",
-          "recommendation": "Reject when |now() - t| exceeds about 5 minutes, using lib/clock. Refuse bodies over a small limit (for example check Content-Length below 256 KB) before reading.",
+          "evidence": "`\"buildCommand\": \"prisma migrate deploy && next build\"`. Setup step 3 says to set `DATABASE_URL` (Neon pooled) and `DIRECT_URL` (Neon direct) \"for Production and Preview\", taken from the single Neon project in step 1. ADR 0004 says \"Neon ... holds production and preview databases\" and \"branches per preview\". Nothing creates them. The per-batch branch and PR workflow means every Phase 6 batch with a migration would have hit production when its PR opened. This repeats interim SEC1-03 and adds the ADR contradiction.",
+          "impact": "An unreviewed migration lands on the live demo before merge. If the PR then changes that migration (\"never edit an applied migration\"), production ends up with a version main does not have, and later `migrate deploy` runs warn about or trip over the drift. A preview's code also runs against production data.",
+          "recommendation": "Do what ADR 0004 says: use Neon's Vercel integration so each preview gets its own branch with its own DATABASE_URL and DATABASE_URL_UNPOOLED, and set DIRECT_URL for Production only. Or make the build command `if [ \"$VERCEL_ENV\" = production ]; then prisma migrate deploy; fi && next build`. Update docs/06-SETUP.md section 9.",
           "effort": "S",
           "confidence": 0.8,
           "refs": [
-            "ADR 0003"
+            "docs/audit/2026-11-06-interim.md SEC1-03"
           ]
         },
         {
           "pass": 1,
-          "title": "Raw PayMongo payloads, which include customer billing details, are kept forever and skipped by Member deletion",
-          "kind": "gap",
+          "title": "Some CHECK constraints accept the rows they are meant to refuse, because a NULL comparison passes",
+          "kind": "bug",
           "severity": "low",
           "locations": [
-            "src/modules/payments/internal/payments.ts:85-89",
-            "src/modules/ordering/internal/reads.ts:233-243"
+            "prisma/migrations/20261101180000_promos_seasonal/migration.sql:8-14",
+            "prisma/migrations/20261031054051_init/migration.sql:610-611",
+            "prisma/migrations/20261031054051_init/migration.sql:44-45",
+            "prisma/migrations/20261031054051_init/migration.sql:87",
+            "prisma/migrations/20261031054051_init/migration.sql:596-602",
+            "src/modules/menu/internal/queries.ts:134-135"
           ],
-          "evidence": "Every verified event body is stored as `payload` jsonb. PayMongo checkout session and payment resources carry billing name, email and phone. deidentifyOrders scrubs orders.customer_* but nothing touches payment_events, which no code ever reads back. The status link with its access token is also sent to PayMongo as success_url and cancel_url (paymongo.ts:48-49).",
-          "impact": "Personal data survives a Member's deletion request (Data Privacy Act duty in docs/03 section 13). This matters once PayMongo test events contain real tester details.",
-          "recommendation": "Store only the fields needed (event id, type, checkout id, payment id, amount), or null out the payload after processing or on deletion.",
+          "evidence": "On the scratch DB, all of these INSERTs succeeded:\n(1) A menu_item with promo_cents=5000, promo_from='2026-11-01', promo_until NULL. `\"promo_until\" >= \"promo_from\"` is NULL, so the CHECK passes, though the comment says \"all three or none\".\n(2) promo_cents NULL with both dates set, which passes the same way.\n(3) A special_hours row with is_closed=false and all three times NULL. `\"is_closed\" OR (\"opens_at\" < ...)` evaluates false OR NULL.\n(4) badges NULL and allergens NULL. Prisma created these TEXT[] columns nullable (`\"badges\" TEXT[] DEFAULT ARRAY[]::TEXT[]` with no NOT NULL), and `NULL <@ ARRAY[...]` passes.\nThe app guards each case in code (promoFields, SpecialInput, Prisma always writes arrays). queries.ts relies on that: `badges.unshift(`Promo until ${shortDay(row.promoUntil!)}`)`.",
+          "impact": "Defence in depth is weaker than the migration comments claim. A row written by SQL, a future code path or a data migration would make the menu render a Promo with no end date, or an open day with no hours, and could crash where the code assumes non-null.",
+          "recommendation": "Add a migration that replaces the checks:\n- Promo: `CHECK (num_nonnulls(promo_cents, promo_from, promo_until) IN (0, 3) AND (promo_cents IS NULL OR (promo_cents >= 0 AND promo_cents < base_cents AND promo_until >= promo_from)))`.\n- Special Hours: `CHECK (is_closed OR (opens_at IS NOT NULL AND last_order_at IS NOT NULL AND closes_at IS NOT NULL AND opens_at < last_order_at AND last_order_at <= closes_at))`. Optionally also require the times to be NULL when the day is closed, as the doc says.\n- Arrays: `ALTER COLUMN badges SET NOT NULL` (and the same for allergens, adds_allergens and the option_ids columns).",
           "effort": "S",
-          "confidence": 0.6,
-          "refs": [
-            "docs/03-ARCHITECTURE.md section 13 (Privacy)"
-          ]
+          "confidence": 0.9
         },
         {
           "pass": 1,
-          "title": "Fake-provider guard checks the configured NEXT_PUBLIC_SITE_URL, not the domain actually serving requests",
-          "kind": "security",
-          "severity": "low",
-          "locations": [
-            "src/modules/payments/internal/provider.ts:25-44"
-          ],
-          "evidence": "`const host = new URL(env.NEXT_PUBLIC_SITE_URL).hostname; const allowed = LOCAL.includes(host) || host.endsWith(\".vercel.app\") || env.VERCEL_ENV === \"preview\";`. Vercel serves the same production deployment on <project>.vercel.app and on any custom domain added later. If NEXT_PUBLIC_SITE_URL is left at the vercel.app address, /dev/pay and the fake webhook work on the custom domain too, against ADR 0003 ('refuses to run on a production domain'). The check is also lazy: it runs at the first payment call, not at startup.",
-          "impact": "A misconfiguration would let anyone mark Orders paid on a production-looking domain. There is no real money (ADR 0006), so the risk is low.",
-          "recommendation": "In /dev/pay and fakePayAction, also check the request Host (headers()) against the same allowlist. Call providerFor(process.env) once at startup (instrumentation.ts) so a bad config fails the deploy.",
-          "effort": "S",
-          "confidence": 0.6,
-          "refs": [
-            "ADR 0003",
-            "ADR 0006",
-            "PRD PAY-06"
-          ]
-        },
-        {
-          "pass": 1,
-          "title": "fakePayAction ignores the webhook response, and /dev/pay for an unknown id answers 200",
-          "kind": "inconsistency",
-          "severity": "low",
-          "locations": [
-            "src/app/(site)/dev/pay/[id]/actions.ts:26-32",
-            "src/app/(site)/dev/pay/[id]/page.tsx:39-41"
-          ],
-          "evidence": "The action calls `await fetch(`${site}/api/webhooks/fake`, ...)` and redirects without checking `response.ok`. A 429, a 500, or a 401 from Vercel Deployment Protection on preview deploys (the self-fetch carries no bypass) leaves the Customer on a 'Finish paying' page with no reason given. `curl /dev/pay/fake_cs_nope` returns HTTP 200 with 'This page could not be found': notFound() fires inside Suspense after the shell has streamed.",
-          "impact": "Demo payments can silently fail to record on protected preview deploys, which makes them hard to debug.",
-          "recommendation": "Check response.ok and show a short error on the fake page. For previews, document the Vercel protection bypass header or call receivePaymentWebhook in-process with the signed event.",
-          "effort": "S",
-          "confidence": 0.6,
-          "refs": [
-            "PRD PAY-06"
-          ]
-        },
-        {
-          "pass": 1,
-          "title": "An online Order can be placed with a total of PHP 0.00 (Reward covers the whole Cart)",
-          "kind": "gap",
-          "severity": "low",
-          "locations": [
-            "src/modules/ordering/internal/place.ts:199-203",
-            "src/modules/ordering/internal/place.ts:320-327"
-          ],
-          "evidence": "placeOrder has no rule against `totalCents === 0` with an online paymentMethod. A Member with 9 Stars and one drink with no Price Deltas gets an online checkout for 0 centavos. The fake page shows 'Pay PHP 0.00'. PayMongo would probably refuse a zero line item, which leads to payment_start_failed (finding 3). I could not confirm PayMongo's minimum amount.",
-          "impact": "Confusing flow; with PayMongo it likely fails and loses the Cart.",
-          "recommendation": "When the total is 0, place it like Pay at Pickup (no Payment), or hide online methods.",
-          "effort": "S",
-          "confidence": 0.5,
-          "refs": [
-            "PRD LOY-03, PAY-01"
-          ]
-        },
-        {
-          "pass": 1,
-          "title": "Tests miss late payment, provider failure and PayMongo payload paths",
+          "title": "Only 3 of about 25 hand-written constraints are tested, which is how the Promo and Special Hours gaps went unnoticed",
           "kind": "test-gap",
           "severity": "low",
           "locations": [
-            "tests/db/payments.test.ts",
-            "tests/db/refunds.test.ts",
-            "src/modules/payments/internal/provider.test.ts"
+            "tests/db/seed.test.ts:34-87"
           ],
-          "evidence": "No tests cover: a paid event after the Customer cancels or after a failed event; the paid_late branch; a provider refund that throws (claim revert); a createCheckout that throws (payment_start_failed); PayMongo payment.failed or refund event shapes; a PayMongo header missing `te` or with only `li`; /api/cron/daily auth; /dev/pay and fakePayAction refusing when the provider is paymongo. payments.test.ts:185-193 asserts the questionable 'ignored after expiry' behaviour.",
-          "impact": "The bugs above went unnoticed, and the existing test would resist the fix.",
-          "recommendation": "Add DB tests for each path, test-first per CLAUDE.md (webhook handlers are on the tdd list), using a stub provider that throws.",
+          "evidence": "The \"schema constraints\" block tests options_delta_cents_check, orders_contact_check and the order_events append-only trigger. No test covers menu_items_promo_check, special_hours_times_check, opening_hours_times_check, carts_one_owner_check, cart_lines_quantity_check and note_check, order_lines_money_check, star_entries_sign_check (including birthday), events_seats_check, event_signups_seats_check, inquiries_message_check or guests_check, recurring_events_times_check, menu_items_badges_check or allergens_check, menu_items_calorie_kcal_check, cafe_settings_singleton_check or users_birth_month_check. The append-only test covers UPDATE but not DELETE.",
+          "impact": "A later migration that drops or loosens a check (for example while adding a badge, as 20261101090000 does) would pass every gate. CLAUDE.md's rule \"build money, Capacity, Stars ... test-first\" leans on these constraints.",
+          "recommendation": "Add one table-driven test in tests/db: each entry is a raw INSERT or UPDATE that must fail with a named constraint, plus the boundary rows that must pass. Include the NULL cases from the previous finding.",
+          "effort": "S",
+          "confidence": 0.9
+        },
+        {
+          "pass": 1,
+          "title": "Account deletion erases the Stars ledger, although the user row is kept so ledgers keep their keys, and the Manager's Stars report changes after the fact",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/modules/loyalty/internal/ledger.ts:170-173",
+            "src/modules/identity/internal/privacy.ts:46-51",
+            "src/modules/loyalty/internal/ledger.ts:216-231",
+            "src/app/(site)/account/actions.ts:42-51"
+          ],
+          "evidence": "privacy.ts says \"the user row stays so the ledgers it once touched keep their keys, but it no longer holds a name or email\". deleteAccountAction still calls `forgetStars` → `db.starEntry.deleteMany({ where: { memberId } })`. starTotals sums star_entries by kind over the last N days, so a deletion lowers the earned, redeemed and adjusted figures for days already reported. Orders, by contrast, are kept and de-identified (deidentifyOrders).",
+          "impact": "Loyalty liability and redemption numbers in /manage reports are not stable: they drop whenever a Member deletes their account. The Stars history is the only ledger that is not kept de-identified, though the scrubbed user row would make it anonymous already.",
+          "recommendation": "Keep the star_entries rows. They point at a user row with no name and an invalid email, so they hold no personal data. Optionally null out `reason` on adjust rows. Or, if deletion stays the choice, record it in an ADR and note in the report that deleted Members drop out.",
+          "effort": "S",
+          "confidence": 0.7
+        },
+        {
+          "pass": 1,
+          "title": "No retention rule exists for any table holding personal data; the data model and the privacy page cover only accounts and Orders",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "docs/04-DATA-MODEL.md:51",
+            "docs/04-DATA-MODEL.md:90",
+            "src/app/(site)/privacy/page.tsx:26-31",
+            "src/lib/rate-limit.ts:18-22",
+            "src/modules/payments/internal/payments.ts:85-89",
+            "src/app/api/cron/daily/route.ts:12-21"
+          ],
+          "evidence": "The dev DB has 72 rate_limits rows with raw emails in their keys (`link:perf-q-1793931436851@example.test`) plus IP keys, and 28 Guest Carts, the oldest last updated 2026-11-05. payment_events.payload stores the whole verified webhook body (`${rawBody}::jsonb`). event_signups and inquiries keep name and email with no Member link and no delete path. The daily cron only runs expireUnpaid and revalidateTag. 04-DATA-MODEL.md has no retention column or section. The privacy page's \"How long\" mentions only the account and Orders. This consolidates interim ID2-08, PAY-10, SEC2-06 and ORD-21 from the schema angle.",
+          "impact": "Personal data builds up indefinitely, contrary to the PRD's privacy line \"collect only what an Order needs\" and the Data Privacy Act basics (ACC-03). It also uses up Neon's 0.5 GB free tier for no reason.",
+          "recommendation": "Add a retention column to each table in docs/04-DATA-MODEL.md. For example: rate_limits 1 day, Guest Carts 30 days, verifications on expiry, payment_events payload trimmed to ids after processing, Sign-ups 30 days after the Event, Inquiries 1 year after they close. Enforce it with one DELETE per table in /api/cron/daily, and list Sign-ups and Inquiries on the privacy page.",
           "effort": "M",
+          "confidence": 0.8,
+          "refs": [
+            "docs/01-PRD.md:177",
+            "docs/audit/2026-11-06-interim.md ID2-08, PAY-10, SEC2-06, ORD-21"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Without a Resend key, a production build off Vercel keeps every email on disk indefinitely, including sign-in links and status links that never expire",
+          "kind": "security",
+          "severity": "low",
+          "locations": [
+            "src/modules/notify/internal/outbox.ts:38-63"
+          ],
+          "evidence": "`send()` writes the email to `data/mail/<stamp>-<rand>-<to>.txt` whenever RESEND_API_KEY is empty and VERCEL is unset. NODE_ENV is not checked, and nothing prunes the folder. The production build on :3300 has written 352 files so far. Each holds the recipient's address and either a sign-in link or a `/orders/<id>?t=<token>` status link. The order token does not expire (interim ID1-19). data/ is gitignored.",
+          "impact": "On any self-hosted or other non-Vercel production host, the disk becomes a growing store of customer emails and live Order access tokens. Anyone who can read the folder or a backup can open those Orders. Low on the planned Vercel deploy, where this branch is skipped.",
+          "recommendation": "Write to data/mail only when NODE_ENV !== \"production\", or refuse to start in production without RESEND_API_KEY. Prune files older than a day in dev.",
+          "effort": "S",
+          "confidence": 0.75
+        },
+        {
+          "pass": 1,
+          "title": "\"At most one default per single-choice Option Group\" breaks when a group's maximum is lowered to 1",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "src/modules/menu/internal/edit.ts:340-360",
+            "src/modules/menu/internal/edit.ts:380-386",
+            "docs/04-DATA-MODEL.md:41"
+          ],
+          "evidence": "saveOption clears the other defaults only when the saved Option is the default and `group.maxSelect === 1`. saveOptionGroup updates min_select and max_select and nothing else. A multi-choice group (seeded Add-ons, max 2) with two defaults keeps both after the Manager changes max_select to 1. No constraint enforces the rule. I did not check how the Menu Item page and pricing behave then, so this is from code reading only.",
+          "impact": "A single-choice group can end up with two defaults. The default choice on the Menu Item page may then go over max_select and be refused when added, or show a different default than the server applies.",
+          "recommendation": "In saveOptionGroup, when max_select becomes 1, keep only the first default by sort (in the same transaction), or refuse the change while more than one default exists.",
+          "effort": "S",
+          "confidence": 0.5
+        },
+        {
+          "pass": 1,
+          "title": "The seed is not atomic, and its guard checks only categories, so a failed run leaves a half-seeded database it then refuses to fix",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "prisma/seed.ts:24-31",
+            "prisma/seed-data.ts:391-415",
+            "prisma/seed-data.ts:417-445"
+          ],
+          "evidence": "main() returns early when `await db.category.count()` is non-zero. Otherwise it runs seedDatabase, which makes about 40 separate writes with no transaction. Option groups are created first, then categories, hours, settings, Events, Posts and users. If it fails before the first category, a rerun duplicates every Option Group (\"Size\" twice). If it fails after a category, a rerun prints \"Already seeded\" while cafe_settings may be missing, and `cafeSettings.findUniqueOrThrow` in placeOrder then throws.",
+          "impact": "For a local or demo setup the only fix is db:reset. On the remote demo seed (ALLOW_REMOTE_SEED=1 over a slow link) a timeout part-way through is plausible.",
+          "recommendation": "Guard on the last thing created (users, or cafe_settings when people is false), or run seedDatabase in `db.$transaction(fn, { timeout: 60_000 })` with seedDatabase taking the tx client.",
+          "effort": "S",
+          "confidence": 0.8
+        },
+        {
+          "pass": 1,
+          "title": "The schema, the data model doc and the setup doc disagree in small ways",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "prisma/schema.prisma:1-2",
+            "prisma/schema.prisma:268",
+            "prisma/schema.prisma:475",
+            "docs/04-DATA-MODEL.md:3",
+            "docs/04-DATA-MODEL.md:8",
+            "docs/04-DATA-MODEL.md:16-29",
+            "docs/04-DATA-MODEL.md:69",
+            "docs/04-DATA-MODEL.md:133",
+            "docs/04-DATA-MODEL.md:140",
+            "docs/06-SETUP.md:109"
+          ],
+          "evidence": "(1) Doc §1: `orders.id` is \"a random UUID made before insert\", and place.ts:272 does pass `randomUUID()`, but the schema declares `id String @id @default(cuid())`.\n(2) The schema header still says \"Covers the MVP; V1 tables (inquiries, recurring_events) arrive in Phase 6.\" Both now exist.\n(3) `// Unpublished while published_at is null.` sits above model EventSignup (line 475); it belongs to Post.\n(4) The doc header says \"Status: draft v0.1\".\n(5) The entity overview leaves out favourites and event_signups.\n(6) order_code_counters says \"by UPDATE ... RETURNING\", but status.ts:191-196 uses INSERT ... ON CONFLICT DO UPDATE.\n(7) Doc §5 and §6 say Staff and Member accounts, and all seed data, load \"in dev and test only\". docs/06-SETUP.md:109 lists the seeded accounts for \"dev, test and the live demo\", and step 4 seeds the demo with seedDatabase's default `people = true`.",
+          "impact": "The doc says it is the reasoning behind the schema (\"when they disagree, fix one in the same change\"), and readers or agents following it get the wrong id type and seeding policy.",
+          "recommendation": "Change the schema to `id String @id @db.Uuid` with no default (or keep TEXT and drop `@default(cuid())`). Fix both schema comments, bump the doc status, add the missing tables to the overview, and pick one seeding policy for the live demo and state it in both documents.",
+          "effort": "S",
+          "confidence": 0.9
+        },
+        {
+          "pass": 1,
+          "title": "Some timestamps come from the database clock and others from lib/clock, against the CLAUDE.md rule",
+          "kind": "inconsistency",
+          "severity": "info",
+          "locations": [
+            "src/modules/ordering/internal/status.ts:183-192",
+            "src/modules/ordering/internal/place.ts:290-296",
+            "src/modules/loyalty/internal/ledger.ts:49-56",
+            "src/modules/loyalty/internal/ledger.ts:198-205",
+            "prisma/schema.prisma:338",
+            "prisma/schema.prisma:443"
+          ],
+          "evidence": "orders.placed_at, Sign-ups, Inquiries and the Birthday Treat take their time from `now()` in lib/clock (for example `createdAt: at` at ledger.ts:204). order_events.at, the star_entries created_at for earn, reserve, release, reverse and adjust, audit_log.at and payment_events.received_at fall back to the DB default CURRENT_TIMESTAMP, which is the transaction's start time.",
+          "impact": "With a frozen or offset clock (tests, demos), an Order's history can come before or after its placed_at, and starTotals, which filters by createdAt against `now()`, mixes the two clocks. In production the clocks agree, so this is an observation.",
+          "recommendation": "Pass `at: now()` and `createdAt: now()` explicitly in transition(), the ledger writers and audit(), so every timestamp follows lib/clock.",
+          "effort": "S",
+          "confidence": 0.8
+        }
+      ]
+    },
+    {
+      "key": "docs",
+      "passes": 1,
+      "summaries": [
+        "The docs are detailed, and on the core rules (centavos, transition(), webhooks, Day and Night palettes, the Concept Notice) they mostly match the code. They have drifted since 2026-10-31 in five ways. (1) There is no fresh-clone path: README sends readers to setup section 3, which re-scaffolds the app with create-next-app, robocopy and shadcn. No doc says to create .env.test or to install Playwright's browser. (2) Status markers are stale: README still says \"next step is Phase 0, batch 0.1\"; roadmap batches 3.4 and 6.5 are ticked though skipped or dropped; the PRD's \"confirm\" rows and the decisions-due table were never closed; the PRD has no per-requirement status, so unmet MVP IDs (PAY-01 never run against PayMongo, NEWS-01 and EVT-01 photos) are hidden. (3) docs/03, the doc CLAUDE.md points to for modules and Stars, has stale public function names, gives Inquiries to the wrong module, lists routes that do not exist, and says the Birthday Treat is not a Star entry when it is. (4) Some glossary definitions disagree with what is built, and customers can see it: Reward says \"Options at Base Price\" and the /cafe FAQ says \"free drink, any size\", while the code charges Price Deltas; Prep Time is defined from \"the Lines in the Order\", but the code ignores the Order's own drinks and unaccepted Orders. Words such as Service Day, Choice and Palette are used in code without a glossary entry. (5) Two ADR consequences are not delivered: ADR 0006 promises noindex, but public pages have no robots meta and no robots.txt; ADR 0005 says sign-in links print \"in development only\", but the code checks VERCEL, so any production build on another host logs every link. Smaller issues: the npm run perf command does not exist, doc paths point to a D: drive that does not exist, a git remote 'drive' is missing, the seed-on-demo statements contradict each other, design and library docs still describe the batch 1.1 samples and shadcn, and a few wrong section references and typos."
+      ],
+      "coverage": [
+        "Read in full: CLAUDE.md, AGENTS.md, README.md, GLOSSARY.md, docs/01-PRD.md, docs/03-ARCHITECTURE.md, docs/04-DATA-MODEL.md, docs/05-DESIGN-SYSTEM.md, docs/06-SETUP.md, docs/07-ROADMAP.md, docs/08-TOOLING.md, docs/ASSETS.md, all 14 ADRs (0001 to 0014), docs/audit/README.md; docs/02-RESEARCH-CAFES.md: summary and candidate tables (C-01 to C-63)",
+        "Checked against code: package.json scripts and deps, .env.example, .gitignore, .prettierignore, vercel.json, next.config.ts, prisma.config.ts, vitest.config.mts, playwright.config.ts, tests/db/helpers.ts, tests/db/global-setup.ts, tests/e2e/reset-db.mts, tests/e2e/axe.ts, prisma/seed.ts, prisma/seed-data.ts (menu, Option Groups, picks, people), prisma/schema.prisma (header, MenuItem, CafeSettings, Order*, StarKind), every src/modules/*/index.ts, identity session/auth/audit, payments provider.ts, notify outbox.ts, ordering links.ts/windows.ts/status.ts code, cafe ordering-day.ts prepMinutes and room.ts, loyalty ledger birthday, menu queries cacheLife, cron route, theme.ts, theme-switch.tsx, globals.css tokens, footer, root layout, bar layout and bar-screen polling, status-poller, manage page/layout/menu roles, cafe FAQ copy, checkout Reward copy, content-forms photo fields, weekly-list",
+        "Searches: process.env over the repo (documented vs used env vars), npm run/npx commands in docs vs scripts, relative links and backticked paths in every doc (script), PRD requirement IDs vs roadmap mentions (script: only STAFF-01 missing), glossary avoided words in src, em/en dashes in src, Filipino/locale references, new Date()/Date.now() in src, cacheLife uses, takeToken limits vs docs/03 section 13, docs/ADR references in code comments",
+        "Runtime/env checks: curl of /, /cafe, /menu, /robots.txt, /sitemap.xml on :3300 for robots meta; build.log route table; audit-all.log; e2e.log tail; git remote -v and branches; gh auth status; node/npm/docker versions; existence of D:\\ and iOne paths and the Drive bundle; keys (not values) of .env.local and .env.test",
+        "Cross-checked against the 182 saved findings in docs/audit/findings-2026-11-06.json to avoid re-reporting (Manager invite, last Pickup Window, captions, motion, Google OAuth setup, Refund keeping redeemed Stars are already there)"
+      ],
+      "findings": [
+        {
+          "pass": 1,
+          "title": "No fresh-clone setup path: README sends readers to the scaffold steps, and .env.test and the Playwright browser are never mentioned",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "README.md:33-35",
+            "docs/06-SETUP.md:30-47",
+            "docs/06-SETUP.md:53-61",
+            "docs/06-SETUP.md:73",
+            "docs/06-SETUP.md:119",
+            "docs/audit/README.md (How to continue, step 1)",
+            "tests/db/helpers.ts:6-13",
+            "tests/db/global-setup.ts:9",
+            "vitest.config.mts:11-12"
+          ],
+          "evidence": "README 'Getting started' says only 'Follow docs/06-SETUP.md'. Setup section 3 then says 'Scaffold in a sibling folder ... npx create-next-app@latest hoshikopi-scaffold ... robocopy hoshikopi-scaffold Hoshikopi /E ...'. Section 4 runs 'npx shadcn@latest init'. Section 5 says only 'Copy .env.example to .env.local'. Section 6 mentions '.env.test, git-ignored' but never says to create it or what goes in it. Vitest loads .env.local and .env.test (loadEnv(\"test\")), and helpers.ts throws 'Refusing to run database tests against ... set DATABASE_URL in .env.test to a *_test database.' 'npx playwright install chromium' appears only in the scaffold-era section 4. The audit lead had to make .env.local and .env.test by hand; the local .env.test is a copy of .env.example (its first line is '# Copy to .env.local ...'). docs/audit/README.md tells another computer to 'follow docs/06-SETUP.md sections 5 and 6', which do not cover .env.test.",
+          "impact": "On a new computer or a bundle restore, a reader following README would re-run create-next-app and robocopy over a working app. npm test fails until they read the test helper source, and npm run test:e2e fails without the Chromium download. CLAUDE.md and README both name this guide for moving to a new computer.",
+          "recommendation": "Add a short 'Fresh clone' section at the top of 06-SETUP and point README at it: git clone (or restore the bundle), npm install, npx playwright install chromium, copy .env.example to .env.local and set BETTER_AUTH_SECRET, create .env.test (DATABASE_URL and DIRECT_URL pointing at hoshikopi_test, plus BETTER_AUTH_SECRET), run the section 6 docker commands, then npm run db:migrate and npm run db:seed. Mark sections 3 and 4 as history (done in batch 0.1). Optional: commit a .env.test.example so it is a one-line copy.",
+          "effort": "S",
+          "confidence": 0.9
+        },
+        {
+          "pass": 1,
+          "title": "ADR 0006's noindex is not built: public pages with the invented address can be indexed",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "docs/adr/0006-concept-project-no-real-money.md:15",
+            "docs/02-RESEARCH-CAFES.md:206",
+            "src/app/layout.tsx:25-32",
+            "src/app/(site)/cafe/page.tsx:101 (JSON-LD url)"
+          ],
+          "evidence": "ADR 0006 Consequences: 'Structured data and the cafe page carry the invented address, so search engines are kept away from the demo (noindex) until the owner decides otherwise.' Research C-50 relies on it ('the demo is noindex (ADR 0006)'). Root metadata has no robots field. Only account, cart, checkout, orders, dev/pay, bar and manage pages set robots: { index: false }. On :3300, curl of /, /cafe and /menu returns no <meta name=\"robots\"> and no X-Robots-Tag header. /robots.txt and /sitemap.xml are 404 (only the 404 page carries Next's default noindex). /cafe ships CafeOrCoffeeShop JSON-LD with the invented Kapitolyo address.",
+          "impact": "Once 5.4 deploys, search engines can index an invented cafe and show it as a real business in Kapitolyo, with hours and a map pin. ADR 0006 was written to prevent exactly that.",
+          "recommendation": "Add robots: { index: false, follow: false } to the root metadata, plus src/app/robots.ts that disallows everything, until the owner decides otherwise. Add one e2e assertion on / and /cafe.",
+          "effort": "S",
           "confidence": 0.9,
           "refs": [
-            "CLAUDE.md test discipline"
+            "docs/adr/0006-concept-project-no-real-money.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Reward is defined three ways: Glossary, PRD and the /cafe FAQ promise 'Options at Base Price' or 'any size', but checkout charges Price Deltas",
+          "kind": "inconsistency",
+          "severity": "medium",
+          "locations": [
+            "GLOSSARY.md:174",
+            "docs/01-PRD.md:133",
+            "src/app/(site)/cafe/page.tsx:70",
+            "docs/03-ARCHITECTURE.md:77",
+            "docs/07-ROADMAP.md:115",
+            "src/app/(site)/checkout/checkout-form.tsx:76-78",
+            "src/app/(site)/account/stars/page.tsx:57",
+            "src/modules/ordering/internal/place.ts:75-82,120-123"
+          ],
+          "evidence": "GLOSSARY Reward: 'a free drink (any Size, Options at Base Price)'. PRD LOY-03: 'the drink Line at zero, Options at their Base Price'. The /cafe FAQ tells customers: '9 Stars get you a free drink, any size.' The architecture doc instead says 'a drink Line at zero; its Options charge their Price Delta'. Roadmap 4.3 records that the glossary's 'any Size' is read as 'any Size you choose'. The code takes only baseOf(line) off (place.ts), and checkout says 'Saves PHP X; options still add their price.' So a Large Reward drink costs PHP 30 (Size Large +30 in the seed).",
+          "impact": "Customers are told a free drink of any size, then pay for Large, Oat milk or shots at checkout. The glossary, which CLAUDE.md makes the source of truth for words, contradicts the money rule the server applies, so a future agent may 'fix' pricing to match it.",
+          "recommendation": "Make the Glossary and PRD LOY-03 say: 'the Base Price of one drink is free; its Options still add their Price Delta'. Change the FAQ to 'a free drink; extras like Large or oat milk still add their price.' No code change needed.",
+          "effort": "S",
+          "confidence": 0.95
+        },
+        {
+          "pass": 1,
+          "title": "Prep Time is defined from 'the Lines in the Order', but the code ignores the Order's own drinks and Orders not yet Accepted",
+          "kind": "inconsistency",
+          "severity": "medium",
+          "locations": [
+            "GLOSSARY.md:99-101",
+            "docs/adr/0007-pickup-windows-and-capacity.md:8",
+            "docs/03-ARCHITECTURE.md:124",
+            "docs/01-PRD.md:164",
+            "src/modules/cafe/internal/ordering-day.ts:33-36",
+            "src/modules/ordering/internal/windows.ts:13-25,47",
+            "src/modules/ordering/internal/bar.ts:64"
+          ],
+          "evidence": "GLOSSARY: 'Prep Time: The estimated minutes from Accepted to Ready, from the current queue and the Lines in the Order.' ADR 0007 and docs/03 use 'base_minutes + per_drink_minutes x drinks queued ahead'. The code is prepMinutes(drinksAhead) = ceil((4 + 1.5 x drinksAhead)/5)*5. drinksQueuedAhead sums only Orders with status in ['accepted','preparing']. With an empty bar, a 10-drink Order and a 1-drink Order both get 'ready in about 5 min'. Placed or Paid Orders waiting to be accepted add nothing either.",
+          "impact": "The PRD's first differentiator ('Honest pickup times ... ready in 8 minutes is true') breaks for big Orders (persona Tita Lorna) and during a rush of unaccepted Orders. The glossary describes a behaviour that does not exist.",
+          "recommendation": "Decide which is meant. Either count the Order's own drinks and placed/paid Orders ahead in drinksQueuedAhead (test-first, as CLAUDE.md requires for Prep Time) and update ADR 0007's wording, or narrow the glossary definition to match the formula.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "docs/adr/0007-pickup-windows-and-capacity.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The PRD has no per-requirement status, and ticked roadmap batches hide MVP requirements that are not met (PAY-01, NEWS-01/EVT-01 photos, ORD-02)",
+          "kind": "docs",
+          "severity": "medium",
+          "locations": [
+            "docs/07-ROADMAP.md:104",
+            "docs/07-ROADMAP.md:124",
+            "docs/07-ROADMAP.md:129",
+            "docs/07-ROADMAP.md:137",
+            "docs/01-PRD.md:62-160",
+            "docs/01-PRD.md:117",
+            "docs/01-PRD.md:190",
+            "docs/adr/0003-payments-paymongo-test-mode.md:18",
+            "src/modules/payments/internal/paymongo.ts:12",
+            "src/app/manage/content-forms.tsx"
+          ],
+          "evidence": "The Phase 5 exit criterion says 'every MVP requirement in the PRD is met and ticked', but the PRD tables have only ID, requirement and priority, so nothing can be ticked. Roadmap 3.4 is '- [x] ... Skipped 2026-10-31' and 6.5 is '- [x] ... Dropped'. So PAY-01 (M: 'Pay online ... through PayMongo's hosted checkout') shows as done, while paymongo.ts says it has not met 'a sandbox (no account yet)'. PRD success metric 4 still says 'pay with a PayMongo test card'. ADR 0003 still says 'PayMongo test mode is added in batch 3.4 if the owner creates a PayMongo account (decision due in batch 3.1)'; the decision was never written back into it. NEWS-01 (M, 'Post pages with a cover photo') and EVT-01 ('photo') are ticked in 5.1, but content-forms.tsx has no photo or cover field (5.1: 'waits for Blob storage'). ORD-02 'edit ... Options' is ticked in 2.2 but not built (already in the saved findings). STAFF-01 is the only PRD ID that no roadmap batch mentions (scripted check).",
+          "impact": "Phase 7.1 ('measure the success metrics') and the case study would claim MVP-complete while one Must requirement was never run against its provider and two have no editor. The checkboxes cannot tell 'done' from 'skipped' or 'dropped'.",
+          "recommendation": "Add a Status column to the PRD tables (done / partial / deferred, with the batch). Use '- [~]' or '(skipped)' for skipped or dropped batches instead of [x]. Update ADR 0003 with the 3.1 decision ('fake' only for the MVP), and change success metric 4 to the fake checkout until 3.4 runs. Map STAFF-01 to batch 0.5.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "docs/adr/0003-payments-paymongo-test-mode.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The architecture module map lists functions that do not exist and gives Inquiries and webhook handling to the wrong modules",
+          "kind": "docs",
+          "severity": "medium",
+          "locations": [
+            "docs/03-ARCHITECTURE.md:32-42",
+            "docs/03-ARCHITECTURE.md:76-77",
+            "src/modules/cafe/index.ts:1-2",
+            "src/modules/content/index.ts:1",
+            "src/modules/menu/index.ts",
+            "src/modules/payments/index.ts",
+            "src/modules/loyalty/index.ts",
+            "src/modules/ordering/index.ts",
+            "docs/07-ROADMAP.md:139",
+            "docs/04-DATA-MODEL.md:51"
+          ],
+          "evidence": "docs/03 section 3 says module cafe owns '... Amenities; Inquiries (V1)' and content owns 'Events and Posts; Recurring Events (V1)'. In code, content/index.ts says 'Events, Recurring Events, Posts and Inquiries', exports submitInquiry and signUpForEvent, and roadmap 6.7 says 'Inquiries live in the content module, not cafe as first planned'. The data model doc lists inquiries under the 'Cafe (module cafe)' heading but labels the row '(V1, content)'. Function names in the map that no module exports: priceLine (actual: menu.priceChoices), setSoldOut (setMenuItemSoldOut/setOptionSoldOut), isOpen and setOrderingPaused (orderingState, pauseOrdering/resumeOrdering), priceCart (getCart prices), handleWebhook and refund in payments (actual: ordering.receivePaymentWebhook and refundOrder; payments exports verifyWebhookEvent, recordPaymentEvent, refundPayment), loyalty release (releaseRedemption), content upcomingEvents (getEvents). Section 5 builds its pricing description on 'priceLine(itemId, optionIds)'.",
+          "impact": "CLAUDE.md sends every 'Modules ...' question to this doc and requires imports only through index.ts. An agent trusting the map would look for Inquiries in cafe or call nonexistent APIs, and the doc no longer shows which module coordinates webhooks and Refunds.",
+          "recommendation": "Regenerate the 'Public interface' column from the index.ts files (a few real names each). Move Inquiries and Sign-ups to content, and say that ordering owns the webhook and Refund flow while payments wraps the provider. Fix the Inquiries heading in docs/04.",
+          "effort": "S",
+          "confidence": 0.95
+        },
+        {
+          "pass": 1,
+          "title": "The Birthday Treat is a 'birthday' Star entry in code, but docs/03 says it is not one and ADR 0008 lists five kinds",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "docs/03-ARCHITECTURE.md:131-133",
+            "docs/adr/0008-stars-ledger.md:8",
+            "prisma/schema.prisma:423-430",
+            "src/modules/loyalty/internal/ledger.ts:176-201,227",
+            "docs/04-DATA-MODEL.md:83",
+            "GLOSSARY.md:177-178"
+          ],
+          "evidence": "docs/03 section 10: 'The Birthday Treat (V1) is a Reward with its own yearly check, not a Star entry.' ADR 0008: 'Every change is a row in star_entries with a kind (earn, reserve, release, reverse, adjust)'. In the code, the StarKind enum has 'birthday', ledger.ts writes kind: \"birthday\" (+9), and the reports sum 'birthday'. Migrations 20261101100000_star_kind_birthday and _birthday_sign_check exist. docs/04 and the Glossary ('Nine Stars a Member gets once a year') match the code.",
+          "impact": "The doc CLAUDE.md names for Stars describes the opposite design. An agent could 'fix' the ledger or the reports to match it and break the balance-is-a-sum rule.",
+          "recommendation": "Change docs/03 section 10 to list the six kinds, with birthday as +9 once a year. Add a line to ADR 0008 (or a short new ADR) recording the sixth kind.",
+          "effort": "S",
+          "confidence": 0.95,
+          "refs": [
+            "docs/adr/0008-stars-ledger.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The architecture routes table is stale: /account/orders and /api/webhooks/paymongo do not exist, /manage is not Manager-only, and eight routes are missing",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "docs/03-ARCHITECTURE.md:56",
+            "docs/03-ARCHITECTURE.md:62",
+            "docs/03-ARCHITECTURE.md:64-65",
+            "docs/03-ARCHITECTURE.md:88",
+            "docs/03-ARCHITECTURE.md:145",
+            "docs/03-ARCHITECTURE.md:152",
+            "build.log route table",
+            "src/app/manage/page.tsx:15-17",
+            "src/app/api/cron/daily/route.ts:7-19",
+            "src/modules/ordering/internal/links.ts:3-21"
+          ],
+          "evidence": "The table lists '/account, /account/stars, /account/orders' (no account/orders route exists; Orders are on /account) and '/api/webhooks/paymongo' (the route is /api/webhooks/[provider], which also serves fake). '/manage/* | Managers', but Baristas open /manage and /manage/menu (requireStaff(\"barista\", \"/manage/menu\")). '/concept | Static', but build.log shows '◐ /concept 1m 1h'. Missing from the table: /privacy, /sign-in, /dev/pay/[id], /api/bar, /api/orders/[id]/status, /api/account/export, /manage/two-factor and the opengraph-image routes. Section 6 step 5 says 'a random access token for the status link', but links.ts makes it an HMAC of the Order id (docs/04 and roadmap 2.6 agree with the code). Section 12 says the cron 'resets Sold Out, and starts the day's Order Code sequence'; the route only expires Orders and revalidates the menu tag ('Order Codes restart by themselves'). Section 13's rate-limit list omits Sign-ups (10 per IP an hour).",
+          "impact": "Readers get a wrong map of the public and Staff surface. The routes a security reviewer most needs (dev/pay, export, the polling APIs) are not listed.",
+          "recommendation": "Rebuild the table from build.log. Fix the Who column for /manage (Barista: /manage and /manage/menu), the token description and the cron sentence, and add Sign-ups to section 13.",
+          "effort": "S",
+          "confidence": 0.95
+        },
+        {
+          "pass": 1,
+          "title": "README is stuck at 'next step is Phase 0, batch 0.1' and 'ADRs 0001 to 0010', and lists neither ASSETS.md nor docs/audit",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "README.md:11",
+            "README.md:31",
+            "README.md:15",
+            "docs/07-ROADMAP.md:7,9"
+          ],
+          "evidence": "README.md:11: 'Planning is complete (2026-10-30). The app is built phase by phase; the next step is Phase 0, batch 0.1 (scaffold).' README.md:31: 'Decisions and why (0001 to 0010)'; docs/adr holds 0001 to 0014. The Documents table has no docs/ASSETS.md or docs/audit/ row. Roadmap section 0 says Phases 0 to 6 are done (5.4 open). The public GitHub repo (CLAUDE.md: public) shows this README first.",
+          "impact": "Portfolio visitors and reviewers see a project that looks unstarted. The ADR range misleads anyone checking decisions.",
+          "recommendation": "Replace the Status paragraph with one line that points at roadmap section 0 (MVP and V1 built, 5.4 and Phase 7 open). Say 'ADRs 0001 onward', and add rows for ASSETS.md and audit.",
+          "effort": "S",
+          "confidence": 0.95
+        },
+        {
+          "pass": 1,
+          "title": "Roadmap status contradicts itself and bypasses its own exit rule; the 5.4 note on emails is out of date",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "docs/07-ROADMAP.md:3",
+            "docs/07-ROADMAP.md:5",
+            "docs/07-ROADMAP.md:9",
+            "docs/07-ROADMAP.md:42",
+            "docs/07-ROADMAP.md:125",
+            "docs/07-ROADMAP.md:127",
+            "docs/07-ROADMAP.md:129",
+            "docs/07-ROADMAP.md:143",
+            "CLAUDE.md:7",
+            "CLAUDE.md:46",
+            "src/modules/notify/internal/outbox.ts:38-46"
+          ],
+          "evidence": "Line 9 says '5.4 prepared and waiting for the owner's Neon, Vercel and Resend accounts', then '... Phase 6 done (6.5 dropped). Next: Phase 7 ..., and 5.4's remaining owner steps (Resend, Blob, PageSpeed)'. The second list drops Neon and Vercel, and the sentence repeats 'Batches 6.1 and 6.4 done; 6.5 dropped'. The heading says 'updated 2026-10-31' though it records 2026-11-01 work. Line 3 says exit criteria 'must be observably true before the next phase starts', yet Phase 6 was built with the Phase 5 exit (demo URL, every MVP requirement) unmet, and no note records the exception. CLAUDE.md:7 ('work only on its first unchecked batch', which is the blocked 5.4) conflicts with 'Next: Phase 7'. The Phase 6 exit says 'budgets from Phase 5 still hold', but 5.2 records Performance 86 to 92 and TBT 350 to 460 ms against a 90 and 200 ms budget. Line 127 says 'emails on Vercel without Resend are dropped instead of printing sign-in links to the logs', but outbox.ts prints demo-account links there (ADR 0005, setup section 9 step 5). Line 42 says to look at '375, 768 and 1280 px', while CLAUDE.md:46 says 375 and 1280.",
+          "impact": "An agent following CLAUDE.md's first rule would keep picking up the blocked 5.4. The status block does not say clearly what remains.",
+          "recommendation": "Rewrite section 0 as three lines: done, open (5.4 needs Neon, Vercel, Resend, Blob and PageSpeed; Phase 7), next. Note the Phase 5 exit exception explicitly. Add to CLAUDE.md's rule: 'skip batches waiting on the owner'. Mark Phase 6's budget criterion as not met, fix the line 127 wording, and pick one set of viewport widths.",
+          "effort": "S",
+          "confidence": 0.9
+        },
+        {
+          "pass": 1,
+          "title": "`npm run perf` is documented, but the script does not exist and Lighthouse is not automated",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "docs/06-SETUP.md:138",
+            "docs/08-TOOLING.md:36",
+            "package.json:5-25",
+            "README.md:15",
+            "docs/03-ARCHITECTURE.md:171",
+            "docs/01-PRD.md:188"
+          ],
+          "evidence": "Setup section 7 ('Everyday commands (defined in Phase 0)') lists '| npm run perf | Lighthouse mobile on Home and the menu (as on the iOne website) |'. Tooling reserves ports '3300, 3400 | Ad-hoc production servers for reviews and npm run perf'. package.json scripts are: dev build start lint format format:check typecheck test test:watch test:e2e qa qa:full postinstall db:migrate db:deploy db:seed db:reset db:studio. No perf. README lists 'Tests: Vitest, Playwright with axe, Lighthouse', and docs/03 section 15 has a 'Speed | Lighthouse (mobile)' layer, but nothing runs it. Roadmap 5.2 did its measurements by hand.",
+          "impact": "The documented command fails. The PRD's speed metric (section 8.2) and the Phase 7.1 measurement have no repeatable tool.",
+          "recommendation": "Either add one script (for example \"perf\": \"lighthouse http://localhost:3300/menu --only-categories=performance --form-factor=mobile ...\" against a running start, run with npx) or remove the row and the port note. Say 'Lighthouse run by hand' in README and docs/03.",
+          "effort": "S",
+          "confidence": 0.95
+        },
+        {
+          "pass": 1,
+          "title": "Design and PRD docs still describe batch 1.1's two samples and shadcn, after ADR 0011 settled native elements and CSS",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "docs/05-DESIGN-SYSTEM.md:13",
+            "docs/05-DESIGN-SYSTEM.md:35",
+            "docs/05-DESIGN-SYSTEM.md:49",
+            "docs/05-DESIGN-SYSTEM.md:62",
+            "docs/05-DESIGN-SYSTEM.md:94",
+            "docs/01-PRD.md:201",
+            "docs/08-TOOLING.md:10",
+            "docs/08-TOOLING.md:54",
+            "docs/06-SETUP.md:61",
+            "docs/07-ROADMAP.md:30",
+            "docs/adr/0011-native-elements-and-css.md:8,18"
+          ],
+          "evidence": "docs/05: '1.1 Reference sites (shortlist, owner to pick before batch 1.1)'; 'batch 1.1 shows it in both samples'; 'the batch 1.1 samples build this'; 'Values are starting points for the Phase 1 prototypes'; 'plus the mono at one weight if batch 1.1 keeps it'. PRD risks: 'batch 1.1 still builds two quick prototypes of it, native and with library parts'. Tooling: 'Comparing build approaches (batch 1.1)' and 'motion, shadcn registry parts ... Sample B in batch 1.1'. Setup: 'npx shadcn@latest init'. Roadmap stack row: 'shadcn only when native elements fall short'. ADR 0011: 'No component or animation library is added ... Sample B ... Not built', and docs/05:129 says 'A library component needs a new ADR'. There is no components.json, and no shadcn or motion in package.json. The Day and Night decision itself (ADR 0010) is described the same way everywhere.",
+          "impact": "These stale instructions invite an agent to run shadcn init or build a Sample B, against an accepted ADR.",
+          "recommendation": "Replace each batch-1.1 sample reference with 'decided: ADR 0011 (native and CSS)'. Delete the shadcn init line. Change the roadmap row to 'no component library (ADR 0011)'. Close the PRD risk row.",
+          "effort": "S",
+          "confidence": 0.95,
+          "refs": [
+            "docs/adr/0011-native-elements-and-css.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The library lists in setup and tooling no longer match package.json (resend SDK vs fetch, TOTP through Better Auth, missing pg, uqr and dotenv)",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "docs/06-SETUP.md:53-67",
+            "docs/08-TOOLING.md:41-56",
+            "package.json:26-55",
+            "docs/adr/0014-staff-second-factor-in-identity.md:13,17"
+          ],
+          "evidence": "Setup section 4 installs '@prisma/client better-auth zod' and lists '# Phase 2: resend'. Tooling section 4 says '(none) | Emails go to Resend's REST API with fetch ... no SDK', and the code uses fetch (outbox.ts:20), so the two docs contradict each other. Tooling 'Libraries (planned)' gives better-auth the job 'Sessions, email link, Google, roles, TOTP', but ADR 0014 rejected the plugin and uses @better-auth/utils/otp plus uqr. Neither list has @prisma/adapter-pg, pg, @types/pg, dotenv, uqr or @better-auth/utils, all of which are in package.json. Setup section 4 also says 'record any new dependency in an ADR or the roadmap batch', and only uqr is recorded (ADR 0014).",
+          "impact": "The 'only add a library when needed' rule cannot be audited against these lists. A new machine following section 4 installs a different set than the lockfile.",
+          "recommendation": "Change tooling section 4 to 'Libraries (as installed)' with one line of purpose each, generated from package.json. Replace setup section 4 with 'npm install' (the lockfile is the list).",
+          "effort": "S",
+          "confidence": 0.9
+        },
+        {
+          "pass": 1,
+          "title": "Docs disagree on whether seeded Staff accounts exist on the live demo",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "docs/04-DATA-MODEL.md:133",
+            "docs/04-DATA-MODEL.md:140",
+            "docs/06-SETUP.md:109",
+            "docs/06-SETUP.md:182-183",
+            "docs/adr/0005-better-auth-members-and-staff.md:23",
+            "prisma/seed.ts:11-19",
+            "prisma/seed-data.ts:393,611"
+          ],
+          "evidence": "docs/04 section 5: 'in dev and test only: one Manager (Christian, seed-manager), one Barista (Annika ...) and one Member (Hoshi ...)'. Section 6: 'Seed data loads on dev and test databases only.' Setup section 6 says the opposite: 'Seeded accounts (dev, test and the live demo ...)', and section 9 step 4 seeds Neon with ALLOW_REMOTE_SEED=1. ADR 0005 relies on 'the seeded demo accounts ... written to the Vercel logs'. seed.ts refuses a remote seed with 'Set ALLOW_REMOTE_SEED=1 for a dev branch', and seedDatabase defaults to { people = true }, so the demo seed creates the Manager and Barista with known emails.",
+          "impact": "It is unclear whether the production demo should hold Staff accounts with published emails. The data model rule and the deploy checklist cannot both be followed.",
+          "recommendation": "Pick one rule. If demo Staff are intended (ADR 0005 implies so), update docs/04 sections 5 and 6 and change the seed.ts message to 'dev branch or the demo'. If not, pass { people: false } for remote seeds and change setup step 5.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "docs/adr/0005-better-auth-members-and-staff.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "ADR 0005 says sign-in links print 'in development only', but the code checks VERCEL, so any non-Vercel production host logs every link",
+          "kind": "security",
+          "severity": "low",
+          "locations": [
+            "docs/adr/0005-better-auth-members-and-staff.md:23",
+            "src/modules/notify/internal/outbox.ts:15-63",
+            "docs/07-ROADMAP.md:56"
+          ],
+          "evidence": "ADR 0005: 'Until Resend is set up, sign-in links print to the terminal in development only. On Vercel, real people's links are never logged.' outbox.ts sends through Resend only when RESEND_API_KEY is set. Otherwise 'if (process.env.VERCEL) {...}' drops non-demo mail, and every other environment, NODE_ENV=production included, runs console.log of the full email text and writes it to data/mail/. Observed: this audit's production build on :3300 writes sign-in links to server.log and data/mail. Roadmap section 4 leaves the host open ('Vercel Git deploys from GitHub, or another host').",
+          "impact": "On a production deploy to any host other than Vercel without a Resend key, every Member's and Staff member's sign-in link (single use, 5 minutes) lands in the host's logs and on disk. Anyone with log access can sign in as them. The ADR's guarantee depends on a platform variable it never mentions.",
+          "recommendation": "Fail closed: in outbox.ts, use the terminal and file fallback only when NODE_ENV !== 'production' or the URL is localhost. Otherwise drop the mail (keeping the demo-account exception). Or reword ADR 0005 to say 'outside Vercel, links are always logged'.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "docs/adr/0005-better-auth-members-and-staff.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Baristas can mark Sold Out only in /manage/menu, behind the Second Factor; the docs say /manage is Manager-only and suggest Sold Out from the Bar Screen",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "GLOSSARY.md:147-149",
+            "GLOSSARY.md:159-161",
+            "docs/adr/0005-better-auth-members-and-staff.md:11",
+            "docs/03-ARCHITECTURE.md:64",
+            "docs/02-RESEARCH-CAFES.md:32,41",
+            "src/app/manage/page.tsx:15-17",
+            "src/app/manage/menu/page.tsx:52",
+            "src/modules/identity/internal/session.ts:42-47",
+            "src/app/bar/bar-screen.tsx"
+          ],
+          "evidence": "GLOSSARY Barista: 'Staff who use the Bar Screen: accept, prepare and complete Orders, and mark Menu Items Sold Out.' Research C-03 and C-12 say Sold Out is 'toggled from the Bar Screen'. ADR 0005: 'Baristas can use /bar without it [TOTP] on the cafe tablet'. docs/03 routes: '/manage/* | Managers'. In code, the Bar Screen has no Sold Out control (grep 'sold' in src/app/bar finds nothing). Sold Out lives at /manage/menu (requireStaff(\"barista\", \"/manage/menu\")), and requireStaff sends every /manage path to /manage/two-factor, so a Barista must enrol an authenticator to do STAFF-03.",
+          "impact": "The documented Barista workflow (tablet, no Second Factor, persona Annika with wet hands) does not match the build. Every Barista needs a phone authenticator just to mark the croissants Sold Out.",
+          "recommendation": "Decide whether Sold Out belongs on the Bar Screen (no TOTP, like the other bar actions) or in /manage. Then update the Glossary, ADR 0005 and the docs/03 Who column to match.",
+          "effort": "M",
+          "confidence": 0.85,
+          "refs": [
+            "docs/adr/0005-better-auth-members-and-staff.md",
+            "docs/adr/0014-staff-second-factor-in-identity.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Machine facts and paths point to a D: drive that does not exist, a git remote 'drive' that is not configured, and a signed-in gh",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "docs/06-SETUP.md:35",
+            "docs/06-SETUP.md:151",
+            "docs/08-TOOLING.md:64",
+            "docs/08-TOOLING.md:68-69"
+          ],
+          "evidence": "Setup section 3 says 'cd D:\\Coding\\projects\\Personal', and tooling section 6 references 'Hoshimono (D:\\Coding\\projects\\Personal\\Hoshimono ...)' and 'D:\\Coding\\projects\\ione\\IONE-WEBSITE\\docs\\DESIGN-LIBS.md'. On this machine, /d/ does not exist; the repo and Hoshimono are under C:\\Users\\cjose\\Documents\\Projects\\Personal; 'C:\\...\\Projects\\iOne Website' is empty; no DESIGN-LIBS.md was found (find, depth 4). Setup section 8 says the bundle is a git '(remote drive)', but 'git remote -v' shows only origin; the bundle itself exists at G:\\My Drive\\Coding Projects\\Personal\\Hoshikopi\\hoshikopi.bundle. Tooling says '`gh` 2.101 is installed and signed in'; 'gh auth status' from this session returns 'You are not logged into any GitHub hosts' (may be a session or keyring difference).",
+          "impact": "The 'read DESIGN-LIBS.md before adding any UI library' rule points to a file that cannot be read, and the sibling-project references cannot be followed.",
+          "recommendation": "Update the paths to C:\\Users\\cjose\\Documents\\Projects\\... (or describe them relative to the Projects folder). Mark the iOne docs as unavailable. Drop '(remote drive)' or add the remote. Re-check the gh line when convenient.",
+          "effort": "S",
+          "confidence": 0.7
+        },
+        {
+          "pass": 1,
+          "title": "Env var docs and code disagree: BLOB_READ_WRITE_TOKEN is documented as a switch but never read; ALLOW_REMOTE_SEED, DATABASE_URL_UNPOOLED and E2E_DATABASE_URL are undocumented",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            ".env.example:25-26",
+            "docs/06-SETUP.md:75-89",
+            "docs/06-SETUP.md:182",
+            "src/modules/menu/internal/photo.ts:29",
+            "prisma/seed.ts:15",
+            "prisma.config.ts:18",
+            "playwright.config.ts:8"
+          ],
+          "evidence": ".env.example: '# Batch 5.4: empty stores photos in public/menu/' with BLOB_READ_WRITE_TOKEN=, and setup section 5: '| BLOB_READ_WRITE_TOKEN | Vercel Blob; empty uses public/menu/ |'. No file in src reads it (grep of process.env), and photo.ts always 'Saves a Menu Item photo to public/menu/'. Read by code but missing from the section 5 table and .env.example: ALLOW_REMOTE_SEED (seed.ts:15; only inline in section 9), DATABASE_URL_UNPOOLED (prisma.config.ts:18; section 9 only), E2E_DATABASE_URL (playwright.config.ts:8, tests/e2e/db.ts:5; nowhere). VERCEL and VERCEL_ENV (outbox.ts:38, provider.ts:37) change security behaviour but are not mentioned as inputs.",
+          "impact": "Setting the Blob token on Vercel suggests uploads will work, but they still write to the read-only disk. Overrides that exist cannot be found from the docs.",
+          "recommendation": "Mark BLOB_READ_WRITE_TOKEN as 'not used yet (batch 5.4)' in both places. Add ALLOW_REMOTE_SEED, DATABASE_URL_UNPOOLED and E2E_DATABASE_URL to the section 5 table, with a note that VERCEL and VERCEL_ENV are set by the platform and change email and fake-provider behaviour.",
+          "effort": "S",
+          "confidence": 0.9
+        },
+        {
+          "pass": 1,
+          "title": "Glossary gaps and drift: Service Day, Choice and Palette are used in code but undefined; Recurring Events are called 'weekly'; several definitions no longer match the build",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "GLOSSARY.md:3",
+            "GLOSSARY.md:34",
+            "GLOSSARY.md:160",
+            "GLOSSARY.md:166",
+            "GLOSSARY.md:215-217",
+            "src/modules/content/internal/weekly.ts",
+            "src/components/content/weekly-list.tsx:20",
+            "src/app/manage/events/weekly/page.tsx",
+            "src/modules/menu/internal/pricing.ts:28",
+            "src/modules/cart/internal/cart.ts",
+            "src/modules/identity/internal/second-factor.ts:1,67",
+            "src/app/bar/bar-screen.tsx:252",
+            "docs/01-PRD.md:153"
+          ],
+          "evidence": "CLAUDE.md: 'Add a new word there before using it in code.' Undefined but used: 'service day' or serviceDay (14 uses in src, a column on four tables in docs/04); Choice, PricedChoice and choice_key (28 and 15 uses), the core Cart type; the Day and Night palette (ADR 0010, theme.ts, every e2e spec); Concept image and stand-in (ADR 0012, room.ts); Popular this week; Your details; Bar Screen 'Later today' and makeNext (bar-screen.tsx, 5 uses), while PRD STAFF-02 says 'make next'. Naming against the glossary: Recurring Event says 'Avoid: ... weekly Event', yet code uses weekly.ts, WeeklyList, WeeklyForm and the /manage/events/weekly route. Second Factor says 'Avoid: ... OTP (in code ...)', yet second-factor.ts has otpFor and an otp variable. Definitions that drifted: Second Factor cites '(ADR 0005)' where ADR 0014 now defines it; Sold Out 'resets at the next opening', but sold_out_on clears at Manila midnight (queries.ts comment 'turns Sold Out over after midnight'); Star '1 Star for each drink Line unit' does not say that Reward Lines earn none (roadmap 4.2).",
+          "impact": "The glossary is the naming contract for agents. Missing core words (Service Day, Choice) lead to new synonyms, and 'weekly' is spreading as a second name for Recurring Event.",
+          "recommendation": "Add Service Day, Choice, Palette (Day, Night), Concept image (with stand-in) and the Bar Screen's 'Later today'. Rename the weekly.ts, WeeklyList and route names to recurring at the next touch, or allow 'weekly' in code explicitly. Fix the four drifted definitions.",
+          "effort": "S",
+          "confidence": 0.9
+        },
+        {
+          "pass": 1,
+          "title": "The data model doc repeats columns, files inquiries under the wrong heading, and its seed list stops at Phase 0; the schema header says V1 tables are still to come",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "docs/04-DATA-MODEL.md:38",
+            "docs/04-DATA-MODEL.md:51",
+            "docs/04-DATA-MODEL.md:116-133",
+            "prisma/schema.prisma:2",
+            "prisma/seed-data.ts:124-257,453-470,551"
+          ],
+          "evidence": "In the menu_items row, pairing_id appears in Columns ('pairing_id FK menu_items null (set null on delete; MENU-08)') and again in Notes ('V1 adds (as built): ... pairing_id FK null (MENU-08); and the badge night_pick'); night_pick is listed in both too. The inquiries table sits under '### Cafe (module cafe)' while labelled '(V1, content)'. Section 5 'Seed data (Phase 0 deliverable)' lists only Day picks. The seed also has Night picks (Cafe Mocha, Tanglad Ginger Tea, Banana Bread), a Promo on Matcha Latte, a seasonal Calamansi Honey Soda, Pairings, calorie estimates, Event seats: 12 and three Recurring Events (seed-data.ts:551). schema.prisma:2 still says '// Covers the MVP; V1 tables (inquiries, recurring_events) arrive in Phase 6.', but both models exist.",
+          "impact": "Minor confusion about what the seed guarantees (e2e tests depend on the Night picks and the Promo) and where tables live.",
+          "recommendation": "Merge the 'V1 adds' note into the Columns cell, move inquiries under Content, extend section 5 with the V1 seed rows, and update the schema header comment.",
+          "effort": "S",
+          "confidence": 0.95
+        },
+        {
+          "pass": 1,
+          "title": "PRD assumptions and the roadmap's 'decisions due' were never closed",
+          "kind": "docs",
+          "severity": "low",
+          "locations": [
+            "docs/01-PRD.md:3",
+            "docs/01-PRD.md:32-38",
+            "docs/07-ROADMAP.md:46-56",
+            "docs/adr/0007-pickup-windows-and-capacity.md:27",
+            "docs/adr/0008-stars-ledger.md:20",
+            "src/app/layout.tsx:38",
+            "src/lib/clock.ts:47,52",
+            "prisma/seed-data.ts"
+          ],
+          "evidence": "PRD section 2 still says 'confirm (Phase 0)' for locale, 'confirm (Phase 1)' for currency, 'confirm (Phase 3)' for Payment Methods and 'confirm (Phase 4)' for loyalty, though those phases are done. The roadmap decisions table sends 'Star rules confirmed' to 'PRD section 2'. ADR 0007 still says 'batch 2.1 confirms them' and ADR 0008 'The owner confirms in batch 4.1'. The 5.4 row says 'New ADR' for hosting, but vercel.json already commits to Vercel without one. 'Menu size | About 40 Menu Items in 6 Categories' does not match the 19 seeded items (seed and docs/04 section 5). The locale row says 'en-PH', but the root layout sets lang=\"en\" and clock.ts formats with Intl.DateTimeFormat(\"en-US\") (money.ts uses en-PH). Docs 01, 03, 04, 06, 07 and 08 still carry 'Status: draft v0.1, 2026-10-30'.",
+          "impact": "It is unclear which product rules are settled. The case study (7.2) will need the decision trail these rows were meant to hold.",
+          "recommendation": "Mark each row confirmed with its date and batch. Close the ADR 0007 and 0008 lines. Write the hosting ADR when 5.4 lands. Change the menu size to 'about 20'. Pick one locale. Bump the status lines.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "docs/adr/0007-pickup-windows-and-capacity.md",
+            "docs/adr/0008-stars-ledger.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "'Ordering for tomorrow is V1' is promised, but no V1 batch exists for it and Phase 6 is marked done",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "docs/01-PRD.md:100",
+            "docs/05-DESIGN-SYSTEM.md:121",
+            "docs/01-PRD.md:59",
+            "docs/07-ROADMAP.md:131-143"
+          ],
+          "evidence": "PRD ORD-03: 'Ordering for tomorrow is V1'. docs/05 Pickup Time picker: '(ordering for tomorrow comes in V1)'. The PRD's own V1 scope row (line 59) does not list it, and roadmap Phase 6 (6.1 to 6.9, all ticked) has no batch for it. Roadmap section 0 says 'Phase 6 done'.",
+          "impact": "V1 is declared complete while two docs promise a V1 feature that was never scheduled. Customers still cannot order before opening or for the next day.",
+          "recommendation": "Either add a 6.x batch, or move 'ordering for tomorrow' to 'After V1' in ORD-03, docs/05 and roadmap section 13.",
+          "effort": "S",
+          "confidence": 0.9
+        },
+        {
+          "pass": 1,
+          "title": "Small reference and wording errors: ADR 0013 cites the wrong section and lost its escape sequence; ADR 0009 contradicts itself on hidden tabs",
+          "kind": "docs",
+          "severity": "info",
+          "locations": [
+            "docs/adr/0013-csp-allows-inline-scripts.md:8",
+            "docs/adr/0013-csp-allows-inline-scripts.md:26",
+            "src/app/(site)/cafe/page.tsx:143",
+            "docs/adr/0009-live-updates-by-polling.md:8",
+            "docs/adr/0009-live-updates-by-polling.md:24",
+            "src/app/(site)/orders/[id]/status-poller.tsx:102"
+          ],
+          "evidence": "ADR 0013:8 says 'The architecture doc (section 9) planned a strict policy'; section 9 is Pickup Windows, and security headers are section 13. ADR 0013:26 reads 'escape every `<` as `<`' (the < was lost; the code does .replace(/</g, \"\\\\u003c\")), so the rule reads as a no-op. ADR 0009:8 says the status page polls 'every 15 while its tab is hidden, so it can still alert', but its Consequences at :24 say 'Polling pauses when the tab is hidden'. That is true for the Bar Screen (bar-screen.tsx skips when document.hidden) and false for the status page (status-poller.tsx:102 uses 15_000 when hidden).",
+          "impact": "An unclear security rule (the JSON-LD escaping) and a contradictory polling rule, in ADRs that future changes must respect.",
+          "recommendation": "Change ADR 0013 to 'section 13' and '<'. Change ADR 0009:24 to 'The Bar Screen pauses while hidden; the status page slows to 15 seconds.'",
+          "effort": "S",
+          "confidence": 0.95,
+          "refs": [
+            "docs/adr/0013-csp-allows-inline-scripts.md",
+            "docs/adr/0009-live-updates-by-polling.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The research doc's release key and several candidates are out of date with the PRD and the build",
+          "kind": "docs",
+          "severity": "info",
+          "locations": [
+            "docs/02-RESEARCH-CAFES.md:26",
+            "docs/02-RESEARCH-CAFES.md:13",
+            "docs/02-RESEARCH-CAFES.md:32",
+            "docs/02-RESEARCH-CAFES.md:43",
+            "docs/02-RESEARCH-CAFES.md:187,202"
+          ],
+          "evidence": "Line 26 defines 'V1 completes Version 1 (accounts, Stars, Events, Posts)', and C-25 (Star Card) and C-31 (Events) are tagged V1, but the PRD puts accounts, Stars, Events and Posts in the MVP. C-09 and the summary say 'last window at closing minus Prep Time', but the code ends windows at closing. C-03 says Sold Out is 'toggled from the Bar Screen' (it is not). C-14 says 'larger orders are asked to call' (there is no phone; ORD-12 uses Inquiries). C-46 says 'Home lists featured Menu Items but menu_items has no field to pick them', but barista_pick and night_pick exist. Only C-08, C-32, C-57 and C-58 carry adoption notes.",
+          "impact": "Low. CLAUDE.md sends 'what other cafes do' questions here, and a reader may take the release tags as the current scope.",
+          "recommendation": "Add one line under 'Candidates': 'Release tags are the research's suggestion; scope is the PRD.' Add 'Built as ...' notes where a candidate changed (C-03, C-09, C-14, C-46).",
+          "effort": "S",
+          "confidence": 0.85
+        }
+      ]
+    },
+    {
+      "key": "product",
+      "passes": 1,
+      "summaries": [
+        "Hoshikopi already covers most of what Metro Manila and global cafe sites offer, and more than most of them on the web. It shows prices and Options on one page, has honest Pickup Windows, verified Test Mode payments, a 9-space Star Card, Events with seats, Inquiries, Pairings and Day and Night picks. Starbucks PH, Pickup Coffee and Blue Bottle keep ordering inside an app. Yardstick and Flora have no order-ahead. The research doc already covers most competitor features and places them deliberately (C-01 to C-63). I did not repeat items the owner skipped or deferred: gift cards, subscriptions, reservations, catering, tiers, the Filipino language, public reviews, a newsletter.\n\nThe biggest gaps are these:\n- **The live demo cannot show its best parts to a visitor.** Only the owner can sign in on the demo. No visitor can see the Bar Screen. A visitor's Order sits at Placed forever.\n- **The \"honest pickup times\" differentiator has no answer for a rush the system cannot see.** Walk-ins never enter the queue, and the only lever is pausing. Square's Busy Mode and per-order delays solve this.\n- **Wait information the app already computes is never shown.** `drinksLeft` per window is unused, and the Order page has no queue position.\n- **Smaller loops are left open.**\n  - Phone-only Guests get no confirmation, and the phone is never used.\n  - Event Sign-ups can only be cancelled by replying to an email sent from Resend's test sender, with no reply-to.\n  - There is no senior citizen or PWD discount handling, which is a Philippine legal requirement for a real cafe.\n  - A Guest's first Star is always lost.\n\nFeatures that fit the personas and the product:\n- Name on the cup and a shared Cart link, for office coffee runs.\n- \"Your usual\" on Home.\n- A pickup hand-off block on the Order page.\n- Coffee origin and tasting notes. Research C-07 was marked V1 but silently dropped.\n- An installable Bar Screen that keeps the tablet awake.\n- Gifting a Reward to a friend.\n- Private feedback after pickup.\n\nThings in the running site that feel unfinished next to competitors:\n- No photos. The UI audit already reported this.\n- 19 Menu Items, where the PRD says about 40.\n- Posts of 2 to 4 sentences that do not link to the drink they describe.\n- Merch pages with a \"Note for the barista\" box and no grind choice.\n- A cancelled Order page with no way back to the menu.\n\nThe ordering auditor already reported ordering for tomorrow (ORD-03 V1), so I left it out here. I placed one Guest Order (K-005, Pay at Pickup) and cancelled it at once. I changed no settings and no repo files."
+      ],
+      "coverage": [
+        "Read docs/01-PRD.md fully, docs/07-ROADMAP.md fully, docs/02-RESEARCH-CAFES.md fully (Parts 1 and 2, candidates C-01 to C-63, gaps and sources), ADRs 0005, 0006, 0011, docs/06-SETUP.md section 9, README.md, docs/audit interim feature, improvement and gap titles (to avoid duplicates)",
+        "Browsed http://localhost:3300 at 375 px with Playwright (scripts in scratchpad/audit/product/: browse.cjs, flow.cjs, place.cjs, cancel.cjs, signin.cjs, authed.cjs, q.cjs). Pages: /, /menu, /cafe, /menu/item/hoshi-latte, /menu/item/house-blend-250g, /menu/item/hoshikopi-tumbler, /events, /events/latte-art-night, /news, /news/our-beans-from-benguet, /news/how-we-make-the-hoshi-latte, /concept, /sign-in, /cart, /checkout, /cafe/inquire, /orders/[id]",
+        "Guest flow end to end: added a Hoshi Latte, Cart, checkout (Pay at Pickup), Order page for K-005, then cancelled it (DB confirms status cancelled)",
+        "Signed in as the seeded Member hoshi@hoshikopi.example by email link: /account, /account/stars, Home as a Member",
+        "Read-only DB queries: table list, menu_items columns and rows (19 items, 6 Categories), order count",
+        "Code read: src/app/(site)/orders/[id]/page.tsx and status-poller.tsx, checkout/page.tsx (window mapping), checkout-form.tsx (contact and chips), src/modules/cafe/internal/ordering-day.ts (PickupWindow, Prep Time), src/modules/ordering/internal/emails.ts, reads.ts (deidentify), place.ts (contact), src/modules/notify/index.ts (sign-up email), notify/internal/outbox.ts (send, no reply_to), src/app/bar/bar-screen.tsx and actions.ts (pause, requireStaff), manage/hours/actions.ts, events/[slug]/page.tsx, news/[slug]/page.tsx, components/home/barista-picks.tsx, components/menu/menu-filter.tsx, public/sw.js, cart.ts (note limit)",
+        "Greps: SMS or Viber, customerPhone readers, demo, manifest, wakeLock, delay or late in the bar, senior or PWD, C-07 and tasting in the PRD and roadmap, Notify me",
+        "Web research (WebSearch and WebFetch): Square Order Timing and Busy Mode, Toast Mobile Order and Pay guest experience and catering Share cart, Luma waitlist, Blue Bottle 2025 membership (gift a drink), Pickup Coffee app listing, Starbucks PH new app and Mobile Order and Pay pause, Starbucks mobile status and queue coverage, leanblog 2026 on mobile order timing, Domino's 2026 Tracker, Google popular times, Baymard 2026 takeout benchmark, Yardstick, Tim Wendelboe, Flora, Single O, Sightglass, Kurasu, % Arabica, Bo's Coffee, Starbucks PWA case study, MDN Screen Wake Lock, web.dev installability, Philippine senior and PWD discount rules for online orders (DSWD and DTI 2022) and the Starbucks PH 2024 controversy, Square Feedback, pasabuy",
+        "Not done: /bar and /manage were not browsed as Staff (the Staff auditor covers them; Bar code was read for product gaps only). No Lighthouse run. 1280 px and Night palette were not re-checked (the UI auditor covered them). Google sign-in could not be tested (no keys). The Notify me button could not be checked in headless Chromium (permission not default)."
+      ],
+      "findings": [
+        {
+          "pass": 1,
+          "title": "The live demo cannot show its best parts to a visitor: no way to see the Bar Screen, Orders stay Placed, and only the owner can sign in",
+          "kind": "feature",
+          "severity": "high",
+          "locations": [
+            "docs/01-PRD.md:190",
+            "docs/06-SETUP.md:169",
+            "docs/06-SETUP.md:183",
+            "src/app/bar/actions.ts:16",
+            "src/modules/notify/internal/outbox.ts:18",
+            "src/app/(site)/concept/page.tsx:76"
+          ],
+          "evidence": "As a Guest at 10:53 AM I placed K-005 (Pay at Pickup). The Order page said 'Salamat! We got your order. The bar will accept it soon.' Every move after Placed needs a Staff session (bar actions call requireStaff(\"barista\", \"/bar\")). On the demo, Resend's test sender 'delivers only to the Resend account's own address, so only that address can sign in on the demo' (06-SETUP:169). Seeded accounts sign in only through links in the Vercel logs (06-SETUP:183, outbox.ts:18). Signed in as the seeded Member, /account shows '0 of 9 Stars. 9 drinks to go.', 'No orders yet' and 'Nothing saved yet'. The PRD's two-minute demo script (PRD:190: 'watch it move on the Bar Screen, collect a Star') needs a presenter with Staff access. /concept ends with 'The case study comes later; the code is on GitHub.' and has no try-it steps.",
+          "impact": "A recruiter or reviewer who opens the URL alone is the audience of PRD goal 4. They can browse and place an Order, but they never see the Bar Screen, the live status moving, a Star lighting, a Reward or Favourites. Their demo Orders pile up as Placed (the ordering audit found stale Pay at Pickup Orders are never closed). The project's strongest engineering stays invisible.",
+          "recommendation": "Batch 5.4 or 7.3:\n(1) Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the demo. ACC-01 Google sign-in is already built, so any visitor becomes a Member without a Resend domain.\n(2) Add a demo-only 'Be the barista' panel on the visitor's own Order page. Gate it by the Order token and an env flag that refuses non-preview hosts, as `fake` does. Its buttons call the same transition() as the Bar Screen (Accepted, Preparing, Ready, Picked Up). Or add a /demo split view of the visitor's Order next to a Bar Screen filtered to it.\n(3) Seed the demo Member with an Order history and 8 Stars, as ledger rows with a 'demo' reason, so the Reward is one drink away.\n(4) Add a 'Try it in two minutes' block on /concept.\nAdd Demo Mode to GLOSSARY.md and write an ADR, since this touches ADR 0005 and 0006.",
+          "effort": "M",
+          "confidence": 0.85,
+          "refs": [
+            "docs/01-PRD.md section 8 (success metric 4)",
+            "docs/06-SETUP.md section 9",
+            "docs/adr/0005-better-auth-members-and-staff.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "No Busy Mode or per-Order delay: when walk-ins swamp the bar, the only lever is pausing, so 'ready in 10 min' stops being honest",
+          "kind": "feature",
+          "severity": "high",
+          "locations": [
+            "src/modules/cafe/internal/ordering-day.ts:30",
+            "src/app/bar/bar-screen.tsx:208",
+            "src/app/manage/hours/actions.ts:23",
+            "docs/01-PRD.md:164"
+          ],
+          "evidence": "Prep Time is 'base + per drink x drinks queued ahead (Accepted or Preparing)' (ordering-day.ts:30-31). It counts online Orders only. Walk-in Dine-in orders at the counter never enter the system, because a point-of-sale system is a PRD non-goal (PRD:18). The Bar Screen's only control is 'Pause ordering 30 min' (bar-screen.tsx:208). Prep Time settings sit on /manage/hours behind requireStaff(\"manager\") (actions.ts:23). Grepping 'delay|late' in src/app/bar and ordering/internal/bar.ts finds nothing. Square's Order Timing help has Busy Mode: '+10 minutes, +15 minutes, or +20 minutes' for '15 minutes, 30 minutes, or 1 hour', separate from pausing, turning off by itself. Single orders can be delayed in 15-minute steps, and the customer is told. Lean Blog (2026-03-24) on Starbucks: 'a mismatch between when drinks are produced and when customers arrive'.",
+          "impact": "PRD differentiator 1 ('ready in 8 minutes is true') fails exactly at the morning rush. Persona Hoshi 'will not wait in line if the app says ready in 8 minutes and it takes 20'. The bar's only choice is all or nothing: keep quoting times it cannot meet, or turn ordering off.",
+          "recommendation": "Build test-first, since it is a Prep Time rule.\n- **Busy Mode on the Bar Screen:** +10 or +15 minutes for 30 or 60 minutes, auto-expiring and audited. It adds to prepMinutes and pushes the first Pickup Window, so ASAP quotes and chips follow.\n- **Per-Order 'Running late' tap (+5 or +10):** stores an adjusted ready time. The Order page then shows 'Running a bit behind, now around 11:25'. Capacity does not move.\nAdd Busy Mode to GLOSSARY.md first. This is a post-V1 batch, next to ordering for tomorrow.",
+          "effort": "M",
+          "confidence": 0.8,
+          "refs": [
+            "https://squareup.com/help/us/en/article/8325-manage-order-timing-with-square",
+            "https://www.leanblog.org/2026/03/starbucks-mobile-order-timing-problem-chick-fil-a-solved/",
+            "docs/02-RESEARCH-CAFES.md C-10 (Toast snooze 20 or 40 minutes)"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Wait-time information stops at one number: the Order page never says how many drinks are ahead, and Pickup Time chips hide how full each window is",
+          "kind": "improvement",
+          "severity": "medium",
+          "locations": [
+            "src/modules/cafe/internal/ordering-day.ts:23",
+            "src/app/(site)/checkout/page.tsx:141",
+            "src/app/(site)/checkout/checkout-form.tsx:109",
+            "src/app/(site)/orders/[id]/page.tsx:120"
+          ],
+          "evidence": "pickupWindows already returns drinksLeft and foodLeft for each window (ordering-day.ts:23-24, 64-67). Checkout maps each window to { value, label: formatTime(w.start) } only (checkout/page.tsx:141-144). drinksLeft is read nowhere else in src. Live checkout at 10:52 AM showed 38 identical chips from 11:30 AM to 8:45 PM. The Order page says 'Pickup as soon as possible, around 11:15 AM.' and shows a 5-step timeline, with no queue position, although Prep Time already counts queued drinks. Starbucks' in-app estimate depends on 'the number of mobile orders in the queue'. Domino's 2026 Tracker adds detail under each stage and a more precise ready time.",
+          "impact": "A Customer cannot choose a quieter window, and cannot tell 'not accepted yet' from '6 drinks back'. The product's main differentiator stays invisible. Tita Lorna scheduling 9:00 cannot see that 9:00 is nearly full.",
+          "recommendation": "- On chips where drinksLeft is under a threshold, show 'Filling up' or '2 drinks left', in text, not colour only.\n- On the Order page, while Placed or Accepted, show 'N drinks ahead of yours'. Use the same queued-drinks count Prep Time uses, returned by the existing status route.\n- The hero Pickup Windows row that the UI audit found missing would use the same data on Home.\nNo new tables are needed.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": [
+            "https://abcnews.com/news/story/starbucks-app-makes-waiting-line-coffee-thing-past-33948135",
+            "https://ir.dominos.com/node/24451",
+            "https://blog.google/products/maps/maps101-popular-times-and-live-busyness-information/"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Phone-only Guests get no confirmation and no way back to their Order, and the phone number is collected but never used",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/checkout/checkout-form.tsx:141",
+            "src/modules/ordering/internal/place.ts:155",
+            "src/modules/ordering/internal/place.ts:283",
+            "src/modules/ordering/internal/emails.ts:16"
+          ],
+          "evidence": "Checkout says 'An email or a mobile number, so we can reach you about your Order.' (checkout-form.tsx:141). It accepts a phone alone (place.ts:155 refines on customerEmail || customerPhone; stored at :283). orderForEmail returns null when there is no customerEmail (emails.ts:16), so no placed, Ready or Refund email goes out. customerPhone is read nowhere in src except deidentifyOrders, which nulls it: not on the Bar Screen, not in /manage/orders, and no SMS (ADR 0005 defers SMS). The Order page's only way back is its tokenised URL, and the page never tells the Guest to keep it.",
+          "impact": "A phone-only Guest who closes the tab loses the Order Code, the live status and the Cancel button, and a Refund happens without a word to them. The checkout promises contact the cafe cannot make. Collecting an unused phone also goes against the PRD privacy line ('collect only what an Order needs').",
+          "recommendation": "Laziest fix: require email for Guests and drop the phone field, then update ORD-05. If the phone stays:\n- For Orders without email, show 'Save this page: it's your only link to this Order' on the Order page, with a native Share or Copy link button (navigator.share or clipboard).\n- Show the phone on the Bar Screen card, so staff can reach a no-show.\nSMS stays deferred, per ADR 0005.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "https://support.toasttab.com/en/article/Guest-Experience-for-Toast-Mobile-Order-Pay",
+            "https://squareup.com/help/us/en/article/6889-set-up-customer-email-and-text-alerts-for-square-online-orders"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Event Sign-ups cannot be cancelled in practice: the email says 'Reply to this email' but comes from Resend's test sender with no reply-to, and a full Event offers no waitlist",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "src/modules/notify/index.ts:89",
+            "src/modules/notify/internal/outbox.ts:27",
+            "src/app/(site)/events/[slug]/page.tsx:114",
+            "docs/07-ROADMAP.md:134"
+          ],
+          "evidence": "The Sign-up email says \"Can't make it? Reply to this email so someone else can have your seat.\" (notify/index.ts:89). send() posts with from: process.env.MAIL_FROM ?? 'Hoshikopi <onboarding@resend.dev>' and only to, subject and text: there is no reply_to (outbox.ts:20-31). MAIL_FROM stays the Resend test sender (.env.example:13, 06-SETUP:86). Roadmap 6.2: 'Cancelling a Sign-up is by replying to the email for now.' A full Event shows only 'Fully booked, sorry.' (page.tsx:114). Luma lets guests 'cancel their waitlist registration at any time' and emails them when they are approved off the waitlist.",
+          "impact": "No-show seats are never freed (Latte art night has 12 seats), and the Manager never hears about cancellations. A full Event turns interested people away with nothing to do. The same missing reply-to affects every Order email and the Order page's 'Questions? Email us.'",
+          "recommendation": "- Set reply_to to the cafe's contactEmail on every email. It is one field in send().\n- Put a 'Can't make it' link in the Sign-up email. Use an HMAC token, like orderLink. The link deletes the Sign-up under the existing Event row lock and frees the seats.\n- Optional V1 follow-up to EVT-02: a 'Tell me if a seat opens' list on full Events, emailed in order when seats free up.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "https://help.luma.com/p/waitlist.md"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "No senior citizen or PWD discount anywhere: required of every Philippine food business, including online orders, but absent from the PRD, the FAQ and checkout",
+          "kind": "feature",
+          "severity": "medium",
+          "locations": [
+            "docs/01-PRD.md:202",
+            "src/app/(site)/cafe/page.tsx",
+            "src/app/(site)/checkout/checkout-form.tsx"
+          ],
+          "evidence": "grep -riE 'senior|pwd|9994|10754' over src, docs and GLOSSARY.md finds nothing outside the audit files. The PRD's 'Becoming real' risk (PRD:202) lists a business, BIR receipts, Internet Transactions Act duties, live keys and real photos, nothing else. The cafe FAQ (8 questions) and checkout are silent. RA 9994 and RA 10754 give 20% off plus a VAT exemption on food for personal consumption. A DSWD and DTI joint circular signed in May 2022 extends this to online purchases: the ID number is given when ordering and the ID shown on receipt. In January 2024 Starbucks PH apologised for signage that limited the discount, and its 40% promo excluded Mobile Order & Pay.",
+          "impact": "The site is built 'as if real' for Metro Manila, yet it has no answer to one of the most common counter questions. A real launch would need a money rule (20% plus VAT exemption per qualifying person's items, not per Order). The centavo, snapshot and receipt design should plan for it now.",
+          "recommendation": "Now (S):\n- Add the discount to PRD section 9 'Becoming real'.\n- Add one FAQ answer: 'Senior citizen or PWD? Choose Pay at Pickup and show your ID at the counter; we apply your discount there.'\nLater (L): needs an ADR next to ADR 0002, because it changes money and receipts. A checkout tick with the ID number, a server-computed discount Line for one person's items, and a Barista check of the ID at pickup. Test-first.",
+          "effort": "S",
+          "confidence": 0.75,
+          "refs": [
+            "https://www.philstar.com/business/2022/06/10/2187242/senior-pwd-discounts-pushed-online-purchases",
+            "https://mb.com.ph/2022/6/1/govt-issues-discount-guidelines-for-online-purchases-of-senior-citizens-pwds",
+            "https://www.philstar.com/headlines/2024/01/17/2326488/after-pressure-solons-coffee-chain-apologizes-limiting-senior-citizen-and-pwd-discounts",
+            "https://mb.com.ph/2024/1/23/starbucks-philippines-is-treating-senior-citizens-pw-ds-and-more-with-a-special-promo"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "A Guest's first Stars are always lost: no nudge before Place order, and no way to keep this Order's Stars afterwards",
+          "kind": "improvement",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/orders/[id]/page.tsx:255",
+            "docs/adr/0005-better-auth-members-and-staff.md:10",
+            "docs/01-PRD.md:102",
+            "src/app/(site)/checkout/page.tsx:137"
+          ],
+          "evidence": "Guest checkout, observed at 10:52 AM, never mentions Stars before 'Place order, PHP 185'. Afterwards the Order page says 'Collect Stars next time: sign in with your email before you order.' (page.tsx:255). ADR 0005:10: 'Guests can order without an account but earn no Stars.' The Order already holds the Guest's email, so the link between Order and person exists.",
+          "impact": "The first visit is when the 9-space Star Card persuades most, and 'next time' asks people to remember. Baymard: 18% abandon when forced to sign up, so the fix must stay optional, not a wall.",
+          "recommendation": "(a) S, no ADR: add one line at Guest checkout, 'Sign in first and this drink lights a Star', linking to sign-in and back. The Cart merge already exists.\n(b) M, needs an ADR amending part of ADR 0005: a 'Keep this Order's Stars' button on the Order page. It emails a link to the checkout email, and the link attaches that Order to the new Member if it is not yet Picked Up, was placed today, has no member_id and the email matches. The Star then lands at Picked Up through the existing earn rule.\nBuild (b) test-first (Stars).",
+          "effort": "M",
+          "confidence": 0.7,
+          "refs": [
+            "https://baymard.com/research-articles/current-state-of-checkout-ux",
+            "https://foodondemand.com/09242025/blue-bottle-coffee-launches-loyalty-program/"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "No group or office-run ordering: a Cart cannot be shared, and cups cannot be labelled by person",
+          "kind": "feature",
+          "severity": "medium",
+          "locations": [
+            "docs/01-PRD.md:44",
+            "docs/01-PRD.md:48",
+            "src/modules/cart/internal/cart.ts:13",
+            "src/modules/cart/internal/cart.ts:58"
+          ],
+          "evidence": "Personas: Hoshi works in an Ortigas office, and Tita Lorna orders four drinks and pastries for the family (PRD:44, 48). The Cart belongs to one browser (Guest cookie or Member), with no share path. A Line has Options and a 140-character note (cart.ts:13), so 'for Migs' goes into free text, and the merge key includes the note (cart.ts:58). Toast catering ordering: 'guests can use the Share cart button to reveal a shareable link so multiple people can add items to the cart'. One person checks out, and the link then stops working. Toast Mobile Order & Pay has 'Order as a group'. Pasabuy (asking someone to buy for you) is a common Filipino practice. Its use for office coffee runs is my inference, low confidence.",
+          "impact": "The most common multi-drink order, one colleague collecting 5 drinks, means typing everyone's Options and notes by hand from a group chat. The barista cannot label cups by person, so the handoff at the counter is slow.",
+          "recommendation": "Step 1 (S): a 'Name on the cup' field per Line, shown on the Bar Screen card and the Order page, and part of the merge key. Add the word to GLOSSARY.md first.\nStep 2 (M to L, after V1): a share link for a Cart. Use a random token like the Guest cookie, ending at checkout or after 2 hours. Colleagues add their own Lines with their name, and the owner checks out. Server pricing, the 15-drink cap and Capacity stay as they are.",
+          "effort": "M",
+          "confidence": 0.7,
+          "refs": [
+            "https://support.toasttab.com/en/article/Optimize-Toast-Catering-Online-Ordering",
+            "https://support.toasttab.com/en/article/Guest-Experience-for-Toast-Mobile-Order-Pay",
+            "https://www.rappler.com/nation/overseas-filipinos/pasabuy-scams-target-filipinos-abroad/"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Favourites and Order again live only on /account: Home gives a returning Member no one-tap 'your usual'",
+          "kind": "improvement",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/account/page.tsx:144",
+            "src/components/home/barista-picks.tsx:8",
+            "docs/01-PRD.md:44"
+          ],
+          "evidence": "'Order again' and Favourites appear only on /account (account/page.tsx:144). For the signed-in seeded Member, Home rendered the same text as for a Guest: hero, Barista picks, and the example card '5 of 9 Stars... Example card'. Baymard's 2026 takeout benchmark: 'Repeat ordering was undersupported', with 'no route to past orders from the homepage'.",
+          "impact": "Hoshi's daily iced Spanish latte goes through menu, item, Options, Cart and checkout every morning. PRD goal 1 (under 60 seconds) is easiest to meet with one tap from Home, and the Favourites built in 6.1 go unused.",
+          "recommendation": "For Members only, show 'Your usual' in the hero pickup card: 'Spanish Latte, Large, Oat milk, PHP 230 [Add]', from the newest Favourite or the last Order. Use the existing addLine path, in a small Suspense hole like the header Cart count, so Home stays prerendered for Guests. The UI audit's 'Home shows the example Star Card to Members' sits in the same spot.",
+          "effort": "S",
+          "confidence": 0.75,
+          "refs": [
+            "https://baymard.com/blog/food-delivery-and-takeout-ux-benchmark-2026"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The Order page lacks the pickup handoff: no location, directions or hours, no calendar file for Scheduled Pickups, and a dead end after cancelling",
+          "kind": "improvement",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/orders/[id]/page.tsx:206",
+            "src/app/(site)/orders/[id]/page.tsx:246",
+            "src/app/(site)/orders/[id]/page.tsx:260",
+            "docs/02-RESEARCH-CAFES.md:40"
+          ],
+          "evidence": "The Order page renders the Order Code, the timeline, the Lines, the Stars line and the pickup line. It has no neighbourhood, directions link, today's hours or where-to-collect line. Research C-11 asked for 'cafe directions' on the Order page. Events have Add to calendar, but Scheduled Pickups do not. After I cancelled K-005, the page showed 'This order was cancelled.' and then still 'Pay at the counter when you collect.' (page.tsx:246), with no link to the menu and no Order again. 'Questions? Email us.' (page.tsx:206) is plain text, with no mailto.",
+          "impact": "A first-time Customer has to leave the Order page to find the cafe. Someone who scheduled 9:00 has nothing to put in a calendar. A cancelled Customer is left on a dead page.",
+          "recommendation": "- **Picking up block:** 'Kapitolyo, Pasig. Directions', 'Open until 9:00 PM' and 'Show your Order Code at the bar', reusing the cafe reads.\n- **Calendar file:** an .ics for Scheduled Pickups, reusing the Event calendar route's builder.\n- **Closed Orders:** replace the payment line with 'Order again' (again.ts exists) or 'See the menu'.\n- **Email link:** make 'Email us' a mailto to contactEmail.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "docs/02-RESEARCH-CAFES.md C-11",
+            "https://www.leanblog.org/2024/04/the-inconsistent-mobile-order-delivery-process-at-starbucks-can-be-frustrating"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Coffee storytelling is thin and research C-07 was dropped silently: no origin or tasting notes, Posts do not link to the drinks they describe, and the beans have no grind choice",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "docs/02-RESEARCH-CAFES.md:36",
+            "docs/02-RESEARCH-CAFES.md:62",
+            "prisma/schema.prisma",
+            "src/app/(site)/news/[slug]/page.tsx:44"
+          ],
+          "evidence": "Research C-07 ('Origin and tasting notes on coffee Menu Items', release V1) and C-33 (Posts 'link to Menu Items mentioned') never reached the PRD or roadmap. Grepping C-07 or tasting in both finds nothing, and neither was declined. menu_items has no origin, roast or notes column (information_schema). /menu/item/house-blend-250g shows one line, 'Whole beans: Benguet arabica with a little Batangas barako.', plus a 'Note for the barista' box and no grind Option. The Hoshikopi Tumbler page also asks for a barista note. The Post 'How we make the Hoshi Latte' has no link to the Hoshi Latte: the page's only link is 'All news' (page.tsx:44). Yardstick shows 'Flavor Notes: Dalandan, Dried Fruit, Osmanthus'. Tim Wendelboe links a page for each farm. Starbucks PH shows region and tasting notes.",
+          "impact": "Specialty competitors sell the cup through its origin, while Hoshikopi's 'beans from Benguet' story stops at one sentence. The Posts drive no orders.",
+          "recommendation": "Either record C-07 as declined in the research doc, or build it:\n- Add optional invented, labelled tasting notes and origin region to coffee and bean Menu Items.\n- Add a Grind Option Group (whole, filter, espresso) to the House Blend.\n- Hide the barista note on merch.\n- Show a 'Try it' Menu Item card on Posts, through a post-to-item field, or by rendering /menu/item links in Markdown as cards.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": [
+            "https://yardstickcoffee.com/",
+            "https://timwendelboe.no/",
+            "https://www.starbucks.ph/menu"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The Bar Screen tablet can sleep and miss the new-Order chime: no Screen Wake Lock and no web app manifest to install it",
+          "kind": "improvement",
+          "severity": "medium",
+          "locations": [
+            "public/sw.js:1",
+            "src/app/bar/bar-screen.tsx",
+            "docs/01-PRD.md:59",
+            "docs/07-ROADMAP.md:153"
+          ],
+          "evidence": "public/ holds only grain.png and sw.js, whose comment says 'No caching and no push yet'. No web app manifest exists anywhere (grep manifest in src and public: none). Grepping wakeLock finds nothing. STAFF-02 relies on a sound and highlight for new Orders on a tablet, and tablets dim and lock by default. MDN: the Screen Wake Lock API 'provides a way to prevent devices from dimming or locking the screen', the lock is released when the page is hidden, and it must be requested again on visibilitychange. The owner deferred 'the installable app (PWA) with push notifications' until after V1 (PRD:59), and V1 is now done.",
+          "impact": "Annika's tablet goes dark after a few idle minutes on a slow afternoon, and the next Order's chime and pulse go unseen. Customers who order daily cannot pin the site to their home screen.",
+          "recommendation": "Two small steps, no push needed:\n(1) On the Bar Screen, call navigator.wakeLock.request('screen') and request it again on visibilitychange.\n(2) Add app/manifest.ts (Next metadata route; read node_modules/next/dist/docs first) with name, 192 and 512 icons, display standalone and start_url /, so phones and the bar tablet can install it.\nPush notifications stay in roadmap section 13.",
+          "effort": "S",
+          "confidence": 0.7,
+          "refs": [
+            "https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API",
+            "https://web.dev/installable-manifest",
+            "https://formidable.com/work/starbucks-progressive-web-app"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Treat a friend: send a Reward as a 'libre' to another Member",
+          "kind": "feature",
+          "severity": "low",
+          "locations": [
+            "docs/02-RESEARCH-CAFES.md:58",
+            "docs/adr/0008-stars-ledger.md"
+          ],
+          "evidence": "Research C-29 ('Gift a drink to a friend') is set to Later because of abuse rules. Blue Bottle's September 2025 membership lets members gift a drink for 75 points, against 150 to redeem one for themselves. Blue Bottle's rules allow gifts only between separate accounts, with a 48-hour support window. Hoshikopi's ledger already reserves and releases Stars (ADR 0008).",
+          "impact": "Treating someone (libre) fits Filipino cafe culture and gives the Star Card a social loop, the main growth path a single cafe has. Value is moderate for a portfolio.",
+          "recommendation": "After V1: a Member turns an available Reward into a one-use code emailed to a friend. The friend must sign in as a different Member and redeems it at checkout. Stars move only through ledger rows ('gifted', and 'gift_returned' if unused after 30 days). This needs an ADR 0008 amendment, test-first.",
+          "effort": "M",
+          "confidence": 0.6,
+          "refs": [
+            "https://foodondemand.com/09242025/blue-bottle-coffee-launches-loyalty-program/",
+            "https://support.bluebottlecoffee.com/hc/en-us/articles/49514654528283-Mobile-App-Gift-a-drink-rules-and-guidelines"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "No private feedback after pickup: the Manager learns nothing about the drink beyond sales counts",
+          "kind": "feature",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/orders/[id]/page.tsx:72",
+            "docs/02-RESEARCH-CAFES.md:212"
+          ],
+          "evidence": "After Picked Up, the Order page says only 'Enjoy! See you again soon.' (message() for picked_up). Reports cover sales, top items and Stars. Research C-56 rightly skips public reviews for a concept. Square Feedback lets customers rate a visit privately from the receipt, and that feedback 'is confidential and is not publicly visible'.",
+          "impact": "A private thumbs up or down is an honest alternative to invented social proof. It also gives the Manager and 'Popular this week' real signal, and makes the Reports page more convincing.",
+          "recommendation": "On a Picked Up Order page and in the Ready email, add 'How was your Hoshi Latte?' with up, down and an optional comment. Store it once per Order, and list it with a count in /manage/reports. Rate-limit it like Inquiries.",
+          "effort": "S",
+          "confidence": 0.6,
+          "refs": [
+            "https://squareup.com/help/us/en/article/5244-provide-feedback-on-your-purchases",
+            "https://squareup.com/help/us/en/article/5241-get-started-with-square-feedback"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Dietary filters judge only the default version: no 'can be made dairy-free' path, though Oat milk is an Option",
+          "kind": "improvement",
+          "severity": "low",
+          "locations": [
+            "src/components/menu/menu-filter.tsx:6",
+            "src/modules/menu/internal/queries.ts:67"
+          ],
+          "evidence": "The menu filters are 'Vegan', 'No caffeine' and 'Nut-free', driven by badges (menu-filter.tsx:6-8). A latte with the Oat milk Option does not appear as a dairy-free choice, although Option allergen effects already exist (the item page says 'Almond milk adds tree nuts'). Baymard 2026: 'Dietary and customization needs had no supported path at any decision point.' Lactose intolerance is widely reported as common in Southeast Asia, but estimates range from under 50% to over 85% (low confidence).",
+          "impact": "Customers who avoid milk must open each drink to find out whether a swap works.",
+          "recommendation": "Add a 'Can be made dairy-free' filter or badge, computed from each Menu Item's allergens plus the allergens its Options remove or add. Show the swap on the item page ('Choose Oat milk to make it dairy-free').",
+          "effort": "S",
+          "confidence": 0.55,
+          "refs": [
+            "https://baymard.com/blog/food-delivery-and-takeout-ux-benchmark-2026",
+            "https://www.philstar.com/business/science-and-environment/2001/08/13/129994/one-two-pinoys-suffer-lactose-intolerance"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Content is thinner than the PRD and competitors: 19 Menu Items against 'about 40', one-paragraph Posts, and a 'New picks every Monday' promise with no schedule",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "docs/01-PRD.md:38",
+            "src/components/home/barista-picks.tsx:8"
+          ],
+          "evidence": "PRD:38: 'About 40 Menu Items in 6 Categories'. The database has 19 Menu Items in 6 Categories (query on menu_items joined to categories). The Posts are 2 to 4 sentences ('Our beans from Benguet' is three). Home says 'New picks every Monday.' (barista-picks.tsx:8), but Barista Picks are badges the Manager sets by hand, with no schedule. Every photo slot is a stand-in, which the UI audit already reported.",
+          "impact": "Next to Starbucks PH or Flora, the menu and news read as a skeleton. A promise about Mondays that the system does not keep is a small honesty slip on a site that labels everything invented.",
+          "recommendation": "Either update PRD:38 to the real number or seed about 20 more Menu Items. Write the Posts to a few paragraphs. Change the Monday line to 'Chosen by Annika this week', or drop it.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "docs/01-PRD.md section 2"
           ]
         }
       ]
