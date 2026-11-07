@@ -182,7 +182,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 
 ## 8. Success metrics
 
-Portfolio targets, measured in the Phase 7 review:
+Portfolio targets, measured in the Phase 9 review:
 
 1. End-to-end order in under 60 seconds in a Playwright run on a throttled phone profile.
 2. Mobile Lighthouse performance 90 or more on Home and the menu; zero axe violations on every page.
