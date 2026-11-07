@@ -163,7 +163,7 @@ git clone "G:\My Drive\Coding Projects\Personal\Hoshikopi\hoshikopi.bundle" Hosh
 
 ## 9. Demo deploy (batch 5.4, needs the owner's accounts)
 
-The code is ready for Vercel: `vercel.json` runs `prisma migrate deploy` before `next build` and calls `/api/cron/daily` at 22:00 UTC (6:00 AM Manila, before opening). In order:
+The code is ready for Vercel: `vercel.json` runs `prisma migrate deploy` before `next build` on Production builds only (Preview builds share the production database unless the Neon integration gives each preview its own branch, ADR 0004, so they never migrate it) and calls `/api/cron/daily` at 22:00 UTC (6:00 AM Manila, before opening). A preview of a branch that changes the schema therefore needs a Neon preview branch: in the Vercel project's Neon integration, turn on a database branch for each Preview deployment. In order:
 
 1. **Neon** (region Singapore): create the project and copy two URLs: the pooled one (host has `-pooler`) and the direct one.
 2. **Resend**: create an API key. Until a domain is verified, Resend's test sender delivers only to the Resend account's own address, so only that address can sign in on the demo. Without a key, emails to real addresses on Vercel are dropped (their sign-in links never go to the logs).
