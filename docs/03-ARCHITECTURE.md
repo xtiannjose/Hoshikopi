@@ -136,7 +136,7 @@ Expired, cancelled and refunded Orders give back their Pickup Window counts and 
 
 ([ADR 0009](adr/0009-live-updates-by-polling.md))
 
-- The Bar Screen fetches `/bar` data every 3 seconds with the last-seen Order version; the server answers "no change" cheaply. A new Order plays a sound and highlights its card.
+- The Bar Screen fetches `/api/bar` every 3 seconds with the last-seen board version; the server answers "no change" cheaply. The version covers the Orders, the pause, the Prep Time and how many Orders are make-next, so a Scheduled Order coming due refreshes the board. A new Order plays a sound and highlights its card. Signed out, `/api/bar` answers 401 JSON (not a redirect), and the board stops polling and says so, with a link to sign in again.
 - The Order status page polls every 5 seconds until `ready`, then every 30 seconds until `picked_up` or closed.
 - Server-Sent Events or a hosted realtime service are a later upgrade if polling cost or delay is measured as a problem.
 

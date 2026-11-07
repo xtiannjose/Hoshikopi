@@ -99,6 +99,17 @@ describe("barBoard (STAFF-02)", () => {
     ]);
   });
 
+  // The Bar Screen skips a board whose version it already has, so a
+  // Scheduled Order coming due must change it (audit, 7.4).
+  it("changes its version when a Scheduled Order becomes make-next", async () => {
+    await order("09:15");
+    const before = await barBoard(at("09:05"));
+    const due = await barBoard(at("09:12"));
+    expect(before.orders[0].makeNext).toBe(false);
+    expect(due.orders[0].makeNext).toBe(true);
+    expect(due.version).not.toBe(before.version);
+  });
+
   it("changes its version when an Order moves, and drops closed Orders", async () => {
     const first = await order("09:15");
     const before = await barBoard(at("09:00"));
