@@ -20,7 +20,8 @@ export async function Footer() {
               { href: "/privacy", label: "Privacy" },
               { href: "/concept", label: "About this concept" },
             ].map((link) => (
-              <li key={link.href}>
+              // Stars and Your account share /account, so the label is the key.
+              <li key={link.label}>
                 <Link href={link.href} className="no-underline hover:underline">
                   {link.label}
                 </Link>

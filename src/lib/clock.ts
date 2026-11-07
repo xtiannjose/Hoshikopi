@@ -66,6 +66,17 @@ export function formatDate(at: Date): string {
   return dateFormat.format(at);
 }
 
+const monthYearFormat = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Manila",
+  month: "long",
+  year: "numeric",
+});
+
+/** "November 2026" in Manila time. */
+export function formatMonthYear(at: Date): string {
+  return monthYearFormat.format(at);
+}
+
 /** A datetime-local value in Manila time: "2026-11-12T19:00". */
 export function manilaInputValue(at: Date): string {
   return new Date(at.getTime() + MANILA_OFFSET_MS).toISOString().slice(0, 16);
