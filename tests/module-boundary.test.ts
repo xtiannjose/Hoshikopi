@@ -29,7 +29,7 @@ describe("module boundary lint rule", { timeout: 120_000 }, () => {
   it("allows a module to use its own internal/ and other modules' index", async () => {
     const own = await violations(
       "src/modules/ordering/index.ts",
-      'import { x } from "./internal/place-order";\nexport default x;\n'
+      'import { x } from "./internal/place";\nexport default x;\n'
     );
     const other = await violations(
       "src/modules/ordering/index.ts",

@@ -323,7 +323,7 @@ The pattern behind the gaps: the planning docs treat `/cafe` as hours plus "abou
 | C-53 | `docs/04-DATA-MODEL.md` section 3, Content; `docs/03-ARCHITECTURE.md` section 4 | An `inquiries` table (`kind`, name, contact, date, guests, message, `status`); routes such as `/cafe/inquire` and `/manage/inquiries`; rate limits and the privacy notice cover it |
 | C-53 | `docs/07-ROADMAP.md` section 11; `GLOSSARY.md` | A Phase 6 batch; proposed word Inquiry |
 | C-54 | `docs/01-PRD.md` section 2; `docs/05-DESIGN-SYSTEM.md` section 6 | A new Assumptions row: the phone shown as invented text, not a `tel:` link; email only on the owner's domain; no social links until real accounts exist. The footer follows it. Fits ADR 0006 as written, so no new ADR |
-| C-55 | `docs/03-ARCHITECTURE.md` section 4; `docs/05-DESIGN-SYSTEM.md` section 6, Concept Notice; `docs/07-ROADMAP.md` batches 0.6 and 7.2 | A new prerendered route (for example `/concept`); the Concept Notice links to it; the case study link is added in 7.2 |
+| C-55 | `docs/03-ARCHITECTURE.md` section 4; `docs/05-DESIGN-SYSTEM.md` section 6, Concept Notice; `docs/07-ROADMAP.md` batches 0.6 and 9.2 | A new prerendered route (for example `/concept`); the Concept Notice links to it; the case study link is added in 9.2 |
 
 Proposed glossary words (not yet defined; add to `GLOSSARY.md` before any code uses them):
 

@@ -10,7 +10,7 @@ export async function expectNoAxeViolations(page: Page) {
 }
 
 // 10:00 AM and 8:00 PM in Manila (UTC+8).
-export const DAY_TIME = new Date("2026-11-02T02:00:00Z");
+const DAY_TIME = new Date("2026-11-02T02:00:00Z");
 export const NIGHT_TIME = new Date("2026-11-02T12:00:00Z");
 
 /** Opens `path` at a Manila time in the Day or Night palette. */

@@ -1,6 +1,6 @@
 # Tooling: skills, agents and libraries
 
-Status: draft v0.1, 2026-10-30. Which tool fits which job on Hoshikopi.
+Status: v0.2, 2026-11-07. Which tool fits which job on Hoshikopi.
 
 ## 1. Claude Code skills
 
@@ -33,42 +33,39 @@ Status: draft v0.1, 2026-10-30. Which tool fits which job on Hoshikopi.
 | --- | --- |
 | 3000 | `npm run dev` |
 | 3100 | Playwright (production build) |
-| 3300, 3400 | Ad-hoc production servers for reviews and `npm run perf` |
+| 3300, 3400 | Ad-hoc production servers for reviews and Lighthouse runs |
 | 5434 | Docker Postgres (`hoshikopi-db`) |
 
 Stop every server you start. On Windows a server started through `npx` can outlive its shell; check with `Get-NetTCPConnection -LocalPort <port>` and stop only the process whose command line matches.
 
-## 4. Libraries (planned)
+## 4. Libraries
 
 | Library | Why | Phase |
 | --- | --- | --- |
 | `next`, `react`, `react-dom` | The app | 0 |
-| `tailwindcss` | Styling with tokens | 0 |
-| `@prisma/client`, `prisma` | Database access and migrations | 0 |
-| `better-auth` | Sessions, email link, Google, roles, TOTP | 0 |
+| `tailwindcss`, `@tailwindcss/turbopack` | Styling with tokens | 0 |
+| `@prisma/client`, `prisma`, `@prisma/adapter-pg`, `pg` | Database access and migrations | 0 |
+| `dotenv`, `tsx` | Prisma, the seed and the test setup read `.env` files; `tsx` runs the seed and the e2e reset | 0 |
+| `better-auth` | Sessions, email link, Google, roles | 0 |
 | `zod` | Parsing every input at the edge | 0 |
 | `@phosphor-icons/react` | Icons | 0 |
 | `vitest`, `@playwright/test`, `@axe-core/playwright` | Tests | 0 |
+| `eslint`, `eslint-config-next`, `prettier`, `prettier-plugin-tailwindcss`, `typescript`, `@types/*` | Quality gates in `npm run qa` | 0 |
 | `react-markdown` | The cafe's space, directions and story; Events and Posts | 1 |
 | (none) | Emails go to Resend's REST API with `fetch`, like PayMongo; no SDK | 2 |
-| `motion`, shadcn registry parts (Kokonut, beUI, Animate UI) | Sample B in batch 1.1; kept only if its ADR picks Sample B | 1 |
+| `@better-auth/utils`, `uqr` | Staff Second Factor: TOTP codes and the setup QR code (ADR 0014) | 5 |
+| `@vercel/blob` | Menu photos on Vercel | 5 |
 
-Add a library only when the platform and installed packages cannot do the job, and say why in the batch or an ADR. No PayMongo SDK: its REST API is called with `fetch`.
+Add a library only when the platform and installed packages cannot do the job, and say why in the batch or an ADR. No component or animation library: native elements and CSS (ADR 0011). No PayMongo SDK: its REST API is called with `fetch`.
 
-## 5. Machine facts (checked 2026-10-30)
+## 5. Machine facts (checked 2026-11-07)
 
-- Windows 11, PowerShell and Git Bash; Node 24.18, npm 11.16.
-- Docker Desktop is installed but not always running; start it before database work.
-- Chrome 156 is installed (Lighthouse uses it); Playwright's Chromium is installed.
-- Google Drive for desktop is drive `G:`; project copies go to `G:\My Drive\Coding Projects\Personal\<Project>\<project>.bundle`.
-- GitHub is back (2026-10-31): `origin` is https://github.com/xtiannjose/Hoshikopi; `gh` 2.101 is installed and signed in. Push and open pull requests only when the user asks; the user merges them.
+- Windows 10 Pro, PowerShell and Git Bash; Node 24.19.0, npm 11.17.0.
+- Docker Desktop (Docker 29.8.2) is installed but not always running; start it before database work.
+- Chrome 156.0.8078.80 is installed (Lighthouse uses it); Playwright's Chromium is installed.
+- GitHub: `origin` is https://github.com/xtiannjose/Hoshikopi, the project's only copy; `gh` 2.101 is installed and signed in. Push and open pull requests only when the user asks; the user merges them.
 
-## 6. References
-
-- Sibling projects with the same stack and habits: Hoshimono (`D:\Coding\projects\Personal\Hoshimono`, online supermarket) and the iOne Resources website (`D:\Coding\projects\ione\IONE-WEBSITE`). Reuse their patterns (module results, centavos, rate limits, security headers, quality tools) rather than reinventing them; never edit them from this project.
-- Before adding any UI library, read `D:\Coding\projects\ione\IONE-WEBSITE\docs\DESIGN-LIBS.md`: install recipes, licences and pitfalls for Kokonut, beUI, Animate UI, coss and Motion, tested on this stack. iOne later replaced most of them with native elements and CSS.
-
-## 7. Prompts that work
+## 6. Prompts that work
 
 Start of a session:
 

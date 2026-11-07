@@ -111,7 +111,7 @@ _Avoid_: Busy mode, store closed (when the cafe is open)
 ### Payments
 
 **Payment Method**:
-How the customer pays: GCash, Maya, Card (online, through PayMongo) or Pay at Pickup (at the counter, no provider).
+How the customer pays: GCash, Maya, Card (online, through the payment provider: `fake` on the demo, PayMongo in Test Mode once there is an account) or Pay at Pickup (at the counter, no provider).
 _Avoid_: Payment type, channel, tender
 
 **Payment**:
@@ -119,11 +119,11 @@ One attempt to pay an Order online, with its provider id and status. An Order ha
 _Avoid_: Charge, transaction (alone)
 
 **Test Mode**:
-Hoshikopi is a concept: online payments run against PayMongo's test mode or the local `fake` provider only, and never take real money (ADR 0003).
+Hoshikopi is a concept: online payments run against PayMongo's test mode or the `fake` provider (local and on the demo) only, and never take real money (ADR 0003).
 _Avoid_: Sandbox (in UI copy), demo payments
 
 **Refund**:
-Money returned for a paid Order that was cancelled by the cafe or could not be made, in full.
+Money returned in full for a paid Order: when it is Cancelled (by the Customer before Accepted, or by a Manager), when its payment lands after it Expired or was Cancelled, or by a Manager after Picked Up.
 _Avoid_: Reversal, return
 
 ### People and accounts
@@ -149,7 +149,7 @@ Staff who use the Bar Screen: accept, prepare and complete Orders, and mark Menu
 _Avoid_: Crew, operator
 
 **Manager**:
-Staff who also edit the menu, prices, Opening Hours, Capacity, the cafe's details and Amenities, Events and Posts, and issue Refunds.
+Staff who also edit the menu, prices, Opening Hours, Capacity, the cafe's details and Amenities, Events and Posts, issue Refunds, and give or take Staff roles.
 _Avoid_: Admin, owner (in code)
 
 **Bar Screen**:
@@ -157,7 +157,7 @@ The staff page on a tablet behind the counter that lists live Orders by Pickup T
 _Avoid_: Kitchen display, KDS, POS, dashboard
 
 **Second Factor**:
-The 6-digit code from an authenticator app (TOTP) that Staff enter after the email link before using `/manage`, once per session. The Bar Screen does not ask for it (ADR 0005).
+The 6-digit code from an authenticator app (TOTP) that Staff enter after signing in, before using `/manage`, once per session. The Bar Screen does not ask for it (ADR 0005, ADR 0014).
 _Avoid_: 2FA, MFA, OTP (in code; `twoFactor` only where the table is named)
 
 ### Loyalty
@@ -171,7 +171,7 @@ A Member's Star balance shown as a card of 9 spaces. Nine Stars can be redeemed 
 _Avoid_: Loyalty card, punch card, wallet
 
 **Reward**:
-What Stars buy: a free drink (any Size, Options at Base Price). Applied at checkout as a Line priced at zero.
+What Stars buy: one free drink. Applied at checkout to one unit of the dearest drink in the Order, whose Base Price drops to zero; its Options still add their Price Delta.
 _Avoid_: Voucher, coupon, perk
 
 **Birthday Treat**:

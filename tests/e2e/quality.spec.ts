@@ -41,11 +41,14 @@ test.describe("budgets (docs/05 section 11)", () => {
 
 test.describe("reflow at 320 px (WCAG 1.4.10)", () => {
   test.use({ viewport: { width: 320, height: 640 } });
-  test.beforeEach(openAllDayToday);
+  // Skip first, so the desktop project never runs the database setup.
+  test.beforeEach(async ({}, testInfo) => {
+    test.skip(testInfo.project.name !== "phone", "once is enough");
+    await openAllDayToday();
+  });
 
   for (const path of PAGES) {
-    test(`${path} has no sideways scrolling`, async ({ page }, testInfo) => {
-      test.skip(testInfo.project.name !== "phone", "once is enough");
+    test(`${path} has no sideways scrolling`, async ({ page }) => {
       await page.goto(path);
       const overflow = await page.evaluate(
         () =>
@@ -75,7 +78,6 @@ test("the header fits 320 px with items in the Cart", async ({
 
 test("the skip link and a keyboard-only order", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "a keyboard user on desktop");
-  await openAllDayToday();
   await page.goto("/menu/item/hoshi-latte");
   await page.keyboard.press("Tab");
   await expect(
@@ -102,7 +104,6 @@ test("the Content-Security-Policy holds and nothing breaks it (ADR 0013)", async
     if (message.text().includes("Content Security Policy"))
       violations.push(message.text());
   });
-  await openAllDayToday();
   for (const path of ["/", "/menu/item/hoshi-latte", "/cafe", "/checkout"]) {
     const response = await page.goto(path);
     const csp = response?.headers()["content-security-policy"] ?? "";

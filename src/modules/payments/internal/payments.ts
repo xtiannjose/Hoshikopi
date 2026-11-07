@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { Prisma } from "@/generated/prisma/client";
-import { db, type Client } from "@/lib/db";
+import { db } from "@/lib/db";
 
 import { paymentProvider } from "./provider";
 import type { OnlineMethod, ProviderEvent } from "./types";
@@ -115,11 +115,6 @@ export async function recordPaymentEvent(
     data: { status: "paid", providerPaymentId: event.paymentId },
   });
   return { kind: "paid", orderId: payment.order_id };
-}
-
-/** The online Payment of an Order, if any. */
-export async function paymentForOrder(orderId: string, client: Client = db) {
-  return client.payment.findUnique({ where: { orderId } });
 }
 
 /** What the fake checkout page shows (PAY-06). */

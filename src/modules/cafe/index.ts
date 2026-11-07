@@ -6,16 +6,14 @@ export {
   getCafeDetails,
   getHours,
   type Amenities,
-  type CafeContact,
   type CafeDetails,
 } from "./internal/details";
 export { ROOM_PHOTOS, type RoomPhoto } from "./internal/room";
-export { saveCafeDetails, type DetailsResult } from "./internal/save-details";
+export { saveCafeDetails } from "./internal/save-details";
 export {
   orderingState,
   pickupWindows,
   prepMinutes,
-  WINDOW_MINUTES,
   type Counts,
   type OrderingDay,
   type OrderingState,
@@ -29,5 +27,4 @@ export {
   saveCapacity,
   saveSpecialHours,
   saveWeeklyHours,
-  type HoursResult,
 } from "./internal/save-hours";

@@ -11,15 +11,13 @@ next-env.d.ts
 .env*
 !.env.example
 
-# local data (dev emails, uploads)
+# local data (dev email outbox)
 /data/
 
 # tests
 /test-results/
 /playwright-report/
-/blob-report/
 /coverage/
-/tests/e2e/*-snapshots/
 
 # generated Prisma client
 /src/generated/

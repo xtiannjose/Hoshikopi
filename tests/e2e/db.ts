@@ -23,8 +23,10 @@ export async function openAllDayToday() {
      ON CONFLICT (day) DO NOTHING`,
     [today]
   );
-  // Every e2e Order comes from one IP, so reset the checkout limits.
-  await e2eQuery("DELETE FROM rate_limits WHERE key LIKE 'checkout%'");
+  // Every e2e Order comes from one IP, so reset the per-IP checkout limit.
+  // Per-Cart limits stay: each test has its own Cart, and checkout.spec
+  // counts one Cart's tries while other specs run this.
+  await e2eQuery("DELETE FROM rate_limits WHERE key LIKE 'checkout-ip:%'");
   // Parallel specs order into the same windows; room for all of them, so
   // only the test that fills a window on purpose ever sees one full.
   await e2eQuery(

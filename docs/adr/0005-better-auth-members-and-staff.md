@@ -28,3 +28,5 @@ Better Auth (the library Hoshimono uses) handles sessions in HTTP-only cookies.
 Google sign-in is on for the live demo: an OAuth client "Hoshikopi web" in the Google Cloud project "Hoshikopi", published (In production) with only the basic name and email scopes, so it needs no Google review. Its keys are set in Vercel for Production only. Visitors can now sign in without the seeded demo accounts or Resend.
 
 Mobile number sign-in (SMS codes) was considered again and stays deferred: every text costs money and Philippine senders must be registered, and without a provider the codes would only reach the logs, so visitors still could not use it. The owner chose Google instead. Adding phone sign-in later needs a new ADR.
+
+There is no Staff invite: a Manager gives a role at `/manage/staff`, by email, to someone who has signed in once (batch 8.5, STAFF-10), and taking a role away ends that person's sessions.
