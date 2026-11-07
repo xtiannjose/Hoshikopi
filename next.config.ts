@@ -22,6 +22,17 @@ const nextConfig: NextConfig = {
   // Menu photos up to 2 MB go through a Server Action (batch 1.5), which
   // refuses bodies over 1 MB by default. The action checks the role first.
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
+  // Menu photos uploaded on Vercel live in the Blob store (batch 5.4); the
+  // image optimizer fetches them, so the pages' CSP stays 'self'.
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+        pathname: "/menu/**",
+      },
+    ],
+  },
   // No page may be framed, sniffed as another type, leak its full address
   // to other sites, or ask for the camera, microphone or location.
   async headers() {

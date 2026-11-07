@@ -85,7 +85,7 @@ Copy `.env.example` to `.env.local` and fill in what you have. Never commit `.en
 | `RESEND_API_KEY` | `re_...`; empty means emails go to the terminal | Phase 2 |
 | `MAIL_FROM` | `Hoshikopi <onboarding@resend.dev>` until a domain exists | Phase 2 |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty turns Google sign-in off | Phase 4 |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob; empty uses `public/menu/` | Batch 5.4 |
+| `BLOB_STORE_ID` | Vercel Blob store, set by Vercel when the store is connected (it signs in with Vercel's OIDC token; an older store gives `BLOB_READ_WRITE_TOKEN` instead); empty uses `public/menu/` | Batch 5.4 |
 | `CRON_SECRET` | random string; `/api/cron/daily` checks it | Phase 2 |
 
 ## 6. Database
@@ -181,5 +181,5 @@ The code is ready for Vercel: `vercel.json` runs `prisma migrate deploy` before 
 
 4. **Deploy** (the build runs the migrations; it reads Neon's `DATABASE_URL_UNPOOLED` when `DIRECT_URL` is not set), then seed the menu once from your computer with the Neon direct URL: `$env:DATABASE_URL="<direct>"; $env:DIRECT_URL="<direct>"; $env:ALLOW_REMOTE_SEED="1"; npm run db:seed`.
 5. **Sign in as a demo account**: on the live site, ask for a link for one of the seeded accounts (section 6), then open the Vercel project's **Logs**, find `[email] demo account <email>` and open the link under it. Or use your own email (needs Resend, step 2) and make it a Manager in the Neon SQL editor: `UPDATE users SET role = 'manager' WHERE email = '<your email>';`. The first `/manage` visit asks you to set up the Second Factor.
-6. **Blob** (for photo uploads): create a Blob store in the Vercel project, which adds `BLOB_READ_WRITE_TOKEN`; photo uploads to Blob are built and tested then (until then the demo shows the stand-ins and uploads fail on Vercel's read-only disk).
+6. **Blob** (for photo uploads): in the Vercel project, **Storage**, **Create Storage**, **Blob**, Public access, connected to Production, Preview and Development. Vercel adds `BLOB_STORE_ID` (and `BLOB_WEBHOOK_PUBLIC_KEY`, unused) and the store signs in with the deployment's OIDC token, so there is no secret to copy. Created 2026-11-07 as `hoshikopi-photos`. Uploads in `/manage` then go to `menu/` in the store, and `next/image` fetches them (`images.remotePatterns` in `next.config.ts`). Locally there is no OIDC token without `vercel env pull`, so uploads keep going to `public/menu/`.
 7. **Check**: Lighthouse on Home, `/menu` and a Menu Item with PageSpeed Insights against the budgets (`docs/05-DESIGN-SYSTEM.md` section 11), and the two-minute demo script (PRD section 8).
