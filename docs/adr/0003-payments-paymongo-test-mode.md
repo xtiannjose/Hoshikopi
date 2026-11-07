@@ -22,3 +22,7 @@ Pay at Pickup needs no provider: the Barista marks the Order paid at the counter
 - Payment state comes only from verified webhooks, recorded once under a unique (`provider`, `provider_event_id`); a repeated event is acknowledged and ignored. The browser's return page never decides payment state.
 - Unpaid online Orders Expire after 15 minutes; the checkout session is expired through the interface as well.
 - Refunds are full only in the MVP.
+
+## Update 2026-11-07
+
+PayMongo has paused new sign-ups, so there is still no account and batch 3.4 stays skipped. The owner chose to keep the demo on `fake`, which already shows the hosted checkout, signed webhooks, expiry and refunds. Revisit when PayMongo reopens sign-ups; switching to Xendit instead needs a new ADR.

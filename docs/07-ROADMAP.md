@@ -2,11 +2,11 @@
 
 Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has small batches (one branch each) and exit criteria that must be observably true before the next phase starts. Scope is `docs/01-PRD.md`; requirement IDs (MENU-01, ORD-03...) link the two. Weeks are estimates for one developer working part time; dates move, the order does not.
 
-## 0. Where we are (updated 2026-10-31)
+## 0. Where we are (updated 2026-11-07)
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 4 done (3.4 skipped until a PayMongo account exists); batches 5.1 to 5.3 done; 5.4 prepared and waiting for the owner's Neon, Vercel and Resend accounts. Batches 6.1 and 6.4 done; 6.5 dropped (English only). Phase 6 done (6.5 dropped). **Next: Phase 7** (case study and final review), and 5.4's remaining owner steps (Resend, Blob, PageSpeed).
+- **Build:** Phases 0 to 6 done (3.4 skipped: there is no PayMongo account and PayMongo paused new sign-ups in November 2026, so the demo runs on `fake`; 6.5 dropped). The demo is live on Vercel and Neon; 5.4's last steps are listed in its batch. The November audit (`docs/audit/`) saved 236 findings, not yet verified. **Next: Phase 7, audit fixes** (7.1 to 7.4 the serious bugs, tests first; 7.5 finishes the audit), then 5.4's last steps, then Phase 8 (improvements found by the audit) and Phase 9 (portfolio review). Real photos are on hold (owner, 2026-11-07).
 - **Copy:** the project is on GitHub (https://github.com/xtiannjose/Hoshikopi) with a git bundle on Google Drive as the backup (`docs/06-SETUP.md` section 8).
 
 ## 1. Timeline at a glance
@@ -20,7 +20,9 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 | 4 | Members and Stars | 1 week | |
 | 5 | Events, news, polish and demo deploy | 1.5 weeks | **MVP** |
 | 6 | V1 features | 2 weeks | **V1** |
-| 7 | Portfolio review and case study | 0.5 week | |
+| 7 | Audit fixes | 1 week | |
+| 8 | Improvements found by the audit | 2 weeks | |
+| 9 | Portfolio review and case study | 0.5 week | |
 
 ## 2. Tech stack and where it is used
 
@@ -54,6 +56,8 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 | Batch 3.1 | PayMongo account: create one for test keys, or stay on `fake` for the MVP | ADR 0003 updated |
 | Batch 4.1 | Star rules confirmed (1 per drink, 9 for a Reward) | PRD section 2 |
 | Batch 5.4 | Hosting the demo: Vercel Git deploys from GitHub, or another host | New ADR |
+| Batch 3.4 (Nov 2026) | PayMongo paused new sign-ups: stay on `fake` or add a Xendit Test Mode adapter. **Decided 2026-11-07: stay on `fake`** | ADR 0003 update |
+| Batch 5.4 (Nov 2026) | Resend needs a verified domain to reach anyone but the owner. **Decided 2026-11-07: skip Resend until a domain exists**; visitors use the seeded demo accounts, and demo mode (8.1) later | `docs/06-SETUP.md` section 9 |
 
 ## 5. Phase 0: Foundation (1 week)
 
@@ -124,7 +128,7 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 - [x] **5.1 Events and Posts.** Public pages, Manager editors with Markdown preview, home sections, Event structured data, Event and Post share cards (EVT-01, NEWS-01, NEWS-02, STAFF-06, INFO-09). Done 2026-10-31: `content` module (plain reads for tests, `"use cache"` wrappers under the `content` tag, saves in Manila time with audit); `/events` with past Events in a `details`, `/events/[slug]` with Event structured data, `/news` and `/news/[slug]`; share cards with the title and date or excerpt; Home gains the example Star Card, the next Event and the latest Post; `/manage/events` and `/manage/posts` with a live Markdown preview (no raw HTML). Photo upload for Events and Posts waits for Blob storage (batch 5.4).
 - [x] **5.2 Accessibility and speed pass.** Keyboard-only walkthrough, screen reader spot checks, Lighthouse budgets (`docs/05-DESIGN-SYSTEM.md` section 11), image weights. Done 2026-10-31: `tests/e2e/quality.spec.ts` checks the JavaScript budget (under 170 kB compressed) on seven public pages, no sideways scrolling at 320 px on ten pages (WCAG 1.4.10; the header's Cart word is screen-reader-only under 360 px), and a keyboard-only path from the skip link through an Option Group to Add to order; Manager editors keep what was typed after a refused save (`useKeptForm`). Lighthouse mobile on this laptop (benchmark index about 1,100, so the default 4x CPU slowdown over-throttles): accessibility, best practices and SEO 100 on Home, menu and a Menu Item; LCP 1.0 to 1.4 s and CLS 0 meet the budget; Performance 86 to 92 and total blocking time 350 to 460 ms miss it. The blocking time is React hydration (the `react-dom` chunk), not app code; halving the RSC payload by turning off `partialPrefetching` did not move it, so the flag stays. Re-measure with PageSpeed Insights on the demo URL in 5.4. Bar poll with nothing changed is 13 bytes; the paper grain is 3.7 kB; menu photos are still stand-ins (ADR 0012), served as WebP at card size by `next/image`, so their weight is checked when the real photos land. Screen reader spot checks (NVDA, VoiceOver) need a person; axe covers names, roles and contrast on every page.
 - [x] **5.3 Security pass.** Headers and CSP, rate limits, Staff TOTP, a review of webhook and checkout code (`security-review` skill). Done 2026-10-31: a full Content-Security-Policy locked to this site; scripts need `'unsafe-inline'` because Next's inline RSC scripts on prerendered pages take no nonce or hash (tested: the theme-script hash alone stops hydration; ADR 0013). Rate limits on checkout tries (10 per Cart, 20 per IP, per 15 minutes) and webhooks (120 per IP a minute). Staff Second Factor (TOTP) once per session before `/manage`, checked by `requireStaff()` with our own `two_factors` table, a QR code and 10 tries per 15 minutes; Better Auth's plugin skips email-link sign-ins (ADR 0014). The Bar Screen stays exempt, except a Manager's cancel, which can refund. An independent review of the webhook, checkout, Order link and Second Factor code found: cancelling an unpaid online Order left its checkout payable (now closed, test first), the Bar cancel above, and the fake provider failing open in production without `NEXT_PUBLIC_SITE_URL` or `BETTER_AUTH_SECRET` (now refused). Also fixed: `/orders/[id]` read the clock while Next rendered its shell (`connection()` first). The `security-review` skill reviews a branch against `main`, which still lacks the unmerged batches, so the review ran on the named code instead.
-- [ ] **5.4 Demo deploy.** Neon database, Vercel project, Blob for photos, `PAYMENT_PROVIDER` and email settings for the demo; deploy from GitHub (decision in section 4). Prepared 2026-10-31 (still open: needs the owner's Neon, Vercel and Resend accounts): `vercel.json` (migrations before the build, the daily cron at 6:00 AM Manila), the step-by-step checklist in `docs/06-SETUP.md` section 9, and emails on Vercel without Resend are dropped instead of printing sign-in links to the logs. Blob uploads are built when the token exists, so they are tested the day they ship.
+- [ ] **5.4 Demo deploy.** Neon database, Vercel project, Blob for photos, `PAYMENT_PROVIDER` and email settings for the demo; deploy from GitHub (decision in section 4). Prepared 2026-10-31 (still open: needs the owner's Neon, Vercel and Resend accounts): `vercel.json` (migrations before the build, the daily cron at 6:00 AM Manila), the step-by-step checklist in `docs/06-SETUP.md` section 9, and emails on Vercel without Resend are dropped instead of printing sign-in links to the logs. Blob uploads are built when the token exists, so they are tested the day they ship. Live since 2026-11-01 (Vercel Hobby, Neon, `fake` payments, the daily cron). Left on 2026-11-07: (1) **Blob**: the owner creates a Blob store in the Vercel project, which adds `BLOB_READ_WRITE_TOKEN`; then uploads to Blob are built and tested (today a photo uploaded on Vercel is written to `public/` at runtime and never served). (2) **PageSpeed**: Home, `/menu` and a Menu Item against the budgets in `docs/05-DESIGN-SYSTEM.md` section 11. (3) **Resend** is skipped until a domain exists (section 4). Real photos are on hold.
 
 **Exit criteria:** every MVP requirement in the PRD is met and ticked; the demo URL works for the two-minute demo script (PRD section 8); `qa:full` green.
 
@@ -142,11 +146,38 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 
 **Exit criteria:** each V1 item works end to end with tests; budgets from Phase 5 still hold.
 
-## 12. Phase 7: Portfolio review and case study (0.5 week)
+## 12. Phases 7 to 9: audit fixes, improvements, portfolio review
 
-- [ ] **7.1 Measure.** The success metrics in PRD section 8, written up with numbers.
-- [ ] **7.2 Case study.** `docs/CASE-STUDY.md`: the problem, the decisions (ADRs), screenshots, what I would do next.
-- [ ] **7.3 Final review.** Code review, accessibility statement, README screenshots, demo script rehearsed.
+### Phase 7: Audit fixes (1 week)
+
+From the November audit (`docs/audit/`). Each fix starts with a test that reproduces the finding; a finding no test can reproduce is dropped and noted in the audit.
+
+- [ ] **7.1 Checkout and Cart.** One Order per Place order press, even on a double tap, a retry or a second tab (an idempotency key on `placeOrder`); signing in with a Guest Cart no longer crashes the first page (the Guest Cart merges once); checkout keeps the chosen Pickup Time and Payment Method after a validation error.
+- [ ] **7.2 Payments.** A paid webhook for an Order already Expired or Cancelled is recorded and refunded or shown to the Manager, never dropped; Payment status changes are guarded so `paid` can never be overwritten by `expired`.
+- [ ] **7.3 Security and deploy.** An Event Sign-up email can no longer become a file path in the mail outbox; Better Auth to the latest 1.7.x security release; Preview builds stop running `prisma migrate deploy` on the production database.
+- [ ] **7.4 Bar Screen.** The board keeps updating, or says it stopped, when its session ends; Scheduled Orders move to New on time without another Order changing.
+- [ ] **7.5 Finish the audit.** Review the 7 areas left (accessibility, architecture and code quality, tests, ops and deploy readiness, Staff tools, customer journeys, motion), double-check every finding (full run, owner's choice 2026-11-07) and rank them into `docs/audit/2026-11-XX.md`; findings fixed in 7.1 to 7.4 are marked fixed. New P0 and P1 findings become batches 7.6 onward.
+
+**Exit criteria:** every 7.1 to 7.4 finding has a test that failed before the fix and passes after; the ranked audit backlog exists.
+
+### Phase 8: Improvements found by the audit (2 weeks)
+
+Starts after Phase 7. Requirement IDs are added to the PRD when each batch starts.
+
+- [ ] **8.1 Demo mode for visitors.** A reviewer who opens the link alone can try the Bar Screen and watch an Order move, on demo data and without an email (PRD goal 4).
+- [ ] **8.2 What the docs promise.** Error pages with the site shell and the Concept Notice (`error.tsx`, `global-error.tsx`, the root 404); `noindex` on public pages (ADR 0006); the floating Cart pill and drawer (`docs/05-DESIGN-SYSTEM.md`); Fraunces loaded as the one style used (400 italic).
+- [ ] **8.3 Phone experience.** A sticky Add to order bar on Menu Item pages, sticky Category tabs on `/menu`, and a Pickup Time chooser in place of 42 chips.
+- [ ] **8.4 Busy Mode.** The Manager adds minutes to Prep Time during a rush, so "ready in 8 minutes" stays true.
+- [ ] **8.5 Staff management.** Invite Staff, change roles, remove Staff and end their sessions from `/manage`, not SQL.
+- [ ] **8.6 Order page handoff.** Directions and hours, a calendar file for Scheduled Pickups, and how many drinks are ahead.
+- [ ] **8.7 Event Sign-up protection.** Confirm Sign-ups by email, limit them per visitor, and give each a cancel link, so one visitor cannot book out an Event.
+- [ ] **8.8 Database driver warning.** Stop overlapping queries on one `pg` client before `pg@9` removes them (the warning in the Vitest output).
+
+### Phase 9: Portfolio review and case study (0.5 week)
+
+- [ ] **9.1 Measure.** The success metrics in PRD section 8, written up with numbers.
+- [ ] **9.2 Case study.** `docs/CASE-STUDY.md`: the problem, the decisions (ADRs), screenshots, what I would do next.
+- [ ] **9.3 Final review.** Code review, accessibility statement, README screenshots, demo script rehearsed.
 
 ## 13. After V1 (not scheduled)
 
