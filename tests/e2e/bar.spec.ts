@@ -72,7 +72,10 @@ test("a full Pickup Window is never offered (ORD-04)", async ({ page }) => {
   await page.getByRole("button", { name: "Add to order" }).click();
   await expect(page.getByRole("status")).toContainText("Added");
   await page.goto("/checkout");
-  const offered = page.locator('input[name="pickup"]:not([value="asap"])');
+  // Chips first, then the Later today list (8.3), in page order.
+  const offered = page.locator(
+    'input[name="pickup"]:not([value="asap"]):not([value="later"]), select[name="pickupLater"] option'
+  );
   // The last window is offered at any hour the test cafe is open.
   const full = await offered.last().getAttribute("value");
   await e2eQuery(
@@ -82,9 +85,7 @@ test("a full Pickup Window is never offered (ORD-04)", async ({ page }) => {
     [full]
   );
   await page.reload();
-  await expect(
-    page.locator(`input[name="pickup"][value="${full}"]`)
-  ).toHaveCount(0);
+  await expect(page.locator(`[value="${full}"]`)).toHaveCount(0);
 });
 
 test("the daily cron needs its secret", async ({ request }) => {

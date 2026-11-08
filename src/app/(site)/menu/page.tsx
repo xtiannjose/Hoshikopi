@@ -37,9 +37,7 @@ export default async function MenuPage() {
       <div className="mt-6">
         <MenuFilter />
       </div>
-      <div className="mt-6">
-        <CategoryTabs categories={menu} />
-      </div>
+      <CategoryTabs categories={menu} className="mt-4" />
       {menu.map((category) => (
         <MenuSection key={category.slug} category={category} />
       ))}

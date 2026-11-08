@@ -144,3 +144,28 @@ test("checkout refuses an 11th try from one Cart in 15 minutes", async ({
   await place.click();
   await expect(page.getByText("Too many tries.")).toBeVisible();
 });
+
+test("Pickup Time offers the next few times as chips and the rest in a list (8.3)", async ({
+  page,
+}) => {
+  await addToCart(page, "kopi-hitam");
+  await page.goto("/checkout");
+  const chips = page.locator(
+    'input[name="pickup"]:not([value="asap"]):not([value="later"])'
+  );
+  expect(await chips.count()).toBeLessThanOrEqual(6);
+  const list = page.getByLabel("Time later today");
+  // An all-day test cafe always has more than 6 windows left.
+  const time = (await list.locator("option").nth(2).textContent())!;
+  await list.selectOption({ index: 2 });
+  await expect(
+    page.locator('input[name="pickup"][value="later"]')
+  ).toBeChecked();
+  await expectNoAxeViolations(page);
+  await page.getByText("Pay at Pickup", { exact: true }).click();
+  await page.getByLabel("Name").fill("Lorna");
+  await page.getByLabel("Email").fill("lorna@example.com");
+  await page.getByRole("button", { name: /Place order/ }).click();
+  await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
+  await expect(page.getByText(`Pickup at ${time}.`)).toBeVisible();
+});

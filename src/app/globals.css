@@ -227,6 +227,12 @@
   :root:has(:popover-open) .cart-pill {
     visibility: hidden;
   }
+  /* On phones a Menu Item's own Add to order bar holds that spot. */
+  @media (width < 48rem) {
+    :root:has([data-sticky-add]) .cart-pill {
+      visibility: hidden;
+    }
+  }
 
   /* The phone menu and the Cart slide in from the right and back out. */
   .drawer {

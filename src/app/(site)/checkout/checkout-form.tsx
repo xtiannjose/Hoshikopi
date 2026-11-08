@@ -12,7 +12,7 @@ import { ClockIcon, UserIcon, WalletIcon } from "@phosphor-icons/react";
 
 import { formatPrice } from "@/lib/money";
 
-import { Field } from "@/components/fields";
+import { Field, fieldClass } from "@/components/fields";
 import { IconCircle } from "@/components/panel";
 
 import { placeOrderAction, type CheckoutState } from "./actions";
@@ -39,6 +39,26 @@ const PAYMENTS = [
 ] as const;
 
 const FIELDSET = "rounded-card border-border border p-5 md:p-6";
+
+/** The next Pickup Times as chips; the rest go in the Later today list. */
+const CHIPS = 6;
+
+/** "1:15 PM" belongs to "1 PM". */
+const hourOf = (label: string) => label.replace(/:\d\d/, "");
+
+function byHour(windows: WindowChoice[]) {
+  const groups: { hour: string; windows: WindowChoice[] }[] = [];
+  for (const w of windows) {
+    const hour = hourOf(w.label);
+    if (groups.at(-1)?.hour !== hour) groups.push({ hour, windows: [] });
+    groups.at(-1)!.windows.push(w);
+  }
+  return groups;
+}
+
+// input:checked, not :checked, which also matches the chosen <option>.
+const CHOICE =
+  "border-input has-[input:checked]:border-primary has-[input:checked]:bg-muted has-[:focus-visible]:outline-ring rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2";
 
 /** A step's legend: icon, name, and "1 of 3" kept out of the group's name. */
 function Legend({
@@ -104,6 +124,10 @@ export function CheckoutForm({
   // action; one no longer offered falls back to the first.
   const keptPickup = state.values?.pickup;
   const pickupKept = windows.some((w) => w.value === keptPickup);
+  const chips = windows.slice(0, CHIPS);
+  const later = windows.slice(CHIPS);
+  const keptLater = later.some((w) => w.value === keptPickup);
+  const laterRadio = useRef<HTMLInputElement>(null);
   const payments = PAYMENTS.filter(
     (p) => p.value !== "pay_at_pickup" || payAtPickupAllowed
   );
@@ -143,7 +167,7 @@ export function CheckoutForm({
         </Legend>
         <div className="clear-both grid gap-3">
           {asap && (
-            <label className="border-input has-[:checked]:border-primary has-[:checked]:bg-muted has-[:focus-visible]:outline-ring rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+            <label className={CHOICE}>
               <input
                 type="radio"
                 name="pickup"
@@ -159,16 +183,17 @@ export function CheckoutForm({
               </span>
             </label>
           )}
-          {windows.length > 0 && (
+          {chips.length > 0 && (
             <div>
               <p className="text-muted-foreground mb-2 text-sm">
                 Or choose a time today
               </p>
-              <div className="flex flex-wrap gap-2">
-                {windows.map((w) => (
+              {/* Even widths, so the rows line up (UI2-08). */}
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(5.75rem,1fr))] gap-2">
+                {chips.map((w) => (
                   <label
                     key={w.value}
-                    className="border-input has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary has-[:focus-visible]:outline-ring inline-flex min-h-11 cursor-pointer items-center rounded-full border px-4 font-mono text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+                    className="border-input has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary has-[:focus-visible]:outline-ring inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-3 font-mono text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
                   >
                     <input
                       type="radio"
@@ -181,6 +206,42 @@ export function CheckoutForm({
                   </label>
                 ))}
               </div>
+            </div>
+          )}
+          {later.length > 0 && (
+            // The rest of the day in one native list, by hour, instead of a
+            // wall of chips (UI2-08); choosing a time picks this row.
+            <div className={`${CHOICE} flex-wrap py-2`}>
+              <label className="flex min-h-11 cursor-pointer items-center gap-3">
+                <input
+                  ref={laterRadio}
+                  type="radio"
+                  name="pickup"
+                  value="later"
+                  defaultChecked={keptLater}
+                  className="size-5"
+                />
+                <span className="font-semibold">Later today</span>
+              </label>
+              <select
+                name="pickupLater"
+                aria-label="Time later today"
+                defaultValue={keptLater ? keptPickup : later[0].value}
+                onChange={() => {
+                  if (laterRadio.current) laterRadio.current.checked = true;
+                }}
+                className={`${fieldClass} ml-auto w-auto min-w-[9rem] font-mono text-sm`}
+              >
+                {byHour(later).map((group) => (
+                  <optgroup key={group.hour} label={group.hour}>
+                    {group.windows.map((w) => (
+                      <option key={w.value} value={w.value}>
+                        {w.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
             </div>
           )}
         </div>

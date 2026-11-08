@@ -144,3 +144,22 @@ test("a Promo and a seasonal drink show on the menu and price the Cart (MENU-06)
     page.getByRole("main").getByText("PHP 155").first()
   ).toBeVisible();
 });
+
+test("on a phone, Add to order and the Category tabs stay in reach (8.3)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "phone", "phone task");
+  await page.goto("/menu/item/hoshi-latte");
+  // Halfway through the Options, the price and Add to order are on screen.
+  await page.getByText("Ice Level").scrollIntoViewIfNeeded();
+  await expect(
+    page.getByRole("button", { name: "Add to order" })
+  ).toBeInViewport();
+  await expect(page.getByText("Your Hoshi Latte:")).toBeInViewport();
+
+  await page.goto("/menu");
+  await page.mouse.wheel(0, 3000);
+  await expect(
+    page.getByRole("navigation", { name: "Categories" })
+  ).toBeInViewport();
+});
