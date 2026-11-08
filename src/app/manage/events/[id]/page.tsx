@@ -129,7 +129,8 @@ async function Editor({
   );
 }
 
-/** Who signed up (EVT-02). Read only: no removing or confirming here. */
+/** Who holds Seats (EVT-02): confirmed, or waiting up to 30 minutes for
+ * the email link (8.7). Read only: guests confirm and cancel by their link. */
 async function Signups({ event }: { event: Saved }) {
   const signups = await signupsForEvent(event.id);
   const taken = signups.reduce((sum, signup) => sum + signup.seats, 0);
@@ -168,6 +169,11 @@ async function Signups({ event }: { event: Saved }) {
                 </span>
                 <span className="font-mono">
                   {signup.seats} {signup.seats === 1 ? "seat" : "seats"}
+                  {!signup.confirmedAt && (
+                    <span className="text-muted-foreground block text-right font-sans text-sm">
+                      Waiting for the email link
+                    </span>
+                  )}
                 </span>
               </li>
             ))}

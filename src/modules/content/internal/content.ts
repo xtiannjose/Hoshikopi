@@ -7,6 +7,8 @@ import { db } from "@/lib/db";
 import { parsePesos } from "@/lib/money";
 import { audit, type Staff } from "@/modules/identity";
 
+import { heldSignups } from "./signups";
+
 export type EventCard = {
   slug: string;
   title: string;
@@ -33,7 +35,8 @@ export type PostCard = {
   publishedAt: Date;
 };
 
-const eventSelect = {
+/** An Event card's fields, with the Sign-ups holding Seats at `at`. */
+const eventSelect = (at: Date) => ({
   slug: true,
   title: true,
   startsAt: true,
@@ -45,8 +48,8 @@ const eventSelect = {
   priceCents: true,
   signupUrl: true,
   seats: true,
-  signups: { select: { seats: true } },
-} as const;
+  signups: { where: heldSignups(at), select: { seats: true } },
+});
 
 type EventRow = Omit<EventCard, "seatsLeft"> & { signups: { seats: number }[] };
 
@@ -68,13 +71,13 @@ export async function readEvents(): Promise<{
     db.event.findMany({
       where: { isPublished: true, endsAt: { gte: at } },
       orderBy: { startsAt: "asc" },
-      select: eventSelect,
+      select: eventSelect(at),
     }),
     db.event.findMany({
       where: { isPublished: true, endsAt: { lt: at } },
       orderBy: { startsAt: "desc" },
       take: 12,
-      select: eventSelect,
+      select: eventSelect(at),
     }),
   ]);
   return { upcoming: upcoming.map(toEventCard), past: past.map(toEventCard) };
@@ -131,7 +134,9 @@ export async function contentForStaff() {
   const [events, posts] = await Promise.all([
     db.event.findMany({
       orderBy: { startsAt: "desc" },
-      include: { signups: { select: { seats: true } } },
+      include: {
+        signups: { where: heldSignups(now()), select: { seats: true } },
+      },
     }),
     db.post.findMany({ orderBy: { createdAt: "desc" } }),
   ]);

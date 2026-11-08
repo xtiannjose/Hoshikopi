@@ -27,4 +27,12 @@ export {
   submitInquiry,
   type InquiryView,
 } from "./internal/inquiries";
-export { signUpForEvent, signupsForEvent } from "./internal/signups";
+export {
+  cancelSignup,
+  confirmSignup,
+  HOLD_MINUTES,
+  signupForGuest,
+  signUpForEvent,
+  signupsForEvent,
+  type SignupView,
+} from "./internal/signups";
