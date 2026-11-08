@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { CoffeeIcon, StarIcon } from "@phosphor-icons/react/ssr";
 
+import { BackLink } from "@/components/back-link";
 import { OpenStatus } from "@/components/cafe/open-status";
+import { PageHeader } from "@/components/page-header";
+import { Empty, OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 import { formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { getHours } from "@/modules/cafe";
@@ -20,15 +24,22 @@ export const metadata: Metadata = {
 
 export default function CheckoutPage() {
   return (
-    <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-4 md:px-8">
-      <h1 className="font-display pt-8 pb-1 text-5xl italic">Checkout</h1>
-      <Suspense fallback={<p className="mt-6">Getting your order ready...</p>}>
-        <Checkout />
-      </Suspense>
-      <p className="text-muted-foreground mt-10 font-mono text-sm">
-        Hoshikopi is a concept cafe. Orders and payments here are for
-        demonstration. <Link href="/concept">About this concept</Link>
-      </p>
+    <main id="main" className="page-width flex-1 pt-8">
+      <div className="w-full max-w-6xl">
+        <PageHeader
+          back={<BackLink href="/cart">Back to your Cart</BackLink>}
+          title="Checkout"
+        />
+        <Suspense
+          fallback={<p className="mt-6">Getting your order ready...</p>}
+        >
+          <Checkout />
+        </Suspense>
+        <p className="text-muted-foreground max-w-measure mt-10 font-mono text-sm">
+          Hoshikopi is a concept cafe. Orders and payments here are for
+          demonstration. <Link href="/concept">About this concept</Link>
+        </p>
+      </div>
     </main>
   );
 }
@@ -46,16 +57,29 @@ async function Checkout() {
 
   if (cart.lines.length === 0) {
     return (
-      <div className="mt-6 grid justify-items-start gap-4">
-        <p className="text-lg">Your Cart is empty.</p>
-        <Link href="/menu">See the menu</Link>
+      <div className="mt-8">
+        <Empty icon={<CoffeeIcon size={24} />}>
+          <div>
+            <p className="text-lg font-semibold">Your Cart is empty.</p>
+            <p className="text-muted-foreground">
+              Nothing brewing yet. Pick a drink and we&apos;ll have it ready at
+              the counter.
+            </p>
+          </div>
+          <Link href="/menu" className={PRIMARY_PILL}>
+            See the menu
+          </Link>
+        </Empty>
       </div>
     );
   }
   if (!state.canOrder) {
     const hours = await getHours();
     return (
-      <div role="status" className="bg-muted rounded-card mt-6 grid gap-2 p-6">
+      <div
+        role="status"
+        className="bg-muted rounded-card mt-8 grid max-w-2xl justify-items-start gap-2 p-6"
+      >
         {state.reason === "paused" ? (
           <>
             <p className="text-warning text-lg font-semibold">
@@ -74,26 +98,50 @@ async function Checkout() {
           </>
         )}
         <p>Your Cart is saved for later.</p>
+        <Link href="/cafe" className={`${OUTLINE_PILL} mt-2`}>
+          See our hours
+        </Link>
       </div>
     );
   }
   if (cart.blocked) {
     return (
-      <p className="mt-6">
-        Something in your Cart changed.{" "}
-        <Link href="/cart">Check your Cart</Link>.
-      </p>
+      <div className="mt-8 grid justify-items-start gap-3">
+        <p>Something in your Cart changed.</p>
+        <Link href="/cart" className={PRIMARY_PILL}>
+          Check your Cart
+        </Link>
+      </div>
     );
   }
 
   const [first, ...later] = view.windows;
+  const stars = cart.drinks === 1 ? "1 Star" : `${cart.drinks} Stars`;
   return (
-    <div className="mt-6 grid gap-8">
-      <section aria-labelledby="summary" className="bg-muted rounded-card p-5">
-        <h2 id="summary" className="sr-only">
+    <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+      <section
+        aria-labelledby="summary"
+        className="rounded-card border-border border p-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1"
+      >
+        <h2 id="summary" className="font-display text-2xl italic">
           Your order
         </h2>
-        <ul className="grid gap-2">
+        {cart.drinks > 0 && (
+          <p className="text-muted-foreground mt-2 flex gap-2 text-sm">
+            <StarIcon aria-hidden size={20} className="shrink-0" />
+            <span>
+              {member ? (
+                `This order lights ${stars} when you pick it up.`
+              ) : (
+                <>
+                  <Link href="/sign-in?next=/checkout">Sign in first</Link> and
+                  this order lights {stars}. Your Cart comes with you.
+                </>
+              )}
+            </span>
+          </p>
+        )}
+        <ul className="mt-4 grid gap-2">
           {cart.lines.map((line) => (
             <li key={line.id} className="flex justify-between gap-4">
               <span>
@@ -122,33 +170,40 @@ async function Checkout() {
         </p>
       </section>
 
-      {state.minutesToLastOrder <= 60 && (
-        <p className="text-warning font-semibold">
-          Last order in {state.minutesToLastOrder} min.
-        </p>
-      )}
+      <div className="grid min-w-0 gap-8">
+        {state.minutesToLastOrder <= 60 && (
+          <p className="text-warning font-semibold">
+            Last order in {state.minutesToLastOrder} min.
+          </p>
+        )}
 
-      {!first ? (
-        <p className="bg-muted rounded-card p-5">
-          No Pickup Times are left today. Walk in and order at the counter.
-        </p>
-      ) : (
-        <CheckoutForm
-          asap={{
-            value: "asap",
-            label: `Ready in about ${view.prepMinutes} min, around ${formatTime(first.start)}`,
-          }}
-          windows={later.map((w) => ({
-            value: w.start.toISOString(),
-            label: formatTime(w.start),
-          }))}
-          totalCents={cart.totalCents}
-          totalText={formatPrice(cart.totalCents)}
-          payAtPickupAllowed={view.payAtPickupAllowed}
-          member={member ? { name: member.name, email: member.email } : null}
-          reward={view.reward}
-        />
-      )}
+        {!first ? (
+          <div className="bg-muted rounded-card grid justify-items-start gap-3 p-5">
+            <p>
+              No Pickup Times are left today. Walk in and order at the counter.
+            </p>
+            <Link href="/cafe" className={OUTLINE_PILL}>
+              See our hours
+            </Link>
+          </div>
+        ) : (
+          <CheckoutForm
+            asap={{
+              value: "asap",
+              label: `Ready in about ${view.prepMinutes} min, around ${formatTime(first.start)}`,
+            }}
+            windows={later.map((w) => ({
+              value: w.start.toISOString(),
+              label: formatTime(w.start),
+            }))}
+            totalCents={cart.totalCents}
+            totalText={formatPrice(cart.totalCents)}
+            payAtPickupAllowed={view.payAtPickupAllowed}
+            member={member ? { name: member.name, email: member.email } : null}
+            reward={view.reward}
+          />
+        )}
+      </div>
     </div>
   );
 }

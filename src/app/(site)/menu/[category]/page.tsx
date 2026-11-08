@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ArrowRightIcon } from "@phosphor-icons/react/ssr";
 
+import { Breadcrumb } from "@/components/breadcrumb";
 import { CategoryTabs } from "@/components/menu/category-tabs";
-import { MenuSection } from "@/components/menu/menu-section";
+import { MenuGrid } from "@/components/menu/menu-section";
+import { PageHeader } from "@/components/page-header";
+import { OUTLINE_PILL } from "@/components/panel";
 import { PickupLine } from "@/components/pickup-line";
 import { getMenu, menuSlugs } from "@/modules/menu";
 
@@ -25,11 +30,7 @@ export default function CategoryPage({
   params,
 }: PageProps<"/menu/[category]">) {
   return (
-    <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
-      <p className="text-muted-foreground pt-8 font-mono text-sm">Menu</p>
-      <div className="mt-3">
-        <PickupLine />
-      </div>
+    <main id="main" className="page-width flex-1 pt-8">
       <Suspense fallback={<div className="min-h-96" />}>
         <Category params={params} />
       </Suspense>
@@ -42,14 +43,45 @@ async function Category({
 }: Pick<PageProps<"/menu/[category]">, "params">) {
   const { category: slug } = await params;
   const menu = await getMenu();
-  const category = menu.find((c) => c.slug === slug);
-  if (!category) notFound();
+  const index = menu.findIndex((c) => c.slug === slug);
+  if (index === -1) notFound();
+  const category = menu[index];
+  // The last Category wraps round to the first.
+  const next = menu[(index + 1) % menu.length];
   return (
     <>
+      <PageHeader
+        back={
+          <Breadcrumb
+            items={[{ label: "Menu", href: "/menu" }, { label: category.name }]}
+          />
+        }
+        title={category.name}
+      />
+      <div className="mt-3">
+        <PickupLine />
+      </div>
       <div className="mt-6">
         <CategoryTabs categories={menu} current={slug} />
       </div>
-      <MenuSection category={category} headingLevel={1} />
+      <MenuGrid items={category.items} headingLevel={2} />
+      <nav
+        aria-label="More of the menu"
+        className="border-border mt-12 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-6"
+      >
+        {next !== category && (
+          <Link href={`/menu/${next.slug}`} className={OUTLINE_PILL}>
+            Next up: {next.name}
+            <ArrowRightIcon aria-hidden size={18} />
+          </Link>
+        )}
+        <Link
+          href="/menu"
+          className="inline-flex min-h-11 items-center no-underline hover:underline"
+        >
+          See the whole menu
+        </Link>
+      </nav>
     </>
   );
 }

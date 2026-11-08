@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+
+import { OUTLINE_PILL } from "@/components/panel";
 
 const TAGS = [
   ["vegan", "Vegan"],
@@ -38,6 +40,7 @@ export function MenuFilter() {
   const [query, setQuery] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [shown, setShown] = useState<number | null>(null);
+  const search = useRef<HTMLInputElement>(null);
   const update = (nextQuery: string, nextTags: string[]) => {
     setQuery(nextQuery);
     setTags(nextTags);
@@ -51,6 +54,7 @@ export function MenuFilter() {
         Search the menu
       </label>
       <input
+        ref={search}
         id="menu-search"
         type="search"
         value={query}
@@ -82,12 +86,26 @@ export function MenuFilter() {
           </label>
         ))}
       </fieldset>
-      <p aria-live="polite" className="min-h-6">
-        {shown === 0 && "Nothing matches. Try fewer filters or another word."}
-        {shown !== null &&
-          shown > 0 &&
-          `${shown} ${shown === 1 ? "item matches" : "items match"}.`}
-      </p>
+      <div className="flex min-h-6 flex-wrap items-center gap-x-4 gap-y-2">
+        <p aria-live="polite">
+          {shown === 0 && "Nothing matches. Try fewer filters or another word."}
+          {shown !== null &&
+            shown > 0 &&
+            `${shown} ${shown === 1 ? "item matches" : "items match"}.`}
+        </p>
+        {shown !== null && (
+          <button
+            type="button"
+            onClick={() => {
+              update("", []);
+              search.current?.focus();
+            }}
+            className={OUTLINE_PILL}
+          >
+            Clear search and filters
+          </button>
+        )}
+      </div>
     </search>
   );
 }

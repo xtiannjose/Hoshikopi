@@ -17,7 +17,7 @@ export function PopularThisWeek({ items }: { items: MenuItemCard[] }) {
       <p className="text-muted-foreground mt-2">
         From this week&apos;s orders on this demo.
       </p>
-      <ol className="border-border mt-6 border-t">
+      <ol className="border-border mt-6 max-w-3xl border-t">
         {items.map((item, index) => (
           <li
             key={item.slug}

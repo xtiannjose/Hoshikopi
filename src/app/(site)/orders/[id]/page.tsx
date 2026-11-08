@@ -3,12 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { CheckIcon } from "@phosphor-icons/react/ssr";
+import { ArrowsClockwiseIcon, CheckIcon } from "@phosphor-icons/react/ssr";
 
+import { BackLink } from "@/components/back-link";
+import { OrderStatusPill } from "@/components/order-status-pill";
+import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 import { PickupLine } from "@/components/pickup-line";
-import { formatTime } from "@/lib/clock";
+import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
+import { getCafeContact } from "@/modules/cafe";
 import { getOrderForCustomer, type OrderView } from "@/modules/ordering";
+
+import { orderAgainAction } from "../../account/actions";
 
 import { cancelOrderAction } from "./actions";
 import { StatusPoller } from "./status-poller";
@@ -20,10 +26,12 @@ export const metadata: Metadata = {
 
 export default function OrderPage(props: PageProps<"/orders/[id]">) {
   return (
-    <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-4 md:px-8">
-      <Suspense fallback={<p className="pt-8">Finding your order...</p>}>
-        <Order {...props} />
-      </Suspense>
+    <main id="main" className="page-width flex-1 pt-8">
+      <div className="w-full max-w-6xl">
+        <Suspense fallback={<p>Finding your order...</p>}>
+          <Order {...props} />
+        </Suspense>
+      </div>
     </main>
   );
 }
@@ -52,10 +60,16 @@ const CURRENT: Record<string, string> = {
   picked_up: "Picked Up",
 };
 
+const paymentFailed = (order: OrderView) =>
+  order.status === "placed" && order.payment?.status === "failed";
+
 function message(order: OrderView): string {
   const first = order.lines[0]?.name ?? "order";
   switch (order.status) {
     case "placed":
+      if (paymentFailed(order)) {
+        return "We got your order, but the payment didn't go through.";
+      }
       return order.paymentMethod === "pay_at_pickup"
         ? "Salamat! We got your order. The bar will accept it soon."
         : "Salamat! We got your order. Finish paying to send it to the bar.";
@@ -88,197 +102,257 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
   const token = typeof t === "string" ? t : "";
   const order = await getOrderForCustomer(id, token);
   if (!order) notFound();
+  const { contactEmail } = await getCafeContact();
   const closed = ["cancelled", "expired", "refunded"].includes(order.status);
   const canCancel = order.status === "placed" || order.status === "paid";
+  const failed = paymentFailed(order);
+  // Where to go next once this Order is done, or can't go on.
+  const nextSteps = closed || order.status === "picked_up" || failed;
   const timeline = steps(order);
   const currentIndex = timeline.findIndex(
     (step) => step.label === CURRENT[order.status]
   );
   return (
-    <div className="pt-8">
-      <p className="text-muted-foreground font-mono text-sm">Order Code</p>
-      <h1 className="font-display pb-1 text-6xl italic">{order.code}</h1>
-      <p role="status" className="mt-4 text-lg font-semibold">
-        {/* The live region stays; only its words rise in when they change. */}
-        <span key={order.status} className="animate-rise block">
-          {message(order)}
-        </span>
-      </p>
-      <StatusPoller
-        id={order.id}
-        token={token}
-        code={order.code}
-        status={order.status}
-        version={order.version}
-      />
-      {order.status === "placed" && order.payment?.status === "pending" && (
-        <a
-          href={order.payment.checkoutUrl}
-          className="bg-primary text-primary-foreground mt-4 inline-flex min-h-12 items-center rounded-full px-6 font-semibold no-underline"
-        >
-          Finish paying
-        </a>
-      )}
-      {order.status === "placed" && order.payment?.status === "failed" && (
-        <p className="text-destructive mt-4 font-semibold">
-          Your payment didn&apos;t go through. This order will be let go in a
-          few minutes; place it again, or choose Pay at Pickup.
-        </p>
-      )}
-      {!closed && order.status !== "picked_up" && (
-        <p className="mt-2 text-lg">
-          Pickup{" "}
-          {order.pickupKind === "asap" ? "as soon as possible, around" : "at"}{" "}
-          <span className="font-semibold">{formatTime(order.windowStart)}</span>
-          .
-        </p>
-      )}
-
-      {!closed && (
-        <ol className="mt-8 grid" aria-label="Order Status">
-          {timeline.map((step, index) => {
-            const done = index < currentIndex;
-            const now = index === currentIndex;
-            const ready = now && step.label === "Ready";
-            // Marks appear in step order, on load and when the poll moves
-            // the Order on; a mark that stays put does not replay.
-            const delay = { animationDelay: `${index * 60}ms` };
-            return (
-              <li
-                key={step.label}
-                aria-current={now ? "step" : undefined}
-                className="flex items-center gap-4 py-2"
-              >
-                <span
-                  aria-hidden
-                  className={`relative grid size-8 shrink-0 place-items-center rounded-full ${done ? "bg-primary text-primary-foreground" : now ? "bg-muted" : "border-input border border-dashed"}`}
-                >
-                  {done && (
-                    <CheckIcon
-                      size={16}
-                      weight="bold"
-                      className="animate-pop"
-                      style={delay}
-                    />
-                  )}
-                  {now && (
-                    <svg
-                      viewBox="0 0 24 24"
-                      className={`size-5 ${ready ? "animate-ready" : "animate-pop"}`}
-                      style={delay}
-                    >
-                      {/* Ready is the gold star moment (docs/05 section 6). */}
-                      <path
-                        d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
-                        className={
-                          ready ? "fill-star stroke-star-edge" : "fill-primary"
-                        }
-                        strokeWidth="1"
-                      />
-                    </svg>
-                  )}
-                  {ready && (
-                    <span
-                      className="border-star animate-ring absolute inset-0 rounded-full border-2"
-                      style={{ animationDelay: `${index * 60 + 200}ms` }}
-                    />
-                  )}
-                </span>
-                <span
-                  className={
-                    now ? "font-semibold" : done ? "" : "text-muted-foreground"
-                  }
-                >
-                  {step.label}
-                  {step.at && (done || now) && (
-                    <span className="text-muted-foreground ml-2 font-mono text-sm font-normal">
-                      {formatTime(step.at)}
-                    </span>
-                  )}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
-      )}
-
-      {canCancel ? (
-        <form
-          action={cancelOrderAction}
-          className="mt-6 grid justify-items-start gap-2"
-        >
-          <input type="hidden" name="id" value={order.id} />
-          <input type="hidden" name="t" value={token} />
-          <button
-            type="submit"
-            className="border-destructive text-destructive min-h-11 rounded-full border px-5 font-semibold"
-          >
-            Cancel order
-          </button>
-          <p className="text-muted-foreground text-sm">
-            You can cancel until the bar accepts it. A paid order is refunded in
-            full.
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+      <div className="min-w-0">
+        {order.isMember ? (
+          <BackLink href="/account#orders">Your orders</BackLink>
+        ) : (
+          <BackLink href="/menu">Back to the menu</BackLink>
+        )}
+        {/* A ticket stub: the code to show at the counter, then the time. */}
+        <div className="rounded-card border-input mt-2 border border-dashed p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-muted-foreground font-mono text-sm">
+              Order Code
+            </p>
+            <OrderStatusPill status={order.status} />
+          </div>
+          <h1 className="font-display pb-1 text-6xl italic">{order.code}</h1>
+          <p className="border-input mt-4 flex flex-wrap justify-between gap-x-4 border-t border-dashed pt-4 font-mono text-sm">
+            <span className="text-muted-foreground">Pickup</span>
+            <span>
+              {formatDate(order.windowStart)}, {formatTime(order.windowStart)}
+            </span>
           </p>
-        </form>
-      ) : (
-        !closed &&
-        order.status !== "picked_up" && (
-          <p className="text-muted-foreground mt-6 text-sm">
-            The bar has your order, so it can&apos;t be cancelled here.
-            Questions? Email us.
-          </p>
-        )
-      )}
-
-      <section
-        aria-labelledby="lines"
-        className="bg-muted rounded-card mt-8 p-5"
-      >
-        <h2 id="lines" className="font-display text-2xl italic">
-          Your order
-        </h2>
-        <ul className="mt-3 grid gap-2">
-          {order.lines.map((line, index) => (
-            <li key={index} className="flex justify-between gap-4">
-              <span>
-                {line.quantity} x {line.name}
-                {line.options.length > 0 && (
-                  <span className="text-muted-foreground block text-sm">
-                    {line.options.map((o) => o.name).join(", ")}
-                  </span>
-                )}
-                {line.note && (
-                  <span className="block text-sm">Note: {line.note}</span>
-                )}
-              </span>
-              <span className="font-mono whitespace-nowrap">
-                {formatPrice(line.lineCents)}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="border-border mt-4 flex justify-between border-t pt-3 text-lg font-semibold">
-          Total{" "}
-          <span className="font-mono whitespace-nowrap">
-            {formatPrice(order.totalCents)}
+        </div>
+        <p role="status" className="mt-6 text-lg font-semibold">
+          {/* The live region stays; only its words rise in when they change. */}
+          <span key={order.status} className="animate-rise block">
+            {message(order)}
           </span>
         </p>
-        <p className="text-muted-foreground text-sm">
-          {order.paymentMethod === "pay_at_pickup"
-            ? "Pay at the counter when you collect."
-            : order.payment?.status === "paid" ||
-                order.payment?.status === "refunded"
-              ? "Paid online (Test Mode)."
-              : "Not paid yet."}
-        </p>
-      </section>
-      {!order.isMember && (
-        <p className="bg-muted rounded-card mt-6 p-4">
-          Collect Stars next time: <Link href="/sign-in">sign in</Link> with
-          your email before you order. Nine Stars make a free drink.
-        </p>
-      )}
-      <div className="mt-6">
+        <StatusPoller
+          id={order.id}
+          token={token}
+          code={order.code}
+          status={order.status}
+          version={order.version}
+        />
+        {order.status === "placed" && order.payment?.status === "pending" && (
+          <a
+            href={order.payment.checkoutUrl}
+            className={`${PRIMARY_PILL} mt-4`}
+          >
+            Finish paying
+          </a>
+        )}
+        {failed && (
+          <p className="text-destructive max-w-measure mt-4 font-semibold">
+            Your payment didn&apos;t go through. This order will be let go in a
+            few minutes; place it again, or choose Pay at Pickup.
+          </p>
+        )}
+        {nextSteps && (
+          <div className="mt-4 flex flex-wrap gap-3">
+            {order.isMember && (
+              <form action={orderAgainAction}>
+                <input type="hidden" name="orderId" value={order.id} />
+                <button type="submit" className={PRIMARY_PILL}>
+                  <ArrowsClockwiseIcon aria-hidden size={18} />
+                  Order again
+                </button>
+              </form>
+            )}
+            {order.isMember && order.status === "picked_up" && (
+              <Link href="/account/stars" className={OUTLINE_PILL}>
+                See your Stars
+              </Link>
+            )}
+            <Link href="/menu" className={OUTLINE_PILL}>
+              See the menu
+            </Link>
+          </div>
+        )}
+        {!closed && order.status !== "picked_up" && !failed && (
+          <p className="mt-2 text-lg">
+            Pickup{" "}
+            {order.pickupKind === "asap" ? "as soon as possible, around" : "at"}{" "}
+            <span className="font-semibold">
+              {formatTime(order.windowStart)}
+            </span>
+            .
+          </p>
+        )}
+
+        {!closed && (
+          <ol className="mt-8 grid" aria-label="Order Status">
+            {timeline.map((step, index) => {
+              const done = index < currentIndex;
+              const now = index === currentIndex;
+              const ready = now && step.label === "Ready";
+              // Marks appear in step order, on load and when the poll moves
+              // the Order on; a mark that stays put does not replay.
+              const delay = { animationDelay: `${index * 60}ms` };
+              return (
+                <li
+                  key={step.label}
+                  aria-current={now ? "step" : undefined}
+                  className="flex items-center gap-4 py-2"
+                >
+                  <span
+                    aria-hidden
+                    className={`relative grid size-8 shrink-0 place-items-center rounded-full ${done ? "bg-primary text-primary-foreground" : now ? "bg-muted" : "border-input border border-dashed"}`}
+                  >
+                    {done && (
+                      <CheckIcon
+                        size={16}
+                        weight="bold"
+                        className="animate-pop"
+                        style={delay}
+                      />
+                    )}
+                    {now && (
+                      <svg
+                        viewBox="0 0 24 24"
+                        className={`size-5 ${ready ? "animate-ready" : "animate-pop"}`}
+                        style={delay}
+                      >
+                        {/* Ready is the gold star moment (docs/05 section 6). */}
+                        <path
+                          d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
+                          className={
+                            ready
+                              ? "fill-star stroke-star-edge"
+                              : "fill-primary"
+                          }
+                          strokeWidth="1"
+                        />
+                      </svg>
+                    )}
+                    {ready && (
+                      <span
+                        className="border-star animate-ring absolute inset-0 rounded-full border-2"
+                        style={{ animationDelay: `${index * 60 + 200}ms` }}
+                      />
+                    )}
+                  </span>
+                  <span
+                    className={
+                      now
+                        ? "font-semibold"
+                        : done
+                          ? ""
+                          : "text-muted-foreground"
+                    }
+                  >
+                    {step.label}
+                    {step.at && (done || now) && (
+                      <span className="text-muted-foreground ml-2 font-mono text-sm font-normal">
+                        {formatTime(step.at)}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+
+        {canCancel ? (
+          <form
+            action={cancelOrderAction}
+            className="mt-6 grid justify-items-start gap-2"
+          >
+            <input type="hidden" name="id" value={order.id} />
+            <input type="hidden" name="t" value={token} />
+            <button
+              type="submit"
+              className="border-destructive text-destructive min-h-11 rounded-full border px-5 font-semibold"
+            >
+              Cancel order
+            </button>
+            <p className="text-muted-foreground text-sm">
+              You can cancel until the bar accepts it. A paid order is refunded
+              in full.
+            </p>
+          </form>
+        ) : (
+          !closed &&
+          order.status !== "picked_up" && (
+            <p className="text-muted-foreground mt-6 text-sm">
+              The bar has your order, so it can&apos;t be cancelled here.
+              Questions?{" "}
+              <a
+                href={`mailto:${contactEmail}?subject=${encodeURIComponent(`Order ${order.code}`)}`}
+              >
+                Email us
+              </a>
+              .
+            </p>
+          )
+        )}
+      </div>
+
+      <div className="grid gap-6 lg:sticky lg:top-6">
+        <section
+          aria-labelledby="lines"
+          className="rounded-card border-border border p-5"
+        >
+          <h2 id="lines" className="font-display text-2xl italic">
+            Your order
+          </h2>
+          <ul className="mt-3 grid gap-2">
+            {order.lines.map((line, index) => (
+              <li key={index} className="flex justify-between gap-4">
+                <span>
+                  {line.quantity} x {line.name}
+                  {line.options.length > 0 && (
+                    <span className="text-muted-foreground block text-sm">
+                      {line.options.map((o) => o.name).join(", ")}
+                    </span>
+                  )}
+                  {line.note && (
+                    <span className="block text-sm">Note: {line.note}</span>
+                  )}
+                </span>
+                <span className="font-mono whitespace-nowrap">
+                  {formatPrice(line.lineCents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="border-border mt-4 flex justify-between border-t pt-3 text-lg font-semibold">
+            Total{" "}
+            <span className="font-mono whitespace-nowrap">
+              {formatPrice(order.totalCents)}
+            </span>
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {order.paymentMethod === "pay_at_pickup"
+              ? "Pay at the counter when you collect."
+              : order.payment?.status === "paid" ||
+                  order.payment?.status === "refunded"
+                ? "Paid online (Test Mode)."
+                : "Not paid yet."}
+          </p>
+        </section>
+        {!order.isMember && (
+          <p className="bg-muted rounded-card p-4">
+            Collect Stars next time: <Link href="/sign-in">sign in</Link> with
+            your email before you order. Nine Stars make a free drink.
+          </p>
+        )}
         <PickupLine />
       </div>
     </div>

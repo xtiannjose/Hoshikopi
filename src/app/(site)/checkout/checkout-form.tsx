@@ -1,11 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { ClockIcon, UserIcon, WalletIcon } from "@phosphor-icons/react";
 
 import { formatPrice } from "@/lib/money";
 
 import { Field } from "@/components/fields";
+import { IconCircle } from "@/components/panel";
 
 import { placeOrderAction, type CheckoutState } from "./actions";
 
@@ -29,6 +37,32 @@ const PAYMENTS = [
     note: "Pay at the counter when you collect.",
   },
 ] as const;
+
+const FIELDSET = "rounded-card border-border border p-5 md:p-6";
+
+/** A step's legend: icon, name, and "1 of 3" kept out of the group's name. */
+function Legend({
+  icon,
+  step,
+  children,
+}: {
+  icon: ReactNode;
+  step: number;
+  children: ReactNode;
+}) {
+  return (
+    <legend className="float-left mb-4 flex w-full items-center gap-3">
+      <IconCircle>{icon}</IconCircle>
+      <span className="font-display text-2xl italic">{children}</span>
+      <span
+        aria-hidden
+        className="text-muted-foreground ml-auto font-mono text-sm"
+      >
+        {step} of 3
+      </span>
+    </legend>
+  );
+}
 
 /** Pickup Time, contact details and Payment Method (ORD-03, ORD-05, PAY-02). */
 export function CheckoutForm({
@@ -54,6 +88,17 @@ export function CheckoutForm({
     placeOrderAction,
     {}
   );
+  const form = useRef<HTMLFormElement>(null);
+  const status = useRef<HTMLParagraphElement>(null);
+  // After a refusal, take the Customer to the first field to fix, or to why.
+  useEffect(() => {
+    if (!state.message && !state.errors) return;
+    const invalid = form.current?.querySelector<HTMLElement>(
+      '[aria-invalid="true"]'
+    );
+    if (invalid) invalid.focus();
+    else status.current?.scrollIntoView({ block: "center" });
+  }, [state]);
   const error = (name: string) => state.errors?.[name];
   // After a refusal React resets the form, so the choices come back from the
   // action; one no longer offered falls back to the first.
@@ -70,7 +115,7 @@ export function CheckoutForm({
   const [useReward, setUseReward] = useState(false);
   const total = totalCents - (useReward && reward ? reward.discountCents : 0);
   return (
-    <form action={action} className="grid gap-8">
+    <form ref={form} action={action} className="grid gap-8">
       <input type="hidden" name="seenTotalCents" value={total} />
       {reward && (
         <label className="border-star bg-muted rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 py-3">
@@ -92,9 +137,11 @@ export function CheckoutForm({
           </span>
         </label>
       )}
-      <fieldset>
-        <legend className="font-display text-2xl italic">Pickup Time</legend>
-        <div className="mt-4 grid gap-3">
+      <fieldset className={FIELDSET}>
+        <Legend icon={<ClockIcon size={20} />} step={1}>
+          Pickup Time
+        </Legend>
+        <div className="clear-both grid gap-3">
           {asap && (
             <label className="border-input has-[:checked]:border-primary has-[:checked]:bg-muted has-[:focus-visible]:outline-ring rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
               <input
@@ -139,43 +186,50 @@ export function CheckoutForm({
         </div>
       </fieldset>
 
-      <fieldset className="grid gap-4">
-        <legend className="font-display mb-2 text-2xl italic">
+      <fieldset className={FIELDSET}>
+        <Legend icon={<UserIcon size={20} />} step={2}>
           Who&apos;s picking up
-        </legend>
-        <Field
-          name="customerName"
-          defaultValue={state.values?.customerName ?? member?.name}
-          label="Name"
-          autoComplete="given-name"
-          error={error("customerName")}
-        />
-        <p className="text-muted-foreground -mb-2 text-sm">
-          An email or a mobile number, so we can reach you about your Order. We
-          use them for nothing else. <Link href="/privacy">Privacy</Link>
-        </p>
-        <Field
-          name="customerEmail"
-          defaultValue={state.values?.customerEmail ?? member?.email}
-          label="Email"
-          type="email"
-          autoComplete="email"
-          error={error("customerEmail")}
-        />
-        <Field
-          name="customerPhone"
-          defaultValue={state.values?.customerPhone}
-          label="Mobile number"
-          type="tel"
-          autoComplete="tel"
-          placeholder="0917 123 4567"
-          error={error("customerPhone")}
-        />
+        </Legend>
+        <div className="clear-both grid gap-4">
+          <Field
+            name="customerName"
+            defaultValue={state.values?.customerName ?? member?.name}
+            label="Name"
+            autoComplete="given-name"
+            error={error("customerName")}
+          />
+          <p className="text-muted-foreground max-w-measure text-sm">
+            One of these is enough: an email or a mobile number, so we can reach
+            you about your Order. We use them for nothing else.{" "}
+            <Link href="/privacy">Privacy</Link>
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              name="customerEmail"
+              defaultValue={state.values?.customerEmail ?? member?.email}
+              label="Email"
+              type="email"
+              autoComplete="email"
+              error={error("customerEmail")}
+            />
+            <Field
+              name="customerPhone"
+              defaultValue={state.values?.customerPhone}
+              label="Mobile number"
+              type="tel"
+              autoComplete="tel"
+              placeholder="0917 123 4567"
+              error={error("customerPhone")}
+            />
+          </div>
+        </div>
       </fieldset>
 
-      <fieldset>
-        <legend className="font-display text-2xl italic">Payment</legend>
-        <div className="mt-4 grid gap-3">
+      <fieldset className={FIELDSET}>
+        <Legend icon={<WalletIcon size={20} />} step={3}>
+          Payment
+        </Legend>
+        <div className="clear-both grid gap-3">
           {payments.map((p) => (
             <label
               key={p.value}
@@ -210,7 +264,24 @@ export function CheckoutForm({
       </fieldset>
 
       <div className="grid gap-3">
-        <p role="status" className="min-h-6 font-semibold">
+        {useReward && reward && (
+          // Display only: the server prices the Order again (ADR 0002).
+          <dl className="grid gap-1">
+            <div className="flex justify-between gap-4">
+              <dt>Free drink (9 Stars)</dt>
+              <dd className="font-mono whitespace-nowrap">
+                &minus;{formatPrice(reward.discountCents)}
+              </dd>
+            </div>
+            <div className="border-border flex justify-between gap-4 border-t pt-2 text-lg font-semibold">
+              <dt>Total</dt>
+              <dd className="font-mono whitespace-nowrap">
+                {formatPrice(total)}
+              </dd>
+            </div>
+          </dl>
+        )}
+        <p ref={status} role="status" className="min-h-6 font-semibold">
           {state.message && (
             <span className="text-destructive">{state.message}</span>
           )}

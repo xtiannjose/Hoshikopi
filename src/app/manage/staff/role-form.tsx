@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { setRoleAction, type RoleState } from "./actions";
 
@@ -33,24 +33,35 @@ export function RoleForm({
     },
     {}
   );
+  const [chosen, setChosen] = useState<string>(role ?? "barista");
   const row = email !== undefined;
   return (
-    <form action={action} className="grid gap-2">
+    // React resets the form after the action; chosen follows the select back.
+    <form
+      action={action}
+      onReset={() => setChosen(role ?? "barista")}
+      className="grid gap-2"
+    >
       <div className="flex flex-wrap items-end gap-3">
         {row ? (
           <input type="hidden" name="email" value={email} />
         ) : (
-          <div className="grid gap-1.5">
+          <div className="grid w-full gap-1.5">
             <label htmlFor="staff-email" className="font-semibold">
               Email they signed in with
             </label>
+            <p id="staff-email-hint" className="text-muted-foreground text-sm">
+              They need to have signed in once, with email or Google.
+            </p>
             <input
               id="staff-email"
               name="email"
               type="email"
               required
+              autoComplete="off"
+              aria-describedby="staff-email-hint"
               defaultValue={state.ok ? "" : state.email}
-              className={`${SELECT} w-72 max-w-full`}
+              className={`${SELECT} w-full`}
             />
           </div>
         )}
@@ -65,6 +76,7 @@ export function RoleForm({
             id={row ? `role-${email}` : "staff-role"}
             name="role"
             defaultValue={role ?? "barista"}
+            onChange={(event) => setChosen(event.target.value)}
             className={SELECT}
           >
             <option value="barista">Barista</option>
@@ -77,6 +89,11 @@ export function RoleForm({
           {row && <span className="sr-only"> role for {name}</span>}
         </button>
       </div>
+      {chosen === "customer" && (
+        <p className="text-warning text-sm">
+          They lose staff access and are signed out now.
+        </p>
+      )}
       {!onResult && (
         <p role="status" className="text-sm font-semibold">
           {state.message && (

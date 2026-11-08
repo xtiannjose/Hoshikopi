@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
+import { PlusIcon, RepeatIcon } from "@phosphor-icons/react/ssr";
 
+import { BackLink } from "@/components/back-link";
+import { weeklyWhen } from "@/components/content/weekly-list";
+import { PageHeader } from "@/components/page-header";
+import { Empty, Panel, Pill } from "@/components/panel";
 import { recurringForStaff } from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
@@ -11,18 +15,18 @@ export const metadata: Metadata = { title: "Recurring Events" };
 
 export default function ManageWeeklyPage() {
   return (
-    <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
-      <Link href="/manage/events">Events</Link>
-      <h1 className="font-display mt-4 pb-1 text-4xl italic">
-        Recurring Events
-      </h1>
-      <p className="text-muted-foreground mt-2">
-        Weekly, with no date or sign-up. They show on the Events and cafe pages;
-        untick Shown on the site to pause one.
-      </p>
-      <Suspense fallback={<p className="mt-4">Loading...</p>}>
-        <List />
-      </Suspense>
+    <main id="main" className="page-width flex-1 py-10">
+      <div className="grid gap-8">
+        <PageHeader
+          back={<BackLink href="/manage/events">Events</BackLink>}
+          title="Recurring Events"
+          size="staff"
+          intro="Weekly, with no date or sign-up. They show on the Events and cafe pages; untick Shown on the site to pause one."
+        />
+        <Suspense fallback={<p>Loading...</p>}>
+          <List />
+        </Suspense>
+      </div>
     </main>
   );
 }
@@ -31,14 +35,36 @@ async function List() {
   await requireStaff("manager", "/manage/events/weekly");
   const events = await recurringForStaff();
   return (
-    <div className="mt-8 grid gap-8">
+    <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+      {events.length === 0 && (
+        <Empty icon={<RepeatIcon size={24} />}>
+          <p>
+            Nothing weekly yet. An open mic or a Saturday cupping gives regulars
+            a standing date.
+          </p>
+          <a href="#add-weekly" className="font-semibold">
+            Add one
+          </a>
+        </Empty>
+      )}
       {events.map((event) => (
-        <WeeklyForm key={event.id} event={event} />
+        <Panel
+          key={event.id}
+          id={`weekly-${event.id}`}
+          title={weeklyWhen(event)}
+          icon={<RepeatIcon size={20} />}
+          aside={
+            !event.isPublished && <Pill tone="muted">Not on the site</Pill>
+          }
+        >
+          <WeeklyForm event={event} />
+        </Panel>
       ))}
-      <section aria-labelledby="add-weekly" className="grid gap-4">
-        <h2 id="add-weekly" className="font-display pb-1 text-2xl italic">
-          Add one
-        </h2>
+      <Panel
+        id="add-weekly"
+        title="Add a Recurring Event"
+        icon={<PlusIcon size={20} />}
+      >
         <WeeklyForm
           event={{
             id: null,
@@ -50,7 +76,7 @@ async function List() {
             isPublished: true,
           }}
         />
-      </section>
+      </Panel>
     </div>
   );
 }

@@ -1,23 +1,55 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { EnvelopeSimpleIcon } from "@phosphor-icons/react";
+
+import { Empty, OUTLINE_PILL } from "@/components/panel";
 
 import { requestSignInLink, type SignInState } from "./actions";
 
 const initial: SignInState = { status: "idle" };
 
+/** A new key starts the form over, for "Use a different email". */
 export function SignInForm({ next }: { next: string }) {
+  const [attempt, setAttempt] = useState(0);
+  return (
+    <EmailForm
+      key={attempt}
+      next={next}
+      again={attempt > 0}
+      onReset={() => setAttempt((n) => n + 1)}
+    />
+  );
+}
+
+function EmailForm({
+  next,
+  again,
+  onReset,
+}: {
+  next: string;
+  again: boolean;
+  onReset: () => void;
+}) {
   const [state, action, pending] = useActionState(requestSignInLink, initial);
 
   if (state.status === "sent") {
     return (
-      <div role="status" className="rounded-card bg-muted grid gap-2 p-6">
-        <h2 className="font-display text-2xl italic">Check your email</h2>
-        <p>
-          We sent a sign-in link to <b>{state.email}</b>. It works once, for 5
-          minutes.
-        </p>
-      </div>
+      <Empty icon={<EnvelopeSimpleIcon size={24} />}>
+        <div role="status" className="grid gap-2">
+          <h2 className="font-display text-2xl italic">Check your email</h2>
+          <p>
+            We sent a sign-in link to <b>{state.email}</b>. It works once, for 5
+            minutes.
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Not there in a minute? Check Spam or Promotions.
+          </p>
+        </div>
+        <button type="button" onClick={onReset} className={OUTLINE_PILL}>
+          Use a different email
+        </button>
+      </Empty>
     );
   }
 
@@ -35,6 +67,8 @@ export function SignInForm({ next }: { next: string }) {
           type="email"
           autoComplete="email"
           required
+          // Back from "Use a different email": the button that had focus is gone.
+          autoFocus={again}
           defaultValue={state.status === "error" ? state.email : ""}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "email-error" : undefined}

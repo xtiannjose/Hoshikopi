@@ -1,9 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { SpeakerHighIcon, SpeakerSlashIcon } from "@phosphor-icons/react";
 
-import { formatTime } from "@/lib/clock";
+import { formatTime, now } from "@/lib/clock";
 
 import { pauseAction, resumeAction } from "../manage/hours/actions";
 import { advanceOrder, cancelAtBar } from "./actions";
@@ -18,6 +25,7 @@ type Order = {
   firstName: string;
   pickupKind: "asap" | "scheduled";
   windowStart: string;
+  placedAt: string;
   payAtPickup: boolean;
   makeNext: boolean;
   lines: {
@@ -39,6 +47,23 @@ const STEP: Record<Status, string> = {
   accepted: "Start making",
   preparing: "Ready",
   ready: "Picked up",
+};
+
+type Lane = "New" | "Making" | "Ready";
+
+// Where an Order lands after one tap; Picked Up leaves the board from Ready.
+const LANE_AFTER: Record<Status, Lane> = {
+  placed: "Making",
+  paid: "Making",
+  accepted: "Making",
+  preparing: "Ready",
+  ready: "Ready",
+};
+
+const EMPTY_LANE: Record<Lane, string> = {
+  New: "No new orders yet. They chime in here.",
+  Making: "Nothing on the bar.",
+  Ready: "Nothing waiting at the counter.",
 };
 
 const MUTE_KEY = "hoshikopi-bar-muted";
@@ -71,12 +96,19 @@ export function BarScreen({
   initial,
   manager,
   staffName,
+  links,
 }: {
   initial: Board;
   manager: boolean;
   staffName: string;
+  /** The way back and the staff links, left of the h1. */
+  links?: ReactNode;
 }) {
   const [board, setBoard] = useState(initial);
+  const [tapped, setTapped] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
+  const [clock, setClock] = useState(() => formatTime(now()));
+  const lanes = useRef<Partial<Record<Lane, HTMLHeadingElement | null>>>({});
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [muted, setMuted] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
@@ -132,11 +164,55 @@ export function BarScreen({
     return () => clearInterval(timer);
   }, [poll, signedOut]);
 
-  const act = (run: () => Promise<unknown>) =>
+  // A Manila clock for the counter; it shows no seconds, so 30 s will do.
+  useEffect(() => {
+    const timer = setInterval(() => setClock(formatTime(now())), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timer = setTimeout(() => setNotice(""), 5_000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
+  const advance = (order: Order) => {
+    setTapped(order.id);
     startTransition(async () => {
-      await run();
+      const moved = await advanceOrder(order.id, order.status);
       await poll();
+      if (moved) lanes.current[LANE_AFTER[order.status]]?.focus();
+      else
+        setNotice(
+          `${order.code} changed before your tap. The board is up to date.`
+        );
     });
+  };
+
+  const cancel = (order: Order, reason: string) => {
+    setTapped(order.id);
+    startTransition(async () => {
+      const cancelled = await cancelAtBar(order.id, reason);
+      await poll();
+      setNotice(
+        cancelled
+          ? `Cancelled ${order.code}. Your reason shows on their Order page.`
+          : `${order.code} changed before your tap. The board is up to date.`
+      );
+    });
+  };
+
+  const card = (order: Order) => (
+    <Card
+      key={order.id}
+      order={order}
+      fresh={fresh.has(order.id)}
+      manager={manager}
+      busy={pending && tapped === order.id}
+      onAdvance={() => advance(order)}
+      onCancel={(reason) => cancel(order, reason)}
+    />
+  );
 
   const toggleSound = () => {
     const next = !muted;
@@ -148,7 +224,7 @@ export function BarScreen({
     if (!next) chime();
   };
 
-  const columns: { title: string; orders: Order[]; later?: Order[] }[] = [
+  const columns: { title: Lane; orders: Order[]; later?: Order[] }[] = [
     {
       title: "New",
       orders: board.orders.filter(
@@ -183,59 +259,80 @@ export function BarScreen({
           </a>
         </p>
       )}
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl italic">Bar Screen</h1>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-muted-foreground text-sm">{staffName}</span>
-          <button
-            type="button"
-            onClick={toggleSound}
-            aria-pressed={!muted}
-            className="border-input inline-flex min-h-12 items-center gap-2 rounded-full border px-4 font-semibold"
-          >
-            {muted ? (
-              <SpeakerSlashIcon aria-hidden size={22} />
-            ) : (
-              <SpeakerHighIcon aria-hidden size={22} />
-            )}
-            Sound for new orders
-          </button>
-          {manager &&
-            (board.paused ? (
-              <form
-                action={resumeAction}
-                onSubmit={() => setTimeout(poll, 500)}
-              >
-                <button
-                  type="submit"
-                  className="bg-primary text-primary-foreground min-h-12 rounded-full px-5 font-semibold"
+      <div className="grid gap-2">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            {links}
+            <h1 className="font-display text-3xl italic">Bar Screen</h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-muted-foreground text-sm">{staffName}</span>
+            {/* Server and browser may be a minute apart on first paint. */}
+            <span className="font-mono" suppressHydrationWarning>
+              {clock}
+            </span>
+            <button
+              type="button"
+              onClick={toggleSound}
+              aria-pressed={!muted}
+              className="border-input inline-flex min-h-12 items-center gap-2 rounded-full border px-4 font-semibold"
+            >
+              {muted ? (
+                <SpeakerSlashIcon aria-hidden size={22} />
+              ) : (
+                <SpeakerHighIcon aria-hidden size={22} />
+              )}
+              Sound for new orders
+            </button>
+            {manager &&
+              (board.paused ? (
+                <form
+                  action={resumeAction}
+                  onSubmit={() => setTimeout(poll, 500)}
                 >
-                  Resume ordering
-                </button>
-              </form>
-            ) : (
-              <form action={pauseAction} onSubmit={() => setTimeout(poll, 500)}>
-                <input type="hidden" name="minutes" value="30" />
-                <input
-                  type="hidden"
-                  name="message"
-                  value="The bar is swamped. Back in 30 minutes, salamat!"
-                />
-                <button
-                  type="submit"
-                  className="border-warning text-warning min-h-12 rounded-full border px-5 font-semibold"
+                  <button
+                    type="submit"
+                    className="bg-primary text-primary-foreground min-h-12 rounded-full px-5 font-semibold"
+                  >
+                    Resume ordering
+                  </button>
+                </form>
+              ) : (
+                <form
+                  action={pauseAction}
+                  onSubmit={() => setTimeout(poll, 500)}
                 >
-                  Pause ordering 30 min
-                </button>
-              </form>
-            ))}
-        </div>
-      </header>
+                  <input type="hidden" name="minutes" value="30" />
+                  <input
+                    type="hidden"
+                    name="message"
+                    value="The bar is swamped. Back in 30 minutes, salamat!"
+                  />
+                  <button
+                    type="submit"
+                    className="border-warning text-warning min-h-12 rounded-full border px-5 font-semibold"
+                  >
+                    Pause ordering 30 min
+                  </button>
+                </form>
+              ))}
+          </div>
+        </header>
+        {/* Not role=status: the paused banner below already has it. */}
+        <p aria-live="polite" className="font-semibold">
+          {notice}
+        </p>
+      </div>
 
       {board.paused && (
         <p role="status" className="text-warning text-lg font-semibold">
           Ordering Paused until {formatTime(new Date(board.paused.until))}.
+          {board.paused.message && ` "${board.paused.message}"`}
         </p>
+      )}
+
+      {board.orders.length === 0 && (
+        <p className="text-lg">All caught up. Salamat, team!</p>
       )}
 
       <div className="grid gap-4 lg:grid-cols-3" aria-busy={pending}>
@@ -245,53 +342,47 @@ export function BarScreen({
             aria-labelledby={`col-${column.title}`}
             className="bg-muted rounded-card grid content-start gap-3 p-3"
           >
-            <h2 id={`col-${column.title}`} className="text-xl font-semibold">
+            <h2
+              id={`col-${column.title}`}
+              ref={(el) => {
+                lanes.current[column.title] = el;
+              }}
+              tabIndex={-1}
+              className="text-xl font-semibold"
+            >
               {column.title}{" "}
               <span className="text-muted-foreground font-mono">
                 {column.orders.length}
               </span>
             </h2>
-            {column.orders.length === 0 && (
-              <p className="text-muted-foreground">Nothing here.</p>
+            {column.orders.length === 0 && board.orders.length > 0 && (
+              <p className="text-muted-foreground">
+                {EMPTY_LANE[column.title]}
+              </p>
             )}
-            {column.orders.map((order) => (
-              <Card
-                key={order.id}
-                order={order}
-                fresh={fresh.has(order.id)}
-                manager={manager}
-                onAdvance={() =>
-                  act(() => advanceOrder(order.id, order.status))
-                }
-                onCancel={(reason) => act(() => cancelAtBar(order.id, reason))}
-              />
-            ))}
+            {column.orders.length > 0 && (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(17rem,100%),1fr))] gap-3">
+                {column.orders.map(card)}
+              </div>
+            )}
             {column.later && column.later.length > 0 && (
               <details className="mt-2">
                 <summary className="min-h-11 cursor-pointer py-2 font-semibold">
                   Later today ({column.later.length})
                 </summary>
-                <div className="mt-2 grid gap-3">
-                  {column.later.map((order) => (
-                    <Card
-                      key={order.id}
-                      order={order}
-                      fresh={fresh.has(order.id)}
-                      manager={manager}
-                      onAdvance={() =>
-                        act(() => advanceOrder(order.id, order.status))
-                      }
-                      onCancel={(reason) =>
-                        act(() => cancelAtBar(order.id, reason))
-                      }
-                    />
-                  ))}
-                </div>
+                <div className="mt-2 grid gap-3">{column.later.map(card)}</div>
               </details>
             )}
           </section>
         ))}
       </div>
+      {manager && (
+        <datalist id="cancel-reasons">
+          <option value="An ingredient ran out" />
+          <option value="The bar is closing early" />
+          <option value="You asked us to cancel" />
+        </datalist>
+      )}
     </div>
   );
 }
@@ -300,12 +391,14 @@ function Card({
   order,
   fresh,
   manager,
+  busy,
   onAdvance,
   onCancel,
 }: {
   order: Order;
   fresh: boolean;
   manager: boolean;
+  busy: boolean;
   onAdvance: () => void;
   onCancel: (reason: string) => void;
 }) {
@@ -319,9 +412,16 @@ function Card({
         <p className="font-display text-4xl italic">{order.code}</p>
         <p className="text-right">
           <span className="block font-mono text-lg">
-            {order.pickupKind === "asap"
-              ? "ASAP"
-              : formatTime(new Date(order.windowStart))}
+            {order.pickupKind === "asap" ? (
+              <>
+                ASAP
+                <span className="text-muted-foreground text-sm">
+                  , placed {formatTime(new Date(order.placedAt))}
+                </span>
+              </>
+            ) : (
+              formatTime(new Date(order.windowStart))
+            )}
           </span>
           <span className="text-muted-foreground">{order.firstName}</span>
         </p>
@@ -353,11 +453,14 @@ function Card({
       <button
         type="button"
         onClick={onAdvance}
-        className="bg-primary text-primary-foreground min-h-16 rounded-full text-xl font-semibold"
+        disabled={busy}
+        className="bg-primary text-primary-foreground min-h-16 rounded-full text-xl font-semibold disabled:opacity-60"
       >
-        {order.status === "ready" && order.payAtPickup
-          ? "Paid and picked up"
-          : STEP[order.status]}
+        {busy
+          ? "Moving..."
+          : order.status === "ready" && order.payAtPickup
+            ? "Paid and picked up"
+            : STEP[order.status]}
         <span className="sr-only"> {order.code}</span>
       </button>
       {manager && (
@@ -373,11 +476,13 @@ function Card({
               id={`reason-${order.id}`}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
+              list="cancel-reasons"
+              maxLength={160}
               className="rounded-card border-input bg-background min-h-11 border px-3"
             />
             <button
               type="button"
-              disabled={!reason.trim()}
+              disabled={!reason.trim() || busy}
               onClick={() => onCancel(reason)}
               className="border-destructive text-destructive min-h-12 rounded-full border font-semibold disabled:opacity-50"
             >

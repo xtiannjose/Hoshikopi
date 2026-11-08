@@ -19,6 +19,8 @@ import {
 export type FormState = {
   status: "idle" | "saved" | "error";
   errors?: Partial<Record<string, string>>;
+  /** A new Category's id, for the next step after adding it. */
+  id?: string;
 };
 
 const text = (form: FormData, name: string) => String(form.get(name) ?? "");
@@ -73,7 +75,7 @@ export async function saveMenuItemAction(
   const result = await saveMenuItem(id, input, staff, photoUrl);
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("menu");
-  if (!id) redirect(`/manage/menu/item/${result.id}`);
+  if (!id) redirect(`/manage/menu/item/${result.id}?added=1`);
   return { status: "saved" };
 }
 
@@ -82,8 +84,9 @@ export async function saveCategoryAction(
   form: FormData
 ): Promise<FormState> {
   const staff = await requireStaff("manager", "/manage/menu/categories");
+  const id = text(form, "id") || null;
   const result = await saveCategory(
-    text(form, "id") || null,
+    id,
     {
       name: text(form, "name"),
       slug: text(form, "slug"),
@@ -94,7 +97,7 @@ export async function saveCategoryAction(
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("menu");
-  return { status: "saved" };
+  return { status: "saved", id: id ? undefined : result.id };
 }
 
 export async function saveOptionGroupAction(
@@ -114,7 +117,7 @@ export async function saveOptionGroupAction(
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("menu");
-  if (!id) redirect(`/manage/menu/options/${result.id}`);
+  if (!id) redirect(`/manage/menu/options/${result.id}?added=1`);
   return { status: "saved" };
 }
 

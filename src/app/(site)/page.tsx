@@ -30,7 +30,7 @@ export default async function Home() {
   );
   const [windowDusk, , , tables] = ROOM_PHOTOS;
   return (
-    <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
+    <main id="main" className="page-width flex-1">
       <Hero cafe={cafe} hours={hours} photo={windowDusk} />
       <Divider />
       <BaristaPicks picks={items.filter((i) => i.picks.day)} palette="day" />

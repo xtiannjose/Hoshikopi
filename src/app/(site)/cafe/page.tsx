@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EnvelopeIcon, MapPinIcon } from "@phosphor-icons/react/ssr";
+import {
+  ArrowRightIcon,
+  CalendarStarIcon,
+  EnvelopeIcon,
+  MapPinIcon,
+} from "@phosphor-icons/react/ssr";
 
 import { AmenityList } from "@/components/cafe/amenity-list";
 import { HoursList } from "@/components/cafe/hours-list";
@@ -8,6 +13,8 @@ import { mapsUrl } from "@/components/cafe/maps";
 import { OpenStatus } from "@/components/cafe/open-status";
 import { WeeklyList } from "@/components/content/weekly-list";
 import { Markdown } from "@/components/markdown";
+import { PageHeader } from "@/components/page-header";
+import { OUTLINE_PILL, Panel, PRIMARY_PILL } from "@/components/panel";
 import { Photo } from "@/components/photo";
 import { PickupLine } from "@/components/pickup-line";
 import {
@@ -76,6 +83,9 @@ function faq(cafe: CafeDetails): [string, string][] {
   ];
   return rows.filter((row) => row !== null);
 }
+
+// Two sections side by side from lg up.
+const PAIR = "grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-16";
 
 const DAY_NAMES = [
   "Sunday",
@@ -151,17 +161,19 @@ export default async function CafePage() {
   ]);
   const [hero, ...more] = ROOM_PHOTOS;
   return (
-    <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
+    <main id="main" className="page-width flex-1 pt-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: structuredData(cafe, hours) }}
       />
-      <h1 className="font-display pt-8 pb-1 text-5xl leading-[1.1] italic md:text-6xl">
-        Visit Hoshikopi
-      </h1>
-      <p className="mt-3 text-lg">
-        {cafe.area}. <OpenStatus hours={hours} fallback="Open every day." />
-      </p>
+      <PageHeader
+        title="Visit Hoshikopi"
+        intro={
+          <>
+            {cafe.area}. <OpenStatus hours={hours} fallback="Open every day." />
+          </>
+        }
+      />
 
       <section aria-labelledby="space" className="mt-10">
         <h2 id="space" className="sr-only">
@@ -183,7 +195,7 @@ export default async function CafePage() {
         </div>
       </section>
 
-      <div className="mt-14 grid gap-12 md:grid-cols-2">
+      <div className={`mt-14 ${PAIR}`}>
         <section aria-labelledby="hours">
           <h2 id="hours" className="font-display pb-1 text-3xl italic">
             Hours
@@ -227,52 +239,77 @@ export default async function CafePage() {
         </div>
       </section>
 
-      <WeeklyList events={weekly} className="mt-14 max-w-3xl" />
+      <div className={`mt-14 ${PAIR}`}>
+        <WeeklyList events={weekly} className="max-w-measure" />
+        <Panel
+          id="private-events"
+          title="Private events and big orders"
+          icon={<CalendarStarIcon size={20} />}
+        >
+          <p className="max-w-measure">
+            A party, a team meeting or more than {MAX_DRINKS_PER_ORDER} drinks?
+            Tell us a day ahead and the cafe will email you back.
+          </p>
+          <p className="mt-5 flex flex-wrap gap-3">
+            <Link href="/cafe/inquire" className={OUTLINE_PILL}>
+              Send us an inquiry
+            </Link>
+            <Link
+              href="/cafe/inquire?kind=large_order"
+              className={OUTLINE_PILL}
+            >
+              Big order ({MAX_DRINKS_PER_ORDER + 1}+ drinks)
+            </Link>
+          </p>
+        </Panel>
+      </div>
 
-      <section aria-labelledby="private-events" className="mt-14 max-w-3xl">
-        <h2 id="private-events" className="font-display pb-1 text-3xl italic">
-          Private events and big orders
-        </h2>
-        <p className="mt-3 text-lg">
-          Planning a party, a team meeting or an order of more than 15 drinks?{" "}
-          <Link href="/cafe/inquire">Send us an inquiry</Link> and the cafe will
-          email you back.
-        </p>
-      </section>
+      <div className={`mt-14 ${PAIR}`}>
+        <section aria-labelledby="questions" className="max-w-measure">
+          <h2 id="questions" className="font-display pb-1 text-3xl italic">
+            Questions
+          </h2>
+          <div className="border-border mt-4 border-t">
+            {faq(cafe).map(([question, answer]) => (
+              <details key={question} className="border-border group border-b">
+                <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 py-3 font-semibold">
+                  {question}
+                  <span
+                    aria-hidden
+                    className="text-xl transition-transform group-open:rotate-45 motion-reduce:transition-none"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="text-muted-foreground pb-4">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
 
-      <section aria-labelledby="questions" className="mt-14 max-w-3xl">
-        <h2 id="questions" className="font-display pb-1 text-3xl italic">
-          Questions
-        </h2>
-        <div className="border-border mt-4 border-t">
-          {faq(cafe).map(([question, answer]) => (
-            <details key={question} className="border-border group border-b">
-              <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 py-3 font-semibold">
-                {question}
-                <span
-                  aria-hidden
-                  className="text-xl transition-transform group-open:rotate-45 motion-reduce:transition-none"
-                >
-                  +
-                </span>
-              </summary>
-              <p className="text-muted-foreground pb-4">{answer}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+        <section aria-labelledby="story">
+          <h2 id="story" className="font-display pb-1 text-3xl italic">
+            Our story
+          </h2>
+          <div className="mt-4">
+            <Markdown>{cafe.storyMd}</Markdown>
+          </div>
+          <p className="text-muted-foreground mt-4 font-mono text-sm">
+            Concept: the story, the people and the room are invented.
+          </p>
+        </section>
+      </div>
 
-      <section aria-labelledby="story" className="mt-14">
-        <h2 id="story" className="font-display pb-1 text-3xl italic">
-          Our story
-        </h2>
-        <div className="mt-4">
-          <Markdown>{cafe.storyMd}</Markdown>
-        </div>
-        <p className="text-muted-foreground mt-4 font-mono text-sm">
-          Concept: the story, the people and the room are invented.
-        </p>
-      </section>
+      <p className="border-border mt-14 flex flex-wrap gap-3 border-t pt-8">
+        <Link href="/menu" className={PRIMARY_PILL}>
+          Order ahead
+          <ArrowRightIcon aria-hidden size={18} />
+        </Link>
+        <a href={mapsUrl(cafe)} className={OUTLINE_PILL}>
+          <MapPinIcon aria-hidden size={18} />
+          Get directions
+        </a>
+      </p>
     </main>
   );
 }
@@ -285,7 +322,7 @@ function RoomPhoto({
   large?: boolean;
 }) {
   return (
-    <figure className="grid gap-2">
+    <figure className="grid gap-2 md:grid-rows-[minmax(0,1fr)_auto]">
       <Photo
         src={photo.src}
         alt={photo.alt}

@@ -125,13 +125,23 @@ export async function getPost(slug: string): Promise<PostCard | null> {
 
 // ---------- Staff (STAFF-06) ----------
 
-/** Everything the Manager edits, drafts included, read fresh. */
+/** Everything the Manager edits, drafts included, read fresh. `seatsTaken`
+ * is for display only; Sign-ups check seats in their own transaction. */
 export async function contentForStaff() {
   const [events, posts] = await Promise.all([
-    db.event.findMany({ orderBy: { startsAt: "desc" } }),
+    db.event.findMany({
+      orderBy: { startsAt: "desc" },
+      include: { signups: { select: { seats: true } } },
+    }),
     db.post.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
-  return { events, posts };
+  return {
+    events: events.map(({ signups, ...event }) => ({
+      ...event,
+      seatsTaken: signups.reduce((sum, signup) => sum + signup.seats, 0),
+    })),
+    posts,
+  };
 }
 
 export type ContentResult =

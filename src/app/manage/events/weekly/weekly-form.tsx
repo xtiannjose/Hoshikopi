@@ -40,7 +40,7 @@ export function WeeklyForm({ event }: { event: WeeklyFormData }) {
   const key = event.id ?? "new";
   const error = (name: string) => state.errors?.[name];
   return (
-    <form {...form} className="border-border grid gap-4 border-b pb-6">
+    <form {...form} className="grid gap-4">
       {event.id && <input type="hidden" name="id" value={event.id} />}
       <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
         <Field
@@ -103,6 +103,8 @@ export function WeeklyForm({ event }: { event: WeeklyFormData }) {
       <SaveBar
         pending={pending}
         status={state.status}
+        // A new one says where it went instead of "Saved.".
+        savedText={event.id ? undefined : "Added. It's in the list."}
         label={event.id ? `Save ${event.title}` : "Add Recurring Event"}
       />
     </form>

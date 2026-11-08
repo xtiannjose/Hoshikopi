@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { PRIMARY_PILL } from "@/components/panel";
 import { formatReceipt } from "@/lib/money";
-import { getOrderBrief } from "@/modules/ordering";
+import { getOrderBrief, orderLink } from "@/modules/ordering";
 import { paymentByCheckout, paymentProvider } from "@/modules/payments";
 
 import { fakePayAction } from "./actions";
+import { PayButtons } from "./pay-buttons";
 
 export const metadata: Metadata = {
   title: "Test Mode checkout",
@@ -18,6 +21,14 @@ const METHOD = {
   maya: "Maya",
   card: "Card",
   pay_at_pickup: "",
+};
+
+/** What a closed checkout says, by Payment status. */
+const DONE: Record<string, string> = {
+  paid: "Paid. Your order is on its way to the bar.",
+  failed: "This payment didn't go through.",
+  expired: "This checkout timed out.",
+  refunded: "This payment was refunded.",
 };
 
 export default function FakeCheckoutPage({
@@ -40,6 +51,8 @@ async function Checkout({
   const payment = await paymentByCheckout(id);
   if (!payment) notFound();
   const order = await getOrderBrief(payment.orderId);
+  // Same site, so a path: the Order page reads its own state (PAY-03).
+  const back = orderLink(payment.orderId).replace(/^https?:\/\/[^/]+/, "");
   return (
     <div className="rounded-card border-input grid gap-5 border border-dashed p-6">
       <p className="text-warning font-mono text-sm font-semibold">
@@ -55,27 +68,25 @@ async function Checkout({
         </span>
       </p>
       {payment.status === "pending" ? (
-        <form action={fakePayAction} className="grid gap-3">
-          <input type="hidden" name="checkoutId" value={id} />
-          <button
-            type="submit"
-            name="outcome"
-            value="pay"
-            className="bg-primary text-primary-foreground min-h-14 rounded-full text-lg font-semibold"
+        <>
+          <form action={fakePayAction} className="grid gap-3">
+            <input type="hidden" name="checkoutId" value={id} />
+            <PayButtons amount={formatReceipt(payment.amountCents)} />
+          </form>
+          <Link
+            href={back}
+            className="text-muted-foreground inline-flex min-h-11 items-center justify-self-center text-sm"
           >
-            Pay {formatReceipt(payment.amountCents)}
-          </button>
-          <button
-            type="submit"
-            name="outcome"
-            value="fail"
-            className="border-input min-h-12 rounded-full border font-semibold"
-          >
-            Make the payment fail
-          </button>
-        </form>
+            Cancel and go back
+          </Link>
+        </>
       ) : (
-        <p>This checkout is {payment.status}.</p>
+        <>
+          <p className="font-semibold">{DONE[payment.status]}</p>
+          <Link href={back} className={`${PRIMARY_PILL} justify-self-start`}>
+            Back to your order
+          </Link>
+        </>
       )}
       <p className="text-muted-foreground text-sm">
         This page stands in for a payment provider so the whole flow can be

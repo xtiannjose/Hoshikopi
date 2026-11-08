@@ -32,7 +32,7 @@ export function GroupForm({
   );
   const form = useKeptForm(action, state);
   return (
-    <form {...form} className="mt-6 grid max-w-3xl gap-4">
+    <form {...form} className="grid max-w-3xl gap-4">
       {group.id && <input type="hidden" name="id" value={group.id} />}
       <Field
         name="name"
@@ -88,10 +88,16 @@ export function OptionForm({
   const form = useKeptForm(action, state);
   const key = option.id ?? "new";
   return (
-    <form {...form} className="border-border grid gap-4 border-b pb-6">
+    <form
+      {...form}
+      className={`@container grid gap-4 ${option.id ? "rounded-card border-border border p-5 md:p-6" : ""}`}
+    >
       {option.id && <input type="hidden" name="id" value={option.id} />}
       <input type="hidden" name="optionGroupId" value={groupId} />
-      <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
+      {option.id && (
+        <h3 className="font-display pb-1 text-2xl italic">{option.name}</h3>
+      )}
+      <div className="grid gap-4 @lg:grid-cols-[2fr_1fr_1fr] @lg:items-end">
         <Field
           id={`name-${key}`}
           name="name"
@@ -103,6 +109,7 @@ export function OptionForm({
           id={`delta-${key}`}
           name="priceDelta"
           label="Price Delta (PHP)"
+          hint="0 for no change. It is added to the Base Price."
           inputMode="decimal"
           defaultValue={option.priceDelta}
           error={state.errors?.priceDelta}

@@ -32,12 +32,32 @@ export async function setRoleAction(
   const result = await setRole(staff, email, role);
   if (!result.ok) return { message: REFUSED[result.reason], email };
   refresh();
-  return { ok: true, message: `${result.name} is now ${BECOMES[role]}.` };
+  return {
+    ok: true,
+    message: `${result.name || email} is now ${BECOMES[role]}.`,
+  };
 }
 
 /** A Manager signs a Staff member out everywhere (STAFF-10). */
-export async function endSessionsAction(form: FormData): Promise<void> {
+export async function endSessionsAction(
+  _prev: RoleState,
+  form: FormData
+): Promise<RoleState> {
   const staff = await requireStaff("manager", "/manage/staff");
-  await endSessions(staff, String(form.get("userId") ?? ""));
+  // The label is the name the Manager sees in the row, only echoed back.
+  const label = String(form.get("label") ?? "");
+  const result = await endSessions(staff, String(form.get("userId") ?? ""));
+  if (!result.ok) {
+    return {
+      message:
+        result.reason === "self"
+          ? "You can't sign yourself out here. Use Sign out on Manage."
+          : "Only Managers sign Staff out.",
+    };
+  }
   refresh();
+  return {
+    ok: true,
+    message: `${label} is signed out on every device. They can sign in again with their email.`,
+  };
 }

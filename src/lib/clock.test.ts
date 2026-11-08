@@ -4,6 +4,7 @@ import {
   formatDate,
   formatTime,
   freezeClock,
+  greetingFor,
   manila,
   manilaInstant,
   now,
@@ -50,5 +51,32 @@ describe("formatting", () => {
   });
   it("shows dates as Sat, Nov 7", () => {
     expect(formatDate(new Date("2026-11-07T03:00:00Z"))).toBe("Sat, Nov 7");
+  });
+});
+
+describe("greetingFor", () => {
+  it("says umaga from 6:00 AM to 11:59 AM Manila time", () => {
+    expect(greetingFor(new Date("2026-11-06T22:00:00Z"))).toBe(
+      "Magandang umaga"
+    );
+    expect(greetingFor(new Date("2026-11-07T03:59:00Z"))).toBe(
+      "Magandang umaga"
+    );
+  });
+  it("says hapon from 12:00 PM to 5:59 PM", () => {
+    expect(greetingFor(new Date("2026-11-07T04:00:00Z"))).toBe(
+      "Magandang hapon"
+    );
+    expect(greetingFor(new Date("2026-11-07T09:59:00Z"))).toBe(
+      "Magandang hapon"
+    );
+  });
+  it("says gabi from 6:00 PM to 5:59 AM, the Night palette's hours", () => {
+    expect(greetingFor(new Date("2026-11-07T10:00:00Z"))).toBe(
+      "Magandang gabi"
+    );
+    expect(greetingFor(new Date("2026-11-06T21:59:00Z"))).toBe(
+      "Magandang gabi"
+    );
   });
 });

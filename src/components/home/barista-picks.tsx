@@ -38,7 +38,7 @@ export function BaristaPicks({
         {picks.slice(0, 3).map((item, index) => (
           <article
             key={item.slug}
-            className={`reveal grid content-start gap-3 ${index === 0 ? "md:row-span-2" : "md:grid-cols-[2fr_3fr] md:gap-5"}`}
+            className={`reveal grid content-start ${index === 0 ? "gap-3 md:row-span-2" : "grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4"}`}
           >
             <Photo
               src={item.photoUrl}
@@ -47,12 +47,12 @@ export function BaristaPicks({
               sizes={
                 index === 0
                   ? "(min-width: 768px) 50vw, 100vw"
-                  : "(min-width: 768px) 20vw, 100vw"
+                  : "(min-width: 768px) 20vw, 40vw"
               }
               className={`rounded-card ${index === 0 ? "aspect-4/3 md:aspect-auto md:min-h-80" : "aspect-4/3"}`}
             />
             <div className="grid content-start gap-2">
-              <div className="flex items-baseline justify-between gap-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                 <h3 className="font-display pb-1 text-2xl italic">
                   {item.name}
                 </h3>
