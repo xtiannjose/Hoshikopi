@@ -14,12 +14,24 @@ export async function getOrderingDay(
   client: Client = db
 ): Promise<OrderingDay> {
   const { day, weekday } = manila(at);
-  const [special, weekly, capacity, settings] = await Promise.all([
-    client.specialHours.findUnique({ where: { day: dayValue(day) } }),
-    client.openingHours.findUnique({ where: { weekday } }),
-    client.capacityRule.findUnique({ where: { weekday } }),
-    client.cafeSettings.findUniqueOrThrow({ where: { id: 1 } }),
-  ]);
+  const reads = [
+    () => client.specialHours.findUnique({ where: { day: dayValue(day) } }),
+    () => client.openingHours.findUnique({ where: { weekday } }),
+    () => client.capacityRule.findUnique({ where: { weekday } }),
+    () => client.cafeSettings.findUniqueOrThrow({ where: { id: 1 } }),
+  ] as const;
+  // A transaction is one connection, so its queries run one at a time (pg
+  // warns about overlapping queries and pg@9 refuses them); outside one,
+  // the pool runs them side by side.
+  const [special, weekly, capacity, settings] =
+    client === db
+      ? await Promise.all([reads[0](), reads[1](), reads[2](), reads[3]()])
+      : [
+          await reads[0](),
+          await reads[1](),
+          await reads[2](),
+          await reads[3](),
+        ];
   const source = special ?? weekly;
   const open =
     source &&
