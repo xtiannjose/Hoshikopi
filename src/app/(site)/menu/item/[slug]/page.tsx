@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { ArrowLeftIcon, InfoIcon } from "@phosphor-icons/react/ssr";
+import { InfoIcon } from "@phosphor-icons/react/ssr";
 
+import { Breadcrumb } from "@/components/breadcrumb";
 import { Badges } from "@/components/menu/badges";
 import { Price } from "@/components/menu/price";
 import { Photo, type PhotoKind } from "@/components/photo";
@@ -31,7 +32,7 @@ export async function generateMetadata({
 }
 
 const KITCHEN_NOTE =
-  "Our kitchen also handles milk, egg, wheat, soy and tree nuts.";
+  "Made in a kitchen that handles milk, egg, wheat, soy and tree nuts, so traces are possible.";
 
 // params are read inside Suspense so a path outside generateStaticParams
 // (or one revalidated later) can serve the shell first (Partial Prefetching).
@@ -41,7 +42,7 @@ export default function MenuItemPage({
   return (
     <main
       id="main"
-      className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 pt-4 md:grid-cols-2 md:gap-12 md:px-8"
+      className="page-width grid flex-1 content-start gap-6 pt-8 md:grid-cols-2 md:gap-x-12 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
     >
       <Suspense
         fallback={
@@ -61,24 +62,26 @@ async function MenuItemDetails({
   if (!item) notFound();
   return (
     <>
-      <div>
-        <Link
-          href={`/menu/${item.categorySlug}`}
-          className="inline-flex min-h-11 items-center gap-2 no-underline hover:underline"
-        >
-          <ArrowLeftIcon aria-hidden size={18} />
-          {item.categoryName}
-        </Link>
+      <div className="-mt-2 md:col-span-2">
+        <Breadcrumb
+          items={[
+            { label: "Menu", href: "/menu" },
+            { label: item.categoryName, href: `/menu/${item.categorySlug}` },
+            { label: item.name },
+          ]}
+        />
+      </div>
+      <div className="md:sticky md:top-6 md:self-start">
         <Photo
           src={item.photoUrl}
           alt={item.photoAlt}
           kind={item.categorySlug as PhotoKind}
-          sizes="(min-width: 768px) 50vw, 100vw"
+          sizes="(min-width: 1536px) 54rem, (min-width: 1280px) 58vw, (min-width: 768px) 50vw, 100vw"
           priority
-          className={`rounded-card mt-2 aspect-4/3 ${item.soldOut ? "opacity-50 grayscale" : ""}`}
+          className={`rounded-card aspect-4/3 ${item.soldOut ? "opacity-50 grayscale" : ""}`}
         />
       </div>
-      <div className="md:pt-14">
+      <div>
         <div className="flex items-baseline justify-between gap-4">
           <h1 className="font-display pb-1 text-4xl leading-[1.1] italic md:text-5xl">
             {item.name}
@@ -94,7 +97,7 @@ async function MenuItemDetails({
         <div className="mt-3">
           <Badges labels={item.badges} picks={item.picks} />
         </div>
-        <p className="mt-4 text-lg">{item.description}</p>
+        <p className="mt-4 max-w-[60ch] text-lg">{item.description}</p>
         <p className="text-muted-foreground mt-4 flex gap-2 font-mono text-sm">
           <InfoIcon aria-hidden size={18} className="mt-0.5 shrink-0" />
           <span>
@@ -120,6 +123,8 @@ async function MenuItemDetails({
             name={item.name}
             baseCents={item.baseCents}
             groups={item.optionGroups}
+            categorySlug={item.categorySlug}
+            categoryName={item.categoryName}
           />
         )}
         {item.pairing && <PairingCard pairing={item.pairing} />}

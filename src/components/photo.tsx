@@ -11,7 +11,7 @@ import {
   StorefrontIcon,
 } from "@phosphor-icons/react/ssr";
 
-const ICONS = {
+export const ICONS = {
   coffee: CoffeeIcon,
   "non-coffee": OrangeSliceIcon,
   tea: LeafIcon,

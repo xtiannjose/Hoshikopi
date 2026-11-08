@@ -38,7 +38,7 @@ export async function saveEventAction(
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("content");
-  if (!id) redirect(`/manage/events/${result.id}`);
+  if (!id) redirect(`/manage/events/${result.id}?added=1`);
   return { status: "saved" };
 }
 
@@ -61,7 +61,7 @@ export async function savePostAction(
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("content");
-  if (!id) redirect(`/manage/posts/${result.id}`);
+  if (!id) redirect(`/manage/posts/${result.id}?added=1`);
   return { status: "saved" };
 }
 

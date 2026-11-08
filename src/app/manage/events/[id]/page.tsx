@@ -2,7 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import {
+  ArrowSquareOutIcon,
+  CheckCircleIcon,
+  UsersThreeIcon,
+} from "@phosphor-icons/react/ssr";
 
+import { BackLink } from "@/components/back-link";
+import { PageHeader } from "@/components/page-header";
+import { OUTLINE_PILL, Panel, Pill } from "@/components/panel";
 import { manilaInputValue, now } from "@/lib/clock";
 import { formatReceipt } from "@/lib/money";
 import { contentForStaff, signupsForEvent } from "@/modules/content";
@@ -12,25 +20,43 @@ import { EventForm, type EventFormData } from "../../content-forms";
 
 export const metadata: Metadata = { title: "Event" };
 
+const back = <BackLink href="/manage/events">Events</BackLink>;
+
 export default function ManageEventPage({
   params,
+  searchParams,
 }: PageProps<"/manage/events/[id]">) {
   return (
-    <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
-      <Link href="/manage/events">All Events</Link>
-      <Suspense fallback={<p className="mt-4">Loading...</p>}>
-        <Editor params={params} />
+    <main id="main" className="page-width flex-1 py-10">
+      <Suspense
+        fallback={
+          <div className="grid gap-2">
+            {back}
+            <p>Loading...</p>
+          </div>
+        }
+      >
+        <Editor params={params} searchParams={searchParams} />
       </Suspense>
     </main>
   );
 }
 
+type Saved = {
+  id: string;
+  slug: string;
+  seats: number | null;
+  isPublished: boolean;
+};
+
 async function Editor({
   params,
-}: Pick<PageProps<"/manage/events/[id]">, "params">) {
+  searchParams,
+}: Pick<PageProps<"/manage/events/[id]">, "params" | "searchParams">) {
   await requireStaff("manager", "/manage/events");
-  const { id } = await params;
+  const [{ id }, { added }] = await Promise.all([params, searchParams]);
   let event: EventFormData;
+  let saved: Saved | null = null;
   if (id === "new") {
     const week = new Date(now().getTime() + 7 * 86_400_000);
     event = {
@@ -49,6 +75,7 @@ async function Editor({
   } else {
     const row = (await contentForStaff()).events.find((e) => e.id === id);
     if (!row) notFound();
+    saved = row;
     event = {
       id: row.id,
       title: row.title,
@@ -63,43 +90,81 @@ async function Editor({
       isPublished: row.isPublished,
     };
   }
+  const href = `/events/${event.slug}`;
   return (
-    <>
-      <h1 className="font-display mt-4 pb-1 text-4xl italic">
-        {event.id ? event.title : "Add an Event"}
-      </h1>
-      <EventForm event={event} />
-      {event.id && <Signups eventId={event.id} />}
-    </>
+    <div className="grid gap-8">
+      <PageHeader
+        back={back}
+        title={event.id ? event.title : "Add an Event"}
+        size="staff"
+        actions={
+          saved &&
+          (saved.isPublished ? (
+            <Link href={href} className={OUTLINE_PILL}>
+              See it on the site
+              <ArrowSquareOutIcon aria-hidden size={18} />
+            </Link>
+          ) : (
+            <Pill tone="muted">Draft: not on the site yet</Pill>
+          ))
+        }
+      />
+      {saved && added && (
+        <p className="bg-muted rounded-card flex flex-wrap items-center gap-3 p-4">
+          <CheckCircleIcon aria-hidden size={22} className="text-success" />
+          {saved.isPublished ? (
+            <>
+              Added.{" "}
+              <Link href={href} className="font-semibold">
+                See it on the site
+              </Link>
+            </>
+          ) : (
+            "Saved as a draft. Tick Published on the site when it's ready."
+          )}
+        </p>
+      )}
+      <EventForm event={event} aside={saved && <Signups event={saved} />} />
+    </div>
   );
 }
 
-/** Who signed up (EVT-02). */
-async function Signups({ eventId }: { eventId: string }) {
-  const signups = await signupsForEvent(eventId);
-  const seats = signups.reduce((sum, signup) => sum + signup.seats, 0);
+/** Who signed up (EVT-02). Read only: no removing or confirming here. */
+async function Signups({ event }: { event: Saved }) {
+  const signups = await signupsForEvent(event.id);
+  const taken = signups.reduce((sum, signup) => sum + signup.seats, 0);
   return (
-    <section aria-labelledby="signups" className="mt-12 max-w-3xl">
-      <h2 id="signups" className="font-display pb-1 text-2xl italic">
-        Sign-ups
-      </h2>
-      {signups.length === 0 ? (
-        <p className="mt-2">No Sign-ups yet.</p>
-      ) : (
-        <>
-          <p className="mt-2">
-            {signups.length} {signups.length === 1 ? "Sign-up" : "Sign-ups"},{" "}
-            {seats} {seats === 1 ? "seat" : "seats"}.
-          </p>
-          <ul className="border-border mt-3 border-t">
+    <Panel id="signups" title="Sign-ups" icon={<UsersThreeIcon size={20} />}>
+      <div className="grid gap-3">
+        <p className={event.seats === null ? "text-muted-foreground" : ""}>
+          {event.seats === null
+            ? "Sign-ups here are off. Add Seats above to take them on the Event page."
+            : `${taken} of ${event.seats} seats taken, ${Math.max(event.seats - taken, 0)} left.`}
+        </p>
+        {signups.length === 0 ? (
+          event.seats !== null && (
+            <p className="text-muted-foreground">
+              No Sign-ups yet. Share the{" "}
+              {event.isPublished ? (
+                <Link href={`/events/${event.slug}`}>Event page</Link>
+              ) : (
+                "Event page"
+              )}{" "}
+              to fill the seats.
+            </p>
+          )
+        ) : (
+          <ul className="border-border border-t">
             {signups.map((signup) => (
               <li
                 key={signup.id}
-                className="border-border flex flex-wrap justify-between gap-3 border-b py-2"
+                className="border-border flex flex-wrap justify-between gap-x-3 border-b py-2"
               >
-                <span>
+                <span className="min-w-0">
                   {signup.name}{" "}
-                  <a href={`mailto:${signup.email}`}>{signup.email}</a>
+                  <a href={`mailto:${signup.email}`} className="break-all">
+                    {signup.email}
+                  </a>
                 </span>
                 <span className="font-mono">
                   {signup.seats} {signup.seats === 1 ? "seat" : "seats"}
@@ -107,8 +172,8 @@ async function Signups({ eventId }: { eventId: string }) {
               </li>
             ))}
           </ul>
-        </>
-      )}
-    </section>
+        )}
+      </div>
+    </Panel>
   );
 }

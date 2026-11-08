@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Bar Screen",
@@ -15,7 +16,7 @@ export default function BarLayout({ children }: LayoutProps<"/bar">) {
       {children}
       <p className="text-muted-foreground px-4 py-3 font-mono text-sm lg:px-6">
         Hoshikopi is a concept cafe. Orders and payments here are for
-        demonstration.
+        demonstration. <Link href="/concept">About this concept</Link>
       </p>
     </div>
   );

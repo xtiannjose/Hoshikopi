@@ -62,3 +62,12 @@ export async function getMenuItemForEdit(id: string) {
     },
   });
 }
+
+/** The Menu Items that offer an Option Group, in menu order. */
+export async function itemsOfferingGroup(groupId: string) {
+  return db.menuItem.findMany({
+    where: { optionGroups: { some: { optionGroupId: groupId } } },
+    orderBy: [{ category: { sort: "asc" } }, { sort: "asc" }],
+    select: { id: true, name: true },
+  });
+}

@@ -1,5 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
+import {
+  ArrowRightIcon,
+  GithubLogoIcon,
+  MaskHappyIcon,
+  SealCheckIcon,
+} from "@phosphor-icons/react/ssr";
+
+import { PageHeader } from "@/components/page-header";
+import { OUTLINE_PILL, Panel, PRIMARY_PILL } from "@/components/panel";
 
 export const metadata: Metadata = {
   title: "About this concept",
@@ -45,46 +55,55 @@ const REAL = [
 
 export default function ConceptPage() {
   return (
-    <main
-      id="main"
-      className="mx-auto w-full max-w-3xl flex-1 px-4 pt-10 md:px-8"
-    >
-      <p className="text-muted-foreground font-mono text-sm">
-        About this concept
-      </p>
-      <h1 className="font-display mt-3 pb-1 text-4xl leading-[1.1] italic md:text-6xl">
-        Hoshikopi is a cafe that doesn&apos;t exist, yet.
-      </h1>
-      <p className="mt-6 max-w-[60ch] text-lg">
-        This is a portfolio project: a full cafe website built as if the cafe
-        were real, so every part of it can be tried. You can browse, order, pay
-        in Test Mode and watch your Order move through the bar. No real money
-        moves, and no drink will be waiting at a counter.
-      </p>
+    <main id="main" className="page-width flex-1 pt-8">
+      <div className="w-full max-w-6xl">
+        <PageHeader
+          eyebrow="About this concept"
+          title="Hoshikopi is a cafe that doesn't exist, yet."
+          intro="This is a portfolio project: a full cafe website built as if the cafe were real, so every part of it can be tried. You can browse, order, pay in Test Mode and watch your Order move through the bar. No real money moves, and no drink will be waiting at a counter."
+        />
 
-      <Facts id="made-up" title="What's made up" rows={MADE_UP} />
-      <Facts id="real" title="What's real" rows={REAL} />
+        <div className="mt-12 grid gap-6 lg:grid-cols-2 lg:items-start">
+          <Facts
+            id="made-up"
+            title="What's made up"
+            icon={<MaskHappyIcon size={20} />}
+            rows={MADE_UP}
+          />
+          <Facts
+            id="real"
+            title="What's real"
+            icon={<SealCheckIcon size={20} />}
+            rows={REAL}
+          />
+        </div>
 
-      <section aria-labelledby="how" className="mt-14">
-        <h2 id="how" className="font-display pb-1 text-3xl italic">
-          How it was made
-        </h2>
-        <p className="mt-4 max-w-[60ch]">
-          Research on how Metro Manila cafes take orders, a design that follows
-          the cafe&apos;s clock from day to night, and the build itself. The
-          case study comes later; the code is on{" "}
-          <a href="https://github.com/xtiannjose/Hoshikopi">GitHub</a>.
+        <section aria-labelledby="how" className="mt-14">
+          <h2 id="how" className="font-display pb-1 text-3xl italic">
+            How it was made
+          </h2>
+          <p className="max-w-measure mt-4">
+            Research on how Metro Manila cafes take orders, a design that
+            follows the cafe&apos;s clock from day to night, and the build
+            itself. The case study comes later; the code is open for anyone to
+            read.
+          </p>
+        </section>
+
+        <p className="mt-10 flex flex-wrap gap-3">
+          <Link href="/menu" className={PRIMARY_PILL}>
+            Try ordering a drink
+            <ArrowRightIcon aria-hidden size={18} />
+          </Link>
+          <a
+            href="https://github.com/xtiannjose/Hoshikopi"
+            className={OUTLINE_PILL}
+          >
+            <GithubLogoIcon aria-hidden size={18} />
+            See the code on GitHub
+          </a>
         </p>
-      </section>
-
-      <p className="mt-12">
-        <Link
-          href="/menu"
-          className="bg-primary text-primary-foreground inline-flex min-h-12 items-center rounded-full px-6 font-semibold no-underline"
-        >
-          Try ordering a drink
-        </Link>
-      </p>
+      </div>
     </main>
   );
 }
@@ -92,22 +111,21 @@ export default function ConceptPage() {
 function Facts({
   id,
   title,
+  icon,
   rows,
 }: {
   id: string;
   title: string;
+  icon: ReactNode;
   rows: readonly (readonly [string, string])[];
 }) {
   return (
-    <section aria-labelledby={id} className="mt-14">
-      <h2 id={id} className="font-display pb-1 text-3xl italic">
-        {title}
-      </h2>
-      <dl className="border-border mt-4 grid border-t">
+    <Panel id={id} title={title} icon={icon}>
+      <dl className="divide-border -my-4 grid divide-y">
         {rows.map(([term, detail]) => (
           <div
             key={term}
-            className="border-border grid gap-1 border-b py-4 sm:grid-cols-[9rem_1fr] sm:gap-4"
+            className="grid gap-1 py-4 sm:grid-cols-[9rem_1fr] sm:gap-4"
           >
             <dt className="text-muted-foreground font-mono text-sm sm:pt-0.5">
               {term}
@@ -116,6 +134,6 @@ function Facts({
           </div>
         ))}
       </dl>
-    </section>
+    </Panel>
   );
 }

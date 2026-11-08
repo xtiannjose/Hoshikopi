@@ -45,7 +45,7 @@ export function MarkdownField({
       </div>
       <section
         aria-label="Preview"
-        className="bg-muted rounded-card grid content-start gap-3 p-4 [&_a]:underline"
+        className="bg-muted rounded-card max-w-measure grid content-start gap-3 p-4 [&_a]:underline"
       >
         <p className="text-muted-foreground font-mono text-xs">Preview</p>
         <ReactMarkdown skipHtml>{text}</ReactMarkdown>

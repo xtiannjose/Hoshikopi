@@ -44,11 +44,15 @@ export function OptionPicker({
   name,
   baseCents,
   groups,
+  categorySlug,
+  categoryName,
 }: {
   menuItemId: string;
   name: string;
   baseCents: number;
   groups: OptionGroupView[];
+  categorySlug: string;
+  categoryName: string;
 }) {
   const [picked, setPicked] = useState(() => initialPicks(groups));
   const [quantity, setQuantity] = useState(1);
@@ -164,7 +168,7 @@ export function OptionPicker({
           id="note"
           name="note"
           maxLength={140}
-          placeholder="less ice please"
+          placeholder="Extra hot, please"
           className="rounded-card border-input bg-background min-h-11 border px-3"
         />
       </div>
@@ -262,7 +266,12 @@ export function OptionPicker({
               Added to your order. Salamat!{" "}
               <Link href="/cart" className="font-semibold">
                 See your Cart
+              </Link>{" "}
+              or{" "}
+              <Link href={`/menu/${categorySlug}`} className="font-semibold">
+                keep browsing {categoryName}
               </Link>
+              .
             </>
           )}
           {last === "add" && state.status === "error" && (

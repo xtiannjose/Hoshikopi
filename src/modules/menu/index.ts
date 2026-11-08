@@ -20,7 +20,11 @@ export {
   type MenuItemInput,
   type OptionFormInput,
 } from "./internal/edit";
-export { getMenuForStaff, getMenuItemForEdit } from "./internal/staff-queries";
+export {
+  getMenuForStaff,
+  getMenuItemForEdit,
+  itemsOfferingGroup,
+} from "./internal/staff-queries";
 export { storeMenuPhoto } from "./internal/photo";
 export {
   priceChoices,

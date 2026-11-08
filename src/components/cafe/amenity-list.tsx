@@ -10,6 +10,7 @@ import {
 } from "@phosphor-icons/react/ssr";
 import type { Icon } from "@phosphor-icons/react";
 
+import { IconCircle } from "@/components/panel";
 import type { Amenities } from "@/modules/cafe";
 
 type Row = { icon: Icon; label: string; note?: string | null };
@@ -72,10 +73,12 @@ export function amenityRows(a: Amenities): Row[] {
 
 export function AmenityList({ amenities }: { amenities: Amenities }) {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2">
+    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {amenityRows(amenities).map(({ icon: Icon, label, note }) => (
-        <li key={label} className="flex gap-3">
-          <Icon aria-hidden size={24} className="mt-0.5 shrink-0" />
+        <li key={label} className="flex items-center gap-3">
+          <IconCircle>
+            <Icon size={20} />
+          </IconCircle>
           <span>
             <span className="font-semibold">{label}</span>
             {note && (

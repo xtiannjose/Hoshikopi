@@ -21,7 +21,8 @@ import { deidentifyOrders, orderAgain } from "@/modules/ordering";
 export async function signOutAction() {
   await signOut();
   refresh();
-  redirect("/");
+  // The sign-in page says "You're signed out" and offers the way back in.
+  redirect("/sign-in?out=1");
 }
 
 /** Your details: name, birth month and the marketing opt-in (ACC-03). */

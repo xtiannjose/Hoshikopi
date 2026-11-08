@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { CategoryTabs } from "@/components/menu/category-tabs";
 import { MenuFilter } from "@/components/menu/menu-filter";
 import { MenuSection } from "@/components/menu/menu-section";
+import { PageHeader } from "@/components/page-header";
 import { PickupLine } from "@/components/pickup-line";
 import { getMenu } from "@/modules/menu";
 
@@ -15,10 +16,21 @@ export const metadata: Metadata = {
 export default async function MenuPage() {
   const menu = await getMenu();
   return (
-    <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
-      <h1 className="font-display pt-8 pb-1 text-5xl italic md:text-6xl">
-        Menu
-      </h1>
+    <main id="main" className="page-width flex-1 pt-8">
+      <PageHeader
+        title="Menu"
+        intro={
+          // Both lines are in the page; the palette shows one (ADR 0010).
+          <>
+            <span className="night:hidden">
+              Kopi, tea and merienda, made to order.
+            </span>
+            <span className="night:inline hidden">
+              A calm cup and a late merienda for the study night.
+            </span>
+          </>
+        }
+      />
       <div className="mt-3">
         <PickupLine />
       </div>

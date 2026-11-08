@@ -1,6 +1,6 @@
 # Design System
 
-Status: v0.3, 2026-11-07 (motion, section 7). The look and feel of Hoshikopi. Built with native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)); library parts (the old Sample B) were not built.
+Status: v0.4, 2026-11-07 (page polish, batch 8.10). The look and feel of Hoshikopi. Built with native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)); library parts (the old Sample B) were not built.
 
 ## 1. Design read
 
@@ -82,6 +82,8 @@ Values match `src/app/globals.css` (checked 2026-11-07); they must pass the cont
 
 **Which palette shows** ([ADR 0010](adr/0010-theme-follows-manila-time.md)): Day from 6:00 AM to 5:59 PM Manila time, Night from 6:00 PM to 5:59 AM, for every visitor wherever they are; the site follows the cafe's sky. A switch in the header (Auto, Day, Night, shown as a stopwatch, a sun and a star with the words as screen-reader labels and tooltips) pins one, saved per browser; Auto is the default. The device's light or dark setting is not used. The Bar Screen always uses the night palette.
 
+Native radios and checkboxes take `accent-color` from `--primary`, so they are kopi by Day and moonlight by Night.
+
 ## 4. Typography
 
 | Role | Font | Notes |
@@ -91,13 +93,36 @@ Values match `src/app/globals.css` (checked 2026-11-07); they must pass the cont
 | Order Codes and prices in tables | Plus Jakarta Sans with tabular figures | `font-variant-numeric: tabular-nums` |
 | Typewriter accents | Courier Prime, regular only | Prices in the printed-menu section, short notes under items, dates, small label buttons (the Flora feel, section 1.1); never body text; open font licence |
 
-Self-hosted through `next/font`, `display: swap`: two variable families plus the mono at one weight. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for Posts.
+Self-hosted through `next/font`, `display: swap`: two variable families plus the mono at one weight. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for reading text (Posts, Events, page intros, the concept, privacy and Visit pages). The token for it is `max-w-measure` (`--container-measure: 34em` in `globals.css`): in em, so it follows the text's own size, about 68 to 72 characters at 16 to 18 px. Tailwind's `max-w-prose` (65ch) is not used: the zero in Plus Jakarta Sans is wide, so 65ch runs about 100 characters.
 
 ## 5. Shape, space, elevation
 
 - Radius: 12 px for cards and inputs, full pills for chips and the Cart button.
 - Spacing on a 4 px grid; page gutter 16 px on phones, 24 px on tablets, 32 px on desktop.
 - Elevation through tone (cream to latte) and one soft shadow for floating elements (Cart button, drawers). No glassmorphism.
+
+**Layout** (batch 8.10). The owner asked for the whole screen on wide monitors, with phones and laptops still comfortable.
+
+- **Page container:** the `page-width` utility in `globals.css`, 96rem (1536 px) wide with 16, 24 and 32 px gutters. The site header, the footer, the Staff header and every `main` use it, except the fake payment page (`max-w-md`, a provider sheet) and the Bar Screen (full bleed).
+- **Wide pages fill it:** Home, the menu, a Menu Item, Visit, Events, News, the account pages and every Manage page.
+- **Focus pages keep one narrower column** that starts at the logo like every other page (no `mx-auto`, so the left edge never jumps between pages): `max-w-6xl` for the Cart, checkout, the Order page, an inquiry, an Event and the concept page, and `max-w-5xl` for sign-in and privacy.
+- **A Post is the one centred page:** its header and text at `max-w-measure` (both at 18 px, so they line up), its cover at `max-w-5xl`.
+- **Reading text** stays at `max-w-measure` (section 4). Form fields are never wider than `max-w-3xl`. Lists with a name and a price on one row (Popular this week, Every week) stop at `max-w-3xl`, so the price stays near its name.
+
+Grids add columns as the screen grows:
+
+| What | Columns |
+| --- | --- |
+| Menu Item cards | 1 below sm (a row with a 6rem square photo), 2 from sm, 3 from lg, 4 from xl, 5 from 2xl |
+| Event cards | 2 from md, 3 from xl |
+| Post cards | 2 from md, 3 from lg, 4 from 2xl; on `/news` the newest is a lead card spanning 2 |
+| Tiles (Manage areas, Amenities) | 2 from sm, 3 from lg |
+| Main column and aside | From lg, a main column plus a 24rem aside, sticky at `top-6` (Cart, checkout, the Order page, an Event, an inquiry) |
+| Equal pairs | 2 from lg |
+| Stat strips | `auto-fit` columns of at least 14rem |
+| Bar Screen lane | A second card per row only when each keeps 17rem (`auto-fill`), about 1900 px wide and up |
+
+Number columns in tables are right aligned with tabular figures.
 
 ## 6. Components
 
@@ -112,22 +137,33 @@ Self-hosted through `next/font`, `display: swap`: two variable families plus the
 | Amenity list | On `/cafe`: Phosphor icon, label, short note ("Wi-Fi: yes, ask at the bar"); an unknown Amenity is left out |
 | Visit FAQ | On `/cafe`: about eight native `details` elements. Visit answers come from the Amenities and Dine-in rules; ordering and Stars answers come from the PRD rules (cancel until Accepted, Refunds, Pay at Pickup limit, Stars, large Orders); no FAQ structured data |
 | Home menu section | The Flora-style printed menu (section 1.1): Categories side by side, Menu Item names left, prices right in the mono, one photo beside the list; each name links to its Menu Item page; Sold Out items show "Sold out today"; "Make it yours" lists the Price Deltas below. A View switch (List, Photos) sits above it: two rings on a dashed thread with italic serif labels, the picked one a star; Photos shows Menu Item cards behind Category tabs |
-| Menu Item card | Used on `/menu`. Photo (4:3), name, one-line description, price, badges; Sold Out greys the photo and replaces the price with "Sold out today" |
+| Menu Item card | Used on `/menu`. Photo (4:3), name, one-line description, price, badges; below sm it is a row with a 6rem square photo beside the text. Sold Out greys the photo and replaces the price with "Sold out today" |
 | Option picker | Each Option Group is a `fieldset` with a `legend`; single choice uses styled native radios as large chips; multi choice uses checkboxes; the Price Delta sits on the chip ("Oat +35"); the running price updates in a live region |
-| Allergen line | Under the description on the Menu Item page: an info icon and "Contains: milk. Almond milk adds tree nuts. Our kitchen also handles gluten and egg." in the mono; "No common allergens" when empty (PRD MENU-07) |
+| Allergen line | Under the description on the Menu Item page: an info icon and "Contains: milk. Almond milk adds tree nuts." in the mono, then the kitchen note "Made in a kitchen that handles milk, egg, wheat, soy and tree nuts, so traces are possible."; "No common allergens" when empty (PRD MENU-07) |
 | Pairing (V1) | Under the Option Groups: "Goes well with", one small card (photo, name, price, an add button) (PRD MENU-08) |
 | Quantity stepper | Two 44 px buttons around the number; long-press free |
 | Cart button and drawer | A floating pill with the count and total; the drawer is a native `dialog` |
 | Pickup Time picker | "As soon as possible: ready in about 10 min" first, then today's windows as chips; full windows are not shown (ordering for tomorrow comes in V1) |
 | Payment Method list | Radio cards: GCash, Maya, Card, Pay at Pickup, each with its logo or icon and a one-line note; a "Test Mode" tag on online methods |
 | Order status timeline | Placed, Paid, Accepted, Preparing, Ready, Picked Up; the current step is announced politely; Ready uses the gold star |
-| Star Card | "Nine Stars make a cup": a constellation of nine points that draws a cup. Earned Stars are gold stars (with `--star-edge` by day) joined by `--lit` lines; the rest are small rings on dashed `--input` lines. A Reward appears when all nine are lit |
+| Star Card | "Nine Stars make a cup": a constellation of nine points that draws a cup. Earned Stars are gold stars (with `--star-edge` by day) joined by `--lit` lines; the rest are small rings on dashed `--input` lines. A Reward appears when all nine are lit, with Pick your free drink. The card lays out by its own width (a container query), so it fits a sidebar or a full row |
 | Account button | A 44 px round icon button beside the Cart, like the menu button: an outlined person for Sign in, a filled person on `--muted` for Account (accessible names "Sign in" and "Account"). From sm up; on phones Account sits in the menu so the Cart keeps its room |
-| Account page | Greeting with "Signed in as" and a "Member since" pill (a gold star); Sign out at the top. From lg up two columns: the Star Card and a list of links (Star history, Download my data, Privacy) on the left, kept in view; Your orders, Your Favourites and Your details as outlined panels on the right, each with an icon in a `--muted` circle. Orders show a status pill (Ready in `--success`); Favourites are `--muted` tiles with Add and a corner Remove; empty panels offer the next step. Staff also see a "For Staff" box (an espresso border) at the top of the left column, with Manage the cafe and Bar Screen, since the staff screens are not in the public header |
-| Manage home | Greeting with "Signed in as" and Sign out; a Today strip of `--muted` tiles that link where each can be acted on (Ordering: Taking orders in `--success`, Paused or Closed; Live orders; New inquiries for Managers, in `--warning` when some wait); then the areas the role may open as outlined tiles with an icon in a `--muted` circle and one line each, grouped as Run the day, Menu and stories, People and numbers |
-| Event card, Post card | Date block, photo, title, one line; Events show "Free" or a price |
-| Concept Notice | A slim footer line and a short note on checkout: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration." It links to `/concept` |
+| Account page | Greeting with "Signed in as" and a "Member since" pill (a gold star); Sign out at the top. From lg up two columns: the Star Card and a list of links (Star history, Download my data, Privacy) on the left, kept in view; Your orders, Your Favourites and Your details as outlined panels on the right, each with an icon in a `--muted` circle. Orders show a status pill (Ready in `--success`); Favourites are `--muted` tiles with Add and a corner Remove; empty panels offer the next step. Staff also see a "For Staff" box (an espresso border) at the top of the left column, with Manage the cafe and Bar Screen, since the staff screens are not in the public header. Batch 8.10 added a greeting by the cafe's clock (Magandang umaga, hapon or gabi), a banner for a live Order, jump links on phones, earlier Orders folded away, and a third column from 2xl |
+| Manage home | Greeting with "Signed in as" and Sign out; a Today strip of `--muted` tiles that link where each can be acted on (Ordering: Taking orders in `--success`, Paused or Closed; Live orders; New inquiries for Managers, in `--warning` when some wait); then the areas the role may open as outlined tiles with an icon in a `--muted` circle and one line each, grouped as Run the day, Menu and stories, People and numbers. Batch 8.10 added the greeting as a mono eyebrow, a Today so far tile for Managers, tiles that lift on hover, and the three groups side by side from 2xl |
+| Event card, Post card | Photo, title, one line. An Event card puts its date block on the photo's corner and shows "Free" or a price. A Post card has a lead variant: the newest Post on `/news` spans two columns |
+| Concept Notice | A slim footer line and a short note on checkout: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration." It links to `/concept`. The Staff and Bar frames carry it too, with the same link |
 | Bar Screen card | See section 9 |
+| Back link | `BackLink`: an arrow and the parent's name ("Menu", "Your account"), never an Order Code or a Menu Item name; a 44 px target. On every page below the top level; the header and footer lead to the top-level pages |
+| Breadcrumb | `Breadcrumb`: Menu / Category / Menu Item, the only three-level public path. In the mono; the current page is marked with `aria-current` and has no link |
+| Page header | `PageHeader`: the back link, a mono eyebrow, the italic h1 with its actions (pills, links) beside it, and an intro at `max-w-measure`. Pills never go inside the h1, since tests read its text |
+| Panel | `Panel`: an outlined section with an icon in a `--muted` circle beside its heading; the section is a region named by that heading |
+| Empty state | `Empty`: a `--muted` box, the icon in a `--background` circle, a warm line and a next step (a link or a button), never a bare "Nothing here" |
+| Pill, Order Status pill | `Pill`: a small outlined label in a tone (plain, muted, `--success`, `--warning`, `--destructive`); `--warning` marks what needs a look (a new inquiry, Ordering Paused, Sold out today). `OrderStatusPill`: Ready in `--success`, waiting Orders (Placed to Preparing) plain, closed ones (Picked Up, Cancelled, Expired, Refunded) muted |
+| Icon circle | `IconCircle`: a Phosphor icon (20 px, or 24 px in the large size) in a round `--muted` wash, or `--background` on a `--muted` surface |
+| Main nav | The current section is underlined in `--input` and carries `aria-current="page"`; no gold, which stays for Stars |
+| Phone menu | The header popover: each item's icon in a circle, the logo goes home, the theme switch, then the area and the small links (Privacy, About this concept) at the bottom |
+| Footer | The hand-drawn divider, the sign-off "Salamat sa pagdaan. See you at the counter.", three labelled link lists side by side from md, 44 px links on phones, Back to top, and the Concept Notice |
+| Staff frame | The `/manage` header: Staff links to `/manage`, the theme switch, tab titles "%s \| Staff \| Hoshikopi", and the Concept Notice linking `/concept`, as in the Bar frame |
 
 Native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)). A library component needs a new ADR that shows a native element cannot do the job.
 
@@ -144,7 +180,7 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 | Press | Every button, pill link and chip | Shrinks to 0.97 under the finger, 150 ms (a global rule) |
 | Lift | Menu Item, Event and Post cards (the whole card is a link) | Rises 4 px on hover or keyboard focus, 200 ms |
 | Reveal | The same cards and the Barista picks | Rise 2 rem and fade in as they scroll into view, tied to the scroll; still in browsers without scroll timelines |
-| Page change | Every customer page (`src/app/(site)/template.tsx`) | The old page fades out in 120 ms, the new one rises 8 px and fades in over 250 ms. Only navigation animates: `router.refresh()` and Server Actions never move the page |
+| Page change | Every customer page (`src/app/(site)/template.tsx`) | The old page fades out in 120 ms, the new one rises 8 px and fades in over 250 ms. Only navigation animates: `router.refresh()` and Server Actions never move the page. `/manage` pages fade the same way (`src/app/manage/template.tsx`) |
 | Phone menu | The header popover | Slides in from the right while the backdrop fades, 250 ms; slides back out |
 | Disclosures | Every `details` (Visit FAQ, Later today, Cancel) | The answer rises in, 250 ms |
 | Day and Night | The theme switch | The palettes crossfade, 250 ms (a View Transition) |
@@ -177,6 +213,7 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 - One big button per card for the next step (64 px tall); cancel sits behind a confirm.
 - A new Order plays a short sound (with a mute toggle); its card slides in with a gold edge and pulses once (section 7).
 - Shows "Ordering Paused" and a one-tap pause and resume for Managers.
+- Batch 8.10: the header links to Your account, Manage and Sold out, beside a Manila clock. An empty lane says what comes next in its own words, and an empty board says "All caught up. Salamat, team!". As soon as possible cards show when they were placed. Every tap gets feedback (a short notice in a live region). A lane puts a second card beside the first only when each keeps 17rem, about 1900 px wide and up; the tablet keeps one card per row.
 
 ## 10. Accessibility checklist (per component and per page)
 

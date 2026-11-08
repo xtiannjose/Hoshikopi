@@ -1,29 +1,74 @@
 "use client";
 
-import { useActionState } from "react";
+import Link from "next/link";
+import { useActionState, useEffect, useState } from "react";
 
 import { Field, fieldClass } from "@/components/fields";
+import { now } from "@/lib/clock";
 
 import { signUpAction, type SignupState } from "./actions";
 
-/** Sign up for an Event with Seats (EVT-02). */
+/** Sign up for an Event with Seats (EVT-02). Closes itself once the Event
+ * starts: the page stays prerendered, so the browser reads the clock. */
 export function SignupForm({
   slug,
   seatsLeft,
   price,
+  startsAt,
+  calendar,
+  directions,
 }: {
   slug: string;
   seatsLeft: number;
   price: string | null;
+  /** ISO time the Event starts. */
+  startsAt: string;
+  /** The Event's .ics file and the cafe's maps link. */
+  calendar: string;
+  directions: string;
 }) {
   const [state, action, pending] = useActionState<SignupState, FormData>(
     signUpAction,
     { status: "idle" }
   );
+  const [started, setStarted] = useState(false);
+  useEffect(() => {
+    // The first tick runs at once; later ones catch the start while open.
+    const start = new Date(startsAt).getTime();
+    const tick = () => setStarted(now().getTime() >= start);
+    const first = setTimeout(tick, 0);
+    const timer = setInterval(tick, 60_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [startsAt]);
   if (state.status === "done") {
     return (
-      <p role="status" className="bg-muted rounded-card mt-4 p-4 text-lg">
-        You&apos;re in! We emailed {state.email} with the details.
+      <div role="status" className="bg-background rounded-card mt-4 p-4">
+        <p className="text-lg">
+          You&apos;re in! We emailed {state.email} with the details.
+        </p>
+        <p className="mt-2 flex flex-wrap gap-x-6">
+          <a
+            href={calendar}
+            download={`${slug}.ics`}
+            className="inline-flex min-h-11 items-center"
+          >
+            Add it to your calendar
+          </a>
+          <a href={directions} className="inline-flex min-h-11 items-center">
+            Get directions
+          </a>
+        </p>
+      </div>
+    );
+  }
+  if (started) {
+    return (
+      <p className="bg-background rounded-card mt-4 p-4 text-lg">
+        Sign-up closed when we started. Walk in and watch, or{" "}
+        <Link href="/events">see what&apos;s next</Link>.
       </p>
     );
   }

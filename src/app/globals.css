@@ -29,6 +29,11 @@
 
   --radius-card: 12px;
 
+  /* max-w-measure: reading text near 65 to 70 characters a line. In em, so
+     it follows the element's own size; 65ch runs about 100 characters in
+     Plus Jakarta Sans, whose "0" is wide. */
+  --container-measure: 34em;
+
   /* Motion (docs/05-DESIGN-SYSTEM.md section 7): calm for UI, pop only for
      the delight moments. Keyframes are below, outside @theme. */
   --ease-calm: cubic-bezier(0.22, 1, 0.36, 1);
@@ -41,6 +46,12 @@
   --animate-ring: ring 700ms var(--ease-calm) both;
   --animate-arrive: arrive 700ms var(--ease-calm) both;
   --animate-confirm: confirm 1600ms var(--ease-calm) both;
+}
+
+/* The one page container (docs/05 section 5): 1536 px with 16, 24 and
+   32 px gutters, for the header, the footer, the Staff frame and every main. */
+@utility page-width {
+  @apply mx-auto w-full max-w-[96rem] px-4 md:px-6 lg:px-8;
 }
 
 [data-theme="night"] {
@@ -70,8 +81,13 @@
   outline-offset: 3px;
 }
 
-/* Links in text are underlined; navigation opts out with no-underline. */
 @layer base {
+  /* Native radios and checkboxes: kopi by Day, moonlight by Night. */
+  :root {
+    accent-color: var(--color-primary);
+  }
+
+  /* Links in text are underlined; navigation opts out with no-underline. */
   a {
     text-decoration-line: underline;
     text-underline-offset: 0.2em;

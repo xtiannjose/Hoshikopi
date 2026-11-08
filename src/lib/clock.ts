@@ -81,3 +81,11 @@ export function formatMonthYear(at: Date): string {
 export function manilaInputValue(at: Date): string {
   return new Date(at.getTime() + MANILA_OFFSET_MS).toISOString().slice(0, 16);
 }
+
+/** A Filipino greeting on the cafe's clock; gabi matches the Night palette. */
+export function greetingFor(at: Date): string {
+  const { minutes } = manila(at);
+  if (minutes >= 6 * 60 && minutes < 12 * 60) return "Magandang umaga";
+  if (minutes >= 12 * 60 && minutes < 18 * 60) return "Magandang hapon";
+  return "Magandang gabi";
+}

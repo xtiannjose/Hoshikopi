@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from "react";
+import type { FocusEvent, InputHTMLAttributes, ReactNode } from "react";
 
 export const fieldClass =
   "rounded-card border-input bg-background min-h-11 w-full border px-3 py-2";
@@ -98,10 +98,12 @@ export function SaveBar({
   pending,
   label,
   status,
+  savedText = "Saved.",
 }: {
   pending: boolean;
   label: string;
   status: "idle" | "saved" | "error";
+  savedText?: string;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-4">
@@ -113,7 +115,7 @@ export function SaveBar({
         {pending ? "Saving..." : label}
       </button>
       <p role="status" className="font-semibold">
-        {status === "saved" && "Saved."}
+        {status === "saved" && savedText}
         {status === "error" && (
           <span className="text-destructive">Some fields need a fix.</span>
         )}
@@ -133,3 +135,23 @@ export const ALLERGEN_LABELS = [
   ["shellfish", "Shellfish"],
   ["sesame", "Sesame"],
 ] as const;
+
+/** A Web address from a Name or Title: "Café Ube Latte!" is
+ * "cafe-ube-latte". */
+function slugify(text: string): string {
+  return text
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** onBlur of a Name or Title on a new record: fills an empty Web address
+ * (the form's "slug" field). */
+export function fillSlug(event: FocusEvent<HTMLInputElement>) {
+  const slug = event.currentTarget.form?.elements.namedItem("slug");
+  if (slug instanceof HTMLInputElement && !slug.value) {
+    slug.value = slugify(event.currentTarget.value);
+  }
+}

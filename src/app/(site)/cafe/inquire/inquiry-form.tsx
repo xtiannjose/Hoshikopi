@@ -1,32 +1,64 @@
 "use client";
 
-import { useActionState } from "react";
+import Link from "next/link";
+import { useActionState, useEffect, useRef } from "react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
 
 import { Field, fieldClass } from "@/components/fields";
+import { Empty, OUTLINE_PILL } from "@/components/panel";
 
 import { inquireAction, type InquiryState } from "./actions";
 
 export function InquiryForm({
   kind,
+  today,
 }: {
   kind: "private_event" | "large_order";
+  /** The Manila day ("2026-11-07"): no inquiry for a day gone by. */
+  today: string;
 }) {
   const [state, action, pending] = useActionState<InquiryState, FormData>(
     inquireAction,
     { status: "idle" }
   );
+  const form = useRef<HTMLFormElement>(null);
+  const status = useRef<HTMLParagraphElement>(null);
+  // After a refusal, take the Customer to the first field to fix, or to why.
+  useEffect(() => {
+    if (state.status !== "error") return;
+    const invalid = form.current?.querySelector<HTMLElement>(
+      '[aria-invalid="true"]'
+    );
+    if (invalid) invalid.focus();
+    else status.current?.scrollIntoView({ block: "center" });
+  }, [state]);
   if (state.status === "sent") {
     return (
-      <p role="status" className="bg-muted rounded-card mt-8 p-6 text-lg">
-        Salamat! Your inquiry is with the cafe. We&apos;ll email you back within
-        two days.
-      </p>
+      <Empty icon={<CheckCircleIcon size={24} />}>
+        <div>
+          <p role="status" className="text-lg">
+            Salamat! Your inquiry is with the cafe. We&apos;ll email you back
+            within two days.
+          </p>
+          <p className="text-muted-foreground">
+            We&apos;ll reply to <b>{state.email}</b>.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/cafe" className={OUTLINE_PILL}>
+            Back to Visit
+          </Link>
+          <Link href="/events" className={OUTLINE_PILL}>
+            See upcoming Events
+          </Link>
+        </div>
+      </Empty>
     );
   }
   const value = (name: string) => state.values?.[name];
   const error = (name: string) => state.errors?.[name];
   return (
-    <form action={action} className="mt-8 grid max-w-xl gap-5">
+    <form ref={form} action={action} className="grid max-w-xl gap-5">
       <Field name="kind" label="What is it about?" error={error("kind")}>
         <select
           id="kind"
@@ -58,6 +90,7 @@ export function InquiryForm({
           name="wantedOn"
           label="Date (optional)"
           type="date"
+          min={today}
           defaultValue={value("wantedOn")}
           error={error("wantedOn")}
         />
@@ -73,6 +106,9 @@ export function InquiryForm({
         <label htmlFor="message" className="font-semibold">
           Tell us about it
         </label>
+        <p id="message-hint" className="text-muted-foreground text-sm">
+          The day, how many, and any drinks or food you have in mind.
+        </p>
         <textarea
           id="message"
           name="message"
@@ -80,7 +116,9 @@ export function InquiryForm({
           maxLength={1000}
           defaultValue={value("message")}
           aria-invalid={error("message") ? true : undefined}
-          aria-describedby={error("message") ? "message-error" : undefined}
+          aria-describedby={
+            error("message") ? "message-hint message-error" : "message-hint"
+          }
           className={`${fieldClass} py-2`}
         />
         {error("message") && (
@@ -101,7 +139,11 @@ export function InquiryForm({
         >
           {pending ? "Sending..." : "Send inquiry"}
         </button>
-        <p role="status" className="text-destructive font-semibold">
+        <p
+          ref={status}
+          role="status"
+          className="text-destructive font-semibold"
+        >
           {state.status === "error" && state.message}
         </p>
       </div>

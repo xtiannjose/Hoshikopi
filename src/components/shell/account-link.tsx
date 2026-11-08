@@ -43,8 +43,19 @@ export async function AccountLink() {
 export async function AccountMenuLink() {
   const member = await currentMember();
   return member ? (
-    <MenuLink href="/account" label="Account" />
+    <MenuLink href="/account" icon={<UserCircleIcon size={20} />}>
+      Account
+    </MenuLink>
   ) : (
-    <MenuLink href="/sign-in" label="Sign in" />
+    <SignInMenuLink />
+  );
+}
+
+/** The phone menu's Sign in, also its entry before the session is read. */
+export function SignInMenuLink() {
+  return (
+    <MenuLink href="/sign-in" icon={<UserIcon size={20} />}>
+      Sign in
+    </MenuLink>
   );
 }

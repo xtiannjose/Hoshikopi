@@ -24,6 +24,10 @@ const DAYS = [
 ];
 const idle: FormState = { status: "idle" };
 const cell = `${fieldClass} min-w-28`;
+// A ticked Closed box greys out its times, in CSS only. No opacity, so the
+// text keeps its contrast.
+const CLOSED_TIMES =
+  "[&:has(input[type=checkbox]:checked)_input[type=time]]:bg-muted [&:has(input[type=checkbox]:checked)_input[type=time]]:text-muted-foreground";
 
 export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
   const [state, action, pending] = useActionState(saveWeeklyHoursAction, idle);
@@ -59,7 +63,7 @@ export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
               return (
                 <tr
                   key={day.weekday}
-                  className="border-border border-t align-top"
+                  className={`border-border border-t align-top ${CLOSED_TIMES}`}
                 >
                   <th scope="row" className="py-3 pr-3 font-semibold">
                     {name}
@@ -112,13 +116,20 @@ export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
   );
 }
 
-export function SpecialHoursForm() {
+/** `today` is the Manila day, the earliest date the picker offers. */
+export function SpecialHoursForm({ today }: { today: string }) {
   const [state, action, pending] = useActionState(saveSpecialHoursAction, idle);
   const form = useKeptForm(action, state);
   return (
-    <form {...form} className="grid max-w-3xl gap-4">
+    <form {...form} className={`grid max-w-3xl gap-4 ${CLOSED_TIMES}`}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field name="day" label="Date" type="date" error={state.errors?.day} />
+        <Field
+          name="day"
+          label="Date"
+          type="date"
+          min={today}
+          error={state.errors?.day}
+        />
         <Field
           name="note"
           label="Why (shown to Customers)"
@@ -165,9 +176,12 @@ export function SpecialHoursForm() {
 export function CapacityForm({
   capacity,
   prep,
+  example,
 }: {
   capacity: { weekday: number; drinks: number; food: number }[];
   prep: { baseMinutes: number; perDrinkMinutes: number };
+  /** Prep Time with 4 drinks ahead, from the cafe module's prepMinutes. */
+  example: number;
 }) {
   const [state, action, pending] = useActionState(saveCapacityAction, idle);
   const form = useKeptForm(action, state);
@@ -240,6 +254,9 @@ export function CapacityForm({
         <legend className="mb-2 font-semibold">
           Prep Time: base + minutes per drink queued ahead
         </legend>
+        <p className="text-muted-foreground text-sm sm:col-span-2">
+          Right now: with 4 drinks ahead, about {example} minutes.
+        </p>
         <Field
           name="baseMinutes"
           label="Base minutes"

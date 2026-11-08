@@ -13,6 +13,8 @@ export type InquiryState = {
   errors?: Partial<Record<string, string>>;
   /** What was typed, kept after a refusal (React resets the form). */
   values?: Record<string, string>;
+  /** Where the cafe will reply, shown once it is sent. */
+  email?: string;
 };
 
 const FIELDS = ["kind", "name", "email", "wantedOn", "guests", "message"];
@@ -54,5 +56,5 @@ export async function inquireAction(
     // Saved either way; the Manager also sees it in /manage/inquiries.
     console.error("[inquiry] email not sent:", error);
   }
-  return { status: "sent" };
+  return { status: "sent", email: result.inquiry.email };
 }

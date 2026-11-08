@@ -38,7 +38,7 @@ export function PrintedMenu({
         </fieldset>
       </div>
 
-      <div className="mt-10 grid gap-x-12 gap-y-10 group-has-[#view-photos:checked]/view:hidden md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-10 grid gap-x-12 gap-y-10 group-has-[#view-photos:checked]/view:hidden md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {menu.map((category) => (
           <div key={category.slug}>
             <h3 className="font-display pb-1 text-2xl italic">

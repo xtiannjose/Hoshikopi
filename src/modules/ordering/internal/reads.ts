@@ -147,12 +147,30 @@ export async function getOrderBrief(id: string) {
   });
 }
 
+/** "2 x Hoshi Latte, 1 x Ensaymada" and the status page path, without the
+ * site's origin, for staff and Member lists. */
+function summaryAndLink(order: {
+  id: string;
+  lines: { name: string; quantity: number }[];
+}) {
+  return {
+    summary: order.lines.map((l) => `${l.quantity} x ${l.name}`).join(", "),
+    link: orderLink(order.id).replace(/^https?:\/\/[^/]+/, ""),
+  };
+}
+
 /** A day's Orders and totals for the Manager (STAFF-07). */
 export async function dayOrders(day: string) {
   const orders = await db.order.findMany({
     where: { serviceDay: new Date(`${day}T00:00:00Z`) },
     orderBy: { placedAt: "asc" },
-    include: { payment: { select: { status: true } } },
+    include: {
+      payment: { select: { status: true } },
+      lines: {
+        select: { name: true, quantity: true },
+        orderBy: { createdAt: "asc" },
+      },
+    },
   });
   const counted = orders.filter(
     (o) => !["cancelled", "expired", "refunded"].includes(o.status)
@@ -168,6 +186,7 @@ export async function dayOrders(day: string) {
       paymentMethod: o.paymentMethod,
       totalCents: o.totalCents,
       paid: o.paidAt !== null,
+      ...summaryAndLink(o),
       refundable:
         o.status === "picked_up" ||
         (o.status === "cancelled" && o.paidAt !== null),
@@ -198,8 +217,7 @@ export async function ordersForMember(memberId: string, take = 20) {
     status: order.status,
     placedAt: order.placedAt,
     totalCents: order.totalCents,
-    summary: order.lines.map((l) => `${l.quantity} x ${l.name}`).join(", "),
-    link: orderLink(order.id).replace(/^https?:\/\/[^/]+/, ""),
+    ...summaryAndLink(order),
   }));
 }
 

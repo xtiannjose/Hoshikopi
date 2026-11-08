@@ -302,11 +302,11 @@ export async function saveCategory(
   id: string | null,
   input: z.input<typeof CategoryInput>,
   actor: Staff
-): Promise<FormResult> {
+): Promise<FormResult<{ id: string }>> {
   const parsed = CategoryInput.safeParse(input);
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
   try {
-    await db.$transaction(async (tx) => {
+    const saved = await db.$transaction(async (tx) => {
       const category = id
         ? await tx.category.update({ where: { id }, data: parsed.data })
         : await tx.category.create({ data: parsed.data });
@@ -317,8 +317,9 @@ export async function saveCategory(
         {},
         tx
       );
+      return category;
     });
-    return { ok: true };
+    return { ok: true, id: saved.id };
   } catch (error) {
     if (isUniqueClash(error)) {
       return { ok: false, errors: { slug: "Another Category uses this." } };

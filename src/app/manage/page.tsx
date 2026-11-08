@@ -17,11 +17,13 @@ import {
   UsersThreeIcon,
 } from "@phosphor-icons/react/ssr";
 
-import { formatTime, now } from "@/lib/clock";
+import { BackLink } from "@/components/back-link";
+import { formatTime, greetingFor, manila, now } from "@/lib/clock";
+import { formatPrice } from "@/lib/money";
 import { getOrderingDay, orderingState } from "@/modules/cafe";
 import { inquiriesForStaff } from "@/modules/content";
 import { requireStaff, type Staff } from "@/modules/identity";
-import { barBoard } from "@/modules/ordering";
+import { barBoard, dayOrders } from "@/modules/ordering";
 
 import { signOutAction } from "./actions";
 
@@ -135,7 +137,7 @@ const GROUPS: { title: string; areas: Area[] }[] = [
 
 export default function ManagePage() {
   return (
-    <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
+    <main id="main" className="page-width flex-1 py-10">
       <Suspense
         fallback={
           <>
@@ -154,11 +156,13 @@ async function Who() {
   const staff = await requireStaff("barista");
   const at = now();
   const manager = staff.role === "manager";
-  const [day, board, inquiries] = await Promise.all([
+  const [day, board, inquiries, sold] = await Promise.all([
     getOrderingDay(at),
     barBoard(at),
     manager ? inquiriesForStaff() : Promise.resolve([]),
+    manager ? dayOrders(manila(at).day) : null,
   ]);
+  const firstName = staff.name.trim().split(/\s+/)[0];
   const state = orderingState(at, day);
   const ordering = state.canOrder
     ? {
@@ -180,8 +184,14 @@ async function Who() {
 
   return (
     <div className="grid gap-10">
+      {/* Staff arrive from their account page (the For Staff box). */}
+      <BackLink href="/account">Your account</BackLink>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
+          <p className="text-muted-foreground font-mono text-sm">
+            {greetingFor(at)}
+            {firstName && `, ${firstName}`}
+          </p>
           <h1 className="font-display pb-1 text-5xl italic">Manage</h1>
           <p className="text-muted-foreground mt-2">
             Signed in as {staff.name} ({ROLE[staff.role]}).
@@ -202,7 +212,7 @@ async function Who() {
         <h2 id="today" className="sr-only">
           Today
         </h2>
-        <ul className="grid gap-3 sm:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
           <Stat
             label="Ordering"
             value={ordering.value}
@@ -229,51 +239,62 @@ async function Who() {
               tone={fresh > 0 ? "attention" : "plain"}
             />
           )}
+          {sold && (
+            <Stat
+              label="Today so far"
+              value={sold.count === 1 ? "1 order" : `${sold.count} orders`}
+              note={formatPrice(sold.totalCents)}
+              href="/manage/orders"
+            />
+          )}
         </ul>
       </section>
 
-      {GROUPS.map((group) => {
-        const areas = group.areas.filter((a) => a.roles.includes(staff.role));
-        if (areas.length === 0) return null;
-        const id = `group-${group.title.toLowerCase().replace(/\W+/g, "-")}`;
-        return (
-          <section key={group.title} aria-labelledby={id}>
-            <h2 id={id} className="font-display text-2xl italic">
-              {group.title}
-            </h2>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {areas.map((area) => (
-                <li key={area.href}>
-                  <Link
-                    href={area.href}
-                    className="rounded-card border-border hover:bg-muted group flex h-full items-center gap-4 border p-4 no-underline transition-colors"
-                  >
-                    <span
-                      aria-hidden
-                      className="bg-muted group-hover:bg-background grid size-12 shrink-0 place-items-center rounded-full transition-colors"
+      <div className="grid gap-10 2xl:grid-cols-3 2xl:items-start">
+        {GROUPS.map((group) => {
+          const areas = group.areas.filter((a) => a.roles.includes(staff.role));
+          if (areas.length === 0) return null;
+          const id = `group-${group.title.toLowerCase().replace(/\W+/g, "-")}`;
+          return (
+            <section key={group.title} aria-labelledby={id}>
+              <h2 id={id} className="font-display text-2xl italic">
+                {group.title}
+              </h2>
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-1">
+                {areas.map((area) => (
+                  // lift on the li: its :has(:focus-visible) needs the link inside.
+                  <li key={area.href} className="lift">
+                    <Link
+                      href={area.href}
+                      className="rounded-card border-border hover:bg-muted group flex h-full items-center gap-4 border p-4 no-underline"
                     >
-                      {area.icon}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-lg font-semibold">
-                        {area.label}
+                      <span
+                        aria-hidden
+                        className="bg-muted group-hover:bg-background grid size-12 shrink-0 place-items-center rounded-full transition-colors"
+                      >
+                        {area.icon}
                       </span>
-                      <span className="text-muted-foreground block text-sm">
-                        {area.note}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-lg font-semibold">
+                          {area.label}
+                        </span>
+                        <span className="text-muted-foreground block text-sm">
+                          {area.note}
+                        </span>
                       </span>
-                    </span>
-                    <CaretRightIcon
-                      aria-hidden
-                      size={18}
-                      className="text-muted-foreground shrink-0"
-                    />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        );
-      })}
+                      <CaretRightIcon
+                        aria-hidden
+                        size={18}
+                        className="text-muted-foreground shrink-0"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -310,7 +331,7 @@ function Stat({
     </>
   );
   return (
-    <li className="bg-muted rounded-card">
+    <li className={`bg-muted rounded-card ${href ? "lift" : ""}`}>
       {href ? (
         <Link
           href={href}

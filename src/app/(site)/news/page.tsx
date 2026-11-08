@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { NewspaperIcon } from "@phosphor-icons/react/ssr";
 
 import { PostCard } from "@/components/content/post-card";
+import { PageHeader } from "@/components/page-header";
+import { Empty, PRIMARY_PILL } from "@/components/panel";
 import { getPosts } from "@/modules/content";
 
 export const metadata: Metadata = {
@@ -11,16 +15,26 @@ export const metadata: Metadata = {
 export default async function NewsPage() {
   const posts = await getPosts();
   return (
-    <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-8">
-      <h1 className="font-display pt-8 pb-1 text-5xl italic md:text-6xl">
-        News
-      </h1>
+    <main id="main" className="page-width flex-1 pt-8">
+      <PageHeader
+        title="News"
+        intro="New drinks, the farms behind our beans and news from the bar."
+      />
       {posts.length === 0 ? (
-        <p className="mt-6 text-lg">No news yet.</p>
+        <div className="mt-8">
+          <Empty icon={<NewspaperIcon size={24} />}>
+            <p className="text-lg">
+              No posts yet. While you wait, the menu&apos;s open.
+            </p>
+            <Link href="/menu" className={PRIMARY_PILL}>
+              See the menu
+            </Link>
+          </Empty>
+        </div>
       ) : (
-        <div className="mt-8 grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post) => (
-            <PostCard key={post.slug} post={post} />
+        <div className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          {posts.map((post, index) => (
+            <PostCard key={post.slug} post={post} lead={index === 0} />
           ))}
         </div>
       )}
