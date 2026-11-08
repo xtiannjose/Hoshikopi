@@ -61,9 +61,7 @@ async function Category({
       <div className="mt-3">
         <PickupLine />
       </div>
-      <div className="mt-6">
-        <CategoryTabs categories={menu} current={slug} />
-      </div>
+      <CategoryTabs categories={menu} current={slug} className="mt-4" />
       <MenuGrid items={category.items} headingLevel={2} />
       <nav
         aria-label="More of the menu"

@@ -77,7 +77,10 @@ export async function placeOrderAction(
     customerEmail: String(form.get("customerEmail") ?? ""),
     customerPhone: String(form.get("customerPhone") ?? ""),
   };
-  const pickup = String(form.get("pickup") ?? "asap");
+  // "Later today" sends its time in a list beside the chips (8.3).
+  const chosen = String(form.get("pickup") ?? "asap");
+  const pickup =
+    chosen === "later" ? String(form.get("pickupLater") ?? "asap") : chosen;
   const method = String(form.get("paymentMethod")) as PaymentMethod;
   // The Pickup Time and Payment Method come back too, so a refusal keeps them.
   const kept = { ...values, pickup, paymentMethod: method };

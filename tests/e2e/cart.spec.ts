@@ -57,9 +57,10 @@ test("the floating Cart opens a drawer and leads to checkout (8.2)", async ({
   await page.goto("/menu/item/kopi-hitam");
   await page.getByRole("button", { name: "Add to order" }).click();
   await expect(page.getByRole("status")).toContainText("Added");
+  // On a phone the Menu Item's own Add to order bar holds that spot (8.3).
+  await page.goto("/menu");
   const pill = page.getByRole("button", { name: /Your Cart/ });
   await expect(pill).toContainText("PHP");
-  await page.goto("/menu");
   await pill.click();
   const drawer = page.getByRole("dialog", { name: "Your Cart" });
   await expect(drawer).toContainText("1 x Kopi Hitam");

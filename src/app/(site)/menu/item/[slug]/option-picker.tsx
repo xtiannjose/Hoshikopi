@@ -172,14 +172,20 @@ export function OptionPicker({
           className="rounded-card border-input bg-background min-h-11 border px-3"
         />
       </div>
-      <div className="border-border grid gap-4 border-t pt-4">
+      {/* On phones the price and Add to order stay at the bottom of the
+          screen while Options are chosen (8.3, UI2-03): a direct child of
+          the form, so it sticks over every Option Group. */}
+      <div
+        data-sticky-add
+        className="border-border bg-background grid gap-3 border-t pt-4 max-md:sticky max-md:bottom-0 max-md:z-20 max-md:-mx-4 max-md:px-4 max-md:pt-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      >
         <p aria-live="polite" className="text-lg">
           Your {name}:{" "}
           <span className="font-mono font-semibold">
             {formatPrice(unit * quantity)}
           </span>
         </p>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-3">
           <div
             role="group"
             aria-label="Quantity"
@@ -231,6 +237,10 @@ export function OptionPicker({
               </span>
             )}
           </button>
+        </div>
+      </div>
+      <div className="-mt-2 grid gap-3">
+        <div>
           <button
             type="submit"
             formAction={saveFavourite}
