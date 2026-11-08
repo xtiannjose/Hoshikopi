@@ -344,6 +344,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
             <form action={demoAdvanceAction}>
               <input type="hidden" name="id" value={order.id} />
               <input type="hidden" name="t" value={token} />
+              <input type="hidden" name="from" value={order.status} />
               <button type="submit" className={PRIMARY_PILL}>
                 {demoStep}
               </button>

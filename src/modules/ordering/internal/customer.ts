@@ -66,11 +66,16 @@ const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
  */
 export async function advanceInDemo(
   id: string,
-  token: string
+  token: string,
+  /** The Order Status the button was drawn for: a repeat tap finds it moved. */
+  from: OrderStatus
 ): Promise<TransitionResult> {
   const order = await orderWithToken(id, token);
   if (!order) return { ok: false, reason: "not_found" };
-  const next = NEXT[order.status];
-  if (!next) return { ok: false, reason: "not_allowed", status: order.status };
+  const next = NEXT[from];
+  if (!next || order.status !== from) {
+    return { ok: false, reason: "not_allowed", status: order.status };
+  }
+  // transition() re-checks under the row lock, so two taps at once move once.
   return transition(order.id, next, { kind: "demo" });
 }
