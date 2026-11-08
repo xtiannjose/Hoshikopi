@@ -11,7 +11,12 @@ export function Breadcrumb({
     <nav aria-label="Breadcrumb">
       <ol className="flex flex-wrap items-center gap-x-2 font-mono text-sm">
         {items.map((item, index) => (
-          <li key={item.label} className="flex items-center gap-2">
+          // On phones the current page drops to its own row; the h1 just
+          // below already names it, so it shows from sm up.
+          <li
+            key={item.label}
+            className={`items-center gap-2 ${item.href ? "flex" : "hidden sm:flex"}`}
+          >
             {index > 0 && (
               <span aria-hidden className="text-muted-foreground">
                 /

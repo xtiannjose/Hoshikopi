@@ -83,7 +83,7 @@ async function MenuItemDetails({
       </div>
       <div>
         <div className="flex items-baseline justify-between gap-4">
-          <h1 className="font-display pb-1 text-4xl leading-[1.1] italic md:text-5xl">
+          <h1 className="font-display pb-1 text-4xl leading-[1.1] text-balance italic md:text-5xl">
             {item.name}
           </h1>
           <p className="shrink-0 font-mono text-lg">
