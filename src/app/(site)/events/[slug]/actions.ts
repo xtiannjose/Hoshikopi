@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 
 import { clientIp, takeToken } from "@/lib/rate-limit";
 import { cancelSignup, confirmSignup, signUpForEvent } from "@/modules/content";
+import { currentMember } from "@/modules/identity";
 import { sendEventSignup } from "@/modules/notify";
 
 export type SignupState = {
@@ -14,6 +15,8 @@ export type SignupState = {
   /** What was typed, kept after a refusal (React resets the form). */
   values?: { name: string; email: string; seats: string };
   email?: string;
+  /** A Member's own email needs no link: confirmed at once. */
+  confirmed?: boolean;
 };
 
 /** Sign-ups that went through, per visitor per Event per day (8.7). */
@@ -69,6 +72,12 @@ export async function signUpAction(
       values,
     };
   }
+  // A signed-in Member's email is proven already (a link or Google), so
+  // their own address needs no link; anyone else's waits for it.
+  const member = await currentMember();
+  const confirmed =
+    member?.email.toLowerCase() === result.signup.email &&
+    (await confirmSignup(result.signup.id, result.token)).ok;
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   try {
     await sendEventSignup({
@@ -76,6 +85,7 @@ export async function signUpAction(
       seats: result.signup.seats,
       event: result.event,
       link: `${site}/events/${result.event.slug}/signup/${result.signup.id}?t=${result.token}`,
+      confirmed,
     });
   } catch (error) {
     // The Seats are held for 30 minutes either way, then go back.
@@ -83,7 +93,7 @@ export async function signUpAction(
   }
   // Seats left on the Event page.
   updateTag("content");
-  return { status: "done", email: result.signup.email };
+  return { status: "done", email: result.signup.email, confirmed };
 }
 
 export type AnswerState = {

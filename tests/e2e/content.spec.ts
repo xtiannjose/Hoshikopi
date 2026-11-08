@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations, openIn } from "./axe";
+import { e2eQuery } from "./db";
 import { signIn } from "./sign-in";
 
 const MAIL = path.join(process.cwd(), "data", "mail");
@@ -161,6 +162,8 @@ test("a visitor signs up for an Event, confirms by email, the Manager sees it an
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "desktop task");
   test.setTimeout(180_000);
+  // Sign-up limits are per visitor, and every spec here is one visitor.
+  await e2eQuery("DELETE FROM rate_limits WHERE key LIKE 'signup-%'");
   const email = `signup-${Date.now()}@example.com`;
   await page.goto("/events/latte-art-night");
   const signup = page.getByRole("region", { name: "Sign up" });
@@ -219,5 +222,20 @@ test("a visitor signs up for an Event, confirms by email, the Manager sees it an
   await page.getByRole("button", { name: "Cancel my Sign-up" }).click();
   await expect(page.getByRole("status")).toContainText(
     "Cancelled. Your seats are free for someone else."
+  );
+});
+
+test("a signed-in Member's Sign-up with their own email is confirmed at once (8.7)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  await e2eQuery("DELETE FROM rate_limits WHERE key LIKE 'signup-%'");
+  await signIn(page, "hoshi@hoshikopi.example", "/events/latte-art-night");
+  const signup = page.getByRole("region", { name: "Sign up" });
+  await signup.getByLabel("Your name").fill("Hoshi");
+  await signup.getByLabel("Email").fill("hoshi@hoshikopi.example");
+  await signup.getByRole("button", { name: "Sign up" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "You're in! See you there."
   );
 });

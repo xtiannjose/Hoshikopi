@@ -209,7 +209,7 @@ Something happening at the cafe on a date: a cupping, latte art night, open mic,
 _Avoid_: Activity, happening
 
 **Sign-up**:
-A person's place at an Event: a name, an email and 1 to 4 Seats, confirmed by email. It waits for its email link and holds its Seats for 30 minutes; the same link cancels it. An Event with Seats takes Sign-ups until they run out; one Sign-up per email per Event. Paid at the door.
+A person's place at an Event: a name, an email and 1 to 4 Seats, confirmed by email. It waits for its email link and holds its Seats for 30 minutes (a signed-in Member's own email is confirmed at once); the same link cancels it. An Event with Seats takes Sign-ups until they run out; one Sign-up per email per Event. Paid at the door.
 _Avoid_: Booking, reservation, ticket, RSVP
 
 **Recurring Event**:
