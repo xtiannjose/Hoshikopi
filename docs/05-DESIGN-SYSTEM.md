@@ -236,6 +236,8 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 | Every page | JavaScript under 170 kB compressed on first load; images in AVIF or WebP, menu photos under 80 kB each at card size; the Day paper grain is a small tiled image (under 5 kB), never a live SVG filter over the page, which is slow to paint on phones |
 | Bar Screen | First data within 1 s on a tablet over Wi-Fi; each poll response under 5 kB when nothing changed |
 
+Measure on the live site, or a local production build for the other numbers: on localhost the scripts arrive before the first paint, so Lighthouse's simulated LCP is about half a second worse than on the live site (7.6). What keeps the pages light: icons render on the server (a client component takes them as props), `partialPrefetching` stays off, and big client parts sit in their own Suspense boundary so hydration runs in short tasks.
+
 ## 12. Tailwind v4 mapping (Phase 0)
 
 - Tokens live in `src/app/globals.css` under `@theme` (`--color-background`, `--color-primary`, `--color-night`, `--color-star`, `--font-display`, `--font-sans`, `--radius-card`), with the Night palette redefining them under `[data-theme="night"]` on `<html>`, set before first paint (section 3, ADR 0010).

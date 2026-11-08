@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import { CheckIcon, MinusIcon, PlusIcon } from "@phosphor-icons/react";
+import { useActionState, useState, type ReactNode } from "react";
 
 import { formatDelta, formatPrice } from "@/lib/money";
 import type { OptionGroupView } from "@/modules/menu";
@@ -40,6 +39,7 @@ function initialPicks(groups: OptionGroupView[]): Picked {
  * the Line (ORD-01, ORD-06).
  */
 export function OptionPicker({
+  icons,
   menuItemId,
   name,
   baseCents,
@@ -47,6 +47,8 @@ export function OptionPicker({
   categorySlug,
   categoryName,
 }: {
+  /** Rendered by the page, so no icon code ships with the picker. */
+  icons: { minus: ReactNode; plus: ReactNode; check: ReactNode };
   menuItemId: string;
   name: string;
   baseCents: number;
@@ -198,7 +200,7 @@ export function OptionPicker({
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               className="border-input grid size-11 place-items-center rounded-full border disabled:opacity-40"
             >
-              <MinusIcon aria-hidden size={18} />
+              {icons.minus}
             </button>
             <span
               aria-live="polite"
@@ -214,7 +216,7 @@ export function OptionPicker({
               onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
               className="border-input grid size-11 place-items-center rounded-full border disabled:opacity-40"
             >
-              <PlusIcon aria-hidden size={18} />
+              {icons.plus}
             </button>
           </div>
           <button
@@ -232,7 +234,7 @@ export function OptionPicker({
                 aria-hidden
                 className="animate-confirm bg-primary pointer-events-none absolute inset-0 flex items-center justify-center gap-2 rounded-full"
               >
-                <CheckIcon size={18} weight="bold" />
+                {icons.check}
                 Added
               </span>
             )}
