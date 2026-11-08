@@ -12,7 +12,7 @@ const DAYS = [
 ];
 
 /** "Thursdays, 7:00 PM to 9:00 PM" */
-function weeklyWhen(event: RecurringEventView): string {
+export function weeklyWhen(event: RecurringEventView): string {
   return `${DAYS[event.weekday]}, ${formatClock(event.startsAt)} to ${formatClock(event.endsAt)}`;
 }
 
