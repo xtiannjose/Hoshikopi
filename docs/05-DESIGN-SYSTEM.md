@@ -88,7 +88,7 @@ Native radios and checkboxes take `accent-color` from `--primary`, so they are k
 
 | Role | Font | Notes |
 | --- | --- | --- |
-| Display and headings | Fraunces (variable, soft optical sizes) | Warm serif with character for the menu and hero; open font licence |
+| Display and headings | Fraunces 400 italic, the one style used, loaded static (about 23 kB; the variable font with every weight and optical size was 81 kB) | Warm serif with character for the menu and hero; open font licence |
 | Text and UI | Plus Jakarta Sans (variable) | Clear at small sizes; made by an Indonesian foundry, a nod to kopi; open font licence |
 | Order Codes and prices in tables | Plus Jakarta Sans with tabular figures | `font-variant-numeric: tabular-nums` |
 | Typewriter accents | Courier Prime, regular only | Prices in the printed-menu section, short notes under items, dates, small label buttons (the Flora feel, section 1.1); never body text; open font licence |
@@ -142,7 +142,8 @@ Number columns in tables are right aligned with tabular figures.
 | Allergen line | Under the description on the Menu Item page: an info icon and "Contains: milk. Almond milk adds tree nuts." in the mono, then the kitchen note "Made in a kitchen that handles milk, egg, wheat, soy and tree nuts, so traces are possible."; "No common allergens" when empty (PRD MENU-07) |
 | Pairing (V1) | Under the Option Groups: "Goes well with", one small card (photo, name, price, an add button) (PRD MENU-08) |
 | Quantity stepper | Two 44 px buttons around the number; long-press free |
-| Cart button and drawer | A floating pill with the count and total; the drawer is a native `dialog` |
+| Cart button and drawer | In the header, and once the Cart holds something a floating pill at the bottom right ("Your Cart", the count and total; not on the Cart or checkout). It opens a drawer from the right, a native `popover` like the phone menu: the Lines, the total, Check out and See your Cart (Fix your Cart to check out when a Line can't be ordered). A spacer at the end of the page keeps the pill off the footer |
+| Error and 404 pages | Inside the frame they happen in, so the header and the Concept Notice stay: "Sorry, that didn't work" with Try again and a way on (the menu, or Manage for Staff) and the error code for a bug report; "This page could not be found" with See the menu and Back home (Back to Manage for Staff). An unknown address gets the customer header and footer; a failed root layout gets its own page with the notice |
 | Pickup Time picker | "As soon as possible: ready in about 10 min" first, then today's windows as chips; full windows are not shown (ordering for tomorrow comes in V1) |
 | Payment Method list | Radio cards: GCash, Maya, Card, Pay at Pickup, each with its logo or icon and a one-line note; a "Test Mode" tag on online methods |
 | Order status timeline | Placed, Paid, Accepted, Preparing, Ready, Picked Up; the current step is announced politely; Ready uses the gold star |

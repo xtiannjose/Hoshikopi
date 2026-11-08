@@ -50,3 +50,22 @@ for (const palette of ["day", "night"] as const) {
     await expectNoAxeViolations(page);
   });
 }
+
+test("the floating Cart opens a drawer and leads to checkout (8.2)", async ({
+  page,
+}) => {
+  await page.goto("/menu/item/kopi-hitam");
+  await page.getByRole("button", { name: "Add to order" }).click();
+  await expect(page.getByRole("status")).toContainText("Added");
+  const pill = page.getByRole("button", { name: /Your Cart/ });
+  await expect(pill).toContainText("PHP");
+  await page.goto("/menu");
+  await pill.click();
+  const drawer = page.getByRole("dialog", { name: "Your Cart" });
+  await expect(drawer).toContainText("1 x Kopi Hitam");
+  await expectNoAxeViolations(page);
+  await drawer.getByRole("link", { name: "Check out" }).click();
+  await expect(page).toHaveURL(/\/checkout$/);
+  await expect(drawer).toBeHidden();
+  await expect(pill).toHaveCount(0);
+});

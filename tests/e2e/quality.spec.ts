@@ -116,3 +116,30 @@ test("the Content-Security-Policy holds and nothing breaks it (ADR 0013)", async
   await expect(page.getByRole("status")).toContainText("Added");
   expect(violations).toEqual([]);
 });
+
+test("public pages ask search engines to stay away (ADR 0006)", async ({
+  page,
+}) => {
+  for (const path of ["/", "/cafe", "/menu"]) {
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      /noindex/
+    );
+  }
+});
+
+test("an unknown address keeps the site's frame and the Concept Notice (8.2)", async ({
+  page,
+}) => {
+  const response = await page.goto("/no-such-page");
+  expect(response?.status()).toBe(404);
+  await expect(
+    page.getByRole("heading", { name: "This page could not be found" })
+  ).toBeVisible();
+  await expect(page.getByRole("banner")).toBeVisible();
+  await expect(page.getByRole("link", { name: "See the menu" })).toBeVisible();
+  await expect(
+    page.getByRole("contentinfo").getByText(/Hoshikopi is a concept cafe/)
+  ).toBeVisible();
+});

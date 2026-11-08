@@ -5,11 +5,13 @@ import { THEME_SCRIPT } from "@/components/theme";
 
 import "./globals.css";
 
+// The one display style used: 400 italic, static (about 23 kB, not the
+// 81 kB variable font with every weight and optical size; PERF-06).
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   style: "italic",
-  axes: ["opsz"],
+  weight: "400",
 });
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -29,6 +31,10 @@ export const metadata: Metadata = {
   title: { default: "Hoshikopi", template: "%s | Hoshikopi" },
   description:
     "A concept cafe in Kapitolyo, Pasig. Order ahead for pickup and earn Stars.",
+  // An invented cafe with a real neighbourhood: kept out of search until
+  // the owner decides otherwise (ADR 0006). Crawlers may fetch pages, so
+  // they see this; a robots.txt block would hide it from them.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
