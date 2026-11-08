@@ -2,8 +2,10 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
+import type { OrderStatus, PaymentMethod } from "@/generated/prisma/enums";
 import {
   cancelByCustomer,
+  getOrderForCustomer,
   orderVersion,
   placeOrder,
   transition,
@@ -68,6 +70,103 @@ describe("cancelByCustomer (ORD-09)", () => {
       reason: "not_allowed",
       status: "accepted",
     });
+  });
+});
+
+let code = 100;
+
+/** Another Customer's Order on the same service day, straight in the table. */
+async function other(
+  windowStart: Date,
+  status: OrderStatus,
+  drinks: number,
+  {
+    paymentMethod = "pay_at_pickup",
+    placedAt = new Date("2026-11-02T00:50:00Z"),
+  }: { paymentMethod?: PaymentMethod; placedAt?: Date } = {}
+) {
+  const line = (name: string, quantity: number, isDrink: boolean) => ({
+    name,
+    quantity,
+    isDrink,
+    options: [],
+    unitCents: 16500,
+    lineCents: 16500 * quantity,
+  });
+  return db.order.create({
+    data: {
+      serviceDay: new Date("2026-11-02"),
+      code: `K-${++code}`,
+      status,
+      customerName: "Lia Cruz",
+      customerEmail: "lia@example.com",
+      pickupKind: "asap",
+      windowStart,
+      paymentMethod,
+      totalCents: 16500,
+      accessTokenHash: "x",
+      placedAt,
+      lines: {
+        create: [
+          line("Hoshi Latte", drinks, true),
+          line("Ube Pandesal", 4, false),
+        ],
+      },
+    },
+  });
+}
+
+const minutes = (at: Date, by: number) => new Date(at.getTime() + by * 60_000);
+
+describe("drinks ahead on the Order page (FEAT-03)", () => {
+  it("counts drinks the bar makes first, in Bar Screen order, and the poll sees it change", async () => {
+    const mine = await placed();
+    const first = await getOrderForCustomer(mine.orderId, mine.accessToken);
+    expect(first?.drinksAhead).toBe(0);
+    const window = first!.windowStart;
+
+    const earlier = await other(minutes(window, -15), "accepted", 2);
+    await other(window, "placed", 1); // same window, placed before mine
+    await other(window, "placed", 5, {
+      placedAt: new Date("2026-11-02T01:05:00Z"), // placed after mine
+    });
+    await other(minutes(window, -15), "ready", 3); // done, waiting at the counter
+    await other(minutes(window, -15), "placed", 4, { paymentMethod: "gcash" }); // not paid, not on the bar
+    await other(minutes(window, 15), "paid", 6); // a later Pickup Time
+
+    const view = await getOrderForCustomer(mine.orderId, mine.accessToken);
+    expect(view?.drinksAhead).toBe(3);
+    const before = await orderVersion(mine.orderId, mine.accessToken);
+    expect(before?.version).toBe(view?.version);
+
+    await transition(earlier.id, "preparing", annika);
+    await transition(earlier.id, "ready", annika);
+    const after = await orderVersion(mine.orderId, mine.accessToken);
+    expect(after?.version).not.toBe(before?.version);
+    expect(
+      (await getOrderForCustomer(mine.orderId, mine.accessToken))?.drinksAhead
+    ).toBe(1);
+  });
+
+  it("is not given for a Scheduled Pickup, or once the bar is making the Order", async () => {
+    const mine = await placed();
+    await transition(mine.orderId, "accepted", annika);
+    expect(
+      (await getOrderForCustomer(mine.orderId, mine.accessToken))?.drinksAhead
+    ).toBe(0);
+    await transition(mine.orderId, "preparing", annika);
+    expect(
+      (await getOrderForCustomer(mine.orderId, mine.accessToken))?.drinksAhead
+    ).toBeNull();
+
+    const later = await placed();
+    await db.order.update({
+      where: { id: later.orderId },
+      data: { pickupKind: "scheduled" },
+    });
+    expect(
+      (await getOrderForCustomer(later.orderId, later.accessToken))?.drinksAhead
+    ).toBeNull();
   });
 });
 

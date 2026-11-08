@@ -18,6 +18,7 @@ export {
   type OrderingDay,
   type OrderingState,
   type PickupWindow,
+  WINDOW_MINUTES,
 } from "./internal/ordering-day";
 export { getHoursForStaff, getOrderingDay } from "./internal/ordering-day-db";
 export {

@@ -3,15 +3,24 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { ArrowsClockwiseIcon, CheckIcon } from "@phosphor-icons/react/ssr";
+import {
+  ArrowsClockwiseIcon,
+  CalendarPlusIcon,
+  CheckIcon,
+  ClockIcon,
+  MapPinIcon,
+  StorefrontIcon,
+  TicketIcon,
+} from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
+import { mapsUrl } from "@/components/cafe/maps";
+import { OpenStatus } from "@/components/cafe/open-status";
 import { OrderStatusPill } from "@/components/order-status-pill";
-import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
-import { PickupLine } from "@/components/pickup-line";
+import { OUTLINE_PILL, Panel, PRIMARY_PILL } from "@/components/panel";
 import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
-import { getCafeContact } from "@/modules/cafe";
+import { getCafeDetails, getHours } from "@/modules/cafe";
 import { getOrderForCustomer, type OrderView } from "@/modules/ordering";
 
 import { orderAgainAction } from "../../account/actions";
@@ -94,6 +103,32 @@ function message(order: OrderView): string {
   }
 }
 
+/** The bar's queue in a line (FEAT-03). */
+function aheadLine(drinks: number): string {
+  if (drinks === 0) return "No drinks ahead of yours. You're next at the bar.";
+  return drinks === 1
+    ? "1 drink ahead of yours."
+    : `${drinks} drinks ahead of yours.`;
+}
+
+function paymentNote(order: OrderView): string {
+  const closed = ["cancelled", "expired", "refunded"].includes(order.status);
+  if (order.status === "refunded" || order.payment?.status === "refunded") {
+    return "Refunded in full (Test Mode).";
+  }
+  if (closed) {
+    return order.payment?.status === "paid"
+      ? "Paid online (Test Mode). The refund is on its way."
+      : "Nothing to pay.";
+  }
+  if (order.paymentMethod === "pay_at_pickup") {
+    return "Pay at the counter when you collect.";
+  }
+  return order.payment?.status === "paid"
+    ? "Paid online (Test Mode)."
+    : "Not paid yet.";
+}
+
 async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
   // Per request (the link token), and the read below checks the clock.
   await connection();
@@ -102,10 +137,15 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
   const token = typeof t === "string" ? t : "";
   const order = await getOrderForCustomer(id, token);
   if (!order) notFound();
-  const { contactEmail } = await getCafeContact();
+  const [cafe, hours] = await Promise.all([getCafeDetails(), getHours()]);
   const closed = ["cancelled", "expired", "refunded"].includes(order.status);
   const canCancel = order.status === "placed" || order.status === "paid";
   const failed = paymentFailed(order);
+  // Still to collect: where, when and what to show.
+  const live = !closed && order.status !== "picked_up" && !failed;
+  // An unpaid online Order is not on the bar yet.
+  const onBar =
+    order.status !== "placed" || order.paymentMethod === "pay_at_pickup";
   // Where to go next once this Order is done, or can't go on.
   const nextSteps = closed || order.status === "picked_up" || failed;
   const timeline = steps(order);
@@ -184,7 +224,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
             </Link>
           </div>
         )}
-        {!closed && order.status !== "picked_up" && !failed && (
+        {live && (
           <p className="mt-2 text-lg">
             Pickup{" "}
             {order.pickupKind === "asap" ? "as soon as possible, around" : "at"}{" "}
@@ -192,6 +232,11 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
               {formatTime(order.windowStart)}
             </span>
             .
+          </p>
+        )}
+        {live && onBar && order.drinksAhead !== null && (
+          <p className="text-muted-foreground mt-1">
+            {aheadLine(order.drinksAhead)}
           </p>
         )}
 
@@ -294,7 +339,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
               The bar has your order, so it can&apos;t be cancelled here.
               Questions?{" "}
               <a
-                href={`mailto:${contactEmail}?subject=${encodeURIComponent(`Order ${order.code}`)}`}
+                href={`mailto:${cafe.contactEmail}?subject=${encodeURIComponent(`Order ${order.code}`)}`}
               >
                 Email us
               </a>
@@ -338,22 +383,56 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
               {formatPrice(order.totalCents)}
             </span>
           </p>
-          <p className="text-muted-foreground text-sm">
-            {order.paymentMethod === "pay_at_pickup"
-              ? "Pay at the counter when you collect."
-              : order.payment?.status === "paid" ||
-                  order.payment?.status === "refunded"
-                ? "Paid online (Test Mode)."
-                : "Not paid yet."}
-          </p>
+          <p className="text-muted-foreground text-sm">{paymentNote(order)}</p>
         </section>
+        {live && (
+          <Panel
+            id="picking-up"
+            title="Picking up"
+            icon={<StorefrontIcon size={20} />}
+          >
+            <ul className="grid gap-3">
+              <li className="flex gap-3">
+                <MapPinIcon aria-hidden size={20} className="mt-0.5 shrink-0" />
+                <span>
+                  Hoshikopi, {cafe.area}.{" "}
+                  {/* A new tab, so this page keeps following the Order. */}
+                  <a href={mapsUrl(cafe)} target="_blank" rel="noreferrer">
+                    Directions
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <ClockIcon aria-hidden size={20} className="mt-0.5 shrink-0" />
+                <OpenStatus hours={hours} fallback="Open daily" />
+              </li>
+              <li className="flex gap-3">
+                <TicketIcon aria-hidden size={20} className="mt-0.5 shrink-0" />
+                <span>
+                  Show code <span className="font-semibold">{order.code}</span>{" "}
+                  at the bar.
+                </span>
+              </li>
+            </ul>
+            {order.pickupKind === "scheduled" && (
+              <a
+                href={`/orders/${order.id}/calendar?t=${encodeURIComponent(token)}`}
+                download={`hoshikopi-${order.code}.ics`}
+                className={`${OUTLINE_PILL} mt-5`}
+              >
+                <CalendarPlusIcon aria-hidden size={18} />
+                Add to calendar
+              </a>
+            )}
+          </Panel>
+        )}
         {!order.isMember && (
           <p className="bg-muted rounded-card p-4">
             Collect Stars next time: <Link href="/sign-in">sign in</Link> with
             your email before you order. Nine Stars make a free drink.
           </p>
         )}
-        <PickupLine />
       </div>
     </div>
   );

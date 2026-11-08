@@ -68,7 +68,8 @@ Rules:
 | `/api/webhooks/[provider]` | The payment provider (`paymongo` or `fake`) | Route handler; verifies the signature |
 | `/api/cron/daily` | Vercel Cron | Route handler; secret header |
 | `/api/bar` | Baristas, Managers | Route handler; the Bar Screen polls it (section 11) |
-| `/api/orders/[id]/status` | The Customer (Order token) | Route handler; the Order status page polls it |
+| `/api/orders/[id]/status` | The Customer (Order token) | Route handler; the Order status page polls it. Its version also changes with the drinks ahead of an As Soon As Possible Order |
+| `/orders/[id]/calendar` | The Customer (Order token) | Route handler; a calendar file for a Scheduled Pickup (`src/lib/calendar.ts`, shared with Events) |
 | `/api/account/export` | Members | Route handler: "Download my data" as JSON (ACC-03) |
 | `/api/auth/*` | Better Auth | Route handler |
 

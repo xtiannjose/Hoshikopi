@@ -2,13 +2,23 @@ import type { OrderStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
 import { tokenMatches } from "./links";
+import { customerVersion, drinksAhead } from "./queue";
 import { cancelOrder } from "./refund";
 import type { TransitionResult } from "./status";
 
 async function orderWithToken(id: string, token: string) {
   const order = await db.order.findUnique({
     where: { id },
-    select: { id: true, status: true, updatedAt: true, accessTokenHash: true },
+    select: {
+      id: true,
+      status: true,
+      pickupKind: true,
+      serviceDay: true,
+      windowStart: true,
+      placedAt: true,
+      updatedAt: true,
+      accessTokenHash: true,
+    },
   });
   return order && token && tokenMatches(token, order.accessTokenHash)
     ? order
@@ -35,7 +45,7 @@ export async function orderVersion(
   return order
     ? {
         status: order.status,
-        version: `${order.status}:${order.updatedAt.getTime()}`,
+        version: customerVersion(order, await drinksAhead(order)),
       }
     : null;
 }

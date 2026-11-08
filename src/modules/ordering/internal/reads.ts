@@ -13,6 +13,7 @@ import { balance, STARS_PER_REWARD } from "@/modules/loyalty";
 import { expireUnpaid } from "./bar";
 import { orderLink, tokenMatches } from "./links";
 import { baseOf, rewardLineOf } from "./place";
+import { customerVersion, drinksAhead } from "./queue";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS } from "./rules";
 import { offeredWindows } from "./windows";
 
@@ -82,6 +83,8 @@ export type OrderView = {
   cancelReason: string | null;
   /** Changes whenever the Order does; the page polls for it (ADR 0009). */
   version: string;
+  /** Drinks the bar makes first, while an As Soon As Possible Order waits. */
+  drinksAhead: number | null;
   /** Guests are offered an account to keep Stars (ORD-05). */
   isMember: boolean;
   /** The online Payment, if any: pending shows "Finish paying". */
@@ -108,6 +111,7 @@ export async function getOrderForCustomer(
   if (!order || !token || !tokenMatches(token, order.accessTokenHash)) {
     return null;
   }
+  const ahead = await drinksAhead(order);
   return {
     id: order.id,
     code: order.code,
@@ -124,7 +128,8 @@ export async function getOrderForCustomer(
     pickedUpAt: order.pickedUpAt,
     cancelledAt: order.cancelledAt,
     cancelReason: order.cancelReason,
-    version: `${order.status}:${order.updatedAt.getTime()}`,
+    version: customerVersion(order, ahead),
+    drinksAhead: ahead,
     isMember: order.memberId !== null,
     payment: order.payment
       ? { status: order.payment.status, checkoutUrl: order.payment.checkoutUrl }
