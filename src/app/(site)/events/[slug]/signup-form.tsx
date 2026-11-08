@@ -47,7 +47,8 @@ export function SignupForm({
     return (
       <div role="status" className="bg-background rounded-card mt-4 p-4">
         <p className="text-lg">
-          You&apos;re in! We emailed {state.email} with the details.
+          Almost there! We emailed {state.email} a link. Open it within 30
+          minutes to keep your seats.
         </p>
         <p className="mt-2 flex flex-wrap gap-x-6">
           <a

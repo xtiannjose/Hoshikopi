@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
@@ -156,7 +156,7 @@ test("a Customer sends an Inquiry and the Manager answers it (INFO-11)", async (
   await expect(item).toContainText("Answered");
 });
 
-test("a visitor signs up for an Event and the Manager sees it (EVT-02)", async ({
+test("a visitor signs up for an Event, confirms by email, the Manager sees it and the visitor cancels (EVT-02, 8.7)", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "desktop task");
@@ -171,14 +171,20 @@ test("a visitor signs up for an Event and the Manager sees it (EVT-02)", async (
   await signup.getByLabel("Seats").selectOption("2");
   await signup.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("status")).toContainText(
-    `You're in! We emailed ${email} with the details.`
+    `Almost there! We emailed ${email} a link.`
   );
+  let mail = "";
   await expect
     .poll(async () => {
       const files = await readdir(MAIL).catch(() => []);
-      return files.some((file) => file.endsWith(`${email}.txt`));
+      const file = files.find((name) => name.endsWith(`${email}.txt`));
+      mail = file ? await readFile(path.join(MAIL, file), "utf8") : "";
+      return mail;
     })
-    .toBe(true);
+    .toContain("/signup/");
+  const link = mail.match(/https?:\/\/\S+\/signup\/\S+/)![0];
+  // The visitor's own text never goes into the email.
+  expect(mail).not.toContain("Annika");
 
   // The same email can't take more seats.
   await page.reload();
@@ -194,4 +200,24 @@ test("a visitor signs up for an Event and the Manager sees it (EVT-02)", async (
   const list = page.getByRole("region", { name: "Sign-ups" });
   await expect(list).toContainText(email);
   await expect(list).toContainText("2 seats");
+  await expect(list).toContainText("Waiting for the email link");
+
+  // The link confirms, then cancels; Seats are held only while confirmed.
+  await page.goto(link);
+  await expect(page.getByRole("status")).toHaveText(
+    "One more step: confirm within 30 minutes to keep your seats."
+  );
+  await expectNoAxeViolations(page);
+  await page.getByRole("button", { name: "Confirm my seats" }).click();
+  await expect(page.getByRole("status")).toHaveText(
+    "You're in! See you there."
+  );
+  await page.reload();
+  await expect(page.getByRole("status")).toHaveText(
+    "You're in! See you there."
+  );
+  await page.getByRole("button", { name: "Cancel my Sign-up" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Cancelled. Your seats are free for someone else."
+  );
 });

@@ -58,6 +58,7 @@ Rules:
 | `/cafe/inquire` (V1) | Everyone | Dynamic form; rate limited (PRD INFO-11) |
 | `/events`, `/events/[slug]`, `/news`, `/news/[slug]` | Everyone | Prerendered; tagged `content` |
 | `/events/[slug]/calendar` (V1) | Everyone | Route handler: the Event as an iCalendar file (PRD EVT-04) |
+| `/events/[slug]/signup/[id]` | The guest (Sign-up token in the email link) | Dynamic; confirms a waiting Sign-up within 30 minutes, or cancels one (8.7) |
 | `/cart`, `/checkout` | Everyone | Dynamic (per Customer) |
 | `/orders/[id]` | The Customer (Order token in the link) or the Member | Dynamic; polls for status |
 | `/dev/pay/[id]` | The Customer | The `fake` checkout; not found unless the provider is `fake` (section 8) |
