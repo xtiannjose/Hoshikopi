@@ -32,6 +32,10 @@ export async function getOrderingDay(
           await reads[2](),
           await reads[3](),
         ];
+  const busy =
+    settings.busyUntil && settings.busyUntil > at
+      ? { minutes: settings.busyMinutes, until: settings.busyUntil }
+      : null;
   const source = special ?? weekly;
   const open =
     source &&
@@ -54,9 +58,11 @@ export async function getOrderingDay(
     },
     pausedUntil: settings.orderingPausedUntil,
     pauseMessage: settings.pauseMessage,
+    busy,
     prep: {
       baseMinutes: settings.prepBaseMinutes.toNumber(),
       perDrinkMinutes: settings.prepPerDrinkMinutes.toNumber(),
+      busyMinutes: busy?.minutes ?? 0,
     },
   };
 }

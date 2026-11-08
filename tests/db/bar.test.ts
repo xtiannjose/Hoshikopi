@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { PaymentMethod } from "@/generated/prisma/enums";
 import { freezeClock, unfreezeClock } from "@/lib/clock";
+import { startBusyMode } from "@/modules/cafe";
 import { barBoard, expireUnpaid, transition } from "@/modules/ordering";
 
 import { seedDatabase } from "../../prisma/seed-data";
@@ -139,5 +140,26 @@ describe("expireUnpaid (PAY-04, ADR 0007)", () => {
         where: { windowStart: at("09:30") },
       })
     ).toMatchObject({ drinks: 2 });
+  });
+});
+
+describe("Busy Mode on the Bar Screen (8.4)", () => {
+  it("shows on the board and starts Scheduled Orders sooner", async () => {
+    await order("09:15");
+    // Prep Time 5 minutes: 9:15 is not due at 9:00.
+    const before = await barBoard(at("09:00"));
+    expect(before.busy).toBeNull();
+    expect(before.orders[0].makeNext).toBe(false);
+
+    await startBusyMode(15, 30, {
+      id: "seed-manager",
+      name: "Christian",
+      role: "manager",
+    });
+    // Prep Time 20 minutes: 9:15 is due from 8:55.
+    const busy = await barBoard(at("09:00"));
+    expect(busy.busy).toEqual({ minutes: 15, until: at("09:30") });
+    expect(busy.orders[0].makeNext).toBe(true);
+    expect(busy.version).not.toBe(before.version);
   });
 });

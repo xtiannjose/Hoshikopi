@@ -2,12 +2,14 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import {
+  endBusyMode,
   getOrderingDay,
   pauseOrdering,
   resumeOrdering,
   saveCapacity,
   saveSpecialHours,
   saveWeeklyHours,
+  startBusyMode,
 } from "@/modules/cafe";
 
 import { seedDatabase } from "../../prisma/seed-data";
@@ -103,5 +105,40 @@ describe("Ordering Paused", () => {
     });
     await resumeOrdering(christian);
     expect((await getOrderingDay(new Date(MONDAY_9AM))).pausedUntil).toBeNull();
+  });
+});
+
+describe("Busy Mode (8.4)", () => {
+  it("adds minutes to Prep Time for a while, then ends by itself", async () => {
+    await startBusyMode(15, 60, christian);
+    expect(await getOrderingDay(new Date(MONDAY_9AM))).toMatchObject({
+      busy: { minutes: 15, until: new Date("2026-11-02T02:00:00Z") },
+      prep: { baseMinutes: 4, perDrinkMinutes: 1.5, busyMinutes: 15 },
+    });
+    const later = await getOrderingDay(new Date("2026-11-02T02:00:00Z"));
+    expect(later.busy).toBeNull();
+    expect(later.prep.busyMinutes).toBe(0);
+    expect(
+      await db.auditLog.findFirst({
+        where: { action: "cafe.busy.start" },
+        select: { actorId: true, data: true },
+      })
+    ).toEqual({
+      actorId: "seed-manager",
+      data: { minutes: 15, forMinutes: 60 },
+    });
+  });
+
+  it("can be ended early, and refuses odd amounts", async () => {
+    await startBusyMode(10, 30, christian);
+    await endBusyMode(christian);
+    const day = await getOrderingDay(new Date(MONDAY_9AM));
+    expect(day.busy).toBeNull();
+    expect(day.prep.busyMinutes).toBe(0);
+    expect(
+      await db.auditLog.count({ where: { action: "cafe.busy.end" } })
+    ).toBe(1);
+    await expect(startBusyMode(45, 30, christian)).rejects.toThrow();
+    await expect(startBusyMode(10, 600, christian)).rejects.toThrow();
   });
 });

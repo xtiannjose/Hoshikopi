@@ -17,6 +17,10 @@ describe("prepMinutes (Prep Time, ADR 0007)", () => {
     expect(prepMinutes(4, PREP)).toBe(10); // 4 + 6 = 10
     expect(prepMinutes(5, PREP)).toBe(15); // 4 + 7.5 = 11.5
   });
+  it("adds Busy Mode's minutes before rounding (8.4)", () => {
+    expect(prepMinutes(4, { ...PREP, busyMinutes: 15 })).toBe(25); // 10 + 15
+    expect(prepMinutes(5, { ...PREP, busyMinutes: 10 })).toBe(25); // 21.5
+  });
 });
 
 // Manila is UTC+8; at() reads a Manila wall-clock time on Monday Nov 2.
@@ -28,6 +32,7 @@ const DAY: OrderingDay = {
   capacity: { drinks: 12, food: 8 },
   pausedUntil: null,
   pauseMessage: null,
+  busy: null,
   prep: PREP,
 };
 const none = new Map<string, { drinks: number; food: number }>();

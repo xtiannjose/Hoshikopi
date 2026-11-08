@@ -129,7 +129,7 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 
 - A day is cut into 15-minute Pickup Windows from opening to the last order time. Capacity per window (drinks, food Lines) is set per day of the week; Special Hours close or shorten a day.
 - `pickup_window_usage(day, window_start)` holds counts taken; `placeOrder` locks and updates it.
-- **Prep Time** for As Soon As Possible: `base_minutes + per_drink_minutes × drinks queued ahead in Accepted or Preparing`, rounded up to the next 5 minutes; both numbers are Manager settings (defaults 4 and 1.5). ASAP takes the earliest window that starts after now + Prep Time and has room.
+- **Prep Time** for As Soon As Possible: `base_minutes + per_drink_minutes × drinks queued ahead in Accepted or Preparing + Busy Mode minutes`, rounded up to the next 5 minutes; both numbers are Manager settings (defaults 4 and 1.5). ASAP takes the earliest window that starts after now + Prep Time and has room.
 - The checkout lists only windows with room; the server checks again when placing.
 
 ## 10. Loyalty
@@ -144,7 +144,7 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 
 ([ADR 0009](adr/0009-live-updates-by-polling.md))
 
-- The Bar Screen fetches `/api/bar` every 3 seconds with the last-seen board version; the server answers "no change" cheaply. The version covers the Orders, the pause, the Prep Time and how many Orders are make-next, so a Scheduled Order coming due refreshes the board. A new Order plays a sound and highlights its card. Signed out, `/api/bar` answers 401 JSON (not a redirect), and the board stops polling and says so, with a link to sign in again.
+- The Bar Screen fetches `/api/bar` every 3 seconds with the last-seen board version; the server answers "no change" cheaply. The version covers the Orders, the pause, Busy Mode, the Prep Time and how many Orders are make-next, so a Scheduled Order coming due refreshes the board. A new Order plays a sound and highlights its card. Signed out, `/api/bar` answers 401 JSON (not a redirect), and the board stops polling and says so, with a link to sign in again.
 - The Order status page polls every 5 seconds until `ready`, then every 30 seconds until `picked_up` or closed.
 - Server-Sent Events or a hosted realtime service are a later upgrade if polling cost or delay is measured as a problem.
 

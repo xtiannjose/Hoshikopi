@@ -1,7 +1,12 @@
 import { manilaInstant } from "@/lib/clock";
 import { toMinutes, type DayHours } from "@/lib/hours";
 
-export type PrepSettings = { baseMinutes: number; perDrinkMinutes: number };
+export type PrepSettings = {
+  baseMinutes: number;
+  perDrinkMinutes: number;
+  /** Busy Mode's extra minutes while it is on (8.4). */
+  busyMinutes?: number;
+};
 
 /** What ordering needs to know about one Manila service day. */
 export type OrderingDay = {
@@ -12,6 +17,8 @@ export type OrderingDay = {
   capacity: { drinks: number; food: number };
   pausedUntil: Date | null;
   pauseMessage: string | null;
+  /** Busy Mode while it is on: its minutes are in `prep` too (8.4). */
+  busy: { minutes: number; until: Date } | null;
   prep: PrepSettings;
 };
 
@@ -28,10 +35,14 @@ export const WINDOW_MINUTES = 15;
 
 /**
  * Prep Time for As Soon As Possible: base + per drink x drinks queued ahead
- * (Accepted or Preparing), rounded up to the next 5 minutes (ADR 0007).
+ * (Accepted or Preparing), plus Busy Mode's minutes, rounded up to the next
+ * 5 minutes (ADR 0007, 8.4).
  */
 export function prepMinutes(drinksAhead: number, prep: PrepSettings): number {
-  const minutes = prep.baseMinutes + prep.perDrinkMinutes * drinksAhead;
+  const minutes =
+    prep.baseMinutes +
+    prep.perDrinkMinutes * drinksAhead +
+    (prep.busyMinutes ?? 0);
   return Math.ceil(minutes / 5) * 5;
 }
 

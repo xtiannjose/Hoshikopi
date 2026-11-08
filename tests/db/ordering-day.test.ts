@@ -25,7 +25,8 @@ describe("getOrderingDay", () => {
       capacity: { drinks: 12, food: 8 },
       pausedUntil: null,
       pauseMessage: null,
-      prep: { baseMinutes: 4, perDrinkMinutes: 1.5 },
+      busy: null,
+      prep: { baseMinutes: 4, perDrinkMinutes: 1.5, busyMinutes: 0 },
     });
   });
 

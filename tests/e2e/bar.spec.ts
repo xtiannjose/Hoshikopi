@@ -109,3 +109,28 @@ test("the Bar Screen says it stopped when its session ends (audit, 7.4)", async 
     alert.getByRole("link", { name: "Sign in again" })
   ).toHaveAttribute("href", "/sign-in?next=%2Fbar");
 });
+
+test("a Manager turns on Busy Mode from the Bar Screen and checkout says so (8.4)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  test.setTimeout(120_000);
+  // Busy Mode, like Pause, needs the Manager's Second Factor.
+  await signIn(page, "christian@hoshikopi.example", "/manage");
+  await page.goto("/bar");
+  await page.getByRole("button", { name: "Busy +15 min, 1 hour" }).click();
+  const banner = page.getByRole("status").filter({ hasText: "Busy Mode" });
+  await expect(banner).toContainText("Busy Mode: Prep Time +15 min until");
+  await expectNoAxeViolations(page);
+
+  await page.goto("/menu/item/kopi-hitam");
+  await page.getByRole("button", { name: "Add to order" }).click();
+  await expect(page.getByRole("status")).toContainText("Added");
+  await page.goto("/checkout");
+  await expect(page.getByText("The bar is extra busy right now")).toBeVisible();
+
+  // Other specs share this database: end it right away.
+  await page.goto("/bar");
+  await page.getByRole("button", { name: "End Busy Mode" }).click();
+  await expect(banner).toHaveCount(0);
+});

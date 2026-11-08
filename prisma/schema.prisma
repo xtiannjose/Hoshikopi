@@ -157,6 +157,9 @@ model CafeSettings {
   id                  Int       @id @default(1)
   orderingPausedUntil DateTime? @map("ordering_paused_until") @db.Timestamptz(3)
   pauseMessage        String?   @map("pause_message")
+  /// Busy Mode (8.4): minutes added to Prep Time until busy_until.
+  busyMinutes         Int       @default(0) @map("busy_minutes") @db.SmallInt
+  busyUntil           DateTime? @map("busy_until") @db.Timestamptz(3)
   prepBaseMinutes     Decimal   @map("prep_base_minutes") @db.Decimal(4, 1)
   prepPerDrinkMinutes Decimal   @map("prep_per_drink_minutes") @db.Decimal(4, 1)
   orderCodePrefix     String    @map("order_code_prefix")

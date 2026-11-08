@@ -55,6 +55,8 @@ export type BarBoard = {
   version: string;
   orders: BarOrder[];
   paused: { until: Date; message: string | null } | null;
+  /** Busy Mode while it is on (8.4); Prep Time already counts it. */
+  busy: { minutes: number; until: Date } | null;
 };
 
 /** Today's live Orders for the Bar Screen, by Pickup Time (STAFF-02). */
@@ -104,8 +106,9 @@ export async function barBoard(at: Date): Promise<BarBoard> {
   // both are in the version the Bar Screen compares (audit, 7.4).
   const due = orders.filter((o) => o.makeNext).length;
   return {
-    version: `${rows.length}:${latest}:${paused?.until.getTime() ?? 0}:${prep}:${due}`,
+    version: `${rows.length}:${latest}:${paused?.until.getTime() ?? 0}:${day.busy?.until.getTime() ?? 0}:${prep}:${due}`,
     paused,
+    busy: day.busy,
     orders,
   };
 }

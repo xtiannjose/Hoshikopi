@@ -21,6 +21,8 @@ export type CheckoutView = {
   state: OrderingState;
   cart: CartView;
   prepMinutes: number;
+  /** Busy Mode is on: Prep Time and the windows are longer than usual. */
+  busy: boolean;
   windows: PickupWindow[];
   /** Guests may Pay at Pickup for up to 4 drinks (PAY-02). */
   payAtPickupAllowed: boolean;
@@ -58,6 +60,7 @@ export async function checkoutView(
     state: orderingState(at, day),
     cart,
     prepMinutes,
+    busy: day.busy !== null,
     windows,
     reward,
     payAtPickupAllowed:
