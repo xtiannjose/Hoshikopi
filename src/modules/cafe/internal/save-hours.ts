@@ -244,3 +244,54 @@ export async function resumeOrdering(actor: Staff) {
     );
   });
 }
+
+/** What the Bar Screen offers for Busy Mode (8.4, audit FEAT-02). */
+export const BUSY_MINUTES = [10, 15] as const;
+export const BUSY_FOR_MINUTES = [30, 60] as const;
+
+/**
+ * Busy Mode: during a rush the counter's walk-ins never reach the queue, so
+ * the Manager adds minutes to Prep Time for a while; it ends by itself.
+ */
+export async function startBusyMode(
+  minutes: number,
+  forMinutes: number,
+  actor: Staff
+) {
+  if (
+    !(BUSY_MINUTES as readonly number[]).includes(minutes) ||
+    !(BUSY_FOR_MINUTES as readonly number[]).includes(forMinutes)
+  ) {
+    throw new Error("Busy Mode takes 10 or 15 minutes for 30 or 60 minutes");
+  }
+  const until = new Date(now().getTime() + forMinutes * 60_000);
+  await db.$transaction(async (tx) => {
+    await tx.cafeSettings.update({
+      where: { id: 1 },
+      data: { busyMinutes: minutes, busyUntil: until },
+    });
+    await audit(
+      actor,
+      "cafe.busy.start",
+      { type: "cafe_settings", id: "1" },
+      { minutes, forMinutes },
+      tx
+    );
+  });
+}
+
+export async function endBusyMode(actor: Staff) {
+  await db.$transaction(async (tx) => {
+    await tx.cafeSettings.update({
+      where: { id: 1 },
+      data: { busyMinutes: 0, busyUntil: null },
+    });
+    await audit(
+      actor,
+      "cafe.busy.end",
+      { type: "cafe_settings", id: "1" },
+      {},
+      tx
+    );
+  });
+}

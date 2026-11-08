@@ -177,6 +177,12 @@ async function Checkout() {
           </p>
         )}
 
+        {view.busy && first && (
+          <p className="text-warning font-semibold">
+            The bar is extra busy right now, so pickup times are a little longer
+            than usual. Salamat for your patience!
+          </p>
+        )}
         {!first ? (
           <div className="bg-muted rounded-card grid justify-items-start gap-3 p-5">
             <p>

@@ -3,12 +3,16 @@
 import { updateTag } from "next/cache";
 
 import {
+  BUSY_FOR_MINUTES,
+  BUSY_MINUTES,
   deleteSpecialHours,
+  endBusyMode,
   pauseOrdering,
   resumeOrdering,
   saveCapacity,
   saveSpecialHours,
   saveWeeklyHours,
+  startBusyMode,
 } from "@/modules/cafe";
 import { requireStaff } from "@/modules/identity";
 
@@ -106,5 +110,26 @@ export async function pauseAction(form: FormData) {
 export async function resumeAction() {
   const staff = await manager();
   await resumeOrdering(staff);
+  updateTag("hours");
+}
+
+/** Busy Mode from the Bar Screen (8.4): only the offered amounts go in. */
+export async function busyAction(form: FormData) {
+  const staff = await manager();
+  const minutes = Number(text(form, "minutes"));
+  const forMinutes = Number(text(form, "forMinutes"));
+  if (
+    !(BUSY_MINUTES as readonly number[]).includes(minutes) ||
+    !(BUSY_FOR_MINUTES as readonly number[]).includes(forMinutes)
+  ) {
+    return;
+  }
+  await startBusyMode(minutes, forMinutes, staff);
+  updateTag("hours");
+}
+
+export async function endBusyAction() {
+  const staff = await manager();
+  await endBusyMode(staff);
   updateTag("hours");
 }

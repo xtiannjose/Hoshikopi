@@ -106,7 +106,11 @@ _Avoid_: State (in UI copy), stage
 
 **Ordering Paused**:
 The Manager has stopped new Orders for now (busy bar, closing early). Menu stays visible; checkout says when ordering resumes.
-_Avoid_: Busy mode, store closed (when the cafe is open)
+_Avoid_: Store closed (when the cafe is open)
+
+**Busy Mode**:
+During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen; it ends by itself. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
+_Avoid_: Rush mode, delay mode, snooze
 
 ### Payments
 

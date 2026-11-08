@@ -12,7 +12,12 @@ import { SpeakerHighIcon, SpeakerSlashIcon } from "@phosphor-icons/react";
 
 import { formatTime, now } from "@/lib/clock";
 
-import { pauseAction, resumeAction } from "../manage/hours/actions";
+import {
+  busyAction,
+  endBusyAction,
+  pauseAction,
+  resumeAction,
+} from "../manage/hours/actions";
 import { advanceOrder, cancelAtBar } from "./actions";
 
 type Status = "placed" | "paid" | "accepted" | "preparing" | "ready";
@@ -39,6 +44,7 @@ type Board = {
   version: string;
   orders: Order[];
   paused: { until: string; message: string | null } | null;
+  busy: { minutes: number; until: string } | null;
 };
 
 const STEP: Record<Status, string> = {
@@ -316,6 +322,56 @@ export function BarScreen({
                   </button>
                 </form>
               ))}
+            {manager &&
+              !board.paused &&
+              (board.busy ? (
+                <form
+                  action={endBusyAction}
+                  onSubmit={() => setTimeout(poll, 500)}
+                >
+                  <button
+                    type="submit"
+                    className="border-input min-h-12 rounded-full border px-5 font-semibold"
+                  >
+                    End Busy Mode
+                  </button>
+                </form>
+              ) : (
+                // A rush the queue can't see (walk-ins): longer, honest
+                // times instead of pausing (8.4).
+                <div
+                  role="group"
+                  aria-label="Busy Mode"
+                  className="flex flex-wrap gap-2"
+                >
+                  {(
+                    [
+                      [10, 30],
+                      [15, 60],
+                    ] as const
+                  ).map(([minutes, forMinutes]) => (
+                    <form
+                      key={minutes}
+                      action={busyAction}
+                      onSubmit={() => setTimeout(poll, 500)}
+                    >
+                      <input type="hidden" name="minutes" value={minutes} />
+                      <input
+                        type="hidden"
+                        name="forMinutes"
+                        value={forMinutes}
+                      />
+                      <button
+                        type="submit"
+                        className="border-input min-h-12 rounded-full border px-5 font-semibold"
+                      >
+                        Busy +{minutes} min,{" "}
+                        {forMinutes === 60 ? "1 hour" : `${forMinutes} min`}
+                      </button>
+                    </form>
+                  ))}
+                </div>
+              ))}
           </div>
         </header>
         {/* Not role=status: the paused banner below already has it. */}
@@ -328,6 +384,13 @@ export function BarScreen({
         <p role="status" className="text-warning text-lg font-semibold">
           Ordering Paused until {formatTime(new Date(board.paused.until))}.
           {board.paused.message && ` "${board.paused.message}"`}
+        </p>
+      )}
+      {board.busy && !board.paused && (
+        <p role="status" className="text-warning text-lg font-semibold">
+          Busy Mode: Prep Time +{board.busy.minutes} min until{" "}
+          {formatTime(new Date(board.busy.until))}. Customers see the longer
+          times.
         </p>
       )}
 
