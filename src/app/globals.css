@@ -222,7 +222,13 @@
     }
   }
 
-  /* The phone menu slides in from the right and back out. */
+  /* A drawer is open: the floating Cart steps aside instead of sitting
+     over it. */
+  :root:has(:popover-open) .cart-pill {
+    visibility: hidden;
+  }
+
+  /* The phone menu and the Cart slide in from the right and back out. */
   .drawer {
     translate: 100% 0;
     transition:

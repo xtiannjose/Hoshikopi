@@ -1,3 +1,6 @@
+import { Suspense } from "react";
+
+import { CartFloat } from "@/components/shell/cart-float";
 import { Footer } from "@/components/shell/footer";
 import { Header } from "@/components/shell/header";
 
@@ -8,6 +11,10 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
       <Header />
       {children}
       <Footer />
+      {/* Per browser, so the prerendered pages keep a hole for it. */}
+      <Suspense>
+        <CartFloat />
+      </Suspense>
     </>
   );
 }
