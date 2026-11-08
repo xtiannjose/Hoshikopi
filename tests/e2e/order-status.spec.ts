@@ -13,6 +13,8 @@ test("the Order page follows the bar live (ORD-08)", async ({ page }) => {
     "Salamat! We got your order. The bar will accept it soon."
   );
   await expect(page.locator('[aria-current="step"]')).toContainText("Placed");
+  // Other specs place Orders too, so only the line itself is checked.
+  await expect(page.getByText(/ahead of yours\./)).toBeVisible();
 
   // Moves the Order on directly; bar.spec.ts drives the real Bar Screen.
   await e2eQuery(
@@ -26,6 +28,37 @@ test("the Order page follows the bar live (ORD-08)", async ({ page }) => {
   await expect(page.getByText("can't be cancelled here")).toBeVisible();
 });
 
+test("the Order page hands off a Scheduled Pickup: where, what to show and a calendar file (8.6)", async ({
+  page,
+}) => {
+  await addToCart(page, "kopi-hitam");
+  await page.goto("/checkout");
+  const later = page.locator('input[name="pickup"]:not([value="asap"])').last();
+  await later.locator("xpath=..").click();
+  await page.getByText("Pay at Pickup", { exact: true }).click();
+  await page.getByLabel("Name").fill("Lorna");
+  await page.getByLabel("Email").fill("lorna@example.com");
+  await page.getByRole("button", { name: /Place order/ }).click();
+  await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
+
+  const panel = page.getByRole("region", { name: "Picking up" });
+  await expect(panel.getByRole("link", { name: "Directions" })).toHaveAttribute(
+    "href",
+    /google\.com\/maps/
+  );
+  await expect(panel).toContainText(/Show code K-\d+ at the bar\./);
+  const href = await panel
+    .getByRole("link", { name: "Add to calendar" })
+    .getAttribute("href");
+  const file = await page.request.get(href!);
+  expect(file.headers()["content-type"]).toContain("text/calendar");
+  expect(await file.text()).toContain(
+    "SUMMARY:Pick up your Hoshikopi order K-"
+  );
+  // Made near its Pickup Time, so no queue line.
+  await expect(page.getByText(/ahead of yours/)).toHaveCount(0);
+});
+
 test("a Customer cancels before the bar accepts (ORD-09)", async ({ page }) => {
   await addToCart(page, "kopi-hitam");
   await placeGuestOrder(page, "Migs");
@@ -36,6 +69,10 @@ test("a Customer cancels before the bar accepts (ORD-09)", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Cancel order" })).toHaveCount(
     0
   );
+  // No dead end and no payment to make (8.6).
+  await expect(page.getByText("Nothing to pay.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "See the menu" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Picking up" })).toHaveCount(0);
 });
 
 for (const palette of ["day", "night"] as const) {
