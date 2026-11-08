@@ -22,10 +22,11 @@ import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { getCafeDetails, getHours } from "@/modules/cafe";
 import { getOrderForCustomer, type OrderView } from "@/modules/ordering";
+import { demoMode } from "@/modules/payments";
 
 import { orderAgainAction } from "../../account/actions";
 
-import { cancelOrderAction } from "./actions";
+import { cancelOrderAction, demoAdvanceAction } from "./actions";
 import { StatusPoller } from "./status-poller";
 
 export const metadata: Metadata = {
@@ -103,6 +104,15 @@ function message(order: OrderView): string {
   }
 }
 
+/** The bar's next tap, as the Bar Screen words it (Demo Mode, ADR 0015). */
+const DEMO_STEP: Partial<Record<OrderView["status"], string>> = {
+  placed: "Accept the order",
+  paid: "Accept the order",
+  accepted: "Start making it",
+  preparing: "Mark it Ready",
+  ready: "Hand it over",
+};
+
 /** The bar's queue in a line (FEAT-03). */
 function aheadLine(drinks: number): string {
   if (drinks === 0) return "No drinks ahead of yours. You're next at the bar.";
@@ -146,6 +156,9 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
   // An unpaid online Order is not on the bar yet.
   const onBar =
     order.status !== "placed" || order.paymentMethod === "pay_at_pickup";
+  // Demo Mode: nobody is behind this bar, so the visitor plays the barista.
+  const demoStep =
+    demoMode() && live && onBar ? DEMO_STEP[order.status] : undefined;
   // Where to go next once this Order is done, or can't go on.
   const nextSteps = closed || order.status === "picked_up" || failed;
   const timeline = steps(order);
@@ -312,6 +325,30 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
               );
             })}
           </ol>
+        )}
+
+        {demoStep && (
+          <section
+            aria-labelledby="demo-bar"
+            className="rounded-card border-star bg-muted mt-8 grid justify-items-start gap-3 border p-5"
+          >
+            <p className="text-muted-foreground font-mono text-sm">Demo Mode</p>
+            <h2 id="demo-bar" className="font-display text-2xl italic">
+              Be the barista
+            </h2>
+            <p className="max-w-measure">
+              This is a concept cafe, so nobody is behind the bar. Tap the
+              bar&apos;s next step yourself and watch this page follow, as it
+              would on a real day from the Bar Screen.
+            </p>
+            <form action={demoAdvanceAction}>
+              <input type="hidden" name="id" value={order.id} />
+              <input type="hidden" name="t" value={token} />
+              <button type="submit" className={PRIMARY_PILL}>
+                {demoStep}
+              </button>
+            </form>
+          </section>
         )}
 
         {canCancel ? (

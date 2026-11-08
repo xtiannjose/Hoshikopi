@@ -108,6 +108,10 @@ _Avoid_: State (in UI copy), stage
 The Manager has stopped new Orders for now (busy bar, closing early). Menu stays visible; checkout says when ordering resumes.
 _Avoid_: Store closed (when the cafe is open)
 
+**Demo Mode**:
+On while the fake payment provider runs (locally and on the `*.vercel.app` demo): with no one behind the bar, a visitor taps the bar's steps on their own Order page ("Be the barista") and watches it move, and the concept page says how to try it (ADR 0015). Recorded as the `demo` actor, never as Staff.
+_Avoid_: Sandbox, test mode (that is the payments' Test Mode)
+
 **Busy Mode**:
 During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen; it ends by itself. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
 _Avoid_: Rush mode, delay mode, snooze

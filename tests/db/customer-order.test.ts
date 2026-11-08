@@ -4,6 +4,7 @@ import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
 import type { OrderStatus, PaymentMethod } from "@/generated/prisma/enums";
 import {
+  advanceInDemo,
   cancelByCustomer,
   getOrderForCustomer,
   orderVersion,
@@ -181,5 +182,47 @@ describe("orderVersion (polling, ADR 0009)", () => {
     const after = await orderVersion(order.orderId, order.accessToken);
     expect(after?.status).toBe("accepted");
     expect(after?.version).not.toBe(before?.version);
+  });
+});
+
+describe("Demo Mode: the visitor plays the barista (8.1)", () => {
+  it("moves their own Order one step at a time with its link, recorded as demo", async () => {
+    const order = await placed();
+    expect(await advanceInDemo(order.orderId, "wrong")).toMatchObject({
+      ok: false,
+      reason: "not_found",
+    });
+    const steps: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      const result = await advanceInDemo(order.orderId, order.accessToken);
+      if (!result.ok) throw new Error(result.reason);
+      steps.push(result.order.status);
+    }
+    expect(steps).toEqual(["accepted", "preparing", "ready", "picked_up"]);
+    // Picked Up is the end: nothing left to play.
+    expect(await advanceInDemo(order.orderId, order.accessToken)).toMatchObject(
+      { ok: false, reason: "not_allowed" }
+    );
+    const events = await db.orderEvent.findMany({
+      where: { orderId: order.orderId, toStatus: { not: "placed" } },
+      select: { actorKind: true },
+    });
+    expect(events.map((e) => e.actorKind)).toEqual([
+      "demo",
+      "demo",
+      "demo",
+      "demo",
+    ]);
+  });
+
+  it("leaves an unpaid online Order to the checkout", async () => {
+    const order = await placed();
+    await db.order.update({
+      where: { id: order.orderId },
+      data: { paymentMethod: "gcash" },
+    });
+    expect(await advanceInDemo(order.orderId, order.accessToken)).toMatchObject(
+      { ok: false, reason: "not_allowed", status: "placed" }
+    );
   });
 });

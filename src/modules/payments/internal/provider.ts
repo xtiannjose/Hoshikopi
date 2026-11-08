@@ -52,6 +52,15 @@ export function paymentProvider(): PaymentProvider {
   return current;
 }
 
+/**
+ * Demo Mode (ADR 0015) is on exactly when the fake provider runs, which it
+ * only does locally and on *.vercel.app demos: a visitor may then play the
+ * barista on their own Order.
+ */
+export function demoMode(): boolean {
+  return paymentProvider().name === "fake";
+}
+
 /** Signs an event as the fake checkout page sends it; fake provider only. */
 export function signFakeEvent(event: ProviderEvent) {
   const provider = paymentProvider();

@@ -7,6 +7,7 @@ import {
   releaseRedemption,
   reverseForOrder,
 } from "@/modules/loyalty";
+import { demoMode } from "@/modules/payments";
 
 import { emailOrderPlaced, emailOrderReady } from "./emails";
 
@@ -17,7 +18,9 @@ export type Actor =
   | { kind: "customer"; id?: string }
   | { kind: "webhook" }
   | { kind: "system" }
-  | { kind: "staff"; id: string; role: "barista" | "manager" };
+  | { kind: "staff"; id: string; role: "barista" | "manager" }
+  /** A visitor playing the barista on their own Order (ADR 0015). */
+  | { kind: "demo" };
 
 export type TransitionResult =
   | { ok: true; order: Order; from: OrderStatus }
@@ -29,6 +32,9 @@ export type TransitionResult =
 
 const ONLINE = (order: Order) => order.paymentMethod !== "pay_at_pickup";
 const isStaff = (actor: Actor) => actor.kind === "staff";
+/** The bar's own steps: Staff, or a visitor in Demo Mode (ADR 0015). */
+const isBar = (actor: Actor) =>
+  isStaff(actor) || (actor.kind === "demo" && demoMode());
 const isManager = (actor: Actor) =>
   actor.kind === "staff" && actor.role === "manager";
 
@@ -42,15 +48,15 @@ function allowed(order: Order, to: OrderStatus, actor: Actor): boolean {
       return from === "placed" && ONLINE(order) && actor.kind === "system";
     case "accepted":
       return (
-        isStaff(actor) &&
+        isBar(actor) &&
         ((from === "placed" && !ONLINE(order)) || from === "paid")
       );
     case "preparing":
-      return isStaff(actor) && from === "accepted";
+      return isBar(actor) && from === "accepted";
     case "ready":
-      return isStaff(actor) && from === "preparing";
+      return isBar(actor) && from === "preparing";
     case "picked_up":
-      return isStaff(actor) && from === "ready";
+      return isBar(actor) && from === "ready";
     case "cancelled":
       if (actor.kind === "customer")
         return from === "placed" || from === "paid";
