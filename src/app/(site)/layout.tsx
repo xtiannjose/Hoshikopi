@@ -10,7 +10,11 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
     <>
       <Header />
       {children}
-      <Footer />
+      {/* A Suspense boundary hydrates on its own, splitting the page's
+          hydration into shorter tasks (7.6). */}
+      <Suspense>
+        <Footer />
+      </Suspense>
       {/* Per browser, so the prerendered pages keep a hole for it. */}
       <Suspense>
         <CartFloat />

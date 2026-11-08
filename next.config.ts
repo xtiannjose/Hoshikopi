@@ -18,7 +18,10 @@ const csp = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  partialPrefetching: true,
+  // Off (7.6): with it on, every page carried its React payload twice (Home
+  // 405 kB raw, 50 kB compressed); off, once (258 kB, 34 kB). Links still
+  // prefetch, after the page has loaded.
+  partialPrefetching: false,
   // Menu photos up to 2 MB go through a Server Action (batch 1.5), which
   // refuses bodies over 1 MB by default. The action checks the role first.
   experimental: { serverActions: { bodySizeLimit: "3mb" } },

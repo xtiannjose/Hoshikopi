@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { InfoIcon } from "@phosphor-icons/react/ssr";
+import {
+  CheckIcon,
+  InfoIcon,
+  MinusIcon,
+  PlusIcon,
+} from "@phosphor-icons/react/ssr";
 
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Badges } from "@/components/menu/badges";
@@ -118,14 +123,24 @@ async function MenuItemDetails({
             Sold out today. Back tomorrow, salamat for understanding!
           </p>
         ) : (
-          <OptionPicker
-            menuItemId={item.id}
-            name={item.name}
-            baseCents={item.baseCents}
-            groups={item.optionGroups}
-            categorySlug={item.categorySlug}
-            categoryName={item.categoryName}
-          />
+          // Its own Suspense boundary: React hydrates it as a separate task,
+          // so the page's hydration is no one long task (7.6).
+          <Suspense>
+            <OptionPicker
+              // Rendered here, so no icon code ships with the picker (7.6).
+              icons={{
+                minus: <MinusIcon aria-hidden size={18} />,
+                plus: <PlusIcon aria-hidden size={18} />,
+                check: <CheckIcon size={18} weight="bold" />,
+              }}
+              menuItemId={item.id}
+              name={item.name}
+              baseCents={item.baseCents}
+              groups={item.optionGroups}
+              categorySlug={item.categorySlug}
+              categoryName={item.categoryName}
+            />
+          </Suspense>
         )}
         {item.pairing && <PairingCard pairing={item.pairing} />}
       </div>

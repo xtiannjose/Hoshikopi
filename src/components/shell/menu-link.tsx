@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 
 import { IconCircle } from "@/components/panel";
 
-import { isCurrent, MENU_LINK_CLASS } from "./nav-links";
+import { isCurrent, MENU_LINK_CLASS } from "./nav-classes";
 
 /** A link in the phone menu: the layout stays mounted, so close the menu. */
 export function MenuLink({

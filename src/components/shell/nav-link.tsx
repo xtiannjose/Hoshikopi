@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { isCurrent, NAV_LINK_CLASS } from "./nav-links";
+import { isCurrent, NAV_LINK_CLASS } from "./nav-classes";
 
 /** A Main nav link, underlined while you are in its section. usePathname
  * suspends on routes with fallback params, so callers wrap it in Suspense. */

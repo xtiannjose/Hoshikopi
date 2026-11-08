@@ -17,11 +17,14 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
 });
-// Typewriter accents only: prices in the printed menu, notes, dates.
+// Typewriter accents only: prices in the printed menu, notes, dates. Not
+// preloaded, so it doesn't compete with the headline and body fonts for the
+// first paint; it loads once used, over a size-matched fallback (7.6).
 const courier = Courier_Prime({
   variable: "--font-courier",
   subsets: ["latin"],
   weight: "400",
+  preload: false,
 });
 
 export const metadata: Metadata = {
