@@ -144,3 +144,28 @@ test("a Customer asks to be told, and Ready chimes in and notifies", async ({
     `Your order is ready: Salamat! Show code ${code} at the counter.`,
   ]);
 });
+
+test("in Demo Mode a visitor plays the barista on their own Order (8.1)", async ({
+  page,
+}) => {
+  await addToCart(page, "kopi-hitam");
+  await placeGuestOrder(page, "Migs");
+  const panel = page.getByRole("region", { name: "Be the barista" });
+  await expect(panel).toBeVisible();
+  await expectNoAxeViolations(page);
+  for (const [tap, message] of [
+    ["Accept the order", "The bar has your order."],
+    ["Start making it", "We're making your Kopi Hitam."],
+    ["Mark it Ready", /^Ready at the counter\. Show code K-\d+\.$/],
+    ["Hand it over", "Enjoy! See you again soon."],
+  ] as const) {
+    await panel.getByRole("button", { name: tap }).click();
+    await expect(page.getByRole("status").first()).toHaveText(message);
+  }
+  await expect(panel).toHaveCount(0);
+
+  await page.goto("/concept");
+  await expect(
+    page.getByRole("heading", { name: "Try it in two minutes" })
+  ).toBeVisible();
+});

@@ -105,10 +105,10 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 | (none) | `placed` | `placeOrder` | Window counts taken; Stars reserved; "Order placed" email for Pay at Pickup |
 | `placed` (online) | `paid` | Verified provider webhook | "Order placed" email |
 | `placed` (online) | `expired` | 15 minutes unpaid (section 12) | Window and Stars released; checkout session expired |
-| `placed` (Pay at Pickup), `paid` | `accepted` | Barista | Prep Time starts |
-| `accepted` | `preparing` | Barista | None |
-| `preparing` | `ready` | Barista | "Ready for pickup" email; status page shows it |
-| `ready` | `picked_up` | Barista (marks paid at the counter for Pay at Pickup) | Stars earned (`loyalty`); Redemption final |
+| `placed` (Pay at Pickup), `paid` | `accepted` | Barista (or the visitor in Demo Mode, ADR 0015) | Prep Time starts |
+| `accepted` | `preparing` | Barista (or Demo Mode) | None |
+| `preparing` | `ready` | Barista (or Demo Mode) | "Ready for pickup" email; status page shows it |
+| `ready` | `picked_up` | Barista, or Demo Mode (marks paid at the counter for Pay at Pickup) | Stars earned (`loyalty`); Redemption final |
 | `placed`, `paid` | `cancelled` | Customer, before `accepted` | Window and Stars released; a paid Order goes on to `refunded` |
 | any before `picked_up` | `cancelled` | Manager | Same as above; reason required |
 | `cancelled` (was paid), `picked_up` | `refunded` | Manager; also the system, right after a Customer cancels a paid Order | Full refund through the provider (cash at the counter for Pay at Pickup); Stars earned are taken back |

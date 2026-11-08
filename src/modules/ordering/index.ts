@@ -26,7 +26,11 @@ export {
   popularDrinks,
   salesReport,
 } from "./internal/reports";
-export { cancelByCustomer, orderVersion } from "./internal/customer";
+export {
+  advanceInDemo,
+  cancelByCustomer,
+  orderVersion,
+} from "./internal/customer";
 export { orderLink } from "./internal/links";
 export { barBoard, expireUnpaid } from "./internal/bar";
 export { receivePaymentWebhook } from "./internal/webhook";

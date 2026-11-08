@@ -4,6 +4,7 @@ import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
 import type { OrderStatus, PaymentMethod } from "@/generated/prisma/enums";
 import {
+  advanceInDemo,
   cancelByCustomer,
   getOrderForCustomer,
   orderVersion,
@@ -181,5 +182,72 @@ describe("orderVersion (polling, ADR 0009)", () => {
     const after = await orderVersion(order.orderId, order.accessToken);
     expect(after?.status).toBe("accepted");
     expect(after?.version).not.toBe(before?.version);
+  });
+});
+
+describe("Demo Mode: the visitor plays the barista (8.1)", () => {
+  it("moves their own Order one step at a time with its link, recorded as demo", async () => {
+    const order = await placed();
+    expect(await advanceInDemo(order.orderId, "wrong", "placed")).toMatchObject(
+      { ok: false, reason: "not_found" }
+    );
+    const steps: string[] = [];
+    let from: OrderStatus = "placed";
+    for (let i = 0; i < 4; i++) {
+      const result = await advanceInDemo(
+        order.orderId,
+        order.accessToken,
+        from
+      );
+      if (!result.ok) throw new Error(result.reason);
+      steps.push(result.order.status);
+      from = result.order.status;
+    }
+    expect(steps).toEqual(["accepted", "preparing", "ready", "picked_up"]);
+    // Picked Up is the end: nothing left to play.
+    expect(
+      await advanceInDemo(order.orderId, order.accessToken, "picked_up")
+    ).toMatchObject({ ok: false, reason: "not_allowed" });
+    const events = await db.orderEvent.findMany({
+      where: { orderId: order.orderId, toStatus: { not: "placed" } },
+      select: { actorKind: true },
+    });
+    expect(events.map((e) => e.actorKind)).toEqual([
+      "demo",
+      "demo",
+      "demo",
+      "demo",
+    ]);
+  });
+
+  it("leaves an unpaid online Order to the checkout", async () => {
+    const order = await placed();
+    await db.order.update({
+      where: { id: order.orderId },
+      data: { paymentMethod: "gcash" },
+    });
+    expect(
+      await advanceInDemo(order.orderId, order.accessToken, "placed")
+    ).toMatchObject({ ok: false, reason: "not_allowed", status: "placed" });
+  });
+
+  it("moves one step for a double tap, in a row or at once (audit 7.5)", async () => {
+    const order = await placed();
+    expect(
+      (await advanceInDemo(order.orderId, order.accessToken, "placed")).ok
+    ).toBe(true);
+    // The second tap of the same button still says "placed".
+    expect(
+      await advanceInDemo(order.orderId, order.accessToken, "placed")
+    ).toMatchObject({ ok: false, reason: "not_allowed", status: "accepted" });
+    const both = await Promise.all([
+      advanceInDemo(order.orderId, order.accessToken, "accepted"),
+      advanceInDemo(order.orderId, order.accessToken, "accepted"),
+    ]);
+    expect(both.filter((r) => r.ok)).toHaveLength(1);
+    const after = await db.order.findUniqueOrThrow({
+      where: { id: order.orderId },
+    });
+    expect(after.status).toBe("preparing");
   });
 });

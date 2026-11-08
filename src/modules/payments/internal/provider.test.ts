@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { fakeProvider } from "./fake";
-import { providerFor } from "./provider";
+import { demoMode, providerFor } from "./provider";
 
 const env = (values: Record<string, string>) =>
   values as unknown as NodeJS.ProcessEnv;
@@ -148,5 +148,43 @@ describe("PayMongo webhook signature", () => {
       checkoutId: "cs_9",
       paymentId: "pay_7",
     });
+  });
+});
+
+describe("demoMode (ADR 0015)", () => {
+  it("is on wherever the fake provider may run, without needing its secret", () => {
+    expect(demoMode(env({ PAYMENT_PROVIDER: "fake" }))).toBe(true);
+    // A Vercel preview build: no secret and no address, still a demo.
+    expect(
+      demoMode(
+        env({
+          PAYMENT_PROVIDER: "fake",
+          NODE_ENV: "production",
+          VERCEL_ENV: "preview",
+        })
+      )
+    ).toBe(true);
+    expect(
+      demoMode(
+        env({
+          PAYMENT_PROVIDER: "fake",
+          NODE_ENV: "production",
+          NEXT_PUBLIC_SITE_URL: "https://hoshikopi.vercel.app",
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("is off with real payments or on a production domain", () => {
+    expect(demoMode(env({ PAYMENT_PROVIDER: "paymongo" }))).toBe(false);
+    expect(
+      demoMode(
+        env({
+          PAYMENT_PROVIDER: "fake",
+          NODE_ENV: "production",
+          NEXT_PUBLIC_SITE_URL: "https://hoshikopi.ph",
+        })
+      )
+    ).toBe(false);
   });
 });

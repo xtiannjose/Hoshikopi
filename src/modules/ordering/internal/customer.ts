@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { tokenMatches } from "./links";
 import { customerVersion, drinksAhead } from "./queue";
 import { cancelOrder } from "./refund";
-import type { TransitionResult } from "./status";
+import { transition, type TransitionResult } from "./status";
 
 async function orderWithToken(id: string, token: string) {
   const order = await db.order.findUnique({
@@ -48,4 +48,34 @@ export async function orderVersion(
         version: customerVersion(order, await drinksAhead(order)),
       }
     : null;
+}
+
+/** The bar's next step from each Order Status (the Bar Screen's one tap). */
+const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
+  placed: "accepted",
+  paid: "accepted",
+  accepted: "preparing",
+  preparing: "ready",
+  ready: "picked_up",
+};
+
+/**
+ * Demo Mode (ADR 0015): the visitor plays the barista on their own Order,
+ * one step at a time, with its link. The Order Status table still decides;
+ * an unpaid online Order waits for its checkout.
+ */
+export async function advanceInDemo(
+  id: string,
+  token: string,
+  /** The Order Status the button was drawn for: a repeat tap finds it moved. */
+  from: OrderStatus
+): Promise<TransitionResult> {
+  const order = await orderWithToken(id, token);
+  if (!order) return { ok: false, reason: "not_found" };
+  const next = NEXT[from];
+  if (!next || order.status !== from) {
+    return { ok: false, reason: "not_allowed", status: order.status };
+  }
+  // transition() re-checks under the row lock, so two taps at once move once.
+  return transition(order.id, next, { kind: "demo" });
 }

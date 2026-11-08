@@ -265,6 +265,8 @@ enum ActorKind {
   staff
   system
   webhook
+  /// A visitor playing the barista on their own Order (Demo Mode, ADR 0015).
+  demo
 }
 
 model Order {

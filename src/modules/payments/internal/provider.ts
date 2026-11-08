@@ -4,6 +4,14 @@ import type { PaymentProvider, ProviderEvent } from "./types";
 
 const LOCAL = ["localhost", "127.0.0.1"];
 
+/** Where the fake provider may run: locally, *.vercel.app and previews. */
+function demoHost(env: NodeJS.ProcessEnv): boolean {
+  if (env.VERCEL_ENV === "preview") return true;
+  if (!env.NEXT_PUBLIC_SITE_URL) return false;
+  const host = new URL(env.NEXT_PUBLIC_SITE_URL).hostname;
+  return LOCAL.includes(host) || host.endsWith(".vercel.app");
+}
+
 /**
  * The provider for this environment (ADR 0003, ADR 0006). PayMongo runs only
  * with a test key, on every environment; the fake provider never runs on a
@@ -30,12 +38,7 @@ export function providerFor(env: NodeJS.ProcessEnv): PaymentProvider {
         "The fake payment provider needs NEXT_PUBLIC_SITE_URL and BETTER_AUTH_SECRET in production."
       );
     }
-    const host = new URL(env.NEXT_PUBLIC_SITE_URL).hostname;
-    const allowed =
-      LOCAL.includes(host) ||
-      host.endsWith(".vercel.app") ||
-      env.VERCEL_ENV === "preview";
-    if (!allowed) {
+    if (!demoHost(env)) {
       throw new Error(
         "The fake payment provider refuses to run on a production domain (ADR 0003)."
       );
@@ -50,6 +53,18 @@ let current: PaymentProvider | null = null;
 export function paymentProvider(): PaymentProvider {
   current ??= providerFor(process.env);
   return current;
+}
+
+/**
+ * Demo Mode (ADR 0015) is on wherever the fake provider may run: locally,
+ * on *.vercel.app and on previews. A visitor may then play the barista on
+ * their own Order.
+ */
+export function demoMode(env: NodeJS.ProcessEnv = process.env): boolean {
+  // The provider's own rule, without building it: a prerendered page asks
+  // this at build time, when a preview build may have no secret.
+  if (env.PAYMENT_PROVIDER === "paymongo") return false;
+  return env.NODE_ENV !== "production" || demoHost(env);
 }
 
 /** Signs an event as the fake checkout page sends it; fake provider only. */
