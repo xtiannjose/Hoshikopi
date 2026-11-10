@@ -1,0 +1,1021 @@
+{
+  "generated": "2026-11-10",
+  "note": "Unverified findings from the batch 7.5 audit reviewers, on main at 0aa0462; see docs/audit/README.md",
+  "areas": [
+    {
+      "key": "a11y",
+      "passes": 1,
+      "summaries": [
+        "Accessibility (WCAG 2.2 AA) QA on current main (0aa0462) against the production build on :3300. The automated baseline is strong: axe-core 4.14 with the wcag2a/2aa/21a/21aa/22aa tags found 0 violations on every customer route, the signed-in pages, the Bar Screen, the Order page in every status (including Demo Mode and Ready with motion on), the fake pay page, the open Cart drawer and phone menu, and the form error states, at 375 and 1280 px in both palettes. The one exception is an empty <title> on an error page. Headings and landmarks are clean (one h1 per page, no skipped levels, a single main with id=main everywhere), reduced motion is honoured everywhere I measured (no running animation is longer than 0.01 ms under reduce, and there are no loops or smooth scroll), checkout and Inquiry move focus to the first invalid field, and the Bar Screen's keyboard flow is good. The real defects are in what axe cannot see. (1) Focus is hidden: the sticky Category tabs (any width, when tabbing backwards) and the phone sticky Add to order bar cover the focused element entirely (WCAG 2.4.11). (2) Focus management: the Cart drawer drops focus to <body> when it opens; Esc then loses the place; after any keyboard client navigation the next Tab jumps to the footer, because Next 16 keeps the old page hidden in the DOM (Activity); submit buttons disabled while pending drop focus; the sign-in error is neither focused nor announced. (3) Text enlargement: the phone header still forces sideways scrolling from 125 percent text size up (UI1-10). (4) Day placeholder contrast is 3.16:1. On the test side, every Day-palette axe run, in the e2e suite as well, cannot check text contrast at all: the paper grain background-image turns it into 'incomplete'. Real Day contrast passes once the grain is removed, so this is a blind spot, not a failure. The 38 skipped e2e tests are all deliberate per-project skips (19 phone-only and 19 desktop-only guards); none hides a failure."
+      ],
+      "coverage": [
+        "axe-core 4.14 via @axe-core/playwright (tags wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa), reduced motion, palette pinned with localStorage hoshikopi-theme before load: 32 routes x 375/1280 x Day/Night = 128 scans. Routes: /, /menu, all 6 /menu/[category], /menu/item/hoshi-latte, kopi-hitam, banana-bread, hoshikopi-tumbler, /cafe, /cafe/inquire, /cart, /checkout, /concept, /events, both seeded /events/[slug], /news, all 3 seeded /news/[slug], /privacy, /sign-in, /nope (root 404), /menu/item/nope, /events/nope, /orders/<unknown>, /dev/pay/nope, /events/latte-art-night/signup/nope. Results: scratch/a11y/axe-public.json and axe-public.txt",
+        "Day palette re-scanned with the grain background removed (18 routes x 2 widths, axe-day-nograin.json), and the grain tile measured: worst pixel #EDE5DD, so muted text stays at or above 5.22:1",
+        "Signed in as Member hoshi@ (one sign-in): /account, /account/stars, /cart, /checkout, / at both widths and palettes, plus Day with no grain (axe-member*.json). Signed in as Barista annika@ (one sign-in): /bar at both widths and palettes, empty and with my Order K-013 that has a Line note (axe-bar.txt, kb13)",
+        "Orders I created: K-012 (Pay at Pickup, Later today 10:00 AM, placed by keyboard only, then walked through all 4 Demo Mode steps by keyboard), K-013 (ASAP, Pay at Pickup, note; moved through the Bar Screen by keyboard as Annika to Picked Up), K-014 (GCash: /dev/pay axe at 4 combos, then cancelled from its Order page). All three are closed. A guest Cart holding 1 Kopi Hitam is left in a scratch context. K-002 and K-010, also named 'A11y Audit', date from 2026-11-06 and are not mine",
+        "Keyboard walkthroughs (Playwright keyboard only, focus logged with rect, outline and an elementFromPoint occlusion test at 9 points): Menu Item page at 375 and 1280; /menu, /, /menu/coffee, /cafe and /events forward and Shift+Tab with a Cart at 375 and 1280; Cart pill and drawer (open, Tab, Esc, close button); phone menu popover; /cart quantity, minus-to-remove and Remove; /checkout with ASAP, 6 chips, Later today radio and select, Name, contact, payment radios and Place order; Order page with Demo Mode; Bar Screen accept to picked up; skip link on a fresh load and after client navigation; focus after client navigation from a card and from the footer",
+        "Form errors: sign-in (bad email), Event Sign-up (empty), Inquiry (empty), checkout (empty) at 375 in both palettes: focus target, aria-invalid, aria-describedby text, live regions, axe on the error state",
+        "Live regions observed with a MutationObserver: Order Status (each Demo step announced), item running price and quantity, Add to order status, pairing Add, Cart total on quantity change, menu filter count",
+        "Reduced motion: document.getAnimations() under reduce and no-preference on /, scrolled /, /account, Add to order, phone menu, Order page; grep for loops, smooth scroll and motion-safe use; scroll-reveal opacity at rest at 375x812, 1280x800 and 1920x1080",
+        "Reflow and zoom: 320x256 (400 percent), 640x400 (1280 at 200 percent) with a Cart on 16 routes, and 320x640 as a Member; text-only enlargement through CDP Page.setFontSizes at 20, 24 and 32 px (375 and 1280); WCAG 1.4.12 text-spacing override at 375 and 1280",
+        "Contrast by hand: placeholder colour through getComputedStyle(::placeholder) in both palettes; focus ring #2F6FD6 against both backgrounds and muted surfaces (3.15:1 to 4.45:1); Pill tones; the Bar Screen note colours (the Bar layout pins Night)",
+        "Target size: own scan of every focusable element under 24x24 at 375 and 1280 on 17 pages (inline-in-text cases separated); headings, landmarks, titles and Filipino phrases on 20 pages",
+        "Next 16 docs read: node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md (Activity keeps up to 3 routes hidden in the DOM). Hidden-route duplicate ids tested for skip-link and label resolution",
+        "Tests reviewed: tests/e2e/axe.ts, playwright.config.ts, quality.spec.ts, menu/cart/checkout/content/members/order-status/bar/stars specs, gates/e2e.log (180 passed, 38 skipped: all project guards). Read docs/05 sections 7 and 10, ADRs 0010, 0011, 0012, 0015 and the interim audit UI1/UI2 sections. Not covered: /manage pages (they need the Manager's Second Factor), a real /events/[slug]/signup/[id] page (making a Sign-up would take a seat; code read only), screen readers themselves (NVDA/VoiceOver), and Firefox/WebKit"
+      ],
+      "findings": [
+        {
+          "pass": 1,
+          "title": "Focused elements disappear under the sticky Category tabs and the phone Add to order bar (WCAG 2.4.11)",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/components/menu/category-tabs.tsx:21",
+            "src/app/(site)/menu/item/[slug]/option-picker.tsx:180-183",
+            "src/components/shell/cart-float.tsx:29",
+            "src/app/globals.css:79-82"
+          ],
+          "evidence": "Neither sticky element is offset with scroll-padding or scroll-margin (grep: no scroll-p in globals.css, and scroll-mt only on Staff pages). (a) Category tabs, 'bg-background sticky top-0 z-10' (68 px tall): with Shift+Tab from the footer, the browser scrolls each card link to the top edge, right under the tabs. kb3.cjs: at 1280 /menu, Ube Latte, Spanish Latte, Hoshi Latte and Kopi Hitam are reported COVERED by NAV.sticky (all 9 sample points). At 375 /menu, 6 links are covered (Longganisa Pandesal Sandwich, Butter Croissant, Tanglad Ginger Tea, Tablea Tsokolate, Cafe Mocha, Kopi Hitam), and the same happens on /menu/coffee. Screenshot scratch/a11y/shots/kb3b-1280-_menu-27.png: no focus ring is visible anywhere. (b) Phone Add bar, 'max-md:sticky max-md:bottom-0 max-md:z-20', 116 px tall from y=696 to 812: tabbing forward on /menu/item/hoshi-latte at 375x812, the Sugar Level chip '100%' (rect 16,696,79x44) and the 'Note for the barista' input (16,742,343x44) are entirely behind the bar (kb2.cjs; shots/kb2-covered-9.png shows only a 2 px sliver of the ring above the bar). (c) The fixed Cart pill partly covers focused links at the bottom right on phones (for example 'Ube Pandesal' on /menu, shots/kb3-375-_menu-27.png). Only a sliver of the ring stays visible, which passes 2.4.11 but fails 2.4.12 (AAA). docs/05 section 10 promises 'focus always visible and never hidden by sticky elements (WCAG 2.4.11)'.",
+          "impact": "Keyboard and switch users lose sight of focus while choosing Options on a phone (the core order flow) and when moving back up the menu at any width. They have to guess where they are, or press keys blindly. This is a WCAG 2.2 AA failure on the two pages where ordering happens.",
+          "recommendation": "CSS only (ADR 0011). In globals.css add ':root:has(nav[aria-label=Categories]) { scroll-padding-top: 5rem }', '@media (width < 48rem) { :root:has([data-sticky-add]) { scroll-padding-bottom: 9rem } }' and ':root:has(.cart-pill) { scroll-padding-bottom: 5rem }'. Chromium, Firefox and Safari honour scroll-padding when focus scrolls an element into view. Add one Playwright check: Tab through the Menu Item at 375 and Shift+Tab through /menu, and for each focused element assert that elementFromPoint at its centre is inside it.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "UI1-04",
+            "UI2-03",
+            "UI1-13"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Cart drawer and phone menu: opening drops or leaves focus outside, Esc loses the place, and Tab runs out behind a full-screen drawer",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/components/shell/cart-float.tsx:26-50",
+            "src/app/globals.css:227-229",
+            "src/components/shell/header.tsx:50-65",
+            "src/components/shell/header.tsx:102-110"
+          ],
+          "evidence": "kb4.cjs and drawer2.cjs (375 Day and 1280 Night). The pill is a popovertarget button, and ':root:has(:popover-open) .cart-pill { visibility: hidden }' hides the focused invoker the moment the drawer opens. Pressing Enter on 'Your Cart 1 item, PHP 120' leaves document.activeElement = BODY, though the drawer is role=dialog 'Your Cart'. Pressing Esc right away keeps BODY, and the next Tab still gives BODY, so the keyboard user is sent back to the top of the document. Tabbing into the drawer (Close your Cart, Check out, See your Cart) works, and Esc from there returns focus to the pill. Past the last link, Tab leaves the still-open drawer for page content hidden behind it: 'Hoshikopi home' is reported COVERED by DIV.drawer at 375, where the drawer is 100vw wide. Phone menu: after Enter on 'Open the menu', focus stays on that button, which the 22rem drawer now covers (COVERED). After its 11 links, Tab moves to 'Open in Maps', 'hello@hoshikopi.example' and so on behind the drawer while it stays open. The pill is also the last tab stop on the page (47 Tabs on /menu).",
+          "impact": "Screen reader users hear nothing when the Cart opens: no dialog announced and focus on <body>. Keyboard users who close it with Esc lose their place. On phones, focus can wander behind an open full-screen drawer that still shows on top. Technically 2.4.11 is met (Esc reveals focus), but this fails the ARIA dialog pattern the drawer claims (role=dialog), and it is a 2.4.3 focus-order risk in the core flow.",
+          "recommendation": "Smallest fix that stays native (ADR 0011): stop hiding the pill with visibility (use opacity:0 plus pointer-events:none, or let the drawer cover it, as it already does on phones), and move focus into each drawer when it opens. One tiny client leaf with onToggle focusing the Close button does it, or the autofocus attribute on the Close button, which the popover focusing steps honour. Better: make the Cart drawer a <dialog> opened with the Invoker Commands API (commandfor='cart-drawer' command='show-modal'). That gives focus-in, an inert background, Esc and focus return with no JS. Check browser support first, and keep the popover as the fallback. Add a Playwright check: Enter on the pill moves focus into the dialog, and Esc returns it to the pill.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "UI1-04",
+            "UI2-04"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "After a keyboard link or client navigation, focus drops to <body> and the next Tab jumps to the footer (Next 16 Activity keeps the old page hidden in the DOM)",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/template.tsx:33-38",
+            "src/app/(site)/layout.tsx:8-24",
+            "node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md"
+          ],
+          "evidence": "kb9.cjs at 1280 Day: on /menu, Tab to the 'Hoshi Latte' card link and press Enter. After navigation activeElement is BODY at scrollY 0, and the next 4 Tabs land on 'Menu | Stars | Your account | Visit', the footer links of the new page, skipping the whole Menu Item page. From the footer 'Events' link on /cafe, the next Tabs go to the /events footer ('News', 'Privacy'...) and scroll to y=790. Cause: with Cache Components, Next keeps up to 3 previous routes in the DOM under display:none !important (kb8.cjs found 2 <main id=main> after one navigation, the hidden one styled 'view-transition-name: _t_0_; ... display: none !important'). The browser's sequential-focus starting point stays at the clicked link, which is now hidden and sits after the new <main> in DOM order. Next's route announcer (role=alert) does read the new title. The skip link still works, because the visible <main> comes first in the DOM (kb10.cjs). Low-confidence side effect: the hidden routes keep duplicate ids (email, name, main), so per the HTML spec a hidden route's <label for=email> also labels the visible input. Playwright's ariaSnapshot then reads the Event Sign-up fields as 'Your name Your name' and 'Email Email', although Chrome's own AX tree (CDP) gives the single name.",
+          "impact": "Keyboard and screen reader users who follow a link must Shift+Tab back up from the footer, or find the skip link, on every client navigation. This breaks a meaningful focus order (2.4.3) across the whole site.",
+          "recommendation": "Reset focus on navigation in one place: a small client leaf in (site)/layout.tsx that, on usePathname() change (not on first load and not on hash changes), focuses the visible main's h1 (h1.tabIndex = -1; h1.focus({ preventScroll: true })), or failing that #main. Keep it a leaf, so pages stay prerendered. Optionally give Field ids a useId() suffix so hidden routes cannot share them. Add a Playwright check: Enter on a menu card link, then Tab, expects focus inside the new main.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Sign-in and Event Sign-up errors: focus is lost to <body>, and the sign-in error is not announced at all",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/sign-in/sign-in-form.tsx:56-90",
+            "src/app/(site)/events/[slug]/signup-form.tsx:114-123",
+            "src/app/(site)/checkout/checkout-form.tsx:113-121",
+            "src/app/(site)/cafe/inquire/inquiry-form.tsx:27-33"
+          ],
+          "evidence": "kb15.cjs at 375 in both palettes. Sign-in: type 'not-an-email', Tab to 'Email me a link' and press Enter. The button gets disabled={pending}, so focus goes to BODY during the request and stays on BODY afterwards. The input gets aria-invalid with aria-describedby='email-error' ('Enter an email address, like hoshi@example.com.'), but the page has no role=status or aria-live region in the error state (live=[]), and nothing moves focus to the field. Event Sign-up (empty submit): focus ends on BODY, and both fields are aria-invalid with their errors described. The 'Some fields need a fix.' role=status is announced, but the user is not taken to the fields. Checkout and Inquiry do this right: a useEffect focuses the first [aria-invalid=true], and focus ended on 'Name' and 'Your name'.",
+          "impact": "A screen reader user who mistypes their email on the only way into an account hears nothing and is left at the top of the document (WCAG 3.3.1 and 4.1.3). On the Event form the error is announced, but the user has to hunt for the fields.",
+          "recommendation": "Reuse the checkout and Inquiry pattern: after a refused submit, focus the first [aria-invalid=true] in the form. Put it in a tiny shared hook (useFocusFirstInvalid(formRef, state)) instead of a third copy. For sign-in, this also makes the error be read through aria-describedby. Add one Playwright check per form: submit invalid input, and expect focus on the invalid field.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "UI1-20"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Submit buttons disabled while pending drop keyboard focus to <body> after successful actions too (Add to order, pairing Add, Cart remove, last Demo step)",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/menu/item/[slug]/option-picker.tsx:222-228",
+            "src/app/(site)/menu/item/[slug]/pairing-add.tsx:29-33",
+            "src/app/(site)/cart/page.tsx:140-176",
+            "src/app/(site)/orders/[id]/page.tsx:330-353",
+            "src/components/fields.tsx:110-114"
+          ],
+          "evidence": "kb16.cjs: Enter on 'Add to order' (/menu/item/kopi-hitam, 1280). During the request and after 'Added to your order. Salamat!' the activeElement is BODY. The next Tab does reach 'Save as Favourite', because Chrome keeps the starting point. The same happens for the pairing 'Add Ube Pandesal'. kb17.cjs on /cart: One more and One less keep focus, but the minus that turns into 'Remove Kopi Hitam' and the Remove button leave focus on BODY, and only 'Total PHP 90' is announced. Removing the last line shows the empty Cart with no announcement. kb12.cjs: after the last Demo Mode step 'Hand it over', the panel unmounts and focus drops to BODY. The earlier steps keep focus on the relabelled button, which is good. grep finds disabled={pending} on 13 customer and Staff submit buttons.",
+          "impact": "Screen readers in browse mode often jump to the top of the page when focus drops to <body>, so the user loses their place after the most common action on the site. A minor focus-order issue, since the status messages are announced.",
+          "recommendation": "Keep the button focusable while pending: use aria-disabled='true' and ignore repeat clicks (the server already dedupes double taps) instead of the disabled attribute, and keep the pending label. On the Cart, after removing a line, move focus to the next line's heading, or to the Total or empty-state heading (tabIndex=-1). After the final Demo step, focus the status paragraph or the 'See the menu' link.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "In the Day palette axe cannot check text contrast at all, so the e2e 'both palettes' contrast check only works by Night",
+          "kind": "test-gap",
+          "severity": "medium",
+          "locations": [
+            "src/app/globals.css:75-77",
+            "tests/e2e/axe.ts:5-11",
+            "tests/e2e/axe.ts:17-29",
+            "docs/05-DESIGN-SYSTEM.md section 10"
+          ],
+          "evidence": "'[data-theme=\"day\"] body { background-image: url(\"/grain.png\") }' makes axe return color-contrast as incomplete ('Element's background color could not be determined due to a background image') for nearly all text, and incomplete results never fail expectNoAxeViolations. scratch/a11y/axe-public.txt: Day / 375 has 145 incomplete and 12 passed contrast checks, Night 0 and 157. /menu Day 111 and 9, Night 0 and 120. /cafe Day 81 and 2. /privacy Day 42 and 1. The pattern holds on all 32 routes. With the grain removed (axe-day-nograin.txt) Day passes everywhere (for example / 157 passed, 0 incomplete), and the worst grain pixel (#EDE5DD) still leaves muted text at 5.22:1. So today's Day colours are fine, but any future Day colour regression would pass CI unseen. docs/05 section 10 says 'Both palettes pass every check here'.",
+          "impact": "Half of the palette coverage the docs claim is not enforced. A Day text colour slip (for example a new muted tone or a badge) will not be caught by the 40-plus axe calls in the suite.",
+          "recommendation": "In expectNoAxeViolations, inject 'body { background-image: none !important }' before analyze() (the tile averages #F4EEE5, close to the background token), or fail on incomplete color-contrast nodes. Keep the grain in production. One line in tests/e2e/axe.ts.",
+          "effort": "S",
+          "confidence": 0.95,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Placeholder text is 3.16:1 in the Day palette (note field, mobile number, menu search)",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/menu/item/[slug]/option-picker.tsx:173",
+            "src/app/(site)/checkout/checkout-form.tsx:282",
+            "src/components/menu/menu-filter.tsx:62",
+            "src/app/globals.css:84-88"
+          ],
+          "evidence": "ph.cjs: getComputedStyle(input, '::placeholder').color is oklab(0.245 ... / 0.5), the Tailwind 4 default (currentColor at 50 percent), which resolves to rgba(44,30,20,0.5) on #FBF6EE: 3.16:1 for 'Extra hot, please' and 'Ube, latte, chocolate...'. The checkout's '0917 123 4567' uses the same rule. Night is 4.67:1 (passes). No ::placeholder rule exists in globals.css. axe does not test placeholder contrast, so the suite cannot catch it.",
+          "impact": "Low-vision Customers may not read the example text that shows the expected phone format and what a barista note looks like (WCAG 1.4.3 applies to placeholder text). The fields keep visible labels, so this is not a blocker.",
+          "recommendation": "One base rule in globals.css: '::placeholder { color: var(--color-muted-foreground); opacity: 1 }' (6.05:1 by Day, about 9:1 by Night).",
+          "effort": "S",
+          "confidence": 0.75,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Phone header still forces sideways scrolling with larger text, from 125 percent up (UI1-10 not fixed)",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "src/components/shell/header.tsx:29",
+            "src/components/shell/header.tsx:40-58",
+            "src/components/shell/cart-button.tsx:9-18",
+            "docs/05-DESIGN-SYSTEM.md section 10"
+          ],
+          "evidence": "font24.cjs at 375x812, raising Chrome's default font size with CDP Page.setFontSizes: 20 px (Chrome 'Large', 125 percent) gives scrollWidth 437 with a Cart. 24 px ('Very large', 150 percent) gives 496 empty and 520 with a Cart. 32 px (200 percent) gives 654; the header's right group spans 374-654, and every page overflows by 312 px (reflow.cjs, all 16 routes; screenshot shots/reflow-375-32-_menu_item_hoshi-latte.png shows the Cart and menu button off-screen). With the WCAG 1.4.12 text-spacing override at 375, the menu button ends at 392 px, a 17 px overflow (spacing2.cjs). Browser zoom is fine: 0 overflow at 320x256 and at 640x400. The quality.spec 320 px check only uses zoom-style widths, so it passes. The header row is 'flex items-center justify-between' with no wrap.",
+          "impact": "Low-vision phone users who raise their system or browser text size must scroll sideways to reach the Cart and the menu, on every page. docs/05 promises 'Works at 200% text size and 320 px width without horizontal scrolling' (WCAG 1.4.4 and 1.4.12 risk).",
+          "recommendation": "Let the header wrap ('flex-wrap'), or hide the 'Hoshikopi' wordmark text (keep the star, with its aria-label) when the header is tight, with a container query on the header. Add one Playwright check that calls Page.setFontSizes({standard: 32}) at 375 and expects no horizontal overflow.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "UI1-10"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Not-found and error states keep a generic, wrong or empty page title (WCAG 2.4.2)",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "src/components/error-panel.tsx:17-52",
+            "src/components/not-found-body.tsx:13",
+            "src/app/(site)/orders/[id]/page.tsx:32-35"
+          ],
+          "evidence": "outline.cjs and err.cjs: /menu/item/nope has the title 'Hoshikopi' while showing 'This page could not be found'. /orders/xyz?t=x keeps 'Your order | Hoshikopi' over the same not-found body. /events/%00x and /news/%00 are titled 'Hoshikopi'. /menu/item/%00x rendered the site error boundary ('Sorry, that didn't work') with an EMPTY <title>, and axe reported document-title (serious) at 375 Day. On later loads the same URL showed the not-found body, still with an empty title. ErrorPanel sets no title. Only the root /nope gets 'Page not found | Hoshikopi'. These in-route 404s also answer HTTP 200.",
+          "impact": "Screen reader users hear the route announcer read 'Hoshikopi' or 'Your order' when the page actually failed, and tabs and history entries do not say what happened.",
+          "recommendation": "Have NotFoundBody and ErrorPanel set the document title (React 19 hoists a <title> rendered in a component, so '<title>Page not found | Hoshikopi</title>' works inside the body components). Return metadata { title: 'Page not found' } from generateMetadata when the slug does not resolve.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": [
+            "UI2-10",
+            "SEC2-10"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Filipino phrases have no lang attribute (WCAG 3.1.2), including the footer line on every page",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/components/shell/footer.tsx:50",
+            "src/components/home/hero.tsx:16",
+            "src/lib/clock.ts:88-90",
+            "src/app/layout.tsx:47"
+          ],
+          "evidence": "The page is lang='en'. outline.cjs found 'Salamat sa pagdaan. See you at the counter.' in the footer of all 20 pages scanned, the hero's 'Magandang umaga! Order ahead...', the /account greeting 'Magandang umaga' (and hapon or gabi from clock.ts), and the Bar Screen's 'All caught up. Salamat, team!'. The closest ancestor lang is 'en' every time; grep finds no lang= other than the two html elements.",
+          "impact": "English screen reader voices mispronounce the Tagalog phrases. Small single words such as 'Salamat' may count as local vernacular, but 'Salamat sa pagdaan' and 'Magandang umaga' are full Filipino phrases.",
+          "recommendation": "Wrap the full Filipino phrases in <span lang='fil'> (footer, hero lines, the greeting from clock.ts where it is rendered). Leave single loanwords in English copy as they are, per CLAUDE.md's Filipino-English voice.",
+          "effort": "S",
+          "confidence": 0.6,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Checkout contact hint is still not tied to Email or Mobile number (rest of UI1-20)",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/checkout/checkout-form.tsx:255-285"
+          ],
+          "evidence": "The focus half of UI1-20 is fixed: after an empty submit focus moves to 'Name' (kb5.cjs). The rule 'One of these is enough: an email or a mobile number...' is still a loose <p> between Name and the pair, with no aria-describedby: the aria snapshot shows it as a separate paragraph, and Email's aria-describedby is only 'customerEmail-error' once refused. Mobile number is never marked invalid when neither is given; only Email gets 'Give us an email or a mobile number for your Order.'",
+          "impact": "Screen reader users tabbing from Name to Email skip the either-or rule, and the error appears only on Email, though Mobile alone would satisfy it.",
+          "recommendation": "Wrap Email and Mobile in a fieldset (legend 'How we reach you') with the rule as its description, or pass the rule through Field's existing hint prop on both inputs. Mark both inputs aria-invalid with the shared error.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "UI1-20"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "e2e accessibility coverage misses the failure modes axe cannot see; the 38 skips are deliberate project guards",
+          "kind": "test-gap",
+          "severity": "low",
+          "locations": [
+            "tests/e2e/quality.spec.ts:79-96",
+            "tests/e2e/axe.ts:5-11",
+            "playwright.config.ts:19-22",
+            "gates/e2e.log"
+          ],
+          "evidence": "e2e.log: 180 passed, 38 skipped. All 38 are test.skip(project !== ...) guards: 19 phone runs of desktop-only tests (Manager flows, CSP, the keyboard order) and 19 desktop runs of phone-only tests (7 JS budgets, 10 reflow pages, the 320 px header, the 8.3 sticky check). None hides a failure. Gaps: the only keyboard test ('the skip link and a keyboard-only order') runs desktop only and checks neither focus visibility nor occlusion, so the phone sticky-bar case above is untested. Nothing checks focus after drawer open or close, after a refused form, or after client navigation; nothing checks text-size enlargement. axe never runs on /sign-in (empty or error), /cafe/inquire (the customer form), /menu/[category], the 404 pages, the error boundary, the phone menu open, or the sign-in, Sign-up and checkout error states (my runs found them clean, apart from the error page title). Every run uses reducedMotion 'reduce' by design (docs/05 section 7), so axe never sees the motion-on page. I checked Ready with motion on: 0 violations.",
+          "impact": "The regressions most likely to slip in (focus hidden, focus lost, text-size overflow, Day contrast) are the ones the suite cannot catch.",
+          "recommendation": "Add a small a11y spec: (1) a Tab/Shift+Tab occlusion walk on the Menu Item at 375 and /menu at 1280; (2) drawer focus-in and Esc return; (3) refused sign-in and Sign-up focus the invalid field; (4) Page.setFontSizes 32 at 375 with no overflow; (5) axe on /sign-in, /cafe/inquire, /menu/coffee, /nope and an error state. Pair it with the grain fix in axe.ts.",
+          "effort": "M",
+          "confidence": 0.85,
+          "refs": [
+            "UI2-28"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Account marketing checkbox is squeezed to 13 px wide by its flex row",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/account/page.tsx:400-406"
+          ],
+          "evidence": "targets.cjs at 375 on /account as Member: input[name=marketingOptIn] measures 13x20 though it has 'size-5' (20x20). It sits in 'flex min-h-11 items-start gap-3' next to a long sentence, without shrink-0. The wrapping label keeps the target large, so 2.5.8 passes.",
+          "impact": "The only consent control on the account page renders smaller and possibly distorted on phones, against the size-5 used for other checkboxes.",
+          "recommendation": "Add 'shrink-0' to the checkbox (and to the checkout Reward checkbox, which uses the same pattern) so it keeps 20x20.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Order Status steps read as 'Placed7:16 AM': no space between the step and its time",
+          "kind": "bug",
+          "severity": "info",
+          "locations": [
+            "src/app/(site)/orders/[id]/page.tsx:317-321"
+          ],
+          "evidence": "The Order page aria snapshot after Demo Mode (kb12.cjs) has list 'Order Status' items 'Placed7:16 AM', 'Accepted7:19 AM', 'Ready7:20 AM'. The time span is separated only by CSS ml-2, so the text runs together in the accessibility tree.",
+          "impact": "Some screen readers and braille displays present it as one run-on token.",
+          "recommendation": "Add {\" \"} before the time span (or ', ' in sr-only).",
+          "effort": "S",
+          "confidence": 0.7,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Bar Screen: a new Order arrives with a chime and a slide but no text announcement",
+          "kind": "improvement",
+          "severity": "low",
+          "locations": [
+            "src/app/bar/bar-screen.tsx:157-161",
+            "src/app/bar/bar-screen.tsx:378-380"
+          ],
+          "evidence": "On new Orders poll() calls chime() and sets 'fresh' (the gold edge and the arrive animation) but leaves the polite notice paragraph empty. The 'New N' lane heading count is not live. Moves and cancels do use the notice and focus the next lane heading (verified by keyboard as Annika: focus went to 'Making 1', then 'Ready 1', then 'Ready 0').",
+          "impact": "A barista with sound muted ('Sound for new orders' toggles off) who uses a screen reader gets no cue that an Order arrived.",
+          "recommendation": "Also call setNotice('New order K-0xx, ASAP' or the pickup time) when arrived.length > 0. The aria-live notice already exists.",
+          "effort": "S",
+          "confidence": 0.6,
+          "refs": []
+        }
+      ]
+    },
+    {
+      "key": "journeys",
+      "passes": 1,
+      "summaries": [
+        "I ran the real customer journeys on the production build at http://localhost:3300 with standalone Playwright scripts at 375 and 1280 px, between 6:58 and 7:21 AM Manila on 2026-11-10. I placed 11 Orders (K-001 to K-011; K-012 is another auditor's) and closed every one: picked up, cancelled, refunded or expired. The core happy paths now work end to end: browse, Options, Pairing, the floating Cart pill and drawer, Cart edits, Guest and Member checkout, ASAP, chips and Later today, Pay at Pickup, fake pay and fail, live polling, drinks ahead, Picking up and its calendar file, Demo Mode's four steps, Barista moves on /bar, Stars, Reward, refund on cancel, Favourites, Order again, Event Sign-up confirm and cancel, and sign-in rate limiting. Many saved findings are fixed: double submit, the sign-in merge crash, kept checkout choices, the Cart pill, the sticky Add bar and the Pickup Time chooser. What still breaks or confuses sits at the edges. The two-minute demo cannot run outside Manila opening hours, which covers most of a US reviewer's working day. The ASAP Prep Time ignores Orders the bar has not accepted yet and the Order's own size. A 13-drink Cart is told no Pickup Times are left. Two totals show when a Reward is used, and checkout promises a Star for the free drink that never lands. A failed payment leaves no retry and an empty Cart. The Bar Screen never shows how much to collect for Pay at Pickup. A Guest who gives only a phone number, or any visitor on the live demo where emails are dropped, cannot get back to their Order."
+      ],
+      "coverage": [
+        "Read: CLAUDE.md, PRD (sections 5 and 8), roadmap sections 0 and 7 to 8, ADRs 0007, 0008 and 0015, the interim audit's ORD, PAY, UI1 and UI2 sections, and the gate logs (build route table, e2e summary).",
+        "Code read for the journeys: checkout (page, form, action), placeOrder, transition and the Order Status table, bar.ts (expireUnpaid, barBoard), queue.ts (drinksAhead), windows.ts (Prep Time), reads.ts (checkoutView, getOrderForCustomer), customer.ts (advanceInDemo, orderVersion), webhook.ts, the Order page and its poller, actions and calendar route, /dev/pay and its action, the Cart page, actions and module, cart-float, the Menu Item page, option picker and pairing, the menu filter, cafe ordering-day, open-status and last-order-note, Event Sign-up actions, module and page, the sign-in action, page and form, the notify outbox and templates, the daily cron route, the Bar Screen card, and the home barista picks.",
+        "Scripts are in scratchpad/audit/scratch/journeys/ (j1 to j14, signin*.mjs, view.mjs), the log is run.log and the screenshots are in shots/. Two storageStates were saved (Hoshi, Annika), one sign-in each.",
+        "Journeys run at 375 px: menu search (8 queries) and the 3 dietary filters; Hoshi Latte Options and running price; the sticky Add bar (position sticky, bottom of the viewport); a note with HTML and emoji (rendered as text); the Pairing add; the Cart pill and drawer (Escape, Tab, Enter, links); Cart one more, one less and remove; Guest checkout refusal keeping the chip, Later today and Pay at Pickup; a double-click on Place order (one Order, K-001); the Order page with Demo Mode through Picked Up while a second tab followed by polling in 4 to 5 s; the Reward checkout; back button and reload after placing; the phone-only Guest Order; the 5, 13 and 16 drink Carts; Event Sign-up email, confirm, cancel and seats; the sign-in rate limit (throwaway email: 3 sent, the 4th refused); the Guest Cart surviving 'Sign in first' (lands on /checkout with the Cart).",
+        "Journeys run at 1280 px: menu, item, drawer, Cart and checkout (j1); fake provider pay with a Scheduled chip (K-002) and fail with Later today (K-003), plus the calendar file (valid iCalendar, URL carries the token); Member Hoshi: Favourite, a 9-drink Pay at Pickup Order taken to Picked Up in Demo Mode (+9 Stars), Order again, Reward online paid then cancelled (refunded in full, Stars back), a zero-total online Order; Barista Annika on /bar moving K-007 and K-008 Accept, Start making, Ready, Paid and picked up while the Customers' pages and a third checkout watched; two tabs on one Cart.",
+        "Edge probes: wrong or missing link token, a malformed Order id, wrong-token calendar and status routes (404 JSON routes, 200 soft-404 pages); a 61-character name; an invalid email (browser validation blocks it); the unpaid failed Order K-003 left to expire (expired at 15 min 12 s by a sweep, window back to 0); the cron route and webhook read for expiry and late payment; the last-order cutoff and the 'item becomes unavailable' paths read in code (priceChoices, Cart problems, cart_problem refusal), with Sold Out never toggled.",
+        "Saved findings seen fixed in passing: ORD-01 (double-click placed one Order), ORD-02 (the Guest Cart merges on sign-in and lands on /checkout), UI1-01 (refusal keeps the chip, Later today and Pay at Pickup), UI1-04 and UI2-04 (the floating Cart pill and drawer work), UI1-05 and UI2-03 (the Add bar is sticky at 375), UI2-08 (6 chips plus a Later today select grouped by hour), UI1-14, UI2-07 and UI2-10 (the 404 has the site shell), UI1-19 and UI2-19 (closed Orders say 'Nothing to pay.'), PAY-03's held-Stars part (a cancelled Reward Order gave the 9 Stars back), ORD-11 (8.8).",
+        "Saved findings seen still present but not re-filed: UI1-09 and UI2-20 (Cancel order is one tap, no confirm; the owner dropped the confirm in 8.10), UI1-18 and UI2-26 ('Eight seats at the bar' against '12 of 12 seats left'), UI1-08 and UI2-12 (italic Order Code), ORD-10 (the read-then-write addLine is unchanged), and ORD-19 and PAY-07 (the status poll still never sweeps and the webhook has no 15-minute deadline; code read only, since other traffic swept K-003 on time).",
+        "Not covered: Google sign-in (not configured locally), real PayMongo, the Day palette after 6 PM and the Night palette in the day (I saw only the morning Day palette and the Night Bar Screen), the 768 px width, and screen readers."
+      ],
+      "findings": [
+        {
+          "pass": 1,
+          "title": "The two-minute demo can't be tried outside Manila ordering hours, which covers most of a US reviewer's day",
+          "kind": "improvement",
+          "severity": "high",
+          "locations": [
+            "src/modules/cafe/internal/ordering-day.ts:93",
+            "src/modules/ordering/internal/place.ts:182",
+            "src/app/(site)/checkout/page.tsx:76",
+            "src/app/(site)/concept/page.tsx:97"
+          ],
+          "evidence": "At 6:58 AM Manila, /checkout with a Cart showed only \"We're not taking orders right now. Closed now, opens 7:00 AM today. Your Cart is saved for later.\" (j1 run.log). orderingState() refuses before_opening and after_last_order with no Demo Mode path, and placeOrder re-checks the same thing. The concept page's \"Try it in two minutes\" guide (concept/page.tsx:97-111) appears exactly when Demo Mode is on but never mentions hours. With hours of 7:00 AM to last order 8:30 PM Manila, ordering is closed from 8:30 PM to 7:00 AM Manila. That is 7:30 AM to 6:00 PM Eastern US time, and 4:30 AM to 3:00 PM Pacific: a US recruiter's whole working day. Demo Mode (ADR 0015) lets a visitor play the barista, but it starts only once an Order exists.",
+          "impact": "PRD section 8, success metric 4 is the portfolio's main proof, and it stalls at checkout for most overseas reviewers. Nothing tells them when to come back in their own time zone, or that they could try at all.",
+          "recommendation": "While Demo Mode is on (fake provider only, ADR 0015), let checkout place an Order outside hours: take the next open day's first window, or a demo window 'now + Prep Time' labelled 'Demo: the cafe is closed, so this Order is for show'. Keep the real hours check in non-demo deployments. At the least, say on /concept and in checkout's closed state when ordering reopens in the visitor's own time zone (Intl.DateTimeFormat). Record the choice as an ADR 0015 update.",
+          "effort": "M",
+          "confidence": 0.9,
+          "refs": [
+            "ADR 0015",
+            "ADR 0007",
+            "PRD section 8 metric 4",
+            "PRD ORD-07"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Prep Time ignores Orders waiting on the bar that nobody has accepted, and the Order's own size, so ASAP promises 5 minutes regardless",
+          "kind": "improvement",
+          "severity": "medium",
+          "locations": [
+            "src/modules/ordering/internal/windows.ts:13",
+            "src/modules/ordering/internal/windows.ts:20",
+            "src/modules/ordering/internal/queue.ts:22",
+            "src/modules/ordering/internal/queue.ts:38",
+            "src/app/(site)/checkout/page.tsx:199"
+          ],
+          "evidence": "j7: Guests Ana (K-007, 3 x Kopi Hitam) and Ben (K-008, 3 x Cold Brew) placed Pay at Pickup ASAP Orders. K-008's page said \"3 drinks ahead of yours.\" A third Guest at checkout at the same moment saw \"As soon as possible: Ready in about 5 min, around 7:15 AM\". After Annika tapped Accept on K-007 alone, the same checkout said \"Ready in about 10 min, around 7:30 AM\". j5: a 9-drink ASAP Order (K-004) was also promised \"Ready in about 5 min\". Cause: drinksQueuedAhead counts only `status: { in: [\"accepted\", \"preparing\"] }` (windows.ts:20), while drinksAhead (8.6) counts paid and placed Pay at Pickup Orders too (queue.ts:37-38). Neither adds the drinks in the Order being placed. docs/03 section 9 and ADR 0007 define Prep Time this way, so this is a disagreement with a recorded rule.",
+          "impact": "PRD section 6.1 sells \"Honest pickup times\". In a rush, before the barista taps Accept, every new Customer is promised the base 5 minutes, and a 9 to 15 drink Order is promised the same as one drink. Two features show contradictory queues on the same morning.",
+          "recommendation": "Count every Order on the bar that is not made yet (paid, placed Pay at Pickup, accepted, preparing) using the same filter as drinksAhead, and add the Order's own drinks: base + per_drink x (queued + own). Update ADR 0007 and docs/03 section 9. Build it test-first (Prep Time is on the tdd list).",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "ADR 0007",
+            "docs/03-ARCHITECTURE.md section 9",
+            "PRD section 6.1"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Still present: a 13 to 15 drink Cart is told \"No Pickup Times are left today\", and the drawer offers Check out for 16+",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/checkout/page.tsx:186",
+            "src/modules/cafe/internal/ordering-day.ts:77",
+            "src/components/shell/cart-float.tsx:96",
+            "src/app/(site)/cart/page.tsx:95"
+          ],
+          "evidence": "j9 at 7:13 AM, with most of the day's windows empty: a Guest Cart of 13 x Kopi Hitam showed a normal Cart and Check out, then /checkout said \"No Pickup Times are left today. Walk in and order at the counter.\" With 16 x Kopi Hitam, the Cart page correctly says \"Orders hold up to 15 drinks... send us an inquiry\". The floating drawer still showed a \"Check out\" button (cart-float.tsx:96-118 checks only cart.blocked). /checkout showed the same false \"No Pickup Times are left today\" instead of the 15-drink rule. pickupWindows keeps a window only when `drinksLeft >= options.need.drinks` (12 per window).",
+          "impact": "ORD-12 promises up to 15 drinks. Any Order above the 12-drink window Capacity is refused with a false message that sends a large-order Customer to the counter instead of the Inquiry form.",
+          "recommendation": "As ORD-04 said: give checkout its own message when need > Capacity (\"An order this big needs more than one Pickup Window. Send us an inquiry\") and cap Orders at min(15, the day's drinks Capacity), or split across back-to-back windows. Make the drawer use the same tooManyDrinks rule as the Cart page.",
+          "effort": "S",
+          "confidence": 0.95,
+          "refs": [
+            "ORD-04",
+            "PRD ORD-12"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Checkout promises \"This order lights 1 Star\" for a Reward Order, but the free drink earns nothing",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/checkout/page.tsx:119",
+            "src/app/(site)/checkout/page.tsx:134",
+            "src/modules/ordering/internal/status.ts:166",
+            "src/app/(site)/cart/page.tsx:244"
+          ],
+          "evidence": "j11 as Hoshi with 9 Stars: Cart of 1 x Kopi Hitam, ticked \"Use 9 Stars for a free Kopi Hitam\". The summary still said \"This order lights 1 Star when you pick it up.\" and the button said \"Place order, PHP 0\". After the four Demo Mode steps on K-011, /account/stars listed \"Spent on a free drink -9\" and no \"Earned for K-011\" row; the balance was 0 of 9. transition() earns only on lines `isDrink: true, isReward: false` (status.ts:165-172), while the Stars line counts cart.drinks, which the server renders before the Reward checkbox exists. The Reward toggle is client-only, so the line never updates.",
+          "impact": "Customers are told at the money moment that they will earn a Star they never get. PRD LOY-01 (\"1 Star per drink in an Order\") and the code also disagree on whether a free drink earns.",
+          "recommendation": "Decide the rule (most stamp cards do not stamp the free cup), write it in PRD LOY-01 and ADR 0008, and move the Stars line into the client form so it reads `drinks - (useReward ? 1 : 0)`. Add an e2e check.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "PRD LOY-01",
+            "PRD LOY-03",
+            "ADR 0008"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Still present: with a Reward ticked, checkout shows two different totals (summary PHP 295, form PHP 110)",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/checkout/page.tsx:161",
+            "src/app/(site)/checkout/checkout-form.tsx:328"
+          ],
+          "evidence": "j6 at 375 px (screenshot shots/j6-reward-checkout-375.png): the 'Your order' summary at the top reads \"Total PHP 295\". At the bottom of the form, \"Free drink (9 Stars) -PHP 185 / Total PHP 110\" and the button \"Place order, PHP 110\". 8.x added the second total rows to the form but left the server-rendered summary total unchanged.",
+          "impact": "Two 'Total' figures at the money moment (PAY-01 says the total shown is final). On a phone the wrong one is seen first.",
+          "recommendation": "Render the summary total from the same client state (move the summary's total row into CheckoutForm, or show a 'Free drink' row in the summary driven by the checkbox).",
+          "effort": "S",
+          "confidence": 0.95,
+          "refs": [
+            "ORD-18",
+            "PRD PAY-01"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "After a failed online payment there is no retry: the Cart is gone, the message repeats, and the Order holds its window for 15 minutes",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/orders/[id]/page.tsx:80",
+            "src/app/(site)/orders/[id]/page.tsx:213",
+            "src/app/(site)/dev/pay/[id]/page.tsx:70",
+            "src/modules/ordering/internal/place.ts:306"
+          ],
+          "evidence": "j4: a Guest placed K-003 (Maya, Later today 9:30 AM) and pressed \"Make the payment fail\". The Order page said \"We got your order, but the payment didn't go through.\" and then, in red, \"Your payment didn't go through. This order will be let go in a few minutes; place it again, or choose Pay at Pickup.\" Its only button was \"See the menu\". /cart was empty (the Cart is cleared at placement, place.ts:306). Reopening /dev/pay showed \"This payment didn't go through.\" with no Pay button. No 'Finish paying' appears, because it needs payment.status === 'pending'. Since 7.2, a paid event after a failed one does pay the Order, but nothing in the UI lets the Customer try again. K-003 held its 9:30 window until a sweep expired it at 15 min 12 s.",
+          "impact": "A declined GCash or card attempt, common in real life, forces a Guest to rebuild the Cart from the menu while their first Order still holds Capacity. 'Place it again' points to a Cart that no longer exists.",
+          "recommendation": "On the failed state, show 'Try paying again', which reopens the same checkout session (PayMongo sessions stay payable) or creates a new one for the same Order. Or cancel the failed Order at once (giving back window and Stars) and restore the Cart from its snapshot Lines. Drop the duplicated sentence.",
+          "effort": "M",
+          "confidence": 0.85,
+          "refs": [
+            "ORD-05",
+            "PAY-03",
+            "PRD PAY-04"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The Bar Screen never shows how much to collect for a Pay at Pickup Order, or that a drink is a free Reward",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "src/app/bar/bar-screen.tsx:453",
+            "src/app/bar/bar-screen.tsx:492",
+            "src/app/bar/bar-screen.tsx:525",
+            "src/modules/ordering/internal/bar.ts:35"
+          ],
+          "evidence": "j7 as Annika (shots/j7-bar-start-1280.png): the cards read \"K-007 ASAP, placed 7:09 AM Ana / Pay at Pickup / 3 x Kopi Hitam Regular · 100% / Accept\", with no amount anywhere. The last tap is \"Paid and picked up\", which sets paidAtCounter and paidAt (status.ts:87-93). The BarOrder type (bar.ts:35-52) carries no totalCents and no isReward per line, so the reward Order K-011 (PHP 0) looks the same as a paid one.",
+          "impact": "PAY-02 says the Barista marks a Pay at Pickup Order paid at the counter, but the Barista has no amount to charge. On a real day they would need a second screen or the Customer's phone. A Reward Order could be charged for its free drink.",
+          "recommendation": "Add totalCents (and isReward per line) to BarOrder. On Pay at Pickup cards show \"Collect PHP 450\" next to the tag and in the final button (\"Paid PHP 450 and picked up\"), and mark Reward lines \"Free (9 Stars)\".",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "PRD PAY-02",
+            "PRD STAFF-02"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "A Guest who gives only a phone number, or any visitor on the live demo, has no way back to their Order page",
+          "kind": "gap",
+          "severity": "medium",
+          "locations": [
+            "src/modules/ordering/internal/emails.ts:16",
+            "src/app/(site)/checkout/checkout-form.tsx:262",
+            "src/app/(site)/orders/[id]/page.tsx:468"
+          ],
+          "evidence": "j9: Guest 'Maria Clara' placed K-010 with only a mobile number. orderForEmail returns null without customerEmail (emails.ts:16), so no message goes anywhere: there is no SMS, no cookie or browser memory of recent Orders, and no lookup by Order Code. The Order page is reachable only through its tokenised URL. The page offers no 'save this link' or 'add to home screen' hint. Checkout says \"an email or a mobile number, so we can reach you about your Order\" (checkout-form.tsx:262-266), but nothing ever uses the number. On the Vercel demo every email to a real address is dropped (docs/06 section 9 step 2), so this applies to every Guest there.",
+          "impact": "Close the tab and the Customer loses the live status, the Ready chime, Directions and the only Cancel button (ORD-09), for an Order that still holds Capacity.",
+          "recommendation": "Remember the last few Order links in the browser (an HTTP-only cookie keyed like the Guest Cart, or localStorage) and show 'Your order K-010' in the header or Cart. Add an Order lookup by code plus phone or email. Until SMS exists, change the copy to say the phone is for the barista to call, and show 'Bookmark this page to follow your Order' on the Order page.",
+          "effort": "M",
+          "confidence": 0.85,
+          "refs": [
+            "PRD ORD-05",
+            "PRD ORD-08",
+            "PRD ORD-09"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "On the live demo, emails are dropped but the site says they were sent (sign-in, Event Sign-up, \"Emails go to the address you type\")",
+          "kind": "inconsistency",
+          "severity": "medium",
+          "locations": [
+            "src/modules/notify/internal/outbox.ts:38",
+            "src/app/(site)/concept/page.tsx:63",
+            "src/app/(site)/events/[slug]/signup-form.tsx:52",
+            "src/app/(site)/events/[slug]/actions.ts:81",
+            "docs/06-SETUP.md:133"
+          ],
+          "evidence": "outbox.ts:38-50: on Vercel without RESEND_API_KEY, an email to a real address is only console.error'd (\"not sent\"), and docs/06 section 9 confirms Resend is skipped on the demo. Yet: /concept's \"What's real\" says \"Emails: Sign-in and order emails go to the address you type. Use one you own.\"; the sign-in form always offers the email link and answers \"Check your email\"; a Guest Event Sign-up answers \"Almost there! We emailed <address> a link. Open it within 30 minutes to keep your seats.\" (seen locally in j8). On the demo that link never arrives, so the seats are held for 30 minutes and the Sign-up quietly lapses. Not observed on the live site (out of scope here); inferred from the code plus the setup doc.",
+          "impact": "A reviewer following the demo waits for a sign-in or Event email that never comes. That is the worst first impression for a portfolio, and it contradicts the concept page.",
+          "recommendation": "Expose a `canEmail()` from notify. Where it is false: hide the email-link form (Google only, with a line saying why), confirm Event Sign-ups on the spot or show the confirm link on the page in Demo Mode, and change the concept row to 'Emails are switched off on this demo'.",
+          "effort": "S",
+          "confidence": 0.75,
+          "refs": [
+            "docs/07-ROADMAP.md section 4 (Batch 5.4 Resend)",
+            "8.7",
+            "ADR 0005",
+            "ADR 0015"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Still present: the ASAP time contradicts itself (\"Ready in about 5 min, around 7:15 AM\" at 7:02)",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/checkout/page.tsx:199",
+            "src/app/(site)/orders/[id]/page.tsx:243"
+          ],
+          "evidence": "j2 at 7:02:57 AM: \"As soon as possible: Ready in about 5 min, around 7:15 AM\". K-001's page then said \"Pickup as soon as possible, around 7:15 AM\". The Bar Screen treats ASAP as make-next, and in Demo Mode the Order was Picked Up at 7:04 AM. The same pattern repeated all morning (\"about 10 min, around 7:30 AM\" at 7:10).",
+          "impact": "Two different promises in one line on the money screen, and the email repeats the later one.",
+          "recommendation": "As ORD-12: show one time (\"Ready around 7:08 AM\") and book Capacity in the window that contains now + Prep Time, or drop the minutes and show only the window.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "ORD-12",
+            "ADR 0007"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Still present: an online Order of PHP 0.00 (Reward covers the whole Cart) goes to a 'Pay PHP 0.00' checkout",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/modules/ordering/internal/place.ts:203",
+            "src/modules/ordering/internal/place.ts:324"
+          ],
+          "evidence": "j6: Hoshi, 1 x Hoshi Latte with defaults, Reward ticked, GCash. The button read \"Place order, PHP 0\" and the redirect went to /dev/pay showing \"Pay with GCash, Hoshikopi order K-006 PHP 0.00, Pay PHP 0.00\". 'Cancel and go back' led to an Order page with \"Finish paying to send it to the bar\". The same Cart with Pay at Pickup (K-011) worked and showed \"Pay at the counter when you collect\" for PHP 0.",
+          "impact": "Confusing, and with PayMongo a zero-amount session is likely refused (payment_start_failed), which also loses the Cart.",
+          "recommendation": "When totalCents is 0, place the Order with no Payment (like Pay at Pickup) and hide the online methods. Say \"Nothing to pay: your free drink\" instead.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "PAY-13"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Picked Up Pay at Pickup Orders (and PHP 0 ones) still say \"Pay at the counter when you collect.\"",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/orders/[id]/page.tsx:124"
+          ],
+          "evidence": "After Picked Up: K-001 (\"Enjoy! See you again soon.\" ... \"Pay at the counter when you collect.\"), K-008 (same), and K-011, a PHP 0 Reward Order (\"Total PHP 0 Pay at the counter when you collect.\"). paymentNote() treats only cancelled, expired and refunded as closed. A picked_up Pay at Pickup Order falls through to the pay-at-counter line, although transition() set paidAtCounter and paidAt.",
+          "impact": "A finished Order reads as unpaid, a small loose end in the receipt the Customer keeps.",
+          "recommendation": "In paymentNote: `picked_up` and Pay at Pickup gives \"Paid at the counter.\", and a total of 0 gives \"Nothing to pay: a free drink.\"",
+          "effort": "S",
+          "confidence": 0.95,
+          "refs": [
+            "UI1-19",
+            "UI2-19"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The Reward Line is unlabelled on the Order page and in emails (\"1 x Hoshi Latte ... PHP 35\")",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/modules/ordering/internal/reads.ts:140",
+            "src/modules/notify/internal/templates.ts:37",
+            "src/modules/notify/internal/templates.ts:69"
+          ],
+          "evidence": "K-005's confirmation email: \"1 x Hoshi Latte (Regular, Oat milk, 100%, Normal): PHP 35.00\". Its Order page shows the same line. K-011 shows \"1 x Kopi Hitam PHP 0\". OrderView lines and the email template drop isReward. Also the Ready email for the 9-drink K-004 says \"Your Hoshi Latte is ready at the counter.\" (singular, first line only).",
+          "impact": "A receipt that looks like a mispriced drink. The Customer cannot see that the Reward was applied.",
+          "recommendation": "Carry isReward through OrderView and the email lines. Render \"Hoshi Latte, free with 9 Stars (Options PHP 35)\". In the Ready email use \"Your order\" when there is more than one drink.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "PRD LOY-03"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Still present: Options can't be edited in the Cart",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/cart/page.tsx:102",
+            "src/app/(site)/cart/actions.ts:8"
+          ],
+          "evidence": "j1 at 375 and 1280: the Cart offers One less, One more and Remove per Line. There is no 'Change' link or button (count 0), and the name links to the item page, which adds a new Line. cart/actions.ts has only setQuantityAction and removeLineAction.",
+          "impact": "PRD ORD-02 (M) promises editing Options. Changing milk means removing the Line and building it again.",
+          "recommendation": "As ORD-07: 'Change' opens the item page with ?line=<id> preselected and replaces the Line. Or amend ORD-02 to quantity only.",
+          "effort": "M",
+          "confidence": 0.9,
+          "refs": [
+            "ORD-07",
+            "PRD ORD-02"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "A name over 60 characters gets a raw Zod error (\"Too big: expected string to have <=60 characters\")",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "src/modules/ordering/internal/place.ts:141",
+            "src/app/(site)/checkout/checkout-form.tsx:255"
+          ],
+          "evidence": "j9: Name \"Maria Clara de los Santos y Ibarra Rizal Mercado Alonzo Realo\" (61 characters) plus a mobile number gave \"Check the details above.\" with the field error \"Too big: expected string to have <=60 characters\". `.max(60)` has no message, and the input has no maxLength, so nothing warns while typing. HTML and emoji in names and notes were stored and shown as text everywhere I looked (Order page, Bar Screen, plain-text email), so no injection.",
+          "impact": "Developer wording in customer copy, against the Voice rules. Long Filipino full names are realistic.",
+          "recommendation": "`.max(60, \"Use 60 characters or fewer, like your first name.\")` and maxLength={60} on the input (the Bar Screen shows only the first name anyway).",
+          "effort": "S",
+          "confidence": 0.95,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Between Last Order and closing, checkout says \"We're not taking orders\" next to \"Open now, closes 9:00 PM\", and never says when ordering reopens",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/checkout/page.tsx:93",
+            "src/components/cafe/open-status.tsx:33",
+            "src/components/cafe/last-order-note.tsx:28"
+          ],
+          "evidence": "Read in code (it was 7 AM): after 20:30 orderingState gives after_last_order, and checkout renders \"We're not taking orders right now.\" followed by <OpenStatus>. openState is still open until 21:00, so OpenStatus prints \"Open now, closes 9:00 PM\". The hero's LastOrderNote says \"Orders are closed for today. Walk in until 9:00 PM.\" Neither says ordering opens at 7:00 AM tomorrow, which ORD-13 asks for (\"after Last Order they say when ordering opens again\"). Before opening it reads well: \"Closed now, opens 7:00 AM today\" (seen at 6:58).",
+          "impact": "Contradictory copy at the cutoff, and no next step beyond the vague 'Your Cart is saved for later'.",
+          "recommendation": "For after_last_order show \"Last orders were at 8:30 PM. Walk in until 9:00 PM, or order ahead from 7:00 AM tomorrow.\" using the next day's hours.",
+          "effort": "S",
+          "confidence": 0.75,
+          "refs": [
+            "PRD ORD-13",
+            "ORD-17"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "When another tab changes the Cart, checkout says \"Prices changed\"",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/checkout/actions.ts:46",
+            "src/modules/ordering/internal/place.ts:205"
+          ],
+          "evidence": "j9: tab A at checkout with 1 x Hoshi Latte (PHP 185); tab B added an Ube Pandesal; tab A's Place order got \"Prices changed: your total is now PHP 260. Check it and place your order again.\" No price changed: the Cart did. The refresh showed both Lines and \"Place order, PHP 260\", so the next tap placed correctly (K-009, cancelled after). When tab B emptied the Cart instead (j10), tab A's tap showed \"Your Cart is empty\" and placed nothing, which is right.",
+          "impact": "Small, but it misexplains the money moment.",
+          "recommendation": "Return a distinct reason when the Lines differ from what was rendered (send a Cart version or Line count with seenTotalCents): \"Your Cart changed in another tab: it's now PHP 260.\"",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "PRD ORD-06"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "A wrong or truncated Order link shows a generic \"This page could not be found\" with HTTP 200 and no way to recover",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/orders/[id]/page.tsx:149",
+            "src/components/not-found-body.tsx:14"
+          ],
+          "evidence": "curl: /orders/<real id>?t=wrong, /orders/<real id> (no token) and /orders/not-a-uuid?t=x all answered 200 with \"404 This page could not be found. It may have moved, or the link has a typo. See the menu / Back home\" under the title \"Your order | Hoshikopi\". The status and calendar routes answer a proper 404. /menu/item/nope and /dev/pay/nope are also 200 (notFound() after the shell streamed, as PAY-12 noted for /dev/pay).",
+          "impact": "Email clients often break long tokenised links. The Customer gets no hint, and crawlers see soft 404s (noindex limits that).",
+          "recommendation": "An Order-specific not-found: \"We couldn't open this order. Use the full link from your email, or sign in to see Your orders.\" Pair it with the recovery path in the phone-only finding.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "PAY-12"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Demo Mode lets any Member mint Stars and records unpaid Pay at Pickup Orders as counter sales",
+          "kind": "improvement",
+          "severity": "low",
+          "locations": [
+            "src/modules/ordering/internal/status.ts:36",
+            "src/modules/ordering/internal/status.ts:91",
+            "src/modules/ordering/internal/reports.ts:31"
+          ],
+          "evidence": "j5: Hoshi placed 9 x Hoshi Latte (PHP 1,665) with Pay at Pickup, tapped the four 'Be the barista' steps, and got +9 Stars (\"Earned for K-004\") and a free-drink Reward within a minute, with no Staff involved. transition() set paidAtCounter=true and paidAt for an Order nobody paid, and salesReport counts every picked_up Order. ADR 0015 accepts 'Pay at Pickup marked paid at the counter, Stars earned' as side effects.",
+          "impact": "On the shared demo, the Star Card and /manage/reports become meaningless, and the reports a reviewer may open show visitor-invented sales. Harmless money-wise (ADR 0006), but it weakens the 'Stars that are simple and honest' story.",
+          "recommendation": "Keep the steps, but leave paidAtCounter false and exclude Orders with a demo actor in order_events from sales reports (or label them 'demo'). Optionally cap demo-earned Stars per Member per day. Record it as an ADR 0015 update.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "ADR 0015",
+            "ADR 0008",
+            "ADR 0006"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Demo script friction: the guide is only on /concept, Home's \"Add to order\" only navigates, and a Guest Order can't become Stars",
+          "kind": "improvement",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/concept/page.tsx:21",
+            "src/components/home/barista-picks.tsx:66",
+            "src/app/(site)/orders/[id]/page.tsx:468"
+          ],
+          "evidence": "As a first-time reviewer at 375 and 1280: Home never mentions Demo Mode or the 'Try it in two minutes' guide, which sits on /concept behind the footer's 'About this concept'. Home's Barista picks show \"Add to order (Hoshi Latte)\", but it is a Link to the item page (barista-picks.tsx:66-70). A Guest who finishes the Be the barista steps sees only \"Collect Stars next time: sign in with your email before you order\". PRD section 8's last step (collect a Star as a Member) means starting a second Order, and on the live demo the email link never arrives (separate finding). The guide also says 'sign in with Google first', which a local run without Google keys doesn't offer.",
+          "impact": "The two-minute script takes longer and needs prior knowledge. Each step is small, but together they are where a reviewer drops off.",
+          "recommendation": "Show a small Demo Mode banner on Home linking to /concept#try. Make Barista picks add with defaults, or call them 'Choose yours'. After a Guest's Picked Up Order in Demo Mode, offer 'Sign in to keep these Stars' that attaches the Order to the new Member (ORD-05's 'offer an account to keep Stars').",
+          "effort": "M",
+          "confidence": 0.8,
+          "refs": [
+            "PRD section 8 metric 4",
+            "PRD ORD-05",
+            "UI1-21",
+            "UI2-24",
+            "ADR 0015"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "The fake checkout's \"Cancel and go back\" doesn't cancel, and the page then says \"We got your order\"",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/dev/pay/[id]/page.tsx:80",
+            "src/app/(site)/orders/[id]/page.tsx:85"
+          ],
+          "evidence": "j6 (K-006): on /dev/pay, \"Cancel and go back\" returned to the Order page reading \"Salamat! We got your order. Finish paying to send it to the bar.\" with Finish paying. The Order stayed Placed with its window and the reserved 9 Stars held until I pressed Cancel order (or until the 15-minute expiry).",
+          "impact": "A visitor who 'cancelled' still has a live Order holding Capacity and their Reward.",
+          "recommendation": "Call it \"Go back without paying\", or make it cancel the Order (closeCheckout plus a customer cancel) and say so.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "PRD PAY-06"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Menu search and dietary filters: accents don't match, 'Nut-free' lists merchandise, and 'No caffeine' hides all food",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/components/menu/menu-filter.tsx:18"
+          ],
+          "evidence": "j1: searching \"café\" gives \"Nothing matches\" although Cafe Mocha exists (the match is a plain includes() on data-search, with no accent folding). Nut-free lists Hoshikopi Tumbler and House Blend 250 g as nut-free menu items. No caffeine shows only Calamansi Honey Soda and Tanglad Ginger Tea, hiding every pastry and meal, because no_caffeine is a badge only drinks carry. Other searches (\"ube\" 2, \"UBE LATTE\" 1, \"  tsokolate \" 1, \"pandesal ube\" 1, \"<script>\" 0) behave well.",
+          "impact": "Minor findability slips on a V1 feature (MENU-05).",
+          "recommendation": "Normalise both sides with `normalize('NFD').replace(/\\p{Diacritic}/gu, '')`. Apply dietary tags only to food and drink (skip the merch Category), and treat 'No caffeine' as 'drinks without caffeine' in its label, or tag caffeine-free food.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": [
+            "PRD MENU-05"
+          ]
+        },
+        {
+          "pass": 1,
+          "title": "Once the bar marks an Order Ready, the Customer's page checks only every 30 s, and in Demo Mode still offers 'Hand it over' after the bar has done it",
+          "kind": "inconsistency",
+          "severity": "info",
+          "locations": [
+            "src/app/(site)/orders/[id]/status-poller.tsx:102",
+            "src/app/(site)/orders/[id]/page.tsx:160"
+          ],
+          "evidence": "j7: Annika tapped 'Paid and picked up' on K-007. Six seconds later Ana's page still said \"Ready at the counter. Show code K-007.\" with the Be the barista panel offering \"Hand it over\". The poller's gap is 30 s once status is 'ready'. Before Ready, my measured follow time was 4.0 to 5.0 s (j3).",
+          "impact": "Small. A Customer standing at the counter sees Ready for up to 30 s after collecting, and in Demo Mode a tap on the stale button is refused silently.",
+          "recommendation": "Poll every 10 s while Ready (the Customer is usually at the counter), and on a refused demo step show \"The bar already moved this order\".",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": [
+            "PRD ORD-14",
+            "ADR 0009"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "motion",
+      "passes": 1,
+      "summaries": [
+        "Batch 8.9's motion is mostly well built: every animation moves only translate, scale, rotate or opacity, nothing loops, the hero stays still (Home LCP is the h1 in both modes, with no difference between motion and reduced motion), CLS from motion is 0, quiet zones (Options, Cart, checkout) only get press feedback, the drawers reverse smoothly from where they are when interrupted, Server Actions and Demo Mode steps never start a view transition, and prefers-reduced-motion stops every animation, the scroll reveals and the page fade. The real problems are around the edges. The reduced-motion rule itself makes every Day/Night flip cost 1.1 to 1.5 s of style work on a throttled phone. It also hides the only visible \"Added\" confirmation for reduced-motion phone users. The page fade leaves the new page's content unclickable and not yet settled for about 0.4 s after every navigation. On Home the Star Card plays its delight off screen. Grading is my own reasoning against the motion and apple-design skills; the Motion+ MotionScore server was not signed in, so no MotionScore tiers were produced."
+      ],
+      "coverage": [
+        "Read every motion source: src/app/globals.css (tokens, keyframes rise/rise-far/fade-in/fade-out/pop/bump/ready/ring/arrive/confirm, press rule, details rule, .lift, .reveal behind @supports, .drawer with @starting-style and allow-discrete, ::view-transition rules, the reduced-motion block), src/app/(site)/template.tsx and its re-exports (cafe, events, menu, menu/item, news, manage), theme-choices.tsx and THEME_SCRIPT (theme.ts), cart-count.tsx, cart-button.tsx, cart-float.tsx, header.tsx, popover-link.tsx, menu-link.tsx, option-picker.tsx, save-details-button.tsx, star-card.tsx, printed-menu.tsx (ring to star), cafe/page.tsx FAQ, menu-card/event-card/post-card/barista-picks (.lift/.reveal), orders/[id]/page.tsx (marks, Ready star and ring), status-poller.tsx (chime, vibration, notification, polling), bar/bar-screen.tsx (arrive, chime, fresh state).",
+        "Checked docs/05-DESIGN-SYSTEM.md section 7, roadmap 8.9 note, ADR 0010 and 0011, Next's bundled view-transitions guide, and the saved findings (UI1-23, UI2-09, UI2-28 in the 2026-11-06 interim; nothing motion-related in findings-2026-11-10.json apart from the Bar Screen announcement item, not repeated here).",
+        "Inventory with Playwright against :3300 (13 public pages, 375 and 1280, motion on and reduce): document.getAnimations() on load and after scrolling, keyframe properties, durations, delays, timelines, and every declared transition. Only translate/scale/rotate/opacity animate; no infinite iterations anywhere (grep and runtime); reduce leaves no scroll timelines and only 0.01 ms animations.",
+        "Load and scroll cost (perf.cjs, 3 runs each, /, /menu, /news, /events; 375 with 4x CPU throttling and 1280): LCP/FCP, CLS on load and during scroll (0 to 0.0002, the same in both modes), frame intervals, CDP style/layout metrics. Wheel-scroll trace on /menu at 375/4x: main-thread RunTask 2767 ms (motion) vs 2641 ms (reduce), UpdateLayoutTree 188 vs 147 ms, 26 vs 7 composited layers (each .reveal card gets a layer); judged acceptable, no finding.",
+        "Home LCP at 375/4x, 8 alternating runs per mode: median LCP 520 ms (motion) vs 584 ms (reduce), LCP element H1 in all runs: motion does not delay first paint and the hero is never animated.",
+        "Page fade: per-frame recording of ::view-transition-* animations for 5 navigations at 1280 and 375/4x, motion and reduce; latency with startViewTransition removed vs kept; hit-testing on the new page during the fade; a click during the fade; account navigations (no template).",
+        "Day/Night: switch crossfade animations, and the cost of a data-theme flip with motion on vs reduce at 375/4x and 1280 on / and /menu; the per-minute clock check re-setting the same value costs nothing (0 style recalcs).",
+        "Add to order at 375 (sticky bar, mid-scroll) and 1280, motion and reduce: Added overlay opacity, status line position, header and pill CartCount bump and visibility, screenshots add-375-motion-1.png and add-375-reduce-1.png.",
+        "Order page: placed one Pay at Pickup Order as a Guest and stepped it to Ready with Demo Mode, logging animationstart, AudioContext/oscillator starts and navigator.vibrate: only changed marks replay, no view transition on Server Action updates, chime and vibration fire on the Ready commit (second note at +180 ms lines up with the star's 180 ms delay).",
+        "Bar Screen: reused another auditor's Barista storageState (no new sign-in), placed one Order as a Guest, watched it arrive (arrive 700 ms in col-New) and accepted it within 4 s. All three test Orders I created (K-015, K-016, K-017) were moved to Picked Up afterwards.",
+        "Drawer at 375/4x: per-frame x while opening, closing, and Escape about 90 ms into opening (reverses from x=41, no jump). Cross-engine support (Chromium 156, Firefox 157, WebKit 27.2): view timelines, @starting-style, overlay, allow-discrete, startViewTransition, and fallbacks. AudioContext accumulation in Chromium/Firefox.",
+        "Not covered: real iOS/Android devices, Safari's AudioContext limits (Playwright WebKit on Windows has no AudioContext), notification display, /manage page fades in depth, and the fake payment page (no motion classes in src/app/(site)/dev by grep)."
+      ],
+      "findings": [
+        {
+          "pass": 1,
+          "title": "The reduced-motion rule gives every element a 0.01 ms 'all' transition, so a Day/Night flip under reduced motion costs 1.1 to 1.5 s of style work on a phone",
+          "kind": "inefficiency",
+          "severity": "medium",
+          "locations": [
+            "src/app/globals.css:282-292",
+            "src/components/theme.ts:13",
+            "src/components/theme-choices.tsx:33-35"
+          ],
+          "evidence": "globals.css:283-291 sets `transition-duration: 0.01ms !important` on `*, ::before, ::after, ::backdrop`. The initial transition-property is `all`, so every element now has a real transition (inventory at 375 under reduce: 4,209 elements report `all 1e-05s`). Flipping data-theme (vt2.cjs) then starts a CSSTransition for every colour that changes. At 375 with 4x CPU: on / 851 to 855 transitions and 1,290 to 1,461 ms of RecalcStyle per flip (motion on: 0 transitions, 42 to 127 ms); on /menu 626 to 645 transitions and 1,122 to 1,173 ms (motion on: 79 to 124 ms). At 1280 without throttling: 697 to 907 transitions, 152 to 203 ms (motion on: 6 to 9 ms). The theme switch click under reduce at 1280 (vt.cjs) created 697 transitions and 151 ms of style work. This hits the header switch and the automatic 6 AM / 6 PM flip; every hover colour change also starts transitions. Nothing in src listens for transitionend or animationend (grep), so the 0.01 ms value buys nothing for transitions.",
+          "impact": "Visitors who asked for less motion get a frozen frame of about one second when the palette changes on a mid-range phone, roughly ten times the cost paid by everyone else. The setting meant to make the site gentler makes it slower.",
+          "recommendation": "In the reduce block use `transition-duration: 0s !important; transition-delay: 0s !important` (a transition whose combined duration is 0 never starts, so no transition objects are created), or `transition: none !important`. Keep 0.01 ms for animation-duration only, so fill: both still lands animations on their final frame. Re-measure the flip: it should cost the same in both modes.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Under reduced motion, Add to order shows no visible confirmation on phones: the 'Added' overlay ends invisible and everything else is off screen",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/menu/item/[slug]/option-picker.tsx:231-240",
+            "src/app/globals.css:182-195",
+            "src/app/globals.css:282-292",
+            "src/app/globals.css:230-235"
+          ],
+          "evidence": "The 'Added' span uses `animate-confirm` (confirm 1600ms ... both). Its keyframes end at `opacity: 0` (globals.css:192-194). The reduce rule shortens it to 0.01 ms, so with fill: both it jumps straight to the invisible end state. Measured (addorder.cjs) at 375 x 812, scrolled so the sticky Add to order bar is in use: 120 ms after the add, confirmOpacity is 0 under reduce (0.99 with motion on). The 'Added to your order. Salamat!' status line sits at y=1301, below the 812 px viewport. The header Cart count is scrolled away. The floating Cart pill is hidden on Menu Item pages under 768 px (globals.css:231-235). Screenshot add-375-reduce-1.png shows only 'Add to order' on the button, while add-375-motion-1.png shows the check and 'Added'. docs/05 section 7 says reduce means 'land on their final state at once', and for this animation the final state is hidden.",
+          "impact": "A reduced-motion Customer on a phone taps Add to order and sees the button flash 'Adding...' then return to 'Add to order', with no sign it worked. They are likely to tap again and add a second drink. Screen readers still hear the status line, so this is not a 4.1.3 failure, but sighted reduced-motion users lose the feedback.",
+          "recommendation": "Give reduced-motion users a static 'Added' for 1.6 s. Either drop the dependency on the animation (for example a state flag that swaps the label for 1.6 s, with the keyframe only fading it), or inside the reduce block re-enable an opacity-only version: `.animate-confirm { animation-name: fade-hold; animation-duration: 1600ms !important; }`, with no scale (a fade is not vestibular motion). Add a Playwright check with reducedMotion: reduce at 375 that 'Added' is visible after the add.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "The page fade leaves the new page unclickable for about 0.35 to 0.45 s and settles it 0.4 s later than without it; the CSS comment says clicks pass through",
+          "kind": "bug",
+          "severity": "medium",
+          "locations": [
+            "src/app/(site)/template.tsx:9-14",
+            "src/app/globals.css:268-279",
+            "node_modules/next/dist/docs/01-app/02-guides/view-transitions.md:362-370"
+          ],
+          "evidence": "The template wraps the whole page in one named <ViewTransition enter=\"page\" exit=\"page\">. While a transition runs, hit-testing skips named participants (Next guide lines 362-370). `::view-transition { pointer-events: none }` only lets clicks reach the unnamed root (header, footer), not the page. vthit.cjs sampled elementFromPoint on the new page's h1 every frame after clicking a /menu card. At 1280 it returns BODY until 484 ms after the click (the view transition is running until 470 ms). At 375 with 4x CPU it returns BODY until 792 ms (the content was committed at about 420 ms). Under reduce the window is 109 to 155 ms (1280) and 484 to 549 ms (375). In vtclick.cjs a real mouse click on the 'Large' Option right after the new page was attached did not check it. Latency (vt2.cjs, 4 runs each): with the fade the page is fully visible at about 453 ms after the click at 1280 (new content committed at 64 ms, animations start at about 107 ms, then the 80 ms delay and 250 ms rise); with startViewTransition removed it is final at 45 ms. At 375/4x: about 875 ms vs about 410 ms; capturing the snapshot alone adds 20 to 50 ms before the commit. The old page fades out in 120 ms while the new one waits 80 ms, so for about 100 ms both are faint.",
+          "impact": "On every customer navigation, a tap in the first few hundred milliseconds on the new page (a Back link, an Option chip, Add to order, a card) is silently dropped. A quick or returning user then has to tap again. The page also reads as slower: on a mid-range phone it reaches its final state about 0.45 s later than without the fade.",
+          "recommendation": "Keep the fade but make it shorter and immediate. Remove the 80 ms delay. Run the new page's fade or rise at about 150 to 200 ms concurrently with a 100 ms old-page fade, so the window where content is not hit-testable is roughly halved. Try a root-only crossfade (no named page participant) and check with elementFromPoint whether the page then stays hit-testable. Correct the comment at globals.css:268-269. Add one motion-on Playwright check that a click right after navigation lands.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "On Home the Star Card lights its Stars on page load, 3.5 to 5.5 screens below the fold, so the delight is over before anyone can see it",
+          "kind": "gap",
+          "severity": "low",
+          "locations": [
+            "src/components/star-card.tsx:35",
+            "src/components/star-card.tsx:65-67",
+            "src/components/star-card.tsx:80-82",
+            "src/components/home/stars-and-news.tsx:44",
+            "docs/05-DESIGN-SYSTEM.md:190"
+          ],
+          "evidence": "The Stars use `animate-pop` and the lines use `animate-fade-in` on the document timeline, with delays of index x 50 ms. starcard.cjs: on Home the Star Card's svg sits at y=4489 at 375 (5.5 viewports down) and y=2839 at 1280 (3.5 viewports down). All 9 of its animations have finished 550 ms after load. On /account and /account/stars it is in the first viewport (y=273 to 427), so the moment works there.",
+          "impact": "One of the two places docs/05 promises the Star Card delight never shows it. Home visitors scroll down to a card that is already fully lit, and the animation runs on every Home load for nothing.",
+          "recommendation": "Start it when the card enters view. CSS only: put `view-timeline-name: --starcard` on the card and give the Stars and lines `animation-timeline: --starcard` with a short `animation-range` (for example entry 40% to entry 100%) and staggered ranges instead of delays, inside the existing `@supports (animation-timeline: view())` and no-preference guard. Or accept a lit card on Home and animate only on the account pages, and update docs/05 section 7.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "Bar Screen: a new card accepted within 4 s slides in again in the Making lane, and one shared 4 s timer cuts a later arrival's gold edge short",
+          "kind": "bug",
+          "severity": "low",
+          "locations": [
+            "src/app/bar/bar-screen.tsx:158-161",
+            "src/app/bar/bar-screen.tsx:212-216",
+            "src/app/bar/bar-screen.tsx:472"
+          ],
+          "evidence": "bar.cjs (Barista board at 1280, one Guest Order K-017): animationstart arrive on article 'Order K-017' in col-New at 6674 ms. After Accept, 1.8 s later, arrive fires again on the same article, now in col-Making at 8458 ms. The card moved to another lane's grid, so React remounts it, and `fresh` still holds its id for 4 s, so the gold edge and `animate-arrive` apply again. Code: `setFresh(new Set(arrived.map(...)))` then `setTimeout(() => setFresh(new Set()), 4_000)`. A second arrival replaces the set, and the first arrival's timer then clears the second's highlight after 4 s minus the gap between polls (polls are 3 s apart, so it can be as short as about 1 s).",
+          "impact": "In a rush, the barista sees an Order they just accepted slide in with the 'new' gold pulse in the Making lane, which reads as a second new Order. A real new Order that lands right after another loses its gold edge early. The one signal meant to say 'new' becomes less reliable.",
+          "recommendation": "Remove an id from `fresh` as soon as it is tapped (in advance and cancel), and apply `animate-arrive` only in the New lane. Keep a timer per arrival, or store an arrival time and derive `fresh` from it, so later arrivals keep their full 4 s.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "The Bar Screen makes a new AudioContext for every chime and never closes it",
+          "kind": "inefficiency",
+          "severity": "low",
+          "locations": [
+            "src/app/bar/bar-screen.tsx:78-95",
+            "src/app/bar/bar-screen.tsx:159",
+            "src/app/bar/bar-screen.tsx:230",
+            "src/app/(site)/orders/[id]/status-poller.tsx:9",
+            "src/app/(site)/orders/[id]/status-poller.tsx:24"
+          ],
+          "evidence": "chime() runs `const audio = new AudioContext();` each time a new Order arrives and on every unmute, and never calls close(). The Order page's chime reuses one module-level context (`audio ??= new AudioContext()`). ac.cjs: in one Chromium 156 page, 200 contexts were created and all stayed 'running', with no cap and no automatic close (Firefox: 200 'suspended'). Playwright's WebKit on Windows has no AudioContext, so Safari/iPadOS behaviour is unconfirmed.",
+          "impact": "A tablet left on the Bar Screen for a shift keeps one live audio context, with its rendering thread, per new Order, for example 100 or more by evening. That wastes CPU and battery and risks the chime failing on devices that limit contexts.",
+          "recommendation": "Do as status-poller.tsx does: one module-level `let audio: AudioContext | null`, created on the first tap (the mute toggle), `resume()`d when suspended, and reused for every chime.",
+          "effort": "S",
+          "confidence": 0.7,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "The Cart count does not bump on the first Add to order where it can be seen, and 'goes up' is measured against the count at page load",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/components/shell/cart-count.tsx:16-20",
+            "src/components/shell/cart-float.tsx:20",
+            "docs/05-DESIGN-SYSTEM.md:189"
+          ],
+          "evidence": "CartCount remembers its first value (`const [onLoad] = useState(count)`) and bumps only when `count > onLoad`. The floating pill renders nothing while the Cart is empty (cart-float.tsx:20), so on the first add it mounts with onLoad = 1 and appears with no motion. addorder.cjs, add #1: the header count bumped (animation 'bump') but was outside the viewport at both 375 and 1280 (visible: false). The pill (visible at 1280) had no animation, and it bumped only on add #2. By the same rule, a page loaded with 3 items whose Cart drops to 1 (removed on /cart while the layout stays mounted) does not bump when it goes back up to 2 (from the code; not run).",
+          "impact": "The Cart pill, the most visible confirmation, appears abruptly at exactly the moment docs/05 promises a bump, and the header bump plays off screen. Small, but it undercuts the 'Added' moment 8.9 built.",
+          "recommendation": "Compare with the previous count rather than the first one: keep `useRef(count)` and update it in an effect, or use the 'previous render' pattern already used in save-details-button.tsx. Give `.cart-pill` an entrance with `@starting-style` (opacity and translate, 250 ms, ease-calm) so its first appearance moves too. Both stay inside the existing reduced-motion rule.",
+          "effort": "S",
+          "confidence": 0.8,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "No page fade between /account and /account/stars, or from an Event to its Sign-up page",
+          "kind": "inconsistency",
+          "severity": "low",
+          "locations": [
+            "src/app/(site)/template.tsx:5-7",
+            "src/app/(site)/account",
+            "src/app/(site)/events/[slug]",
+            "docs/05-DESIGN-SYSTEM.md:185"
+          ],
+          "evidence": "A template remounts only when its own child segment changes, so deeper folders must re-export it (template.tsx's own comment). cafe, events, menu, menu/item and news do, but account/ and events/[slug]/ have no template.tsx. nofade.cjs with the Member session at 1280: /account -> /account/stars and /account/stars -> /account each make 0 startViewTransition calls, while /menu -> /menu/item/hoshi-latte makes 1. docs/05 section 7 says 'Every customer page'.",
+          "impact": "The Star Card page and the account page swap instantly while every other page fades, and the Stars link in the nav goes to one of them. A small inconsistency in the motion system.",
+          "recommendation": "Add `src/app/(site)/account/template.tsx` and `src/app/(site)/events/[slug]/template.tsx`, each re-exporting the (site) template as the other folders do. Or note the exceptions in docs/05.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "The automatic switch at 6 AM and 6 PM flips the palette instantly, while the manual switch crossfades",
+          "kind": "improvement",
+          "severity": "low",
+          "locations": [
+            "src/components/theme.ts:13",
+            "src/components/theme-choices.tsx:33-35"
+          ],
+          "evidence": "THEME_SCRIPT's pick() runs every 60 s and writes `d.dataset.theme=c` directly. Only choose() in theme-choices.tsx wraps the change in document.startViewTransition. An open page in Auto mode therefore jumps from the cream Day palette to the navy Night palette in one frame at 18:00 (and back at 06:00). Apple's reduced-motion and comfort guidance in the apple-design skill asks to ease dark/light changes and avoid abrupt brightness jumps; ADR 0010 is kept as is.",
+          "impact": "A Customer reading the menu at 6 PM sees the whole screen flash from light to dark with no transition, the one palette change that is not eased.",
+          "recommendation": "In pick(), when the value actually changes and `document.visibilityState === 'visible'`, apply it through `document.startViewTransition` where available (reduced motion already removes the animation). Leave the first, before-paint call as it is. Fix the reduced-motion transition cost first (finding 1), since this flip runs under that rule too.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "docs/05 section 7 has drifted from the code: stale Pickup chips line, 'View Transitions are skipped', 'ease-calm for everything', and the page fade's delay",
+          "kind": "docs",
+          "severity": "info",
+          "locations": [
+            "docs/05-DESIGN-SYSTEM.md:178",
+            "docs/05-DESIGN-SYSTEM.md:185",
+            "docs/05-DESIGN-SYSTEM.md:195",
+            "docs/05-DESIGN-SYSTEM.md:197",
+            "src/app/(site)/cafe/page.tsx:279",
+            "src/components/home/printed-menu.tsx:127-131",
+            "src/app/globals.css:276-279"
+          ],
+          "evidence": "(a) Line 195 says 'The Pickup Time chips at checkout stay plain chips until batch 8.3 replaces them'; 8.3 is done (roadmap: chips plus a 'Later today' select). (b) Line 197 says View Transitions are skipped under reduced motion. Measured: React still starts one on every navigation; the pseudo tree is built, and the new page is not hit-testable for about 50 ms at 1280 and 65 ms at 375/4x. Only the animations are removed. (c) Line 178 says '--ease-calm for everything'. The theme crossfade runs the UA default (250 ms, ease, `-ua-view-transition-*` in vt.cjs), and the FAQ plus (cafe/page.tsx:279) and the printed-menu ring (printed-menu.tsx:127) use Tailwind's default 150 ms cubic-bezier(0.4, 0, 0.2, 1). (d) Line 185 describes the page change as 120 ms out and 250 ms in, but the new page also waits 80 ms (globals.css:278).",
+          "impact": "The next motion change will be made against rules the code does not follow, and the reduced-motion claim overstates what happens.",
+          "recommendation": "Update section 7. Delete the chips sentence; reword reduced motion as 'View Transitions run without animation'; mention the 80 ms delay or remove it (see the page fade finding). Either add `ease-[var(--ease-calm)]` (or a `--default-transition-timing-function` theme override) and `::view-transition-*(root)` timing, or relax the 'for everything' wording.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "The drawers slide out only in Chromium; Firefox and Safari close them at once (graceful, but docs/05 says they slide back out)",
+          "kind": "inconsistency",
+          "severity": "info",
+          "locations": [
+            "src/app/globals.css:237-265",
+            "docs/05-DESIGN-SYSTEM.md:186"
+          ],
+          "evidence": "support.cjs at 375: Chromium 156 (overlay supported) is still sliding out 60 ms after Close (display flex, x=301, transitions on display, overlay and translate). Firefox 157 and WebKit 27.2 report `CSS.supports('overlay: auto') === false`, and 60 ms after Close the drawer is already display: none with no transitions. Opening slides in all three (x=25 to 97 at 60 ms). The scroll reveal falls back cleanly: Firefox has no view timelines and all 19 /menu cards are at opacity 1.",
+          "impact": "None for function; the close animation is missing outside Chromium. This is noted so the docs do not promise it everywhere.",
+          "recommendation": "Add 'slides back out where the browser supports overlay (Chromium); elsewhere it closes at once' to docs/05 section 7. No code change needed.",
+          "effort": "S",
+          "confidence": 0.85,
+          "refs": []
+        },
+        {
+          "pass": 1,
+          "title": "No browser test runs with motion on, so none of the motion bugs above can be caught",
+          "kind": "test-gap",
+          "severity": "low",
+          "locations": [
+            "playwright.config.ts:21",
+            "tests/e2e"
+          ],
+          "evidence": "playwright.config.ts:21 sets `reducedMotion: \"reduce\"` for the whole suite, and grep finds no emulateMedia or reducedMotion override anywhere in tests/. Nothing checks that motion runs, that a click right after navigation lands, that 'Added' is visible under reduce at 375, that the Bar Screen arrive plays once, or that the reduce path leaves no running animations (document.getAnimations()). UI2-28 asked for one emulateMedia check once motion landed; the suite went to reduce everywhere instead.",
+          "impact": "Lost taps after navigation, the invisible 'Added' and the replayed Bar Screen slide all passed 180 green Playwright tests.",
+          "recommendation": "Add a small motion.spec.ts that overrides `reducedMotion: 'no-preference'`. Click a menu card and immediately click an Option (expect it checked). Run Add to order at 375 under both settings (expect 'Added' visible). Assert that under reduce every document.getAnimations() entry is finished or has duration <= 0.01 ms on /, /menu and the Order page.",
+          "effort": "S",
+          "confidence": 0.9,
+          "refs": [
+            "UI2-28"
+          ]
+        }
+      ]
+    }
+  ]
+}
