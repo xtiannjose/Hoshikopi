@@ -2,26 +2,33 @@
 
 A deep check of the whole project as a senior web developer, a security reviewer and a QA tester: errors, bugs, inconsistencies, inefficiencies, vulnerabilities, gaps, improvements and features worth adding. It runs as a Claude Code workflow: specialist reviewers each cover one area, a second reviewer tries to disprove every finding, and a final pass merges and ranks what survives into a P0 to P3 backlog.
 
-## Status (2026-11-06)
+## Status (2026-11-10)
 
-In progress. Three runs stopped (two on Claude usage limits, one when the session ended) before the double-check and ranking steps.
+In progress (batch 7.5). Three runs stopped (two on Claude usage limits, one when the session ended) before the double-check and ranking steps. On 2026-11-10 three more areas were reviewed one at a time, on `main` at `0aa0462`, after Phases 7 and 8 had fixed many of the earlier findings.
 
 | File | What it holds |
 | --- | --- |
 | [2026-11-06-interim.md](2026-11-06-interim.md) | 236 findings from 9 of 16 areas, readable, **not yet verified** |
 | [findings-2026-11-06.json](findings-2026-11-06.json) | The same findings as data, read by the next run |
+| [findings-2026-11-10.json](findings-2026-11-10.json) | 135 findings from the last 7 areas (accessibility 15, customer journeys 23, motion 12, ops and deploy readiness 20, tests 18, architecture and code quality 24, Staff tools 23), **not yet verified** |
 | [workflow.md](workflow.md) | The workflow script that finishes the audit |
 
 **Done**
 
-- Quality gates on 2026-11-05, all passing: lint, Prettier, type check, Vitest (193 tests in 36 files), production build, `npm audit --omit=dev` (0 vulnerabilities), Playwright (159 passed, 35 skipped). `npm audit` with dev dependencies exits 1; not looked at yet.
-- Areas reviewed: ordering core, payments, identity and access (2 passes), web security (2 passes), performance, UI (2 passes), data model, docs, product features and competitor research.
+- Quality gates on 2026-11-10, all passing: lint, Prettier, type check, Vitest (228 tests in 39 files), production build, `npm audit` with and without dev dependencies (0 vulnerabilities), Playwright (180 passed, 38 skipped; the skips are deliberate phone-only or desktop-only tests).
+- Areas reviewed on 2026-11-06: ordering core, payments, identity and access (2 passes), web security (2 passes), performance, UI (2 passes), data model, docs, product features and competitor research.
+- Areas reviewed on 2026-11-10: accessibility, customer journeys, motion (graded with the free `motion` and `apple-design` skills, since Motion+ is not signed in), and ops and deploy readiness (read-only checks of the live demo; the Vercel and Neon dashboards were not reachable). The journeys reviewer saw ORD-01, ORD-02 and UI1-01 fixed in the running app; the ops reviewer saw the deploy-related SEC1-01, SEC1-02, SEC1-03, SEC2-01, SEC2-04, DATA-05 and PERF-04 fixed, and found the live functions in `sin1`, so DATA-01's cross-region timeout does not happen live. The tests reviewer ran mutants (code changed on purpose) against the suite: the race tests catch removed locks, but a Prep Time that ignores the bar's queue and a Refund that takes Stars below zero both pass every test. It also traced the flaky Playwright run to four causes (shared cafe-wide changes, the never-emptied `data/mail`, old emails satisfying the ORD-10 check, and the Manila clock after about 21:15).
+
+The architecture reviewer found the module boundaries holding (no deep imports, no cycles, Order Status written only in `status.ts`) and one real bug: the public menu crashes when a Category slug has no stand-in icon.
+
+The Staff tools reviewer found access control holding on every Manager-only Server Action, including the 8.4 and 8.5 ones. It changed cafe-wide settings to test them and put each back (checked in the database). It left "AUDIT TEST" entities in the dev database because the Staff tools have no delete: two hidden Menu Items, Orders K-018 to K-022 (K-022 counts PHP 175 in that day's sales) and a net-zero Star adjustment, besides the ones from 6 November.
+
+All 16 areas are now reviewed.
 
 **Still to do**
 
-1. Review the 7 remaining areas: accessibility, architecture and code quality, tests, ops and deploy readiness (batch 5.4), Staff tools (`/manage`, `/bar`), customer journeys, and motion. The motion reviewer returned nothing on 2026-11-06: its MotionScore method lives on the Motion+ MCP server, which is not signed in, so rerun it with the free `motion` skill or after signing in to Motion+.
-2. Double-check every finding, the 236 above included.
-3. Merge duplicates and rank everything into the final backlog: `docs/audit/2026-11-XX.md`, which replaces the interim file.
+1. Double-check every finding, both JSON files included (the workflow reads one `priorPath`, so run it once per file or merge them, with `todo: []`). Its prompts still describe the code as of 2026-11-06 (Phase 7 open, older test counts): update that text first.
+2. Merge duplicates and rank everything into the final backlog: `docs/audit/2026-11-XX.md`, which replaces the interim file. Findings fixed in 7.1 to 7.4 (and later batches) are marked fixed there.
 
 ## How to continue
 
