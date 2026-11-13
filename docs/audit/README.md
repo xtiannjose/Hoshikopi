@@ -10,7 +10,8 @@ In progress (batch 7.5). Three runs stopped (two on Claude usage limits, one whe
 | --- | --- |
 | [2026-11-06-interim.md](2026-11-06-interim.md) | 236 findings from 9 of 16 areas, readable, **not yet verified** |
 | [findings-2026-11-06.json](findings-2026-11-06.json) | The same findings as data, read by the next run |
-| [findings-2026-11-10.json](findings-2026-11-10.json) | 135 findings from the last 7 areas (accessibility 15, customer journeys 23, motion 12, ops and deploy readiness 20, tests 18, architecture and code quality 24, Staff tools 23), **not yet verified** |
+| [findings-2026-11-10.json](findings-2026-11-10.json) | 135 findings from the last 7 areas (accessibility 15, customer journeys 23, motion 12, ops and deploy readiness 20, tests 18, architecture and code quality 24, Staff tools 23) |
+| [verdicts-2026-11-10.json](verdicts-2026-11-10.json) | A checker's verdict on each of those 135, keyed by area and finding number: 69 confirmed, 61 partly, 4 out of scope, 1 refuted, with adjusted severity, plain problem and fix, and duplicates to merge |
 | [workflow.md](workflow.md) | The workflow script that finishes the audit |
 
 **Done**
@@ -25,9 +26,11 @@ The Staff tools reviewer found access control holding on every Manager-only Serv
 
 All 16 areas are now reviewed.
 
+On 2026-11-13 a skeptical checker opened the cited code for each of the 135 findings of 2026-11-10 (12 checkers, 9 to 15 findings each). Of the 130 that hold, the adjusted severities are 2 high, 20 medium, 93 low and 15 info (the reviewers had 3 high and 51 medium). The 2 high: the public menu crashes when a Category slug has no stand-in icon, and the two-minute demo is closed outside Manila ordering hours.
+
 **Still to do**
 
-1. Double-check every finding, both JSON files included (the workflow reads one `priorPath`, so run it once per file or merge them, with `todo: []`). Its prompts still describe the code as of 2026-11-06 (Phase 7 open, older test counts): update that text first.
+1. Double-check the 236 findings of 2026-11-06 the same way (`findings-2026-11-06.json`; many are fixed by Phases 7 and 8). The workflow's prompts still describe the code as of 2026-11-06 (Phase 7 open, older test counts): update that text first, or reuse the checker brief from 2026-11-13.
 2. Merge duplicates and rank everything into the final backlog: `docs/audit/2026-11-XX.md`, which replaces the interim file. Findings fixed in 7.1 to 7.4 (and later batches) are marked fixed there.
 
 ## How to continue
