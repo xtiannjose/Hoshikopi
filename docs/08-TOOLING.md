@@ -58,12 +58,20 @@ Stop every server you start. On Windows a server started through `npx` can outli
 
 Add a library only when the platform and installed packages cannot do the job, and say why in the batch or an ADR. No component or animation library: native elements and CSS (ADR 0011). No PayMongo SDK: its REST API is called with `fetch`.
 
-## 5. Machine facts (checked 2026-11-07)
+## 5. Machine facts
 
-- Windows 10 Pro, PowerShell and Git Bash; Node 24.19.0, npm 11.17.0.
-- Docker Desktop (Docker 29.8.2) is installed but not always running; start it before database work.
-- Chrome 156.0.8078.80 is installed (Lighthouse uses it); Playwright's Chromium is installed.
-- GitHub: `origin` is https://github.com/xtiannjose/Hoshikopi, the project's only copy; `gh` 2.101 is installed and signed in. Push and open pull requests only when the user asks; the user merges them.
+The owner works on two PCs, both with PowerShell and Git Bash, the project at `C:\Users\cjose\Documents\Projects\Personal\Hoshikopi`. Check `node -v` and `gh auth status` at the start of a session to know which one you are on.
+
+| | Windows 11 Home Single Language (checked 2026-11-13) | Windows 10 Pro (checked 2026-11-07) |
+| --- | --- | --- |
+| Node, npm | 24.18.0, 11.16.0 | 24.19.0, 11.17.0 |
+| Docker Desktop | 29.8.2 | 29.8.2 |
+| Chrome (Lighthouse uses it) | 157.0.8103.51 | 156.0.8078.80 |
+| `gh` | 2.101, **not signed in**: run `gh auth login` once | 2.101, signed in |
+
+- Docker Desktop is installed but not always running; start it before database work. Playwright's Chromium is installed.
+- Each PC has its own `.env.local`, `.env.test` and local databases (git-ignored), so local data differs between them.
+- GitHub: `origin` is https://github.com/xtiannjose/Hoshikopi, the project's only copy. Push and open pull requests only when the user asks; the user merges them.
 
 ## 6. Prompts that work
 
