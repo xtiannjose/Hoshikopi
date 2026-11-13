@@ -2,18 +2,19 @@
 
 A deep check of the whole project as a senior web developer, a security reviewer and a QA tester: errors, bugs, inconsistencies, inefficiencies, vulnerabilities, gaps, improvements and features worth adding. It runs as a Claude Code workflow: specialist reviewers each cover one area, a second reviewer tries to disprove every finding, and a final pass merges and ranks what survives into a P0 to P3 backlog.
 
-## Status (2026-11-10)
+## Status (2026-11-13)
 
-In progress (batch 7.5). Three runs stopped (two on Claude usage limits, one when the session ended) before the double-check and ranking steps. On 2026-11-10 three more areas were reviewed one at a time, on `main` at `0aa0462`, after Phases 7 and 8 had fixed many of the earlier findings.
+Finished, apart from the flaky Playwright fix that batch 7.5 also asks for. **Start with [2026-11-13.md](2026-11-13.md), the ranked backlog.** The first three workflow runs stopped (two on Claude usage limits, one when the session ended) before the double-check and ranking steps, so the rest was done in smaller steps: the last 7 areas one at a time on 2026-11-10 (on `main` at `0aa0462`, after Phases 7 and 8 had fixed many of the earlier findings), then the double-check and ranking on 2026-11-13.
 
 | File | What it holds |
 | --- | --- |
-| [2026-11-06-interim.md](2026-11-06-interim.md) | 236 findings from 9 of 16 areas, readable, **not yet verified** |
-| [findings-2026-11-06.json](findings-2026-11-06.json) | The same findings as data, read by the next run |
+| [2026-11-13.md](2026-11-13.md) | **The ranked backlog**: 205 open items (2 P0, 18 P1, 142 P2, 43 P3), the proposed batches 7.7 to 7.11, and the closed findings |
+| [2026-11-06-interim.md](2026-11-06-interim.md) | The 236 findings of 2026-11-06 from 9 areas, with full evidence (kept as the record behind the backlog) |
+| [findings-2026-11-06.json](findings-2026-11-06.json) | The same findings as data |
 | [findings-2026-11-10.json](findings-2026-11-10.json) | 135 findings from the last 7 areas (accessibility 15, customer journeys 23, motion 12, ops and deploy readiness 20, tests 18, architecture and code quality 24, Staff tools 23) |
 | [verdicts-2026-11-06.json](verdicts-2026-11-06.json) | A checker's verdict on each of the 236 findings of 2026-11-06, keyed by id: 48 fixed, 41 duplicates of a 2026-11-10 finding, 50 confirmed, 83 partly, 14 out of scope. Batch A (45 findings believed fixed in 7.1 to 8.10): 28 fixed, 17 partly fixed, each with the proof or what remains. Batch B (41 findings that repeat a checked 2026-11-10 finding): marked "duplicate", with the 2026-11-10 finding they merge into. Batch C-1 (8 open ordering, payment and identity findings): 7 partly, 1 out of scope, all now low. Batch C-2 (7 open security, performance and data findings): 3 confirmed, 4 partly, all now low or info. Batch C-3 (11 UI findings): 4 confirmed, 1 partly, 3 fixed by 8.10, 3 out of scope (photos on hold, the Cancel confirm dropped on purpose). Batch C-4 (9 docs and feature findings): 3 fixed, 4 partly, 1 confirmed, 1 out of scope. Batch D (115 low and info findings, 7 checkers): none raised to medium; several fixed by Phases 7 and 8, the rest low or info |
 | [verdicts-2026-11-10.json](verdicts-2026-11-10.json) | A checker's verdict on each of those 135, keyed by area and finding number: 69 confirmed, 61 partly, 4 out of scope, 1 refuted, with adjusted severity, plain problem and fix, and duplicates to merge |
-| [workflow.md](workflow.md) | The workflow script that finishes the audit |
+| [workflow.md](workflow.md) | The workflow script the first runs used; kept for a future audit (its prompts describe the code as of 2026-11-06) |
 
 **Done**
 
@@ -31,18 +32,28 @@ On 2026-11-13 a skeptical checker opened the cited code for each of the 135 find
 
 The 236 findings of 2026-11-06 were double-checked the same way on 2026-11-13, in four batches: A, the 45 believed fixed by Phases 7 and 8; B, the 41 that repeat a checked 2026-11-10 finding; C, the 35 still open at high or medium; D, the 115 still open at low or info. None was refuted. Of the 133 that still hold on their own, every one is now low (93) or info (40): Phases 7 and 8 fixed or shrank the rest, and the medium and high ones of that day live on through their 2026-11-10 duplicates.
 
-Every finding of the audit now has a verdict.
+Every finding of the audit now has a verdict, and the merged, ranked backlog is [2026-11-13.md](2026-11-13.md): 205 open items (2 P0, 18 P1, 142 P2, 43 P3). Its P0 and P1 items became roadmap batches 7.7 to 7.11. The interim file stays, as the evidence behind the backlog.
 
 **Still to do**
 
-1. Merge duplicates and rank everything into the final backlog: `docs/audit/2026-11-XX.md`, which replaces the interim file. Findings fixed in 7.1 to 7.4 (and later batches) are marked fixed there.
+1. Fix the flaky Playwright run (backlog items tests:4 and tests:5), the last part of batch 7.5.
 
-## How to continue
+**Done on 2026-11-13**
 
-On this computer, in a Claude Code session in the Hoshikopi folder:
+1. Merged duplicates and ranked everything into [2026-11-13.md](2026-11-13.md), with the 48 findings fixed by Phases 7 and 8 listed there as closed.
 
-1. Start Docker Desktop. The `hoshikopi-db` container (port 5434) already has `hoshikopi`, `hoshikopi_test` and `hoshikopi_e2e`, migrated and seeded. `.env.local` and `.env.test` exist on this computer only (git-ignored); on another computer, follow `docs/06-SETUP.md` sections 5 and 6.
-2. Serve a production build for the reviewers on port 3300 (PowerShell), and stop it when the audit is done:
+## Using the backlog
+
+- Work the batches in `docs/07-ROADMAP.md` (the rest of 7.5, then 7.7 to 7.11). Each names its backlog items, for example `journeys:1`; the backlog gives the problem, the fix, the effort and where in the code.
+- When a batch fixes an item, say so in the batch's "Done" note. Fix P2 items when a batch already touches that code.
+- For the full evidence behind an item, open its finding (`area:N` in `findings-2026-11-10.json`, `ORD-04` style ids in `2026-11-06-interim.md`) and its verdict file.
+
+## Running an audit again
+
+The checks ran against a production build on port 3300 and the seeded dev database. Reviewers and checkers only read code and used the running app; they never edited the repo, ran migrations or the test suites (one tests reviewer ran Vitest), or wrote to the database directly.
+
+1. Start Docker Desktop. The `hoshikopi-db` container (port 5434) holds `hoshikopi`, `hoshikopi_test` and `hoshikopi_e2e`. `.env.local` and `.env.test` exist on this computer only (git-ignored); on another computer, follow `docs/06-SETUP.md` sections 3 to 6.
+2. Serve a production build on port 3300, and stop it when done (PowerShell):
 
    ```powershell
    $env:BETTER_AUTH_URL = "http://localhost:3300"; $env:NEXT_PUBLIC_SITE_URL = "http://localhost:3300"
@@ -50,7 +61,5 @@ On this computer, in a Claude Code session in the Hoshikopi folder:
    npx next start -p 3300
    ```
 
-2. Re-run the quality gates if the code changed since 2026-11-05 (`npm run qa`, `npm run test:e2e`) and save their output where the workflow's `gates` argument points.
-4. Ask Claude to run the workflow in [workflow.md](workflow.md) with the arguments listed there. It skips the reviewed areas, reads their findings from the JSON file, and verifies and ranks everything.
-
-A cheaper fallback when usage is tight: skip step 4's new areas and only verify and rank the saved findings (pass an empty `todo` list).
+3. Run the quality gates first (`npm run qa`, `npm run test:e2e`) and keep their output for the reviewers. Never run `next build` or the Playwright suite while reviewers use port 3300: both rebuild the `.next` folder the server reads.
+4. Run reviewers and checkers in small waves (up to 4 at a time) so a usage limit pauses one wave, not the whole audit. Give each a fresh brief with today's commit and test counts; `workflow.md`'s prompts are out of date.

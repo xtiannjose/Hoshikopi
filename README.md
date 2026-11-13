@@ -8,7 +8,7 @@ A concept cafe in Metro Manila, and the website that runs it. The site sells the
 
 ## Status
 
-Phases 0 to 6 are built and the demo is live at https://hoshikopi.vercel.app (Vercel and Neon, Test Mode payments on the `fake` provider). Now: Phase 7, audit fixes. See [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
+Phases 0 to 6 (MVP and V1) and Phase 8 (improvements) are built, and the demo is live at https://hoshikopi.vercel.app (Vercel and Neon, Test Mode payments on the `fake` provider). Phase 7, audit fixes: the November audit is finished, with every finding double-checked and ranked in [docs/audit/2026-11-13.md](docs/audit/2026-11-13.md). Now: the last part of 7.5 (the flaky Playwright run), then batches 7.7 to 7.11 from the audit, then Phase 9, the portfolio review. See [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
 
 ## Stack
 
@@ -29,8 +29,8 @@ Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS 4,
 | [docs/07-ROADMAP.md](docs/07-ROADMAP.md) | Phases 0 to 9, batches with checkboxes, exit criteria, decisions, definition of done | Picking the next piece of work |
 | [docs/08-TOOLING.md](docs/08-TOOLING.md) | Which skill fits which job, agents, ports, libraries, machine facts, prompts | Choosing how to work |
 | [docs/ASSETS.md](docs/ASSETS.md) | Every shipped file that is not code, its source and licence; the concept images still to make | Adding a font, image or other asset |
-| [docs/audit/](docs/audit/) | The November audit: findings and how it was run | Working on Phase 7 |
-| [docs/adr/](docs/adr/) | Decisions and why (0001 to 0014) | Before changing a decision |
+| [docs/audit/](docs/audit/) | The November audit: findings, each checker's verdict, and the ranked backlog | Working on Phase 7 |
+| [docs/adr/](docs/adr/) | Decisions and why (0001 to 0015) | Before changing a decision |
 
 ## Getting started
 
