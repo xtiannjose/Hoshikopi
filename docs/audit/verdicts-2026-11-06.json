@@ -104,6 +104,15 @@
       "ID1-02",
       "ID1-04",
       "ID2-02"
+    ],
+    "C-2": [
+      "SEC1-04",
+      "SEC2-03",
+      "PERF-08",
+      "PERF-10",
+      "PERF-11",
+      "DATA-02",
+      "DATA-04"
     ]
   },
   "verdicts": {
@@ -2013,6 +2022,157 @@
       "duplicates": [
         "ID1-13"
       ]
+    },
+    "SEC1-04": {
+      "batch": "C-2",
+      "id": "SEC1-04",
+      "title": "A NUL byte in any public text input crashes with a 500",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/api/orders/[id]/status/route.ts:10",
+        "src/modules/ordering/internal/customer.ts:9-25",
+        "src/app/(site)/cafe/inquire/actions.ts:37",
+        "src/modules/content/internal/inquiries.ts:19-48",
+        "src/modules/content/internal/signups.ts:41",
+        "src/modules/ordering/internal/place.ts:141",
+        "src/modules/cart/internal/cart.ts:69"
+      ],
+      "problem": "Text fields and route ids still pass a NUL byte straight to Postgres, which refuses it, so the request fails with an unhandled 500 instead of a field error or a 404. GET /api/orders/%00/status still answers 500 on the local production build.",
+      "fix": "Add one shared refinement that refuses control characters to the Zod text schemas (Inquiry, Sign-up, checkout contact) and to the Cart note, and check the id format before orderWithToken queries. Keep it in the modules, where the other validation already lives.",
+      "reasoning": "Traced today's code: the Inquiry schema (inquiries.ts:19-48), the Sign-up name (signups.ts:41) and the checkout name (place.ts:141) only trim and cap length, and the Cart note is trimmed and sliced (cart.ts:69); none refuse \\u0000. The only control-character guards in src are lib/calendar.ts:33 (8.6) and the sign-in next check (identity/internal/sign-in.ts:11). inquireAction and placeOrderAction have no try/catch around the write, so the Postgres error (22021 on a text column) becomes a 500. Probed :3300 with read-only GETs: /api/orders/%00/status?t=a returned 500, /api/orders/abc/status?t=a returned 404. Impact is lower than written: since 8.2 (a304e60) the failure lands on the branded ErrorPanel with the Concept Notice, not Next's bare page; a person cannot type a NUL into a form field, so only a script triggers it and only that script loses its own rate-limit token. What remains is log noise and a 500 instead of a clean refusal.",
+      "corrections": "The 'dead page with no way back' is now the (site) error.tsx ErrorPanel with Try again and the Concept Notice (SEC1-05 fixed in 8.2). /orders/%00?t=a renders the not-found page, not a 500; the status API still 500s. Real users cannot realistically enter a NUL, so the impact is noise from scripted requests: low, not medium.",
+      "duplicates": [
+        "SEC2-10"
+      ]
+    },
+    "SEC2-03": {
+      "batch": "C-2",
+      "id": "SEC2-03",
+      "title": "The checkout rate limits still let one IP hold most Pickup Window capacity with unpaid or Pay at Pickup Orders",
+      "verdict": "confirmed",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/app/(site)/checkout/actions.ts:86-98",
+        "src/lib/rate-limit.ts:27-33",
+        "src/modules/ordering/internal/place.ts:208-216",
+        "src/modules/ordering/internal/place.ts:248-269",
+        "src/modules/ordering/internal/bar.ts:16-24",
+        "src/modules/ordering/internal/rules.ts:2-5"
+      ],
+      "problem": "Checkout allows 20 Orders per IP per 15 minutes, and a Guest resets the per-Cart limit by dropping the Cart cookie, so one script can keep about 20 Pickup Windows full with unpaid online Orders or fill the day with 4-drink Pay at Pickup Orders. Nothing caps the drinks one IP or contact holds in open Orders.",
+      "fix": "Inside placeOrder's transaction, cap the drinks held by open unpaid or unaccepted Guest Orders per IP (or per contact) across today's windows. Let Managers cancel by contact in one step, so a flood can be cleared without cancelling each Order.",
+      "reasoning": "Unchanged since the finding: placeOrderAction takes checkout:<cartKey> (10) and checkout-ip (20) per 15 minutes (actions.ts:86-98); a Guest's cartKey is the hash of a cookie the client controls, so only the IP limit binds. placeOrder caps Guest Pay at Pickup at 4 drinks and every Order at 15 (place.ts:208-216), then takes Capacity under the row lock (place.ts:248-269). expireUnpaid only expires online Orders after 15 minutes (bar.ts:16-24), so Pay at Pickup holds last until staff cancel or the service day ends. Seeded hours give about 54 windows of 12 drinks. Downgraded: it needs a deliberate scripted attacker; on the Vercel demo X-Forwarded-For is set by Vercel, so one IP really is one client; online holds clear by themselves within 15 minutes of the script stopping; a Manager can pause ordering. ORD-14 from the same audit rated the Pay at Pickup half low. Judged from code only, as instructed (no Orders placed).",
+      "corrections": "An online Order holds at most 12 drinks, not 15: an Order larger than the window Capacity fits no window (journeys:3), so the unpaid path holds about 20 windows, as the finding's own total says. The spoofed X-Forwarded-For point does not apply to the Vercel deploy. Severity medium to low.",
+      "duplicates": [
+        "ORD-14"
+      ]
+    },
+    "PERF-08": {
+      "batch": "C-2",
+      "id": "PERF-08",
+      "title": "The header's dynamic holes make every public page uncacheable at the HTTP layer (no-store, no bfcache, server work per view)",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "info",
+      "effort": "M",
+      "locations": [
+        "src/components/shell/header.tsx:44-49",
+        "src/components/shell/account-link.tsx:28",
+        "src/components/shell/cart-button.tsx:26-27",
+        "src/components/shell/cart-float.tsx:17-18"
+      ],
+      "problem": "The account link and the two Cart indicators read the session and the Cart at request time, so every public page is partially prerendered and resumes those holes on each view. Under next start the page is sent with Cache-Control: private, no-cache, no-store, but the Vercel deploy is not affected that way.",
+      "fix": "No change is needed for the Vercel demo. If the site ever self-hosts behind a CDN, move the account and Cart indicators into one small client island that reads a tiny JSON endpoint, so public pages become fully static.",
+      "reasoning": "The holes remain (header.tsx:44-49, plus CartFloat from 8.2). Local :3300 still sends x-nextjs-postponed: 1 and Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate on /, /concept, /menu, /cafe, /events, /news and /privacy. But the live site (read-only GETs on 2026-11-13) sends Cache-Control: public, max-age=0, must-revalidate with X-Nextjs-Prerender: 1 and X-Vercel-Cache STALE, HIT or PRERENDER: Vercel serves the static shell from its edge and streams only the holes from a function, which is the PPR model the docs describe (node_modules/next/dist/docs cdn-caching.md and deploying-to-platforms.md, 'PPR's static shell served at CDN latency'). With no no-store on the main resource, the bfcache blocker Lighthouse reported does not apply live. The per-view work left is one session read and one Cart read per hole, small on the demo; the suggested /api/me island would still cost a request per view. docs/03 section 4 and CLAUDE.md ('public pages are prerendered') describe exactly this shell-plus-holes design.",
+      "corrections": "no-store and the lost bfcache are true only for next start (local runs, e2e, local Lighthouse), not for the Vercel deploy, where the shell is edge-cached and Cache-Control is public, max-age=0, must-revalidate (ops:20 records the same header difference). The 'full RSC tree' is not re-rendered per view; only the postponed holes resume. Severity medium to info.",
+      "duplicates": []
+    },
+    "PERF-10": {
+      "batch": "C-2",
+      "id": "PERF-10",
+      "title": "cacheLife(\"minutes\") expires public pages after 1 idle hour, so the next visitor waits for a blocking render",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "info",
+      "effort": "S",
+      "locations": [
+        "src/modules/menu/internal/queries.ts:165",
+        "src/modules/content/internal/content.ts:109",
+        "src/modules/cafe/internal/details.ts:35",
+        "src/modules/content/internal/weekly.ts:46",
+        "docs/03-ARCHITECTURE.md:77"
+      ],
+      "problem": "Every public cached read uses cacheLife(\"minutes\"), so each prerendered route carries a one-hour expire (initialExpireSeconds 3600 in the build's prerender manifest), and Next's own server regenerates synchronously after an idle hour. On the Vercel demo, rarely visited pages were still served stale from the edge without a blocking render.",
+      "fix": "Optionally define a custom profile in next.config.ts (stale 300, revalidate 60, expire 30 days) and use it in place of \"minutes\", which keeps the one-minute heal and makes self-hosted runs behave like Vercel. Update docs/03 section 4 to name it.",
+      "reasoning": "Confirmed in code: 10 cacheLife(\"minutes\") calls in the public readers, and .next/prerender-manifest.json gives /, /menu, /concept, /privacy, /news and /cafe revalidate 60 and expire 3600 (the footer's cached hours make even /concept and /privacy expire). cacheLife.md: 'After this period with no traffic, the server regenerates content synchronously on the next request', which applies to next start. On the live site, the build has been up since the 2026-11-10 merge; read-only GETs to rarely visited pages (/menu/item/house-blend-250g, /menu/item/longganisa-pandesal, /menu/item/ube-pandesal, /news/our-beans-from-benguet) came back STALE or PRERENDER with 0.55 to 0.73 s TTFB from Manila, then HIT; a PRERENDER entry served days after the build shows Vercel does not block on the one-hour expire there. So the impact the finding describes (first visit after an idle hour waits on a full render and a Neon cold start) does not show on the deploy that matters; it can show on local production runs, such as the first Lighthouse run after an idle hour.",
+      "corrections": "The blocking render applies to self-hosted next start, not to the Vercel deploy, where expired shells are still served stale from the edge. Severity medium to info. The setting is unrelated to the one-to-two-minute Sold Out delay in staff:2, which comes from the 1-minute revalidate.",
+      "duplicates": []
+    },
+    "PERF-11": {
+      "batch": "C-2",
+      "id": "PERF-11",
+      "title": "Missing tests for the regressions above",
+      "verdict": "partly",
+      "fixed_by": "c800e71 (7.1): tests/db/cart.test.ts:151 'merges once when two requests sign in with the same Guest Cart at once' and tests/e2e/members.spec.ts:13 (Guest Cart, sign in, then /checkout shows it); 94609ff (7.4): tests/db/bar.test.ts:105 'changes its version when a Scheduled Order becomes make-next'.",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "tests/db/cart.test.ts:151",
+        "tests/e2e/members.spec.ts:13",
+        "tests/db/bar.test.ts:105",
+        "src/modules/menu/internal/photo.test.ts:23-59",
+        "tests/e2e/quality.spec.ts:18-37"
+      ],
+      "problem": "Two of the three asked-for regression tests now exist (the Guest Cart merge and the barBoard version), but nothing checks that an uploaded menu photo is then served, and the quality spec still budgets JavaScript bytes only, not HTML size. The photo path is tested only with the Blob client mocked.",
+      "fix": "Add an HTML-size budget (for example Home under 300 kB raw) beside the JavaScript budget in quality.spec.ts. Check the first real photo upload on the live site, as 5.4 already lists, rather than an e2e test that cannot reach Blob.",
+      "reasoning": "The merge crash has a concurrent db test (Promise.all against the real database) plus an e2e that keeps a Guest Cart through sign-in and places an Order from /checkout; the frozen Scheduled Order has a frozen-clock barBoard test that asserts a new version. For photos, photo.test.ts covers the public/ fallback name and the Blob put with the client mocked; no test fetches a stored photo. That matters little now: production uses Blob (PERF-04 partly), and an e2e on the local build would exercise only the fallback path. quality.spec.ts:18-37 still measures only script bytes; 7.6 and PERF-09 show HTML size moved without a test noticing.",
+      "corrections": "The guest-Cart e2e signs in to /account first, not next=/checkout, but the db test covers both causes of the crash (per-request cache() and the row lock). Remaining gap is the photo serving check and the optional HTML budget; severity medium to low.",
+      "duplicates": []
+    },
+    "DATA-02": {
+      "batch": "C-2",
+      "id": "DATA-02",
+      "title": "The Manager's Inquiry list fetches the 200 newest rows and only then puts New first, so older unanswered Inquiries vanish",
+      "verdict": "confirmed",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/content/internal/inquiries.ts:99-106",
+        "src/app/manage/inquiries/page.tsx:81",
+        "prisma/migrations/20261101120000_recurring_events_inquiries/migration.sql:43"
+      ],
+      "problem": "inquiriesForStaff takes the 200 newest Inquiries by date and only then sorts New first, so a New Inquiry older than the 200 newest rows never reaches the Manager's list. The page has no paging, and the (status, created_at) index cannot serve this query.",
+      "fix": "Order in the query instead: orderBy [{ status: \"asc\" }, { createdAt: \"desc\" }] (the enum order is new, answered, closed), or fetch every New Inquiry plus the latest 100 others. Add a db test with more than 200 rows.",
+      "reasoning": "The code is unchanged since 6.7 (a7579c6): findMany({ orderBy: [{ createdAt: 'desc' }], take: 200 }) then an in-memory sort by status. It is the only Inquiry read in src (grep), and the enum is declared ('new', 'answered', 'closed'), so status asc puts New first and matches the existing index. tests/db/weekly-inquiries.test.ts:121 checks the order with a handful of rows only. Severity is low: a New Inquiry vanishes only after 200 newer Inquiries arrive while it waits, which at a small cafe takes spam (5 per IP an hour) rather than normal traffic, and Inquiries cannot be deleted to clear spam (staff:9).",
+      "corrections": "Line numbers moved slightly (inquiries.ts:99-106, page.tsx:81). Severity medium to low for this product's volume.",
+      "duplicates": []
+    },
+    "DATA-04": {
+      "batch": "C-2",
+      "id": "DATA-04",
+      "title": "No database backstop for Star integrity: duplicate earn, reserve or release per Order and repeat Birthday Treats are all accepted",
+      "verdict": "confirmed",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "prisma/migrations/20261031054051_init/migration.sql:503-506",
+        "prisma/migrations/20261101100100_birthday_sign_check/migration.sql:1-7",
+        "src/modules/loyalty/internal/ledger.ts:44-57",
+        "src/modules/loyalty/internal/ledger.ts:140-148",
+        "src/modules/loyalty/internal/ledger.ts:181-209"
+      ],
+      "problem": "star_entries has only a sign CHECK and plain indexes, so the database would accept a second earn, reserve, release or reverse row for one Order and a second Birthday Treat in a year. Today only the code keeps each of these to once.",
+      "fix": "Add a migration with a partial unique index on (order_id, kind) for earn, reserve, release and reverse, and one on (member_id, reason) for birthday rows. Map P2002 to a no-op in the callers and add a db test that a second insert is refused.",
+      "reasoning": "\\d star_entries on the dev database shows the primary key, non-unique member_id and order_id indexes and star_entries_sign_check only; no migration after birthday_sign_check touches the table. The code paths are sound today: earn, release and reverse run inside transition() after SELECT ... FOR UPDATE on the Order, and each status is entered once (status.ts:137-176); reserve runs once in placeOrder's transaction; releaseRedemption and reverseForOrder work from net sums; birthdayTreat locks the Member and checks this year first. earnForOrder and reserveRedemption insert with no existence check, so a future caller outside transition() would double-count without the database noticing. It is defence in depth for an integrity rule (ADR 0008), cheap to add, with no current bug.",
+      "corrections": "'A retry after a partial failure' cannot double-insert: every Star write sits in the same transaction as its status change, so a failure rolls both back. The risk is a future caller, not a current path. Severity medium to low.",
+      "duplicates": []
     }
   }
 }
