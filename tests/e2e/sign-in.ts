@@ -11,10 +11,15 @@ import { e2eQuery } from "./db";
 const E2E_AUTH_SECRET = "e2e-secret-at-least-32-characters-long";
 const MAIL = path.join(process.cwd(), "data", "mail");
 
-/** The sign-in link in the outbox whose return path carries `nonce`. */
-async function linkFor(nonce: string): Promise<string | null> {
+/**
+ * The sign-in link in the outbox whose return path carries `nonce`. Only
+ * this address's files are read: the outbox keeps every email ever sent.
+ */
+async function linkFor(nonce: string, email: string): Promise<string | null> {
+  // The outbox names each file after the address (outbox.ts).
+  const ending = `-${email.replace(/[^\w@.+-]/g, "_")}.txt`;
   const files = await readdir(MAIL).catch(() => []);
-  for (const file of files) {
+  for (const file of files.filter((f) => f.endsWith(ending))) {
     const text = await readFile(path.join(MAIL, file), "utf8");
     const url = text.match(/https?:\/\/\S+/)?.[0];
     if (url?.includes(nonce)) return url;
@@ -64,13 +69,25 @@ export async function signIn(page: Page, email: string, next = "/account") {
   await expect(page.getByRole("status")).toContainText(email);
   let url: string | null = null;
   await expect
-    .poll(async () => (url = await linkFor(nonce)), { timeout: 10_000 })
+    .poll(async () => (url = await linkFor(nonce, email)), { timeout: 10_000 })
     .not.toBeNull();
   await page.goto(url!);
-  // Staff pages ask for the Second Factor once per session (ADR 0014).
+  // Staff pages ask for the Second Factor once per session (ADR 0014). The
+  // page sends a new session there itself, so wait for that before going
+  // there with the nonce, or the two navigations interrupt each other. A
+  // page the person may not open shows not-found instead and stays put.
   if (next.startsWith("/manage")) {
-    await page.goto(`/manage/two-factor?next=${encodeURIComponent(target)}`);
-    await enterSecondFactor(page, email);
+    const asked = page.waitForURL(/\/manage\/two-factor/).then(() => true);
+    const refused = page
+      .getByRole("heading", { name: /could not be found/i })
+      .waitFor()
+      .then(() => false);
+    asked.catch(() => {});
+    refused.catch(() => {});
+    if (await Promise.race([asked, refused])) {
+      await page.goto(`/manage/two-factor?next=${encodeURIComponent(target)}`);
+      await enterSecondFactor(page, email);
+    }
   }
   await expect(page).toHaveURL(new RegExp(`t=${nonce}`));
   expect(page.url()).not.toContain("error=");

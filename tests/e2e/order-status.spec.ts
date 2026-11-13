@@ -21,11 +21,20 @@ test("the Order page follows the bar live (ORD-08)", async ({ page }) => {
     "UPDATE orders SET status = 'preparing', accepted_at = now(), updated_at = now() WHERE id = $1",
     [id]
   );
-  await expect(page.getByRole("status")).toHaveText(
-    "We're making your Spanish Latte.",
-    { timeout: 10_000 }
-  );
-  await expect(page.getByText("can't be cancelled here")).toBeVisible();
+  try {
+    await expect(page.getByRole("status")).toHaveText(
+      "We're making your Spanish Latte.",
+      { timeout: 10_000 }
+    );
+    await expect(page.getByText("can't be cancelled here")).toBeVisible();
+  } finally {
+    // A Preparing Order counts toward Prep Time for every other test, so
+    // hand it over once checked.
+    await e2eQuery(
+      "UPDATE orders SET status = 'picked_up', ready_at = now(), picked_up_at = now(), updated_at = now() WHERE id = $1",
+      [id]
+    );
+  }
 });
 
 test("the Order page hands off a Scheduled Pickup: where, what to show and a calendar file (8.6)", async ({

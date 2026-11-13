@@ -1,10 +1,13 @@
 import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations } from "./axe";
-import { e2eQuery, openAllDayToday } from "./db";
+import { e2eQuery, endPauseAndBusy, openAllDayToday } from "./db";
 import { signIn } from "./sign-in";
 
 test.beforeEach(openAllDayToday);
+test.afterEach(async ({}, testInfo) => {
+  if (testInfo.tags.includes("@cafe-wide")) await endPauseAndBusy();
+});
 
 test("a Guest's Scheduled Order goes through the Bar Screen and the status page follows (Phase 2 exit)", async ({
   browser,
@@ -25,12 +28,14 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
   await guest.getByRole("button", { name: "Add to order" }).click();
   await expect(guest.getByRole("status")).toContainText("Added");
 
-  // A Scheduled Pickup: the first time offered today (tap its label). The
-  // full-window test below takes the last, so late at night they differ.
+  // A Scheduled Pickup: the second time offered today (tap its label), a
+  // window clear of Prep Time even if other specs' Orders raise it before
+  // Place order. The full-window test below takes the last, so late at
+  // night they differ.
   await guest.goto("/checkout");
   await guest
     .locator('label:has(input[name="pickup"]:not([value="asap"]))')
-    .first()
+    .nth(1)
     .click();
   await guest.getByText("Pay at Pickup", { exact: true }).click();
   await guest.getByLabel("Name").fill("Hoshi Santos");
@@ -111,27 +116,32 @@ test("the Bar Screen says it stopped when its session ends (audit, 7.4)", async 
   ).toHaveAttribute("href", "/sign-in?next=%2Fbar");
 });
 
-test("a Manager turns on Busy Mode from the Bar Screen and checkout says so (8.4)", async ({
-  page,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop", "desktop task");
-  test.setTimeout(120_000);
-  // Busy Mode, like Pause, needs the Manager's Second Factor.
-  await signIn(page, "christian@hoshikopi.example", "/manage");
-  await page.goto("/bar");
-  await page.getByRole("button", { name: "Busy +15 min, 1 hour" }).click();
-  const banner = page.getByRole("status").filter({ hasText: "Busy Mode" });
-  await expect(banner).toContainText("Busy Mode: Prep Time +15 min until");
-  await expectNoAxeViolations(page);
+test(
+  "a Manager turns on Busy Mode from the Bar Screen and checkout says so (8.4)",
+  {
+    tag: "@cafe-wide",
+  },
+  async ({ page }) => {
+    test.setTimeout(120_000);
+    // Busy Mode, like Pause, needs the Manager's Second Factor.
+    await signIn(page, "christian@hoshikopi.example", "/manage");
+    await page.goto("/bar");
+    await page.getByRole("button", { name: "Busy +15 min, 1 hour" }).click();
+    const banner = page.getByRole("status").filter({ hasText: "Busy Mode" });
+    await expect(banner).toContainText("Busy Mode: Prep Time +15 min until");
+    await expectNoAxeViolations(page);
 
-  await page.goto("/menu/item/kopi-hitam");
-  await page.getByRole("button", { name: "Add to order" }).click();
-  await expect(page.getByRole("status")).toContainText("Added");
-  await page.goto("/checkout");
-  await expect(page.getByText("The bar is extra busy right now")).toBeVisible();
+    await page.goto("/menu/item/kopi-hitam");
+    await page.getByRole("button", { name: "Add to order" }).click();
+    await expect(page.getByRole("status")).toContainText("Added");
+    await page.goto("/checkout");
+    await expect(
+      page.getByText("The bar is extra busy right now")
+    ).toBeVisible();
 
-  // Other specs share this database: end it right away.
-  await page.goto("/bar");
-  await page.getByRole("button", { name: "End Busy Mode" }).click();
-  await expect(banner).toHaveCount(0);
-});
+    // End it from the Bar Screen too; afterEach covers a failure.
+    await page.goto("/bar");
+    await page.getByRole("button", { name: "End Busy Mode" }).click();
+    await expect(banner).toHaveCount(0);
+  }
+);
