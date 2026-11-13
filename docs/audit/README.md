@@ -11,7 +11,7 @@ In progress (batch 7.5). Three runs stopped (two on Claude usage limits, one whe
 | [2026-11-06-interim.md](2026-11-06-interim.md) | 236 findings from 9 of 16 areas, readable, **not yet verified** |
 | [findings-2026-11-06.json](findings-2026-11-06.json) | The same findings as data, read by the next run |
 | [findings-2026-11-10.json](findings-2026-11-10.json) | 135 findings from the last 7 areas (accessibility 15, customer journeys 23, motion 12, ops and deploy readiness 20, tests 18, architecture and code quality 24, Staff tools 23) |
-| [verdicts-2026-11-06.json](verdicts-2026-11-06.json) | Checker verdicts on the 2026-11-06 findings, keyed by id, filled batch by batch. Batch A (45 findings believed fixed in 7.1 to 8.10): 28 fixed, 17 partly fixed, each with the proof or what remains |
+| [verdicts-2026-11-06.json](verdicts-2026-11-06.json) | Checker verdicts on the 2026-11-06 findings, keyed by id, filled batch by batch. Batch A (45 findings believed fixed in 7.1 to 8.10): 28 fixed, 17 partly fixed, each with the proof or what remains. Batch B (41 findings that repeat a checked 2026-11-10 finding): marked "duplicate", with the 2026-11-10 finding they merge into |
 | [verdicts-2026-11-10.json](verdicts-2026-11-10.json) | A checker's verdict on each of those 135, keyed by area and finding number: 69 confirmed, 61 partly, 4 out of scope, 1 refuted, with adjusted severity, plain problem and fix, and duplicates to merge |
 | [workflow.md](workflow.md) | The workflow script that finishes the audit |
 
@@ -31,7 +31,7 @@ On 2026-11-13 a skeptical checker opened the cited code for each of the 135 find
 
 **Still to do**
 
-1. Double-check the 236 findings of 2026-11-06 in four batches: A, the 45 believed fixed by Phases 7 and 8 (done 2026-11-13); B, the 57 that repeat a checked 2026-11-10 finding (merged during ranking, no new check); C, the 30 still open at high or medium; D, the 104 still open at low or info. The workflow's prompts still describe the code as of 2026-11-06: reuse the checker brief from 2026-11-13 instead.
+1. Double-check the 236 findings of 2026-11-06 in four batches: A, the 45 believed fixed by Phases 7 and 8 (done 2026-11-13); B, the 41 that repeat a checked 2026-11-10 finding (mapped 2026-11-13; 16 more were only related, so they moved to C and D); C, the 35 still open at high or medium; D, the 115 still open at low or info. The workflow's prompts still describe the code as of 2026-11-06: reuse the checker brief from 2026-11-13 instead.
 2. Merge duplicates and rank everything into the final backlog: `docs/audit/2026-11-XX.md`, which replaces the interim file. Findings fixed in 7.1 to 7.4 (and later batches) are marked fixed there.
 
 ## How to continue

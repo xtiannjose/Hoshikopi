@@ -51,6 +51,49 @@
       "FEAT-02",
       "FEAT-03",
       "FEAT-10"
+    ],
+    "B": [
+      "ORD-04",
+      "ORD-05",
+      "ORD-07",
+      "ORD-08",
+      "ORD-10",
+      "ORD-12",
+      "ORD-18",
+      "ORD-21",
+      "PAY-03",
+      "PAY-13",
+      "PAY-14",
+      "ID1-05",
+      "ID1-07",
+      "ID1-14",
+      "ID1-18",
+      "ID2-11",
+      "ID2-14",
+      "ID2-15",
+      "SEC1-02",
+      "SEC1-15",
+      "SEC1-18",
+      "SEC2-06",
+      "SEC2-08",
+      "SEC2-12",
+      "PERF-07",
+      "PERF-17",
+      "UI1-10",
+      "UI1-19",
+      "UI1-20",
+      "UI2-19",
+      "UI2-24",
+      "UI2-28",
+      "DATA-01",
+      "DATA-03",
+      "DATA-07",
+      "DATA-14",
+      "DOC-04",
+      "DOC-16",
+      "DOC-18",
+      "FEAT-04",
+      "FEAT-07"
     ]
   },
   "verdicts": {
@@ -857,6 +900,929 @@
       "fix": "None needed.",
       "reasoning": "Each of the audit's four suggestions maps to code on the Order page, and the calendar route has an e2e test that checks text/calendar.",
       "corrections": "Order again shows only for Members (Guest Order again was dropped in 8.10), but every closed Order gets 'See the menu', so there is no dead end."
+    },
+    "ORD-04": {
+      "batch": "B",
+      "id": "ORD-04",
+      "title": "Orders of 13-15 drinks can never be placed; checkout wrongly says no Pickup Times are left",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:3"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "medium",
+      "effort": "S",
+      "locations": [
+        "src/app/(site)/checkout/page.tsx:107-118",
+        "src/app/(site)/checkout/page.tsx:186-194",
+        "src/modules/cafe/internal/ordering-day.ts:77",
+        "src/components/shell/cart-float.tsx:96-119",
+        "src/app/(site)/cart/page.tsx:95",
+        "src/modules/cart/internal/cart.ts:154",
+        "src/app/(site)/cafe/page.tsx:81"
+      ],
+      "problem": "Same as journeys:3. With the default 12-drink window Capacity, a Cart of 13 to 15 drinks, which ORD-12 and the /cafe FAQ ('Up to 15 drinks online') allow, gets no window and checkout falsely says 'No Pickup Times are left today. Walk in and order at the counter.' A 16-plus Cart is stopped on /cart, but the drawer still offers Check out and checkout shows the same false message instead of the 15-drink rule.",
+      "fix": "In checkoutView or the checkout page, check cart.drinks against min(MAX_DRINKS_PER_ORDER, day.capacity.drinks) (and food Lines against food Capacity) before listing windows, and show the Inquiry message; use the same limit in placeOrder and on /cart. Give the drawer the cart page's tooManyDrinks test so it links to /cart instead of /checkout.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:3.",
+      "corrections": ""
+    },
+    "ORD-05": {
+      "batch": "B",
+      "id": "ORD-05",
+      "title": "Payment page failure (and failed payment) leaves a Placed Order, an emptied Cart and held Stars/Capacity, with no retry",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:6"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/app/(site)/orders/[id]/page.tsx:73-81",
+        "src/app/(site)/orders/[id]/page.tsx:205-239",
+        "src/app/(site)/orders/[id]/page.tsx:355-372",
+        "src/app/(site)/dev/pay/[id]/page.tsx:70-93",
+        "src/modules/ordering/internal/place.ts:306",
+        "src/modules/payments/internal/payments.ts:102-108",
+        "src/modules/payments/internal/paymongo.ts:104-112"
+      ],
+      "problem": "Same as journeys:6. After a failed online payment the Order page repeats 'didn't go through' twice, tells the Customer to 'place it again' although the Cart was emptied at placement, and offers no way to pay again. The Order keeps its Pickup Window (and any reserved Stars) until the 15-minute sweep unless the Customer finds the Cancel button.",
+      "fix": "On the failed state, show 'Try paying again', which starts a new checkout for the same Order through startPayment (the fake page refuses to pay a failed Payment). Drop the duplicated sentence and point the text at the Cancel button, or cancel the failed Order at once and refill the Cart from its Lines as Order again already does for Members.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:6.",
+      "corrections": ""
+    },
+    "ORD-07": {
+      "batch": "B",
+      "id": "ORD-07",
+      "title": "ORD-02 'edit Options' in the Cart is not implemented",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:14"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/app/(site)/cart/page.tsx:102",
+        "src/app/(site)/cart/actions.ts:8",
+        "src/modules/cart/index.ts:3",
+        "docs/01-PRD.md:99",
+        "docs/07-ROADMAP.md:92"
+      ],
+      "problem": "Same as journeys:14. PRD ORD-02, a Must requirement, promises that Options can be edited in the Cart, but the Cart offers only One less, One more and Remove, and the item name opens the item page, which adds a new Line. Roadmap batch 2.2 is ticked as covering ORD-02, so the gap is hidden.",
+      "fix": "Either add a Change link that opens the item page with that Line's choices preselected and replaces the Line through a cart-module function that re-prices and merges by choice key, or amend PRD ORD-02 and the 2.2 note to say quantity and remove only. Amending the PRD is the cheaper honest option if the feature is not wanted.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:14.",
+      "corrections": ""
+    },
+    "ORD-08": {
+      "batch": "B",
+      "id": "ORD-08",
+      "title": "Missing tests for the races and refusal paths found here",
+      "verdict": "duplicate",
+      "same_as": [
+        "tests:8",
+        "tests:9"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/modules/ordering/internal/webhook.ts:60-71",
+        "src/modules/ordering/internal/place.ts:199-201",
+        "src/modules/ordering/internal/place.ts:234",
+        "src/modules/ordering/internal/place.ts:323-336",
+        "src/modules/payments/internal/payments.ts:155-192",
+        "tests/db/payments.test.ts:165-226",
+        "tests/db/refunds.test.ts:78-160"
+      ],
+      "problem": "Same as tests:8. No test makes the payment provider throw, so several failure branches never run in a test: payment_start_failed, a late refund that fails in the webhook, and the claim revert in refundPayment. The placeOrder refusals no_window and reward_unavailable are untested too.",
+      "fix": "Add DB tests with a stubbed provider (vi.mock of the payments provider) whose createCheckout or refund rejects, and assert the result and what a Manager can see. Add two short placeOrder tests: a Reward with no drink in the Cart gives reward_unavailable, and an all-day cafe at 23:40 gives no_window.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into tests:8, tests:9.",
+      "corrections": ""
+    },
+    "ORD-10": {
+      "batch": "B",
+      "id": "ORD-10",
+      "title": "Concurrent add-to-cart loses quantity (read-then-write upsert)",
+      "verdict": "duplicate",
+      "same_as": [
+        "tests:9"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/cart/internal/cart.ts:80-102",
+        "tests/db/cart.test.ts:41-160"
+      ],
+      "problem": "Same as tests:9. addLine reads the Line's quantity, adds in JavaScript and upserts the result with no lock, so concurrent adds to one Cart overwrite each other. Two first adds for a new Cart can also race on the Cart's unique owner key and throw.",
+      "fix": "Write the failing test first: six concurrent addLine calls should give quantity 6 and no error. Then make the add atomic: an INSERT ... ON CONFLICT (cart_id, choice_key) DO UPDATE that increments quantity, capped at 20, or lock the Cart row with the existing lockCart before reading.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into tests:9.",
+      "corrections": ""
+    },
+    "ORD-12": {
+      "batch": "B",
+      "id": "ORD-12",
+      "title": "ASAP copy contradicts itself: 'Ready in about 5 min, around 2:30 PM' at 2:14 PM",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:10"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/(site)/checkout/page.tsx:196-200",
+        "src/modules/cafe/internal/ordering-day.ts:61-70",
+        "src/app/(site)/orders/[id]/page.tsx:240-249",
+        "src/modules/ordering/internal/bar.ts:95-97"
+      ],
+      "problem": "Same as journeys:10. The ASAP choice reads 'Ready in about 5 min, around 7:15 AM' at 7:02: the minutes are Prep Time and the clock time is the start of the first whole Pickup Window after it, up to 15 minutes later. The Order page and email repeat only the later time, while the Bar Screen makes ASAP Orders at once.",
+      "fix": "Show one time on checkout, the Order page and the email, for example 'Ready by 7:15 AM' (the window start the Order is booked in). If the earlier time matters, book ASAP in the window that contains now plus Prep Time, as interim ORD-12 suggested.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:10.",
+      "corrections": ""
+    },
+    "ORD-18": {
+      "batch": "B",
+      "id": "ORD-18",
+      "title": "Checkout summary total ignores the Reward; only the button shows the discounted total",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:5"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/(site)/checkout/page.tsx:161-166",
+        "src/app/(site)/checkout/checkout-form.tsx:139-140",
+        "src/app/(site)/checkout/checkout-form.tsx:328-343"
+      ],
+      "problem": "Same as journeys:5. With a Reward ticked, the server-rendered 'Your order' summary still shows the full Cart total while the form below shows 'Free drink (9 Stars)' and a lower Total and button. On a phone the stale summary total is the first one seen.",
+      "fix": "Drive the summary's Total from the same client state, for example by rendering the summary's total row inside CheckoutForm or passing useReward up through a tiny client wrapper. Then the form's separate Free drink and Total rows can go, leaving one total on the screen.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:5.",
+      "corrections": ""
+    },
+    "ORD-21": {
+      "batch": "B",
+      "id": "ORD-21",
+      "title": "Guest Carts are never purged and leftover hk_cart cookies cost a transaction per request",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:9"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/api/cron/daily/route.ts:12-21",
+        "src/lib/rate-limit.ts:9-24",
+        "vercel.json:4",
+        "docs/06-SETUP.md:130"
+      ],
+      "problem": "Same as ops:9. Nothing deletes old rate_limits rows, whose keys hold emails and IP addresses, or abandoned guest Carts, so both grow without a retention rule. The setup doc says the cron runs at 6:00 AM Manila, but Hobby fires it anywhere in that hour.",
+      "fix": "Add two idempotent deletes to /api/cron/daily: rate_limits with window_start older than 2 days (the longest window is 1 day) and guest Carts not updated for 30 days, the cookie's maxAge. Change the doc wording to 'between 6:00 and 6:59 AM Manila'.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:9.",
+      "corrections": ""
+    },
+    "PAY-03": {
+      "batch": "B",
+      "id": "PAY-03",
+      "title": "When the checkout fails to start, the Cart is already emptied and the Order keeps holding the Pickup Window and reserved Stars",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:6"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/app/(site)/orders/[id]/page.tsx:73-81",
+        "src/app/(site)/orders/[id]/page.tsx:205-239",
+        "src/app/(site)/orders/[id]/page.tsx:355-372",
+        "src/app/(site)/dev/pay/[id]/page.tsx:70-93",
+        "src/modules/ordering/internal/place.ts:306",
+        "src/modules/payments/internal/payments.ts:102-108",
+        "src/modules/payments/internal/paymongo.ts:104-112"
+      ],
+      "problem": "Same as journeys:6. After a failed online payment the Order page repeats 'didn't go through' twice, tells the Customer to 'place it again' although the Cart was emptied at placement, and offers no way to pay again. The Order keeps its Pickup Window (and any reserved Stars) until the 15-minute sweep unless the Customer finds the Cancel button.",
+      "fix": "On the failed state, show 'Try paying again', which starts a new checkout for the same Order through startPayment (the fake page refuses to pay a failed Payment). Drop the duplicated sentence and point the text at the Cancel button, or cancel the failed Order at once and refill the Cart from its Lines as Order again already does for Members.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:6.",
+      "corrections": ""
+    },
+    "PAY-13": {
+      "batch": "B",
+      "id": "PAY-13",
+      "title": "An online Order can be placed with a total of PHP 0.00 (Reward covers the whole Cart)",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:11"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/ordering/internal/place.ts:203-207",
+        "src/modules/ordering/internal/place.ts:319-337",
+        "src/modules/ordering/internal/reads.ts:53-58",
+        "src/app/(site)/checkout/checkout-form.tsx:131-138"
+      ],
+      "problem": "Same as journeys:11. When a Reward covers the whole Cart (one default drink), a Member choosing GCash, Maya or Card is sent to a 'Pay PHP 0.00' checkout. With PayMongo a zero-amount session would most likely be refused, which ends in payment_start_failed with the Cart already emptied.",
+      "fix": "In placeOrder, when totalCents is 0, place the Order with no Payment (as Pay at Pickup does, Members have no drink limit) and skip startPayment. In the form, hide the online methods when the total is 0 and say 'Nothing to pay: your free drink'.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:11.",
+      "corrections": ""
+    },
+    "PAY-14": {
+      "batch": "B",
+      "id": "PAY-14",
+      "title": "Tests miss late payment, provider failure and PayMongo payload paths",
+      "verdict": "duplicate",
+      "same_as": [
+        "tests:8"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/modules/ordering/internal/webhook.ts:60-71",
+        "src/modules/ordering/internal/place.ts:199-201",
+        "src/modules/ordering/internal/place.ts:234",
+        "src/modules/ordering/internal/place.ts:323-336",
+        "src/modules/payments/internal/payments.ts:155-192",
+        "tests/db/payments.test.ts:165-226",
+        "tests/db/refunds.test.ts:78-160"
+      ],
+      "problem": "Same as tests:8. No test makes the payment provider throw, so several failure branches never run in a test: payment_start_failed, a late refund that fails in the webhook, and the claim revert in refundPayment. The placeOrder refusals no_window and reward_unavailable are untested too.",
+      "fix": "Add DB tests with a stubbed provider (vi.mock of the payments provider) whose createCheckout or refund rejects, and assert the result and what a Manager can see. Add two short placeOrder tests: a Reward with no drink in the Cart gives reward_unavailable, and an all-day cafe at 23:40 gives no_window.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into tests:8.",
+      "corrections": ""
+    },
+    "ID1-05": {
+      "batch": "B",
+      "id": "ID1-05",
+      "title": "No regression tests for the Server Action access matrix or for deletion removing sign-in links",
+      "verdict": "duplicate",
+      "same_as": [
+        "staff:23",
+        "tests:13"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "tests/e2e/manage.spec.ts:9-128",
+        "tests/db/staff.test.ts:34-108",
+        "tests/db/privacy.test.ts:104-131",
+        "tests/e2e/bar.spec.ts:114-136",
+        "src/modules/identity/internal/staff.ts:44-96",
+        "src/app/manage/staff/actions.ts:24-50",
+        "src/app/manage/hours/actions.ts:117-134",
+        "src/app/bar/actions.ts:15-38"
+      ],
+      "problem": "Same as tests:13. No test calls a Staff Server Action as a Member, as a Barista where a Manager is needed, or as a Manager without the Second Factor, and setRole and endSessions are never called by a non-Manager. A dropped requireStaff or role check in one action would pass every gate.",
+      "fix": "Add one table-driven e2e test that posts each Staff action with harmless ids as a Member, a Barista and a Manager without the Second Factor and expects 404 or the Second Factor redirect and no change. Add db cases for setRole and endSessions by a Barista returning not_allowed, and check that forgetMember leaves 0 verifications.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into staff:23, tests:13.",
+      "corrections": ""
+    },
+    "ID1-07": {
+      "batch": "B",
+      "id": "ID1-07",
+      "title": "A revoked session keeps working for up to 5 minutes, including deleting the account",
+      "verdict": "duplicate",
+      "same_as": [
+        "staff:17"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/identity/internal/auth.ts:16-20",
+        "src/modules/identity/internal/session.ts:11-23",
+        "src/app/manage/staff/team-list.tsx:142-144",
+        "src/app/manage/staff/actions.ts:61",
+        "src/app/api/bar/route.ts:15"
+      ],
+      "problem": "Same as staff:17. 'Sign out everywhere' tells the Manager the person is signed out on every device, but the Bar Screen, /api/bar and the bar's one-tap moves keep working for up to 5 minutes. Better Auth trusts the signed session cookie cache until it expires and never re-reads the deleted session row on those routes.",
+      "fix": "Pass `query: { disableCookieCache: true }` to getSession in the Staff guards (requireStaff and currentStaff), which costs one indexed session read per request. If that cost is unwanted, change the copy to 'signed out within 5 minutes'.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into staff:17.",
+      "corrections": ""
+    },
+    "ID1-14": {
+      "batch": "B",
+      "id": "ID1-14",
+      "title": "A Manager can give Stars to their own account, with no upper limit",
+      "verdict": "duplicate",
+      "same_as": [
+        "staff:11"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/manage/stars/stars-form.tsx:33-43",
+        "src/modules/loyalty/internal/ledger.ts:86-99",
+        "src/app/manage/stars/actions.ts:24-43",
+        "src/modules/identity/internal/session.ts:102-108"
+      ],
+      "problem": "Same as staff:11. The Stars form says 'Up to 50 at a time' and sets min and max on the input, but adjustStars checks only for a non-zero integer, so any amount saves. memberByEmail also finds Staff, so a Manager can give Stars to their own account.",
+      "fix": "Enforce a limit of 50 Stars either way in adjustStars, refuse a memberId equal to the actor's id, and show both refusals from the server. Add one database test for each.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into staff:11.",
+      "corrections": ""
+    },
+    "ID1-18": {
+      "batch": "B",
+      "id": "ID1-18",
+      "title": "Setup docs miss Google OAuth and preview-deploy auth settings",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:11"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "docs/06-SETUP.md:130",
+        "docs/06-SETUP.md:134-143",
+        "docs/06-SETUP.md:148",
+        "src/modules/identity/internal/auth.ts:14-45",
+        "src/modules/payments/internal/fake.ts:20",
+        "src/app/(site)/dev/pay/[id]/actions.ts:26"
+      ],
+      "problem": "Same as ops:11. Setup section 9 gives Preview deployments the production BETTER_AUTH_URL, NEXT_PUBLIC_SITE_URL and Blob store, and they share the production database unless the owner turned on Neon preview branching, which nothing records. Vercel builds a preview for every pull request (for example hoshikopi-git-feature-81-demo-mode-xtiannjose.vercel.app on PR #67), so unmerged code can write Guest Orders and Carts into live data, and its links and fake checkout jump to production.",
+      "fix": "Check the Neon integration and either turn on a branch per preview or write in section 9 that previews share production data and are for build checks only. Skip the dynamic baseURL plumbing unless previews are ever used to test sign-in, and connect Blob to Production only if preview uploads should stay out of the live store.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:11.",
+      "corrections": ""
+    },
+    "ID2-11": {
+      "batch": "B",
+      "id": "ID2-11",
+      "title": "A Manager can give their own account any number of Stars",
+      "verdict": "duplicate",
+      "same_as": [
+        "staff:11"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/manage/stars/stars-form.tsx:33-43",
+        "src/modules/loyalty/internal/ledger.ts:86-99",
+        "src/app/manage/stars/actions.ts:24-43",
+        "src/modules/identity/internal/session.ts:102-108"
+      ],
+      "problem": "Same as staff:11. The Stars form says 'Up to 50 at a time' and sets min and max on the input, but adjustStars checks only for a non-zero integer, so any amount saves. memberByEmail also finds Staff, so a Manager can give Stars to their own account.",
+      "fix": "Enforce a limit of 50 Stars either way in adjustStars, refuse a memberId equal to the actor's id, and show both refusals from the server. Add one database test for each.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into staff:11.",
+      "corrections": ""
+    },
+    "ID2-14": {
+      "batch": "B",
+      "id": "ID2-14",
+      "title": "No tests that Server Actions refuse a missing Second Factor or the Barista role",
+      "verdict": "duplicate",
+      "same_as": [
+        "staff:23",
+        "tests:13"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "tests/e2e/manage.spec.ts:9-128",
+        "tests/db/staff.test.ts:34-108",
+        "tests/db/privacy.test.ts:104-131",
+        "tests/e2e/bar.spec.ts:114-136",
+        "src/modules/identity/internal/staff.ts:44-96",
+        "src/app/manage/staff/actions.ts:24-50",
+        "src/app/manage/hours/actions.ts:117-134",
+        "src/app/bar/actions.ts:15-38"
+      ],
+      "problem": "Same as tests:13. No test calls a Staff Server Action as a Member, as a Barista where a Manager is needed, or as a Manager without the Second Factor, and setRole and endSessions are never called by a non-Manager. A dropped requireStaff or role check in one action would pass every gate.",
+      "fix": "Add one table-driven e2e test that posts each Staff action with harmless ids as a Member, a Barista and a Manager without the Second Factor and expects 404 or the Second Factor redirect and no change. Add db cases for setRole and endSessions by a Barista returning not_allowed, and check that forgetMember leaves 0 verifications.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into staff:23, tests:13.",
+      "corrections": ""
+    },
+    "ID2-15": {
+      "batch": "B",
+      "id": "ID2-15",
+      "title": "The docs promise a Manager invite and a Manager-led Second Factor reset, but neither exists",
+      "verdict": "duplicate",
+      "same_as": [
+        "staff:16"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/manage/staff/role-form.tsx:36,78,92-96",
+        "src/modules/identity/internal/staff.ts:57-61",
+        "src/app/manage/staff/team-list.tsx:45-104",
+        "docs/adr/0014-staff-second-factor-in-identity.md:23"
+      ],
+      "problem": "Same as staff:16. The Add Staff form defaults to Barista and does not say when the email already belongs to a Manager, so 'Give role' can quietly demote a colleague and sign them out. On a row, only the Member choice warns about the sign-out, although any lower role ends the person's sessions.",
+      "fix": "Show the warning for any choice that ranks below the person's current role, and in Add Staff answer 'already a Manager' (or ask to confirm) before lowering an existing role. Optionally show 'Authenticator set up / waiting' per person; a Manager-led reset needs an ADR 0014 amendment first.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into staff:16.",
+      "corrections": ""
+    },
+    "SEC1-02": {
+      "batch": "B",
+      "id": "SEC1-02",
+      "title": "Menu photo is saved under the raw slug, before validation (path traversal, orphan files)",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:15"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/menu/internal/photo.ts:41-75",
+        "src/app/manage/menu/actions.ts:68-76",
+        "src/modules/menu/internal/edit.ts:259",
+        "src/components/photo.tsx:47-57"
+      ],
+      "problem": "Same as ops:15. saveMenuItemAction uploads a menu photo to the public Blob store before the form is validated, as raw bytes that keep any EXIF location, and nothing ever deletes the file a refused save or a replacement leaves behind. The original stays reachable through the url= parameter in next/image's srcset.",
+      "fix": "Validate the form before storing the photo (or store it only after saveMenuItem succeeds), and del the old Blob URL when a save replaces it. Strip metadata by re-encoding with sharp (sharp(bytes).rotate().toBuffer()), which is already installed alongside next, or tell Managers in the upload hint to export photos without location.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:15.",
+      "corrections": ""
+    },
+    "SEC1-15": {
+      "batch": "B",
+      "id": "SEC1-15",
+      "title": "Missing hardening headers: X-Powered-By is sent, and there is no COOP or CSP reporting",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:20"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "info",
+      "effort": "S",
+      "locations": [
+        "next.config.ts:19-61"
+      ],
+      "problem": "Same as ops:20. The live site sends no Cross-Origin-Opener-Policy, and local next start still sends X-Powered-By: Next.js because poweredByHeader is not turned off. Vercel strips X-Powered-By and adds Access-Control-Allow-Origin: * to some prerendered responses, so the earlier audit's header notes hold only for the local server.",
+      "fix": "Add { key: \"Cross-Origin-Opener-Policy\", value: \"same-origin\" } to the headers list and poweredByHeader: false to next.config.ts. Leave the CDN's ACAO alone: it allows no credentialed reads, and those pages are public anyway.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:20.",
+      "corrections": ""
+    },
+    "SEC1-18": {
+      "batch": "B",
+      "id": "SEC1-18",
+      "title": "Rate-limit rows, guest Carts and expired verifications are never pruned",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:9"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/api/cron/daily/route.ts:12-21",
+        "src/lib/rate-limit.ts:9-24",
+        "vercel.json:4",
+        "docs/06-SETUP.md:130"
+      ],
+      "problem": "Same as ops:9. Nothing deletes old rate_limits rows, whose keys hold emails and IP addresses, or abandoned guest Carts, so both grow without a retention rule. The setup doc says the cron runs at 6:00 AM Manila, but Hobby fires it anywhere in that hour.",
+      "fix": "Add two idempotent deletes to /api/cron/daily: rate_limits with window_start older than 2 days (the longest window is 1 day) and guest Carts not updated for 30 days, the cookie's maxAge. Change the doc wording to 'between 6:00 and 6:59 AM Manila'.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:9.",
+      "corrections": ""
+    },
+    "SEC2-06": {
+      "batch": "B",
+      "id": "SEC2-06",
+      "title": "The rate_limits table is never pruned",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:9"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/api/cron/daily/route.ts:12-21",
+        "src/lib/rate-limit.ts:9-24",
+        "vercel.json:4",
+        "docs/06-SETUP.md:130"
+      ],
+      "problem": "Same as ops:9. Nothing deletes old rate_limits rows, whose keys hold emails and IP addresses, or abandoned guest Carts, so both grow without a retention rule. The setup doc says the cron runs at 6:00 AM Manila, but Hobby fires it anywhere in that hour.",
+      "fix": "Add two idempotent deletes to /api/cron/daily: rate_limits with window_start older than 2 days (the longest window is 1 day) and guest Carts not updated for 30 days, the cookie's maxAge. Change the doc wording to 'between 6:00 and 6:59 AM Manila'.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:9.",
+      "corrections": ""
+    },
+    "SEC2-08": {
+      "batch": "B",
+      "id": "SEC2-08",
+      "title": "Menu photo upload uses the raw slug before validation, and keeps the original file with its EXIF data",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:15"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/menu/internal/photo.ts:41-75",
+        "src/app/manage/menu/actions.ts:68-76",
+        "src/modules/menu/internal/edit.ts:259",
+        "src/components/photo.tsx:47-57"
+      ],
+      "problem": "Same as ops:15. saveMenuItemAction uploads a menu photo to the public Blob store before the form is validated, as raw bytes that keep any EXIF location, and nothing ever deletes the file a refused save or a replacement leaves behind. The original stays reachable through the url= parameter in next/image's srcset.",
+      "fix": "Validate the form before storing the photo (or store it only after saveMenuItem succeeds), and del the old Blob URL when a save replaces it. Strip metadata by re-encoding with sharp (sharp(bytes).rotate().toBuffer()), which is already installed alongside next, or tell Managers in the upload hint to export photos without location.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:15.",
+      "corrections": ""
+    },
+    "SEC2-12": {
+      "batch": "B",
+      "id": "SEC2-12",
+      "title": "Small header gaps: X-Powered-By is still sent and there is no Cross-Origin-Opener-Policy",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:20"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "info",
+      "effort": "S",
+      "locations": [
+        "next.config.ts:19-61"
+      ],
+      "problem": "Same as ops:20. The live site sends no Cross-Origin-Opener-Policy, and local next start still sends X-Powered-By: Next.js because poweredByHeader is not turned off. Vercel strips X-Powered-By and adds Access-Control-Allow-Origin: * to some prerendered responses, so the earlier audit's header notes hold only for the local server.",
+      "fix": "Add { key: \"Cross-Origin-Opener-Policy\", value: \"same-origin\" } to the headers list and poweredByHeader: false to next.config.ts. Leave the CDN's ACAO alone: it allows no credentialed reads, and those pages are public anyway.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:20.",
+      "corrections": ""
+    },
+    "PERF-07": {
+      "batch": "B",
+      "id": "PERF-07",
+      "title": "Session and Cart reads are repeated per request, and a merge transaction runs on every signed-in page view",
+      "verdict": "duplicate",
+      "same_as": [
+        "architecture:13"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/components/shell/cart-button.tsx:26-28",
+        "src/components/shell/cart-float.tsx:17-19",
+        "src/modules/cart/internal/session.ts:24-34",
+        "src/modules/cart/internal/cart.ts:107-129",
+        "src/app/(site)/cart/page.tsx:75-76",
+        "src/modules/ordering/internal/reads.ts:49"
+      ],
+      "problem": "Same as architecture:13. Every customer page renders CartButton in the header and CartFloat in the (site) layout, and each calls getCart(owner), which is not cached per request, so the Cart is read and priced twice per view. /cart and /checkout price it a third time, and CartFloat still does its work there although HiddenOn then hides it in the browser.",
+      "fix": "Add `export const currentCart = cache(async () => { const owner = await currentCartOwner(); return owner ? getCart(owner) : null; })` in cart/internal/session.ts, export it from cart/index.ts, and use it in CartButton, CartFloat and the Cart page. Caching currentUser (ID1-16) and a units field on CartView are optional extras.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into architecture:13.",
+      "corrections": ""
+    },
+    "PERF-17": {
+      "batch": "B",
+      "id": "PERF-17",
+      "title": "rate_limits rows and abandoned guest Carts are never pruned",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:9"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/api/cron/daily/route.ts:12-21",
+        "src/lib/rate-limit.ts:9-24",
+        "vercel.json:4",
+        "docs/06-SETUP.md:130"
+      ],
+      "problem": "Same as ops:9. Nothing deletes old rate_limits rows, whose keys hold emails and IP addresses, or abandoned guest Carts, so both grow without a retention rule. The setup doc says the cron runs at 6:00 AM Manila, but Hobby fires it anywhere in that hour.",
+      "fix": "Add two idempotent deletes to /api/cron/daily: rate_limits with window_start older than 2 days (the longest window is 1 day) and guest Carts not updated for 30 days, the cookie's maxAge. Change the doc wording to 'between 6:00 and 6:59 AM Manila'.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:9.",
+      "corrections": ""
+    },
+    "UI1-10": {
+      "batch": "B",
+      "id": "UI1-10",
+      "title": "At 200% text size on a phone, the header pushes the Cart and menu button off-screen",
+      "verdict": "duplicate",
+      "same_as": [
+        "a11y:8"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/components/shell/header.tsx:29",
+        "src/components/shell/header.tsx:40-58",
+        "src/components/shell/cart-button.tsx:9-18",
+        "src/components/shell/logo.tsx:13",
+        "docs/05-DESIGN-SYSTEM.md:227"
+      ],
+      "problem": "Same as a11y:8. With a larger default text size (font settings, not zoom), the phone header row does not wrap, so the Cart and menu button are pushed off-screen and every page scrolls sideways. This breaks the docs/05 promise 'Works at 200% text size and 320 px width without horizontal scrolling'.",
+      "fix": "Let the header wrap (flex-wrap), or hide the wordmark text under a header container query while keeping the star and its label. Add one Playwright check with Page.setFontSizes({ standard: 32 }) at 375 px expecting no overflow.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into a11y:8.",
+      "corrections": ""
+    },
+    "UI1-19": {
+      "batch": "B",
+      "id": "UI1-19",
+      "title": "Cancelled Order still says 'Pay at the counter when you collect.' and offers no next step",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:12"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/(site)/orders/[id]/page.tsx:124-140"
+      ],
+      "problem": "Same as journeys:12. paymentNote treats only Cancelled, Expired and Refunded as closed, so a Picked Up Pay at Pickup Order still says 'Pay at the counter when you collect.' although transition() set paidAt and paidAtCounter. A PHP 0 Reward Order says the same.",
+      "fix": "In paymentNote, return 'Paid at the counter.' for a Pay at Pickup Order with paidAt set, and 'Nothing to pay: a free drink.' when totalCents is 0. OrderView already carries paidAt and totalCents, so it is two lines.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:12.",
+      "corrections": ""
+    },
+    "UI1-20": {
+      "batch": "B",
+      "id": "UI1-20",
+      "title": "Checkout: focus is lost after a refused submit, and the contact hint is not tied to its fields",
+      "verdict": "duplicate",
+      "same_as": [
+        "a11y:11",
+        "architecture:8"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/(site)/checkout/checkout-form.tsx:255-285",
+        "src/modules/ordering/internal/place.ts:156-158"
+      ],
+      "problem": "Same as a11y:11. The rule 'One of these is enough: an email or a mobile number' is a loose paragraph between Name and the contact fields, tied to neither input. When both are empty, only Email is marked invalid, though a mobile number alone would also do.",
+      "fix": "Wrap Email and Mobile number in a fieldset whose legend or description carries the rule, or pass it through Field's existing hint prop on both inputs. Mark both inputs invalid with the shared error when neither is given.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into a11y:11, architecture:8.",
+      "corrections": ""
+    },
+    "UI2-19": {
+      "batch": "B",
+      "id": "UI2-19",
+      "title": "Cancelled or expired Pay at Pickup orders still say \"Pay at the counter when you collect.\"",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:12"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/(site)/orders/[id]/page.tsx:124-140"
+      ],
+      "problem": "Same as journeys:12. paymentNote treats only Cancelled, Expired and Refunded as closed, so a Picked Up Pay at Pickup Order still says 'Pay at the counter when you collect.' although transition() set paidAt and paidAtCounter. A PHP 0 Reward Order says the same.",
+      "fix": "In paymentNote, return 'Paid at the counter.' for a Pay at Pickup Order with paidAt set, and 'Nothing to pay: a free drink.' when totalCents is 0. OrderView already carries paidAt and totalCents, so it is two lines.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:12.",
+      "corrections": ""
+    },
+    "UI2-24": {
+      "batch": "B",
+      "id": "UI2-24",
+      "title": "Barista Picks says \"Add to order\" on a link that opens the item page, including for Sold Out picks",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:20"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/app/(site)/concept/page.tsx:21",
+        "src/app/(site)/concept/page.tsx:95",
+        "src/components/home/barista-picks.tsx:66",
+        "src/app/(site)/orders/[id]/page.tsx:468",
+        "src/app/(site)/sign-in/page.tsx:98"
+      ],
+      "problem": "Same as journeys:20. Home never mentions Demo Mode or the \"Try it in two minutes\" guide, and the guide always says \"sign in with Google first\", even where Google sign-in is not configured. The other two parts are already recorded: Barista picks' \"Add to order\" only opens the item page, and a Guest cannot keep a finished Order's Stars.",
+      "fix": "While demoMode() is on, add one line on Home linking to /concept#try, and word the guide's sign-in step from googleEnabled(). Handle the Barista picks label under UI2-24 and the Guest Stars idea under FEAT-07, which needs an ADR amending ADR 0005 because Guests earn no Stars by design.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:20.",
+      "corrections": ""
+    },
+    "UI2-28": {
+      "batch": "B",
+      "id": "UI2-28",
+      "title": "No visual regression or reduced-motion coverage in the e2e suite",
+      "verdict": "duplicate",
+      "same_as": [
+        "motion:12"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "playwright.config.ts:21",
+        "tests/e2e"
+      ],
+      "problem": "Same as motion:12. playwright.config.ts sets reducedMotion: 'reduce' for every test and nothing in tests/ overrides it, so no test ever runs with motion on. The Add to order tests assert only the role=status text, so the invisible 'Added' under reduce and the dropped taps during the page fade pass the suite.",
+      "fix": "Add one small motion.spec.ts that sets reducedMotion: 'no-preference' and checks that a tap right after a menu-card navigation lands and that the Bar Screen arrive plays once. Under reduce at 375, assert that 'Added' is visible on the button after Add to order.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into motion:12.",
+      "corrections": ""
+    },
+    "DATA-01": {
+      "batch": "B",
+      "id": "DATA-01",
+      "title": "Checkout will likely time out on the hosted demo: 26 sequential statements in placeOrder's transaction, Vercel's default iad1 region, Neon in Singapore, and Prisma's 5 s default timeout",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:10"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "vercel.json:1-5",
+        "docs/06-SETUP.md:132-146",
+        "src/modules/ordering/internal/place.ts:178-317"
+      ],
+      "problem": "Same as ops:10. Functions run in Singapore next to Neon only because of a dashboard setting; vercel.json has no regions key and setup section 9 never mentions the region. A re-import or a second project would default to Washington, D.C., where placeOrder's many statements in one transaction risk Prisma's 5-second default timeout.",
+      "fix": "Add \"regions\": [\"sin1\"] to vercel.json and one line to setup section 9 step 3. Optionally pass { timeout: 10_000 } to placeOrder's $transaction as a margin.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:10.",
+      "corrections": ""
+    },
+    "DATA-03": {
+      "batch": "B",
+      "id": "DATA-03",
+      "title": "The seed's dates count from the day it runs, and it cannot be re-run, so the hosted demo loses its Events, Promo and seasonal drink within weeks",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:8"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "medium",
+      "effort": "S",
+      "locations": [
+        "prisma/seed-data.ts:446-462",
+        "prisma/seed-data.ts:515-545",
+        "prisma/seed.ts:25-28",
+        "docs/06-SETUP.md:146"
+      ],
+      "problem": "Same as ops:8. The seed dates its Events, Promo and seasonal drink from the day it ran and cannot be re-run, so on the live demo Latte art night is already past, the only upcoming Event is Nov 21, and the Promo ends Dec 1. The Event Sign-up flow (EVT-02, protected in 8.7) cannot be shown on the live site at all, because the remaining Event has no Seats.",
+      "fix": "Before the Phase 9 review, have the Manager add one or two Events with Seats dated well ahead in /manage/events and push the Promo and seasonal end dates in /manage/menu; no code is needed. Only if this keeps recurring, add a Demo Mode-only refresh, not logic in the production cron.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:8.",
+      "corrections": ""
+    },
+    "DATA-07": {
+      "batch": "B",
+      "id": "DATA-07",
+      "title": "Only 3 of about 25 hand-written constraints are tested, which is how the Promo and Special Hours gaps went unnoticed",
+      "verdict": "duplicate",
+      "same_as": [
+        "tests:18"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "tests/db/seed.test.ts:34-87",
+        "prisma/migrations/20261108030338_busy_mode/migration.sql:6",
+        "prisma/migrations/*/migration.sql (23 CHECK constraints, 1 trigger)"
+      ],
+      "problem": "Same as tests:18. The migrations hold 23 hand-written CHECK constraints and one append-only trigger, but tests exercise only options_delta_cents_check, orders_contact_check and the order_events trigger. A migration that loosens or drops a CHECK, including the new cafe_settings_busy_minutes_check, passes every gate.",
+      "fix": "Add one table-driven db test of raw INSERT or UPDATE statements that must fail with a named constraint, plus boundary rows that must pass. Include busy_minutes -1 and 61, and the NULL cases from DATA-06.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into tests:18.",
+      "corrections": ""
+    },
+    "DATA-14": {
+      "batch": "B",
+      "id": "DATA-14",
+      "title": "Some timestamps come from the database clock and others from lib/clock, against the CLAUDE.md rule",
+      "verdict": "duplicate",
+      "same_as": [
+        "architecture:16"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/(site)/menu/item/[slug]/actions.ts:46",
+        "src/modules/ordering/internal/status.ts:177-186",
+        "src/modules/ordering/internal/place.ts:294-301",
+        "src/modules/loyalty/internal/ledger.ts:49-56",
+        "src/modules/loyalty/internal/ledger.ts:198-205"
+      ],
+      "problem": "Same as architecture:16. addToCartAction returns `{ status: \"added\", at: Date.now() }`, a server-side wall-clock read outside clock.ts that CLAUDE.md forbids; the value is only the key that restarts the 'Added' animation (option-picker.tsx:233). Order events and the earn, reserve, release, reverse and adjust Star entries still take Prisma's @default(now()) instead of lib/clock, while placedAt and the Birthday Treat use now().",
+      "fix": "Make the nonce a counter from the previous state, `at: (_prev.status === \"added\" ? _prev.at : 0) + 1`, which needs no clock (now().getTime() would repeat under freezeClock). Pass `at: now()` and `createdAt: now()` in transition(), placeOrder's first Order event and the ledger writers, as DATA-14 proposes.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into architecture:16.",
+      "corrections": ""
+    },
+    "DOC-04": {
+      "batch": "B",
+      "id": "DOC-04",
+      "title": "Prep Time is defined from 'the Lines in the Order', but the code ignores the Order's own drinks and Orders not yet Accepted",
+      "verdict": "duplicate",
+      "same_as": [
+        "architecture:2",
+        "journeys:2"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "medium",
+      "effort": "S",
+      "locations": [
+        "src/modules/ordering/internal/windows.ts:12-25",
+        "src/modules/ordering/internal/windows.ts:47",
+        "src/modules/ordering/internal/queue.ts:74-107",
+        "src/modules/ordering/internal/bar.ts:66",
+        "src/app/(site)/checkout/page.tsx:199",
+        "GLOSSARY.md:99-101",
+        "docs/03-ARCHITECTURE.md:132"
+      ],
+      "problem": "Same as journeys:2. Prep Time counts only drinks in Accepted or Preparing Orders and never the Order's own drinks, so before the barista taps Accept every ASAP Customer is promised the 5-minute minimum, and a 9-drink Order gets the same promise as one drink. The Order page's 'N drinks ahead' counts Paid and Placed Pay at Pickup Orders too, so the two screens show contradictory queues.",
+      "fix": "Use the on-the-bar filter from drinksAhead (paid, accepted, preparing, and placed Pay at Pickup) in drinksQueuedAhead, and add the Cart's own drinks only for checkout and placement (not for barBoard's make-next), test-first in place-order.test.ts. Then align docs/03 section 9 and ADR 0007 with the Glossary, which already says Prep Time comes from 'the current queue and the Lines in the Order'.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into architecture:2, journeys:2.",
+      "corrections": ""
+    },
+    "DOC-16": {
+      "batch": "B",
+      "id": "DOC-16",
+      "title": "Baristas can mark Sold Out only in /manage/menu, behind the Second Factor; the docs say /manage is Manager-only and suggest Sold Out from the Bar Screen",
+      "verdict": "duplicate",
+      "same_as": [
+        "staff:8"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/app/bar/page.tsx:37-39",
+        "src/app/manage/menu/actions.ts:31-40",
+        "src/app/manage/two-factor/page.tsx:60-117",
+        "docs/03-ARCHITECTURE.md:67",
+        "docs/adr/0005-better-auth-members-and-staff.md:11",
+        "GLOSSARY.md:155-156"
+      ],
+      "problem": "Same as staff:8. Baristas can mark Sold Out only at /manage/menu, behind the Second Factor, so STAFF-03 works only after the Barista enrols an authenticator; the seeded Barista never has. On the always-signed-in bar tablet, the Bar Screen's 'Sold out?' link opens that Barista's pending QR code and setup key.",
+      "fix": "Add Sold Out and Back on to the Bar Screen through a /bar Server Action that calls setMenuItemSoldOut and setOptionSoldOut under requireStaff('barista', '/bar'), and record this as an update to ADR 0005 and docs/03. Until then, hide the 'Sold out?' link from a Barista who has not enrolled.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into staff:8.",
+      "corrections": ""
+    },
+    "DOC-18": {
+      "batch": "B",
+      "id": "DOC-18",
+      "title": "Env var docs and code disagree: BLOB_READ_WRITE_TOKEN is documented as a switch but never read; ALLOW_REMOTE_SEED, DATABASE_URL_UNPOOLED and E2E_DATABASE_URL are undocumented",
+      "verdict": "duplicate",
+      "same_as": [
+        "ops:17"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "docs/06-SETUP.md:128-150",
+        "docs/06-SETUP.md:49-67"
+      ],
+      "problem": "Same as ops:17. Setup section 9 steps 1 and 3 describe copying Neon URLs and setting DATABASE_URL and DIRECT_URL by hand, while the live project gets DATABASE_URL and DATABASE_URL_UNPOOLED from the Vercel Neon integration. The checklist also omits the function region (sin1 live, iad1 is Vercel's default), the Node version, Hobby's 1-hour log retention, backups and restore, and the preview database decision, and section 5 still lacks ALLOW_REMOTE_SEED, DATABASE_URL_UNPOOLED and E2E_DATABASE_URL.",
+      "fix": "Rewrite steps 1 and 3 around the Neon integration with the manual path as an aside, and add one line each for the region (sin1), Node, log retention, backups and the preview database decision. Add the three missing variables to the section 5 table.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into ops:17.",
+      "corrections": ""
+    },
+    "FEAT-04": {
+      "batch": "B",
+      "id": "FEAT-04",
+      "title": "Phone-only Guests get no confirmation and no way back to their Order, and the phone number is collected but never used",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:8"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "medium",
+      "effort": "S",
+      "locations": [
+        "src/modules/ordering/internal/emails.ts:16",
+        "src/app/(site)/checkout/checkout-form.tsx:262-266",
+        "src/app/(site)/checkout/actions.ts:116-121",
+        "src/app/(site)/orders/[id]/page.tsx:468-473",
+        "src/modules/notify/internal/outbox.ts:38-50"
+      ],
+      "problem": "Same as journeys:8. A Guest who gives only a mobile number gets no email, no SMS and no stored link, so the tokenised Order page is the only way back, and closing the tab loses the live status, the Ready chime and the only Cancel button. On the live demo every Guest is in that position, because emails to real addresses are dropped without a Resend key.",
+      "fix": "Remember the last Order link in an HTTP-only cookie at placement (like the Guest Cart cookie) and show 'Your order K-010' in the header or Cart drawer, plus a 'Bookmark this page to follow your Order' line for Guests. Change the checkout hint to say the number is for the barista to call, or drop the phone field as interim FEAT-04 suggested.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:8.",
+      "corrections": ""
+    },
+    "FEAT-07": {
+      "batch": "B",
+      "id": "FEAT-07",
+      "title": "A Guest's first Stars are always lost: no nudge before Place order, and no way to keep this Order's Stars afterwards",
+      "verdict": "duplicate",
+      "same_as": [
+        "journeys:20"
+      ],
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "M",
+      "locations": [
+        "src/app/(site)/concept/page.tsx:21",
+        "src/app/(site)/concept/page.tsx:95",
+        "src/components/home/barista-picks.tsx:66",
+        "src/app/(site)/orders/[id]/page.tsx:468",
+        "src/app/(site)/sign-in/page.tsx:98"
+      ],
+      "problem": "Same as journeys:20. Home never mentions Demo Mode or the \"Try it in two minutes\" guide, and the guide always says \"sign in with Google first\", even where Google sign-in is not configured. The other two parts are already recorded: Barista picks' \"Add to order\" only opens the item page, and a Guest cannot keep a finished Order's Stars.",
+      "fix": "While demoMode() is on, add one line on Home linking to /concept#try, and word the guide's sign-in step from googleEnabled(). Handle the Barista picks label under UI2-24 and the Guest Stars idea under FEAT-07, which needs an ADR amending ADR 0005 because Guests earn no Stars by design.",
+      "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:20.",
+      "corrections": ""
     }
   }
 }
