@@ -94,6 +94,16 @@
       "DOC-18",
       "FEAT-04",
       "FEAT-07"
+    ],
+    "C-1": [
+      "ORD-06",
+      "ORD-09",
+      "PAY-04",
+      "PAY-05",
+      "ID1-01",
+      "ID1-02",
+      "ID1-04",
+      "ID2-02"
     ]
   },
   "verdicts": {
@@ -1823,6 +1833,186 @@
       "fix": "While demoMode() is on, add one line on Home linking to /concept#try, and word the guide's sign-in step from googleEnabled(). Handle the Barista picks label under UI2-24 and the Guest Stars idea under FEAT-07, which needs an ADR amending ADR 0005 because Guests earn no Stars by design.",
       "reasoning": "Mapped from the 2026-11-10 checkers' duplicate lists and reviewed by title on 2026-11-13; merges into journeys:20.",
       "corrections": ""
+    },
+    "ORD-06": {
+      "batch": "C-1",
+      "id": "ORD-06",
+      "title": "ASAP takes the window from an unlocked read and is refused 'window_full' instead of moving to the next window",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/ordering/internal/place.ts:224-235",
+        "src/modules/ordering/internal/place.ts:250-262",
+        "src/app/(site)/checkout/actions.ts:60-65",
+        "docs/03-ARCHITECTURE.md:132",
+        "docs/adr/0007-pickup-windows-and-capacity.md:8"
+      ],
+      "problem": "For As Soon As Possible, placeOrder picks offered[0] from an unlocked read of pickup_window_usage, and if another Order takes that window's last room first, the check under the row lock refuses with window_full instead of trying the next window. The Customer is told 'That Pickup Time just filled up' for a time they never chose, although docs/03 and ADR 0007 say ASAP takes the earliest window with room.",
+      "fix": "When pickup.kind is 'asap', walk the offered windows in order under the lock (upsert, SELECT ... FOR UPDATE, check, move on if full) and take the first that fits, returning no_window only when none do. Add one DB test where the first offered window fills between the read and the lock.",
+      "reasoning": "Traced today's code: place.ts:226-235 reads offeredWindows (plain findMany) and sets windowStart = offered[0].start; place.ts:250-262 inserts and locks that one row and returns window_full with nextAfter() when it no longer fits. Nothing retries. The only race test (tests/db/place-order.test.ts:240) uses two Scheduled Orders, so ASAP is not covered. The behaviour contradicts the ASAP rule in docs/03 section 6 and ADR 0007. Counter-evidence on impact: offeredWindows already skips windows without room for this Order's need, so the refusal needs a second placement to commit between this transaction's read and its lock on the same last room, a gap of a few milliseconds after lockCart and canRedeem. At a single concept cafe (Test Mode, no real rush) that is rare, and the Customer only resubmits (7.1 keeps the Pickup Time and Payment Method in the form). Still a real, cheap correctness fix on a Capacity path.",
+      "corrections": "Lines moved: ASAP choice is place.ts:233-235 and the refusal place.ts:258-262 (7.1 added lockCart before it). Severity medium to low: 'in a rush ASAP Customers get refusals' overstates it, since only a near-simultaneous commit on the same last room triggers it. The retry costs one of 10 checkout tries per 15 minutes per Cart, which is not a practical limit for this case.",
+      "duplicates": []
+    },
+    "ORD-09": {
+      "batch": "C-1",
+      "id": "ORD-09",
+      "title": "Order ahead before opening and for tomorrow (ORD-03 V1)",
+      "verdict": "out-of-scope",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/cafe/internal/ordering-day.ts:55-82",
+        "src/modules/cafe/internal/ordering-day.ts:93-110",
+        "docs/01-PRD.md:100",
+        "docs/01-PRD.md:59",
+        "docs/05-DESIGN-SYSTEM.md:148",
+        "docs/07-ROADMAP.md:185-187"
+      ],
+      "problem": "Customers cannot order before opening or for the next open day: orderingState refuses before_opening and after_last_order, and pickupWindows builds today's windows only. PRD ORD-03 and docs/05 still promise 'ordering for tomorrow' in V1, but the PRD's own V1 row and roadmap Phase 6 never scheduled it and Phase 6 is marked done.",
+      "fix": "Move 'ordering for tomorrow' to 'After V1' in PRD ORD-03, the docs/05 Pickup Time picker row and roadmap section 13, so the docs stop promising it. Build it only after Phase 9, with next-day windows from getOrderingDay, Order Code and Capacity per pickup service day, and online payment only.",
+      "reasoning": "Product fit check: the feature does not exist (ordering-day.ts:93-110 refuses outside Opening Hours, pickupWindows at :55-82 loops over today's span only). ORD-03 says 'Ordering for tomorrow is V1', but the V1 scope row (PRD line 59) omits it, Phase 6 batches 6.1 to 6.9 never mention it, and section 13 'After V1' does not list it, so it is an orphaned promise rather than a scheduled requirement. Building it is L, not a small add: service_day would stop meaning 'the day it was placed' for Order Codes, Capacity rows, the Bar Screen board and make-next, Prep Time (drinks queued ahead are irrelevant tomorrow), drinksAhead, expiry of unpaid Orders, Reports by day, Busy Mode and Ordering Paused all assume today. That is a lot of risk on Capacity and Order Status paths just before Phase 9. The reviewer-facing part of the gap (the demo closed outside Manila hours) is better served by journeys:1's S-sized Demo Mode all-day span. The doc inconsistency is real and cheap to fix, which is the recommended action here.",
+      "corrections": "The commuter-rush impact is an assumption for a concept cafe with invented demand. Effort for the feature is L as stated, but the recommended action now is the S doc change. The same doc inconsistency is DOC-22.",
+      "duplicates": [
+        "DOC-22"
+      ]
+    },
+    "PAY-04": {
+      "batch": "C-1",
+      "id": "PAY-04",
+      "title": "Refunds are not atomic with the Order transition, and the claim is reverted on errors whose outcome is unknown; both can leave Orders stuck",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/payments/internal/payments.ts:155-192",
+        "src/modules/ordering/internal/refund.ts:32-49",
+        "src/modules/payments/internal/paymongo.ts:63-74",
+        "src/modules/payments/internal/paymongo.ts:101-111",
+        "prisma/schema.prisma:412-424"
+      ],
+      "problem": "refundOrder refunds the Payment (refundPayment) and then moves the Order to Refunded in a separate step, so a crash or timeout between the two leaves the Payment refunded and the Order still Picked Up or Cancelled. Every retry then gets already_refunded and answers not_allowed, so the Order never reaches Refunded and the Stars of a Picked Up Order are never taken back.",
+      "fix": "In refundOrder, when refundPayment answers already_refunded and the Payment has a Refund row, go on to transition(refunded) and the email instead of refusing, so a retry finishes a half-done refund. Leave provider-side reconciliation (keeping the claim on unknown outcomes, refund webhooks) until a PayMongo account exists (ADR 0003).",
+      "reasoning": "Code is unchanged since the audit (7.2 touched recordPaymentEvent and closeCheckout, not refundPayment or refundOrder). Confirmed: refundPayment claims paid to refunded, calls the provider, writes the Refund row, and reverts to paid on any throw (payments.ts:161-190); refundOrder then calls transition separately and maps already_refunded to not_allowed (refund.ts:43-47). The Manager list keeps showing 'Refund' for such an Order (reads.ts:198-200), and every tap answers 'can't be refunded now'. A process killed mid-call (fetch has no timeout, so a hung provider call ends at the function limit) also leaves the claim without a Refund row. Counter-evidence: the demo runs only on the fake provider (ADR 0003 update: PayMongo paused sign-ups, batch 3.4 skipped), whose refund() never throws, and transition(refunded) cannot be refused after the eligibility check because picked_up and paid cancelled Orders have no other exit and a second refundOrder already stops at the claim. So the stuck state needs a crash in a window of milliseconds. The PayMongo-only parts (refund webhooks mapped to 'other', a timeout after the provider refunded) are latent in an adapter that has never run against a sandbox. The 'no_online_payment for a non-paid Payment' path is unreachable today: a Payment leaves paid only through the refund claim, failed events only touch pending Payments, and closeCheckout only touches pending or failed ones.",
+      "corrections": "Severity medium to low: no failure path can fire with the fake provider, and no real money moves (ADR 0006). The non-paid Payment case is unreachable, not just latent. The unique index on refunds.payment_id is defensive only: the paid-to-refunded claim already prevents a second Refund row. Effort for the recommended part is S; the auditor's full fix (reconcile through PayMongo refund webhooks) is M and cannot be tested without an account.",
+      "duplicates": []
+    },
+    "PAY-05": {
+      "batch": "C-1",
+      "id": "PAY-05",
+      "title": "Refund failures are invisible: refundAction and cancelOrder throw away the RefundResult",
+      "verdict": "partly",
+      "fixed_by": "06ab378 (8.10): refundAction now reads the RefundResult and /manage/orders shows 'The refund for K-xxx didn't go through. Try again in a minute.' (src/app/manage/orders/actions.ts:26-39, page.tsx:62-67). 2711031 (8.6): the Order page says 'Paid online (Test Mode). The refund is on its way.' for a closed Order whose Payment is still paid (src/app/(site)/orders/[id]/page.tsx:124-133).",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/ordering/internal/refund.ts:57-72",
+        "src/app/manage/orders/actions.ts:41-48",
+        "src/app/bar/actions.ts:29-37",
+        "src/app/(site)/orders/[id]/actions.ts:10-16",
+        "src/modules/ordering/internal/reads.ts:198-200",
+        "src/app/(site)/orders/[id]/page.tsx:124-133"
+      ],
+      "problem": "cancelOrder still drops refundOrder's result, so when the refund of a paid Order fails after a cancel, the Manager sees 'Cancelled K-xxx' (or the Bar Screen just closes the card) and a Customer's own cancel only logs a console line. Nothing marks the Order as paid but not refunded, so the Customer's page says the refund is on its way while nothing will retry it.",
+      "fix": "Return the refund outcome from cancelOrder and have cancelAction and cancelAtBar show 'Cancelled K-xxx, but the refund didn't go through. Tap Refund to try again.' On /manage/orders, mark Cancelled rows that were paid and are still refundable with a 'Refund pending' pill so a Customer's failed cancel refund is visible.",
+      "reasoning": "The Manager's Refund button is fixed: since 8.10 refundAction maps provider_failed to a 'didn't go through' line. The cancel path is not: refund.ts:62-71 awaits refundOrder and returns only the TransitionResult, and all three callers (cancelAction, cancelAtBar, cancelOrderAction) see only result.ok. Mitigations that exist: a cancelled paid Order whose refund failed stays on its service day's /manage/orders list as Cancelled with a Refund button (reads.ts:198-200, refundable when cancelled and paidAt set), so a Manager who looks can retry; and the Customer page no longer claims the refund is finished. But nothing flags the row, nothing emails, and nothing retries. Counter-evidence on impact: the fake provider's refund() never throws, so on the demo this branch cannot fire; with PayMongo it is a real 'money not returned, nobody told' case.",
+      "corrections": "The refundAction half and the Customer-page copy are fixed (06ab378, 2711031). The remaining gap is cancelOrder's dropped result, which also affects cancelAtBar on the Bar Screen, not listed in the finding. Severity medium to low: it cannot occur with the fake provider and no real money moves (ADR 0006). The late-paid-after-Expiry refund failure (ORD-03, PAY-01, ops:1) is a neighbouring case: those Orders are Expired and refundOrder refuses them, which this fix does not cover.",
+      "duplicates": [
+        "architecture:5"
+      ]
+    },
+    "ID1-01": {
+      "batch": "C-1",
+      "id": "ID1-01",
+      "title": "Account deletion leaves pending sign-in links working; they sign in to a new account with the deleted email",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/identity/internal/privacy.ts:46-58",
+        "node_modules/better-auth/dist/plugins/magic-link/index.mjs:39",
+        "node_modules/better-auth/dist/plugins/magic-link/index.mjs:90-98",
+        "node_modules/better-auth/dist/plugins/magic-link/index.mjs:164-190",
+        "tests/db/privacy.test.ts:105"
+      ],
+      "problem": "forgetMember deletes verifications where identifier equals the email, but Better Auth 1.7.18 stores sign-in links as identifier 'magic-link:<token>' with the email inside value, so the delete matches nothing. A link sent in the 5 minutes before deletion still works and creates a fresh, empty account with that email, contrary to the docstring.",
+      "fix": "Delete the links by value: db.verification.deleteMany({ where: { identifier: { startsWith: 'magic-link:' }, value: { contains: JSON.stringify(user.email) } } }). Add the assertion to the deletion test in tests/db/privacy.test.ts: request a link, delete the account, expect 0 verifications for that email.",
+      "reasoning": "privacy.ts:58 is unchanged and the docstring at :46-51 still promises that pending sign-in links are removed. Better Auth 1.7.18 (after the 7.3 upgrade) still writes identifier magic-link:${storedToken} (index.mjs:39, :92) with value {type, email, name} (:93-97); verify reads by identifier and, finding no user for that email (forgetMember renamed it to deleted-<id>@hoshikopi.invalid), creates a new user since disableSignUp is not set (auth.ts:33-42, index.mjs:174-190). Counter-evidence on impact: magic-link expiresIn defaults to 300 seconds and the project does not change it, so the window is 5 minutes; only the inbox owner can open the link; the new account has a new id and none of the old data, which is the same as signing up again, and a deleted Member may sign up again by design. Better Auth also purges expired verifications on every link check (internal-adapter.mjs:802-806), so the email does not stay in verifications for long. What remains is a dead line, a false docstring and a few minutes of retained email, so it is a correctness and privacy-promise bug of low impact. The rate_limits 'link:<email>' retention is ops:9's housekeeping finding.",
+      "corrections": "Severity medium to low: 'signed straight back in' is a fresh empty account for the inbox owner within 5 minutes, and the email leaves verifications on the next link check after expiry, not indefinitely. The rate_limits part belongs to ops:9. Same problem as ID2-03, which the audit itself rated low.",
+      "duplicates": [
+        "ID2-03"
+      ]
+    },
+    "ID1-02": {
+      "batch": "C-1",
+      "id": "ID1-02",
+      "title": "Per-email sign-in limit lets anyone lock a chosen person (such as the Manager) out of sign-in and flood their inbox",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/app/(site)/sign-in/actions.ts:32-42",
+        "src/lib/rate-limit.ts:9-33",
+        "docs/adr/0005-better-auth-members-and-staff.md:22",
+        "prisma/seed-data.ts:617"
+      ],
+      "problem": "The email-link limit is keyed on the address alone (3 per 15 minutes) and is checked before the per-IP limit, so anyone who sends 3 requests per window keeps that person from getting a sign-in link. The seeded Manager's address is public in the repo, and it signs in only by email link, so the demo's Manager account can be locked out indefinitely.",
+      "fix": "Check the per-IP limit first, key the strict limit on email and IP together (3 per 15 minutes), and keep a looser per-email cap (about 10 an hour) against inbox flooding. A determined attacker can still exhaust a per-email cap, so note in ADR 0005 that Google sign-in and existing sessions are the way around it.",
+      "reasoning": "Code is unchanged: requestSignInLink runs takeToken(`link:${email}`, 3, 15 min) && takeToken(`link-ip:${ip}`, 30, 15 min), and takeToken counts every call, refused ones included, in fixed clock-aligned windows. Better Auth's own magic-link route is in disabledPaths, so this action is the only way to get a link. christian@hoshikopi.example is in prisma/seed-data.ts in the public repo, and on the live demo the seeded accounts sign in through the logs (docs/06-SETUP.md section 9), not Google, so the lockout works there. Counter-evidence on impact: the inbox-flood half does not apply today: Resend is skipped until a domain exists, so links to real addresses are dropped on Vercel, and the seeded .example addresses cannot receive mail; for a real deployment the cap itself bounds a flood to 12 an hour per address. Members have Google sign-in (live since 2026-11-07) as a way around a lockout, and Staff sessions slide for 7 days, so an already signed-in Manager is not affected. The remaining harm is a targeted nuisance against a portfolio demo. Any per-address cap can be exhausted by someone else, so the fix only raises the cost.",
+      "corrections": "Severity medium to low: no email flooding is possible today (Resend skipped, .example addresses), and existing sessions and Google sign-in limit the lockout. The suggested fix (email+IP plus a looser per-email cap) does not remove a determined lockout, only makes it costlier. ID2-05 is the same finding and adds that clientIp trusts the first X-Forwarded-For entry off Vercel.",
+      "duplicates": [
+        "ID2-05"
+      ]
+    },
+    "ID1-04": {
+      "batch": "C-1",
+      "id": "ID1-04",
+      "title": "Second Factor enforcement depends on the redirect-path string passed to requireStaff",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/identity/internal/session.ts:33-50",
+        "src/app/bar/actions.ts:25-37",
+        "src/app/manage/hours/actions.ts:27",
+        "docs/adr/0014-staff-second-factor-in-identity.md"
+      ],
+      "problem": "requireStaff asks for the Second Factor only when its redirect target starts with /manage, so the security check depends on a navigation string, and cancelAtBar passes '/manage/orders' only to force the check. Every Manager-level call passes a /manage path today, but a future one that passes '/bar' would skip the Second Factor with nothing to catch it.",
+      "fix": "Decide by role as well as path: ask for the Second Factor when role === 'manager' or next starts with '/manage', so the Bar Screen stays exempt for Barista-level calls only. Cover it in the access-matrix test (tests:13): a Manager-level action without the Second Factor redirects.",
+      "reasoning": "session.ts:42-47 is unchanged. Listing every caller today: all 30 requireStaff('manager', ...) calls pass a /manage path, including cancelAtBar ('/manage/orders') and the Pause and Busy actions the Bar Screen imports from manage/hours/actions.ts ('/manage/hours'); /bar and /api/bar use the Barista level ('/bar', or currentStaff for the JSON poll). So there is no live bypass; the 5.3 regression the finding cites was fixed. ADR 0014 records the rule as 'any /manage page or Server Action', which the path test only approximates for actions; deciding by the required role is a one-line change that keeps ADR 0014's Bar exemption (Barista-level calls) and needs no new ADR. It is a hardening of a guard on the CLAUDE.md security path, cheap and worth doing, but not an exploitable defect.",
+      "corrections": "Severity medium to low: no caller passes a non-/manage path at Manager level today, so it is defence in depth. The fix should key on the required role argument, not the user's role, or a Manager opening /bar (requireStaff('barista', '/bar')) would be sent to the Second Factor. Related but different: staff:1 is the Bar Screen showing Manager controls that then redirect; tests:13 is the missing access-matrix test.",
+      "duplicates": [
+        "ID2-07"
+      ]
+    },
+    "ID2-02": {
+      "batch": "C-1",
+      "id": "ID2-02",
+      "title": "Second Factor pass never expires inside a 7-day sliding session, including on the shared bar tablet",
+      "verdict": "partly",
+      "fixed_by": "",
+      "severity_adjusted": "low",
+      "effort": "S",
+      "locations": [
+        "src/modules/identity/internal/second-factor.ts:101-108",
+        "src/modules/identity/internal/auth.ts:14-20",
+        "node_modules/better-auth/dist/context/create-context.mjs:146-149",
+        "src/app/bar/actions.ts:29-37",
+        "docs/adr/0014-staff-second-factor-in-identity.md"
+      ],
+      "problem": "secondFactorPassed only checks that sessions.second_factor_at is set, and Better Auth sessions last 7 days and renew daily with use, so a session that entered the code once keeps full Manager access for as long as it is used. If a Manager enters the code on the shared bar tablet, that tablet stays a full Manager session.",
+      "fix": "Give the pass a lifetime in secondFactorPassed, for example second_factor_at newer than now() minus 12 hours from lib/clock.ts, and record it as an amendment to ADR 0014. Hiding the Bar Screen's Manager controls without the Second Factor (staff:1) removes the main reason to enter a Manager code on the tablet.",
+      "reasoning": "Confirmed in code: second-factor.ts:102-108 returns !!secondFactorAt with no age check; auth.ts sets no session.expiresIn or updateAge, so Better Auth 1.7.18 uses 604800 s (7 days) with updateAge 86400 s (create-context.mjs:147-148). enterSecondFactor marks the existing session without rotating it. ADR 0014 records 'sessions.second_factor_at marks the session that entered a code', so 'once per session' is the recorded design, and changing it needs an ADR amendment. Counter-evidence on impact: ADR 0005 has the bar tablet signed in as a Barista, and a Barista session never shows Manager controls, so the tablet becomes a Manager session only if a Manager signs in there with their own email link and then enters a code; that is a chain of choices the current UI invites (staff:1) but does not force. On a Manager's own device, a 'remembered' second factor for a sliding week is a common trade-off, and 8.5's 'Sign out everywhere' ends such sessions. For a concept cafe with seeded Staff this is low; a 12-hour age check is a one-line change.",
+      "corrections": "Severity medium to low: exposure needs a Manager to sign in and enter the code on the shared tablet, and Staff sessions can now be ended from /manage/staff (8.5). The 'no maximum age' part is the same as one of the three points in ID1-13. staff:1 is related (it is why a Manager would enter the code on the tablet) but describes the lost action, not the pass lifetime.",
+      "duplicates": [
+        "ID1-13"
+      ]
     }
   }
 }
