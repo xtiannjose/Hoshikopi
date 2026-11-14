@@ -108,6 +108,18 @@ export function CheckoutForm({
     state
   );
   const error = (name: string) => state.errors?.[name];
+  // Neither an email nor a mobile number: the refusal is for both fields
+  // (audit a11y:11). The server files it under customerEmail.
+  const noContact =
+    !!error("customerEmail") &&
+    !state.values?.customerEmail.trim() &&
+    !state.values?.customerPhone.trim();
+  const contact = {
+    "aria-describedby": noContact
+      ? "contact-rule contact-error"
+      : "contact-rule",
+    "aria-invalid": noContact || undefined,
+  } as const;
   // After a refusal React resets the form, so the choices come back from the
   // action; one no longer offered falls back to the first.
   const keptPickup = state.values?.pickup;
@@ -252,7 +264,10 @@ export function CheckoutForm({
             maxLength={60}
             error={error("customerName")}
           />
-          <p className="text-muted-foreground max-w-measure text-sm">
+          <p
+            id="contact-rule"
+            className="text-muted-foreground max-w-measure text-sm"
+          >
             One of these is enough: an email or a mobile number, so we can reach
             you about your Order. We use them for nothing else.{" "}
             <Link href="/privacy">Privacy</Link>
@@ -264,7 +279,8 @@ export function CheckoutForm({
               label="Email"
               type="email"
               autoComplete="email"
-              error={error("customerEmail")}
+              {...contact}
+              error={noContact ? undefined : error("customerEmail")}
             />
             <Field
               name="customerPhone"
@@ -273,9 +289,15 @@ export function CheckoutForm({
               type="tel"
               autoComplete="tel"
               placeholder="0917 123 4567"
+              {...contact}
               error={error("customerPhone")}
             />
           </div>
+          {noContact && (
+            <p id="contact-error" className="text-destructive -mt-2 text-sm">
+              {error("customerEmail")}
+            </p>
+          )}
         </div>
       </fieldset>
 

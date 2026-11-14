@@ -69,6 +69,15 @@ test("checkout asks for an email or a mobile number", async ({ page }) => {
   await expect(
     page.getByText("Give us an email or a mobile number for your Order.")
   ).toBeVisible();
+  // The rule and the refusal belong to both fields, not Email alone
+  // (audit a11y:11).
+  for (const name of ["Email", "Mobile number"]) {
+    const field = page.getByRole("textbox", { name });
+    await expect(field).toHaveAttribute("aria-invalid", "true");
+    await expect(field).toHaveAccessibleDescription(
+      /One of these is enough.*Give us an email or a mobile number/
+    );
+  }
   // What was typed stays after the refusal.
   await expect(page.getByLabel("Name")).toHaveValue("Migs");
 });
