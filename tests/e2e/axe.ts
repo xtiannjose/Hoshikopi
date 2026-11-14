@@ -3,6 +3,12 @@ import { expect, type Page } from "@playwright/test";
 
 /** WCAG 2.2 A and AA, as every page test runs it (docs/03 section 15). */
 export async function expectNoAxeViolations(page: Page) {
+  // The Day palette's paper grain is a background image, so axe would mark
+  // every text contrast check incomplete instead of checking it (audit
+  // a11y:6). The tile averages close to the background token.
+  await page.addStyleTag({
+    content: "body { background-image: none !important }",
+  });
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
