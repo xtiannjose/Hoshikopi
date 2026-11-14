@@ -303,12 +303,30 @@
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    /* 0s, not 0.01ms: a near-zero duration still starts a real transition
+       for every colour on a Day and Night switch, hundreds of them, about
+       1 to 3 s of style work on a phone (audit motion:1). */
+    transition-duration: 0s !important;
     transition-delay: 0s !important;
   }
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
+  }
+  /* "Added" holds still for its 1.6 s instead of jumping to its last,
+     invisible frame, so a phone shows the add (audit motion:2). */
+  .animate-confirm {
+    animation: hold 1600ms both !important;
+  }
+}
+
+@keyframes hold {
+  from,
+  99% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }

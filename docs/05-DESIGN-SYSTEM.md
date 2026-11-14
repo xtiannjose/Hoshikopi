@@ -194,7 +194,7 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 
 - **Quiet zones:** nothing moves on its own while the Customer chooses Options or pays (the Options on a Menu Item, the Cart, checkout, the fake payment page); there is only press feedback under the finger. The Pickup Time chips at checkout stay plain chips until batch 8.3 replaces them.
 - **Never animated:** the hero, because it holds the LCP (batch 7.6); loops of any kind; parallax and scroll-jacking.
-- **Reduced motion:** `prefers-reduced-motion: reduce` turns all of it off. Animations and transitions land on their final state at once, View Transitions are skipped and scroll reveals are not applied. Browser tests run this way (`playwright.config.ts`), so axe checks the settled page and never a frame mid-fade.
+- **Reduced motion:** `prefers-reduced-motion: reduce` turns all of it off. Animations land on their final state at once and transitions are `0s` (a near-zero duration still started hundreds of real transitions on a Day and Night switch), View Transitions are skipped and scroll reveals are not applied. One exception: the "Added" on Add to order holds still for its 1.6 s, since its last frame is invisible and on a phone it is the only sign of the add. Browser tests run this way (`playwright.config.ts`), so axe checks the settled page and never a frame mid-fade.
 
 ## 8. Imagery, icons, copy
 
