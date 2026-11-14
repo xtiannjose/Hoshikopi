@@ -65,6 +65,24 @@ test("a failed Test Mode payment can be paid again from the Order page", async (
   );
 });
 
+// Like PayMongo's cancel_url: back to the Order page, nothing cancelled
+// (audit journeys:21).
+test("going back from the Test Mode checkout leaves the Order to pay or cancel", async ({
+  page,
+}) => {
+  await addToCart(page, "kopi-hitam");
+  await checkoutOnline(page);
+  await page.getByRole("link", { name: "Go back without paying" }).click();
+  await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
+  await expect(page.getByRole("status")).toHaveText(
+    "Salamat! We got your order. Finish paying to send it to the bar."
+  );
+  await expect(page.getByRole("link", { name: "Finish paying" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Cancel order" })
+  ).toBeVisible();
+});
+
 test("the webhook route refuses an unsigned event", async ({ request }) => {
   const response = await request.post("/api/webhooks/fake", {
     data: { id: "evt_x", type: "paid", checkoutId: "cs", paymentId: "p" },

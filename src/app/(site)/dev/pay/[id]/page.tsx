@@ -81,12 +81,14 @@ async function Checkout({
             href={back}
             className="text-muted-foreground inline-flex min-h-11 items-center justify-self-center text-sm"
           >
-            Cancel and go back
+            Go back without paying
           </Link>
         </>
       ) : (
         <>
           <p className="font-semibold">{DONE[payment.status]}</p>
+          {/* Like PayMongo's cancel_url: back to the Order page, nothing
+              cancelled there (audit journeys:21). */}
           <Link href={back} className={`${PRIMARY_PILL} justify-self-start`}>
             Back to your order
           </Link>
