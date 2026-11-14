@@ -1,6 +1,6 @@
 import { NotFoundBody } from "@/components/not-found-body";
 
-/** A missing Menu Item, Event, Post or Order, inside the site's frame. */
+/** A missing page inside the site's frame; Orders have their own. */
 export default function NotFound() {
   return (
     <NotFoundBody

@@ -8,17 +8,17 @@ import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
  * such as an Order link (audit a11y:9). */
 export function NotFoundBody({
   links,
+  title = "This page could not be found",
+  intro = "It may have moved, or the link has a typo.",
 }: {
   links: { href: string; label: string }[];
+  title?: string;
+  intro?: string;
 }) {
   return (
     <main id="main" className="page-width flex-1 pt-8 pb-16">
       <title>Page not found | Hoshikopi</title>
-      <PageHeader
-        eyebrow="404"
-        title="This page could not be found"
-        intro="It may have moved, or the link has a typo."
-      />
+      <PageHeader eyebrow="404" title={title} intro={intro} />
       <ul className="mt-6 flex flex-wrap gap-3">
         {links.map((link, index) => (
           <li key={link.href}>
