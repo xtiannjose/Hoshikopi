@@ -67,7 +67,9 @@ export function InquiryForm({
           className={fieldClass}
         >
           <option value="private_event">A private event</option>
-          <option value="large_order">An order of more than 15 drinks</option>
+          <option value="large_order">
+            An order of more than a dozen drinks
+          </option>
         </select>
       </Field>
       <Field

@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
+import { OrderLimitNote } from "@/components/order-limit-note";
 import { PageHeader } from "@/components/page-header";
 import { Empty, PRIMARY_PILL } from "@/components/panel";
 import { PickupLine } from "@/components/pickup-line";
@@ -21,7 +22,7 @@ import {
   MAX_LINE_QUANTITY,
   type CartLineView,
 } from "@/modules/cart";
-import { MAX_DRINKS_PER_ORDER, orderingDay } from "@/modules/ordering";
+import { fitsOneOrder, orderingDay, orderLimit } from "@/modules/ordering";
 
 import { removeLineAction, setQuantityAction } from "./actions";
 
@@ -92,10 +93,13 @@ async function Cart() {
       </div>
     );
   }
-  const tooManyDrinks = cart.drinks > MAX_DRINKS_PER_ORDER;
-  // The same ordering state checkout reads, so the Cart warns first (ORD-07).
+  // The same ordering state and Order limit checkout reads, so the Cart
+  // warns first (ORD-07, audit journeys:3).
   const at = now();
-  const state = orderingState(at, await orderingDay(at));
+  const day = await orderingDay(at);
+  const state = orderingState(at, day);
+  const limit = orderLimit(day.capacity);
+  const tooBig = !fitsOneOrder(cart, limit);
   return (
     <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
       <ul className="border-border border-t">
@@ -197,15 +201,7 @@ async function Cart() {
           </p>
         </div>
 
-        {tooManyDrinks && (
-          <p className="bg-muted rounded-card p-4">
-            Orders hold up to {MAX_DRINKS_PER_ORDER} drinks. For a bigger order,{" "}
-            <Link href="/cafe/inquire?kind=large_order">
-              send us an inquiry
-            </Link>{" "}
-            a day ahead and we&apos;ll get it ready.
-          </p>
-        )}
+        {tooBig && <OrderLimitNote limit={limit} />}
         {!state.canOrder &&
           (state.reason === "paused" ? (
             <div className="bg-muted rounded-card grid gap-1 p-4">
@@ -224,7 +220,7 @@ async function Cart() {
           drinks={cart.drinks}
           member={owner !== null && "memberId" in owner}
         />
-        {cart.blocked || tooManyDrinks ? (
+        {cart.blocked || tooBig ? (
           <p className="font-semibold">Fix the notes above to check out.</p>
         ) : (
           <Link

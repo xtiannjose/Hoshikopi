@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CoffeeIcon, StarIcon } from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
+import { OrderLimitNote } from "@/components/order-limit-note";
 import { OpenStatus } from "@/components/cafe/open-status";
 import { PageHeader } from "@/components/page-header";
 import { Empty, OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
@@ -13,7 +14,7 @@ import { getHours } from "@/modules/cafe";
 import { currentCartOwner } from "@/modules/cart";
 import { currentMember, memberProfile } from "@/modules/identity";
 import { birthdayTreat } from "@/modules/loyalty";
-import { checkoutView } from "@/modules/ordering";
+import { checkoutView, fitsOneOrder } from "@/modules/ordering";
 import { demoAllDayOrdering } from "@/modules/payments";
 
 import { CheckoutForm } from "./checkout-form";
@@ -111,6 +112,17 @@ async function Checkout() {
         <p>Something in your Cart changed.</p>
         <Link href="/cart" className={PRIMARY_PILL}>
           Check your Cart
+        </Link>
+      </div>
+    );
+  }
+  // Too big for one Pickup Window: say so, not "no Pickup Times are left".
+  if (!fitsOneOrder(cart, view.limit)) {
+    return (
+      <div className="mt-8 grid justify-items-start gap-3">
+        <OrderLimitNote limit={view.limit} />
+        <Link href="/cart" className={OUTLINE_PILL}>
+          Back to your Cart
         </Link>
       </div>
     );

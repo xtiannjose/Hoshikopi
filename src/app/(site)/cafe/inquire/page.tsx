@@ -17,7 +17,7 @@ import { InquiryForm } from "./inquiry-form";
 export const metadata: Metadata = {
   title: "Send an inquiry",
   description:
-    "Ask Hoshikopi about a private event or an order of more than 15 drinks.",
+    "Ask Hoshikopi about a private event or an order of more than a dozen drinks.",
 };
 
 const GOOD_TO_KNOW = [
@@ -44,7 +44,7 @@ export default function InquirePage({
         <PageHeader
           back={<BackLink href="/cafe#private-events">Visit</BackLink>}
           title="Send an inquiry"
-          intro="For a private event at the cafe or an order of more than 15 drinks. Tell us what you have in mind and we'll email you back."
+          intro="For a private event at the cafe or an order of more than a dozen drinks. Tell us what you have in mind and we'll email you back."
         />
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
           <Suspense fallback={<div className="min-h-96" />}>

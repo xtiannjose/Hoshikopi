@@ -278,7 +278,8 @@ describe("placeOrder refusals", () => {
     await addLatte(big, 16);
     expect(await placeOrder(await input(big))).toEqual({
       ok: false,
-      reason: "too_many_drinks",
+      reason: "too_big",
+      limit: { drinks: 12, food: 8 },
     });
     const five = guest();
     await addLatte(five, 5);
@@ -288,6 +289,41 @@ describe("placeOrder refusals", () => {
     });
     expect(
       (await placeOrder(await input(five, { memberId: "seed-member" }))).ok
+    ).toBe(true);
+  });
+
+  // An Order is made in one Pickup Window, so it can hold no more than one
+  // window's Capacity: 12 drinks and 8 food Lines in the seed (audit
+  // journeys:3, ORD-04). It used to be told no Pickup Times were left.
+  it("refuses 13 drinks, more than one Pickup Window holds", async () => {
+    const office = guest();
+    await addLatte(office, 13);
+    expect(
+      await placeOrder(await input(office, { paymentMethod: "card" }))
+    ).toEqual({ ok: false, reason: "too_big", limit: { drinks: 12, food: 8 } });
+  });
+
+  it("refuses more food Lines than one Pickup Window holds", async () => {
+    const office = guest();
+    for (let i = 1; i <= 9; i++) {
+      await addLine(office, {
+        menuItemId: items["ube-pandesal"],
+        optionIds: [],
+        quantity: 1,
+        note: `for ${i}`,
+      });
+    }
+    expect((await getCart(office)).foodLines).toBe(9);
+    expect(
+      await placeOrder(await input(office, { paymentMethod: "card" }))
+    ).toEqual({ ok: false, reason: "too_big", limit: { drinks: 12, food: 8 } });
+  });
+
+  it("takes 12 drinks, a full window", async () => {
+    const office = guest();
+    await addLatte(office, 12);
+    expect(
+      (await placeOrder(await input(office, { paymentMethod: "card" }))).ok
     ).toBe(true);
   });
 

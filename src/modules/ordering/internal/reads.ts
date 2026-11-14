@@ -14,7 +14,7 @@ import { orderingDay } from "./day";
 import { orderLink, tokenMatches } from "./links";
 import { baseOf, rewardLineOf } from "./place";
 import { customerVersion, drinksAhead } from "./queue";
-import { GUEST_PAY_AT_PICKUP_MAX_DRINKS } from "./rules";
+import { GUEST_PAY_AT_PICKUP_MAX_DRINKS, orderLimit } from "./rules";
 import { offeredWindows } from "./windows";
 
 export type CheckoutView = {
@@ -23,6 +23,8 @@ export type CheckoutView = {
   /** Busy Mode is on: Prep Time and the windows are longer than usual. */
   busy: boolean;
   windows: PickupWindow[];
+  /** The most one Order holds today: one Pickup Window (audit journeys:3). */
+  limit: { drinks: number; food: number };
   /** Guests may Pay at Pickup for up to 4 drinks (PAY-02). */
   payAtPickupAllowed: boolean;
   /** A Member with 9 Stars may make one drink free (LOY-03). */
@@ -60,6 +62,7 @@ export async function checkoutView(
     cart,
     busy: day.busy !== null,
     windows,
+    limit: orderLimit(day.capacity),
     reward,
     payAtPickupAllowed:
       memberId !== null || cart.drinks <= GUEST_PAY_AT_PICKUP_MAX_DRINKS,
