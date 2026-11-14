@@ -103,13 +103,26 @@ describe("transition: Pay at Pickup through the bar", () => {
     ]);
   });
 
-  it("refuses skipping a step", async () => {
+  // From every step, not only the first: a mutation letting Preparing go
+  // straight to Picked Up passed the suite (Phase 9 check, audit tests:3).
+  it("refuses skipping a step, from every step", async () => {
     const order = await placedOrder();
-    expect(await transition(order.id, "ready", annika)).toEqual({
-      ok: false,
-      reason: "not_allowed",
-      status: "placed",
-    });
+    const path = [
+      "placed",
+      "accepted",
+      "preparing",
+      "ready",
+      "picked_up",
+    ] as const;
+    for (let i = 0; i < path.length - 1; i++) {
+      for (const skip of path.slice(i + 2)) {
+        expect(
+          await transition(order.id, skip, annika),
+          `${path[i]} > ${skip}`
+        ).toEqual({ ok: false, reason: "not_allowed", status: path[i] });
+      }
+      await transition(order.id, path[i + 1], annika);
+    }
   });
 });
 
