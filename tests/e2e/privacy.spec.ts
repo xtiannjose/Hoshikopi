@@ -15,6 +15,18 @@ for (const palette of ["day", "night"] as const) {
   });
 }
 
+for (const palette of ["day", "night"] as const) {
+  test(`the accessibility statement in the ${palette} palette has no axe violations (9.3)`, async ({
+    page,
+  }) => {
+    await openIn(page, palette, "/accessibility");
+    await expect(
+      page.getByRole("heading", { name: "What still falls short" })
+    ).toBeVisible();
+    await expectNoAxeViolations(page);
+  });
+}
+
 test("a Member saves details, downloads their data and deletes the account (ACC-03)", async ({
   page,
 }) => {
