@@ -28,10 +28,9 @@ const InquiryInput = z.object({
     .trim()
     .toLowerCase()
     .max(254, "Enter an email address, like hoshi@example.com.")
-    .regex(
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      "Enter an email address, like hoshi@example.com."
-    ),
+    // z.email, as checkout: the old regex let "x@y.z?cc=a%40b.c" through
+    // into the Manager's mailto links (audit SEC2-01).
+    .pipe(z.email("Enter an email address, like hoshi@example.com.")),
   wantedOn: z
     .string()
     .trim()
