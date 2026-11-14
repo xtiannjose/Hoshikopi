@@ -65,6 +65,19 @@ function doneLine(done: unknown, code: unknown): ReactNode {
           The refund for {that} didn&apos;t go through. Try again in a minute.
         </span>
       );
+    case "cancel_reason":
+      return (
+        <span className="text-destructive">
+          {that} wasn&apos;t cancelled. Write a reason the Customer will see.
+        </span>
+      );
+    case "cancel_not_allowed":
+      return (
+        <span className="text-destructive">
+          {real ? code : "That Order"} can&apos;t be cancelled now. It was
+          already picked up, cancelled or refunded.
+        </span>
+      );
     case "not_allowed":
       return (
         <span className="text-destructive">
