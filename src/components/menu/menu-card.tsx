@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Photo, type PhotoKind } from "@/components/photo";
+import { Photo } from "@/components/photo";
 import type { MenuItemCard } from "@/modules/menu";
 
 import { Badges } from "./badges";
@@ -32,7 +32,7 @@ export function MenuCard({
       <Photo
         src={item.photoUrl}
         alt={item.photoAlt}
-        kind={item.categorySlug as PhotoKind}
+        kind={item.categorySlug}
         sizes="(min-width: 1536px) 18rem, (min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 6rem"
         className={`rounded-card row-span-3 aspect-square self-start sm:row-span-1 sm:aspect-4/3 ${item.soldOut ? "opacity-50 grayscale" : ""}`}
       />

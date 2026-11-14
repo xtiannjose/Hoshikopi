@@ -7,7 +7,7 @@ import { CheckCircleIcon } from "@phosphor-icons/react/ssr";
 import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, Pill } from "@/components/panel";
-import { ICONS, Photo, type PhotoKind } from "@/components/photo";
+import { Photo } from "@/components/photo";
 import { formatDate, manila, now } from "@/lib/clock";
 import { formatReceipt } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
@@ -135,7 +135,7 @@ async function Editor({
     <Photo
       src={row.photoUrl}
       alt={row.photoAlt ?? ""}
-      kind={(Object.hasOwn(ICONS, slug) ? slug : "coffee") as PhotoKind}
+      kind={slug}
       sizes="20rem"
       className="rounded-card aspect-[4/3] w-full max-w-80"
     />

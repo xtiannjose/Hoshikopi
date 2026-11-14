@@ -12,7 +12,8 @@ import { currentMember } from "@/modules/identity";
 
 export type AddState =
   | { status: "idle" }
-  | { status: "added"; at: number }
+  // count goes up with each add in a row, so "Added" plays again.
+  | { status: "added"; count: number }
   | { status: "error"; message: string };
 
 const MESSAGES = {
@@ -30,7 +31,7 @@ const optionIdsOf = (form: FormData) =>
 
 /** Add to the Cart; the server checks and prices it (ORD-01, ORD-06). */
 export async function addToCartAction(
-  _prev: AddState,
+  prev: AddState,
   form: FormData
 ): Promise<AddState> {
   const quantity = Number(form.get("quantity"));
@@ -43,7 +44,10 @@ export async function addToCartAction(
   if (!result.ok) return { status: "error", message: MESSAGES[result.reason] };
   // The header's Cart count reads the Cart; show the new one.
   refresh();
-  return { status: "added", at: Date.now() };
+  return {
+    status: "added",
+    count: (prev.status === "added" ? prev.count : 0) + 1,
+  };
 }
 
 export type FavouriteState =

@@ -230,7 +230,7 @@ export function OptionPicker({
                 is what screen readers hear. A new add restarts it. */}
             {last === "add" && state.status === "added" && (
               <span
-                key={state.at}
+                key={state.count}
                 aria-hidden
                 className="animate-confirm bg-primary pointer-events-none absolute inset-0 flex items-center justify-center gap-2 rounded-full"
               >

@@ -2,12 +2,27 @@ import { describe, expect, it } from "vitest";
 
 import {
   addMoney,
+  formatDecimal,
   formatDelta,
   formatPrice,
   formatReceipt,
   parsePesos,
   vatPart,
 } from "./money";
+
+describe("formatDecimal (machine-readable prices)", () => {
+  it("writes pesos with two decimals and no currency or separators", () => {
+    expect(formatDecimal(35000)).toBe("350.00");
+    expect(formatDecimal(16550)).toBe("165.50");
+    expect(formatDecimal(123456789)).toBe("1234567.89");
+    expect(formatDecimal(5)).toBe("0.05");
+    expect(formatDecimal(0)).toBe("0.00");
+  });
+
+  it("refuses anything that is not whole centavos", () => {
+    expect(() => formatDecimal(16550.5)).toThrow(RangeError);
+  });
+});
 
 describe("formatPrice (menu)", () => {
   it("drops zero centavos", () => {
