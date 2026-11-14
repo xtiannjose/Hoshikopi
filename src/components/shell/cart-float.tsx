@@ -3,6 +3,7 @@ import { BagIcon, XIcon } from "@phosphor-icons/react/ssr";
 import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 import { formatPrice } from "@/lib/money";
 import { currentCartOwner, getCart } from "@/modules/cart";
+import { MAX_DRINKS_PER_ORDER } from "@/modules/ordering";
 
 import { CartCount } from "./cart-count";
 import { HiddenOn } from "./hidden-on";
@@ -93,7 +94,9 @@ export async function CartFloat() {
             </span>
             <span className="font-mono">{formatPrice(cart.totalCents)}</span>
           </p>
-          {cart.blocked ? (
+          {/* Past 15 drinks no Order fits; the Cart page explains a smaller
+              window too. */}
+          {cart.blocked || cart.drinks > MAX_DRINKS_PER_ORDER ? (
             <PopoverLink
               href="/cart"
               className={`${PRIMARY_PILL} justify-center`}

@@ -24,10 +24,7 @@ import {
   type CafeDetails,
 } from "@/modules/cafe";
 import type { Hours } from "@/lib/hours";
-import {
-  GUEST_PAY_AT_PICKUP_MAX_DRINKS,
-  MAX_DRINKS_PER_ORDER,
-} from "@/modules/ordering";
+import { GUEST_PAY_AT_PICKUP_MAX_DRINKS } from "@/modules/ordering";
 import { getRecurringEvents } from "@/modules/content";
 import { STARS_PER_REWARD } from "@/modules/loyalty";
 
@@ -78,7 +75,7 @@ function faq(cafe: CafeDetails): [string, string][] {
     ],
     [
       "What about big orders?",
-      `Up to ${MAX_DRINKS_PER_ORDER} drinks online. For more, send an inquiry from this page a day ahead and we'll get it ready.`,
+      "One online order fits one Pickup Window, about a dozen drinks. For more, send an inquiry from this page a day ahead and we'll get it ready.",
     ],
   ];
   return rows.filter((row) => row !== null);
@@ -247,8 +244,8 @@ export default async function CafePage() {
           icon={<CalendarStarIcon size={20} />}
         >
           <p className="max-w-measure">
-            A party, a team meeting or more than {MAX_DRINKS_PER_ORDER} drinks?
-            Tell us a day ahead and the cafe will email you back.
+            A party, a team meeting or more than a dozen drinks? Tell us a day
+            ahead and the cafe will email you back.
           </p>
           <p className="mt-5 flex flex-wrap gap-3">
             <Link href="/cafe/inquire" className={OUTLINE_PILL}>
@@ -258,7 +255,7 @@ export default async function CafePage() {
               href="/cafe/inquire?kind=large_order"
               className={OUTLINE_PILL}
             >
-              Big order ({MAX_DRINKS_PER_ORDER + 1}+ drinks)
+              Big order (more than a dozen drinks)
             </Link>
           </p>
         </Panel>

@@ -21,7 +21,11 @@ import {
 import { startPayment, type OnlineMethod } from "@/modules/payments";
 
 import { orderingDay } from "./day";
-import { GUEST_PAY_AT_PICKUP_MAX_DRINKS, MAX_DRINKS_PER_ORDER } from "./rules";
+import {
+  fitsOneOrder,
+  GUEST_PAY_AT_PICKUP_MAX_DRINKS,
+  orderLimit,
+} from "./rules";
 import { emailOrderPlaced } from "./emails";
 import { hashToken, orderLink, orderToken } from "./links";
 import { nextOrderCode } from "./status";
@@ -60,7 +64,8 @@ export type PlaceOrderResult =
   | { ok: false; reason: "invalid"; errors: Partial<Record<string, string>> }
   | { ok: false; reason: "closed" | "paused" | "cart_problem" }
   | { ok: false; reason: "price_changed"; totalCents: number }
-  | { ok: false; reason: "too_many_drinks" | "pay_at_pickup_limit" }
+  | { ok: false; reason: "pay_at_pickup_limit" }
+  | { ok: false; reason: "too_big"; limit: { drinks: number; food: number } }
   | { ok: false; reason: "not_enough_stars" | "reward_unavailable" }
   | { ok: false; reason: "payment_start_failed" }
   | { ok: false; reason: "window_unavailable" | "no_window" }
@@ -201,8 +206,9 @@ export async function placeOrder(
       if (totalCents !== input.seenTotalCents) {
         return { ok: false, reason: "price_changed", totalCents };
       }
-      if (cart.drinks > MAX_DRINKS_PER_ORDER) {
-        return { ok: false, reason: "too_many_drinks" };
+      const limit = orderLimit(day.capacity);
+      if (!fitsOneOrder(cart, limit)) {
+        return { ok: false, reason: "too_big", limit };
       }
       if (
         input.paymentMethod === "pay_at_pickup" &&
