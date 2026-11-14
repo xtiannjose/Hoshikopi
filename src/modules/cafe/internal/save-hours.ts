@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { dayValue, now } from "@/lib/clock";
+import { dayValue, manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
 import { toMinutes } from "@/lib/hours";
 import { audit, type Staff } from "@/modules/identity";
@@ -97,7 +97,12 @@ const SpecialInput = z
           closesAt: s.closesAt,
         })),
     { path: ["lastOrderAt"], message: ORDER_MESSAGE }
-  );
+  )
+  // ISO dates compare as strings; today in Manila is the earliest.
+  .refine((s) => s.day >= manila(now()).day, {
+    path: ["day"],
+    message: "Choose today or a later date.",
+  });
 
 /** Set or replace one day's Special Hours. */
 export async function saveSpecialHours(
@@ -150,8 +155,12 @@ export async function deleteSpecialHours(day: string, actor: Staff) {
   });
 }
 
-const count = z.coerce.number().int().min(0).max(200);
-const minutes = z.coerce.number().min(0).max(60);
+// A blank field is missing, not 0: z.coerce turns "" into 0, which saved
+// a cleared Capacity cell as no Pickup Times that day (audit staff:5).
+const filled = z.string().trim().min(1).transform(Number);
+const count = filled.pipe(z.number().int().min(0).max(200));
+// prep_*_minutes are Decimal(4, 1): refuse what the column would round.
+const minutes = filled.pipe(z.number().min(0).max(60).multipleOf(0.1));
 
 /** Capacity per weekday and the two Prep Time numbers. */
 export async function saveCapacity(
@@ -174,8 +183,9 @@ export async function saveCapacity(
   });
   const base = minutes.safeParse(prep.baseMinutes);
   const perDrink = minutes.safeParse(prep.perDrinkMinutes);
-  if (!base.success) errors.baseMinutes = "Use minutes from 0 to 60.";
-  if (!perDrink.success) errors.perDrinkMinutes = "Use minutes from 0 to 60.";
+  const MINUTES = "Use minutes from 0 to 60, like 4 or 1.5.";
+  if (!base.success) errors.baseMinutes = MINUTES;
+  if (!perDrink.success) errors.perDrinkMinutes = MINUTES;
   if (Object.keys(errors).length) return { ok: false, errors };
   await db.$transaction(async (tx) => {
     for (const row of parsed) {

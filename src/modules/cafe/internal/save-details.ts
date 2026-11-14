@@ -17,10 +17,21 @@ const markdown = z
   .min(1, "Write something here.")
   .max(4000, "Keep it under 4,000 characters.");
 
+// Blank is missing, not 0 (z.coerce turns "" into 0, a pin at 0,0).
+const coordinate = (max: number) => {
+  const range = `Use a number from -${max} to ${max}.`;
+  return z
+    .string("Enter the map pin.")
+    .trim()
+    .min(1, "Enter the map pin.")
+    .transform(Number)
+    .pipe(z.number(range).min(-max, range).max(max, range));
+};
+
 const DetailsInput = z.object({
   area: z.string().trim().min(2, "Enter the neighbourhood.").max(80),
-  mapLat: z.coerce.number().min(-90).max(90),
-  mapLng: z.coerce.number().min(-180).max(180),
+  mapLat: coordinate(90),
+  mapLng: coordinate(180),
   contactEmail: z.email("Enter an email address."),
   directionsMd: markdown,
   spaceMd: markdown,

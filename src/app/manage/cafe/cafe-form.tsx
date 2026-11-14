@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, type ReactNode } from "react";
+import {
+  useActionState,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 import {
   ListChecksIcon,
   MapPinIcon,
@@ -46,7 +50,7 @@ export function CafeForm({ cafe }: { cafe: CafeDetails }) {
     name: keyof CafeDetails,
     label: string,
     type = "text",
-    extra: Record<string, string> = {}
+    extra: InputHTMLAttributes<HTMLInputElement> = {}
   ) => (
     <div className="grid gap-1.5">
       <label htmlFor={name} className="font-semibold">
@@ -108,9 +112,11 @@ export function CafeForm({ cafe }: { cafe: CafeDetails }) {
           <div className="grid gap-4 sm:grid-cols-2">
             {text("mapLat", "Map pin latitude", "text", {
               inputMode: "decimal",
+              required: true,
             })}
             {text("mapLng", "Map pin longitude", "text", {
               inputMode: "decimal",
+              required: true,
             })}
           </div>
           <p className="text-muted-foreground max-w-measure text-sm">
