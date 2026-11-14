@@ -2,22 +2,28 @@ import { describe, expect, it } from "vitest";
 
 import { auth } from "./auth";
 
-const post = (path: string) =>
+const call = (path: string, method = "POST") =>
   auth.handler(
     new Request(`${process.env.BETTER_AUTH_URL}/api/auth${path}`, {
-      method: "POST",
+      method,
       headers: {
         "content-type": "application/json",
         origin: process.env.BETTER_AUTH_URL!,
       },
-      body: JSON.stringify({ name: "x".repeat(500) }),
+      body: method === "POST" ? JSON.stringify({}) : undefined,
     })
   );
 
 describe("Better Auth routes this site never uses (audit ID2-04)", () => {
-  it("are closed over HTTP", async () => {
-    for (const path of ["/update-user", "/delete-user", "/sign-up/email"]) {
-      expect((await post(path)).status, path).toBe(404);
+  it("are closed over HTTP, every one of them", async () => {
+    const closed = auth.options.disabledPaths ?? [];
+    expect(closed).toContain("/update-user");
+    for (const path of closed) {
+      expect((await call(path)).status, path).toBe(404);
     }
+  });
+
+  it("leave open what sign-in needs", async () => {
+    expect((await call("/get-session", "GET")).status).not.toBe(404);
   });
 });

@@ -124,7 +124,9 @@ function aheadLine(drinks: number): string {
 function paymentNote(order: OrderView): string {
   const closed = ["cancelled", "expired", "refunded"].includes(order.status);
   if (order.status === "refunded" || order.payment?.status === "refunded") {
-    return "Refunded in full (Test Mode).";
+    return order.paymentMethod === "pay_at_pickup"
+      ? "Refunded in cash at the counter."
+      : "Refunded in full (Test Mode).";
   }
   if (closed) {
     return order.payment?.status === "paid"

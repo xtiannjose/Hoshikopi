@@ -86,7 +86,8 @@ let audio: AudioContext | null = null;
 function chime() {
   try {
     audio ??= new AudioContext();
-    if (audio.state === "suspended") void audio.resume();
+    // Before any tap the browser may refuse; the highlight still shows.
+    if (audio.state === "suspended") audio.resume().catch(() => {});
     const ctx = audio;
     [880, 1320].forEach((frequency, i) => {
       const tone = ctx.createOscillator();
