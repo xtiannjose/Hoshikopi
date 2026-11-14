@@ -10,12 +10,17 @@ import {
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart, type CartOwner } from "@/modules/cart";
-import { placeOrder, type PlaceOrderInput } from "@/modules/ordering";
+import {
+  placeOrder,
+  transition,
+  type PlaceOrderInput,
+} from "@/modules/ordering";
 
 import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
+const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 // 9:00 AM Monday Nov 2 in Manila.
 const NINE_AM = "2026-11-02T01:00:00Z";
 const at = (hhmm: string) => new Date(`2026-11-02T${hhmm}:00+08:00`);
@@ -116,6 +121,60 @@ describe("placeOrder: a Guest pays at pickup (ORD-03 to ORD-08, PAY-02)", () => 
     const result = await placeOrder(await input(hoshi));
     // Empty queue: Prep Time 5 minutes, ready 9:05, first window 9:15.
     expect(result.ok && result.windowStart).toEqual(at("09:15"));
+  });
+
+  // Prep Time (ADR 0007 update, audit journeys:2 and tests:1): base 4 +
+  // 1.5 x (drinks on the bar + this Order's drinks - 1), up to 5 minutes.
+  it("counts drinks waiting on the bar, Pay at Pickup ones too", async () => {
+    for (let i = 0; i < 2; i++) {
+      const waiting = guest();
+      await addLatte(waiting, 4);
+      expect((await placeOrder(await input(waiting))).ok).toBe(true);
+    }
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const result = await placeOrder(await input(hoshi));
+    // 8 drinks waiting: 4 + 1.5 x 8 = 16, so 20 minutes; ready 9:20.
+    expect(result.ok && result.windowStart).toEqual(at("09:30"));
+  });
+
+  it("stops counting an Order once it is Ready", async () => {
+    const waiting = guest();
+    await addLatte(waiting, 4);
+    const first = await placeOrder(await input(waiting));
+    if (!first.ok) throw new Error("not placed");
+    for (const next of ["accepted", "preparing", "ready"] as const) {
+      await transition(first.orderId, next, annika);
+    }
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const result = await placeOrder(await input(hoshi));
+    expect(result.ok && result.windowStart).toEqual(at("09:15"));
+  });
+
+  it("leaves a Scheduled Order still waiting for its time out of the queue", async () => {
+    const later = guest();
+    await addLatte(later, 4);
+    const scheduled = await placeOrder(
+      await input(later, {
+        pickup: { kind: "scheduled", windowStart: at("11:00") },
+      })
+    );
+    expect(scheduled.ok).toBe(true);
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const result = await placeOrder(await input(hoshi));
+    expect(result.ok && result.windowStart).toEqual(at("09:15"));
+  });
+
+  it("counts the Order's own drinks beyond the first", async () => {
+    const office = guest();
+    await addLatte(office, 9);
+    const result = await placeOrder(
+      await input(office, { paymentMethod: "card" })
+    );
+    // 4 + 1.5 x 8 = 16, so 20 minutes; ready 9:20.
+    expect(result.ok && result.windowStart).toEqual(at("09:30"));
   });
 
   it("keeps a later menu edit away from the placed Order", async () => {

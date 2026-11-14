@@ -204,7 +204,7 @@ async function Checkout() {
           <CheckoutForm
             asap={{
               value: "asap",
-              label: `Ready in about ${view.prepMinutes} min, around ${formatTime(first.start)}`,
+              label: `Ready by ${formatTime(first.start)}`,
             }}
             windows={later.map((w) => ({
               value: w.start.toISOString(),

@@ -34,9 +34,10 @@ export type PickupWindow = {
 export const WINDOW_MINUTES = 15;
 
 /**
- * Prep Time for As Soon As Possible: base + per drink x drinks queued ahead
- * (Accepted or Preparing), plus Busy Mode's minutes, rounded up to the next
- * 5 minutes (ADR 0007, 8.4).
+ * Prep Time for As Soon As Possible: base + per drink x drinks ahead, plus
+ * Busy Mode's minutes, rounded up to the next 5 minutes (ADR 0007 and its
+ * 2026-11-14 update, 8.4). The ordering module decides what counts as
+ * ahead, the Order's own drinks beyond the first included.
  */
 export function prepMinutes(drinksAhead: number, prep: PrepSettings): number {
   const minutes =
