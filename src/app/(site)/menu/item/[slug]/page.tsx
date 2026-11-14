@@ -12,7 +12,7 @@ import {
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Badges } from "@/components/menu/badges";
 import { Price } from "@/components/menu/price";
-import { Photo, type PhotoKind } from "@/components/photo";
+import { Photo } from "@/components/photo";
 import { PickupLine } from "@/components/pickup-line";
 import { formatPrice } from "@/lib/money";
 import { getMenuItem, menuSlugs, type Pairing } from "@/modules/menu";
@@ -80,7 +80,7 @@ async function MenuItemDetails({
         <Photo
           src={item.photoUrl}
           alt={item.photoAlt}
-          kind={item.categorySlug as PhotoKind}
+          kind={item.categorySlug}
           sizes="(min-width: 1536px) 54rem, (min-width: 1280px) 58vw, (min-width: 768px) 50vw, 100vw"
           priority
           className={`rounded-card aspect-4/3 ${item.soldOut ? "opacity-50 grayscale" : ""}`}
@@ -164,7 +164,7 @@ function PairingCard({ pairing }: { pairing: Pairing }) {
       <Photo
         src={pairing.photoUrl}
         alt={pairing.photoAlt}
-        kind={pairing.categorySlug as PhotoKind}
+        kind={pairing.categorySlug}
         sizes="6rem"
         className="rounded-card aspect-square"
       />

@@ -15,7 +15,7 @@ import { Markdown } from "@/components/markdown";
 import { IconCircle, OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 import { Photo } from "@/components/photo";
 import { formatDate, formatTime } from "@/lib/clock";
-import { formatPrice } from "@/lib/money";
+import { formatDecimal, formatPrice } from "@/lib/money";
 import { getCafeDetails } from "@/modules/cafe";
 import { getEvent, getEvents } from "@/modules/content";
 
@@ -80,7 +80,7 @@ async function Event({ params }: Pick<PageProps<"/events/[slug]">, "params">) {
     },
     offers: {
       "@type": "Offer",
-      price: ((event.priceCents ?? 0) / 100).toFixed(2),
+      price: formatDecimal(event.priceCents ?? 0),
       priceCurrency: "PHP",
       availability: "https://schema.org/InStock",
       url: event.signupUrl ?? undefined,

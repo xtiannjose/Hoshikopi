@@ -1,8 +1,10 @@
 import Image from "next/image";
+import { createElement } from "react";
 import {
   BowlFoodIcon,
   BreadIcon,
   CoffeeIcon,
+  ForkKnifeIcon,
   LeafIcon,
   MicrophoneStageIcon,
   NewspaperIcon,
@@ -23,7 +25,16 @@ export const ICONS = {
   post: NewspaperIcon,
 } as const;
 
-export type PhotoKind = keyof typeof ICONS;
+/**
+ * The stand-in icon for a kind: a Category slug, or room, event or post.
+ * Managers can add Categories with any slug, so an unknown one (or one
+ * like "constructor") gets the plain fork and knife instead of crashing.
+ */
+export function iconFor(kind: string) {
+  return Object.hasOwn(ICONS, kind)
+    ? ICONS[kind as keyof typeof ICONS]
+    : ForkKnifeIcon;
+}
 
 /**
  * A concept image, or until it exists a calm stand-in panel (ADR 0012).
@@ -39,7 +50,7 @@ export function Photo({
 }: {
   src: string | null;
   alt: string;
-  kind: PhotoKind;
+  kind: string;
   sizes: string;
   priority?: boolean;
   className?: string;
@@ -58,13 +69,12 @@ export function Photo({
       </div>
     );
   }
-  const Icon = ICONS[kind];
   return (
     <div
       aria-hidden
       className={`bg-muted text-input grid place-items-center ${className}`}
     >
-      <Icon size={48} weight="thin" />
+      {createElement(iconFor(kind), { size: 48, weight: "thin" })}
     </div>
   );
 }

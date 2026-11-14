@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Photo, type PhotoKind } from "@/components/photo";
+import { Photo } from "@/components/photo";
 import { formatPrice } from "@/lib/money";
 import type { MenuItemCard } from "@/modules/menu";
 
@@ -43,7 +43,7 @@ export function BaristaPicks({
             <Photo
               src={item.photoUrl}
               alt={item.photoAlt}
-              kind={item.categorySlug as PhotoKind}
+              kind={item.categorySlug}
               sizes={
                 index === 0
                   ? "(min-width: 768px) 50vw, 100vw"

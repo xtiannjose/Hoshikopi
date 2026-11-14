@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
-import {
-  ForkKnifeIcon,
-  PlusIcon,
-  SlidersHorizontalIcon,
-} from "@phosphor-icons/react/ssr";
+import { PlusIcon, SlidersHorizontalIcon } from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
@@ -16,7 +12,7 @@ import {
   Pill,
   PRIMARY_PILL,
 } from "@/components/panel";
-import { ICONS, type PhotoKind } from "@/components/photo";
+import { iconFor } from "@/components/photo";
 import { formatDelta, formatPrice } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
 import { getMenuForStaff } from "@/modules/menu";
@@ -153,9 +149,7 @@ async function MenuEditor() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2 2xl:grid-cols-3">
         {categories.map((category) => {
-          const Icon = Object.hasOwn(ICONS, category.slug)
-            ? ICONS[category.slug as PhotoKind]
-            : ForkKnifeIcon;
+          const Icon = iconFor(category.slug);
           return (
             <Panel
               key={category.id}

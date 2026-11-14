@@ -16,6 +16,17 @@ function format(cents: number, alwaysCentavos: boolean): string {
   return `${cents < 0 ? "-" : ""}PHP ${pesos}${fraction}`;
 }
 
+/**
+ * Machine-readable prices such as structured data: 35000 -> "350.00",
+ * with no currency and no thousands separator.
+ */
+export function formatDecimal(cents: number): string {
+  assertCentavos(cents);
+  const abs = Math.abs(cents);
+  const centavos = String(abs % 100).padStart(2, "0");
+  return `${cents < 0 ? "-" : ""}${Math.trunc(abs / 100)}.${centavos}`;
+}
+
 /** Menu prices: 16500 -> "PHP 165", 16550 -> "PHP 165.50". */
 export function formatPrice(cents: number): string {
   return format(cents, false);
