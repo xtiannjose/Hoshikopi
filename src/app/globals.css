@@ -81,6 +81,21 @@
   outline-offset: 3px;
 }
 
+/* Keyboard focus scrolls clear of what sticks to the screen's edges: the
+   Category tabs, the floating Cart and, on phones, a Menu Item's Add to
+   order bar (WCAG 2.4.11, audit a11y:1). */
+:root:has(nav[aria-label="Categories"]) {
+  scroll-padding-top: 5rem;
+}
+:root:has(.cart-pill) {
+  scroll-padding-bottom: 5rem;
+}
+@media (width < 48rem) {
+  :root:has([data-sticky-add]) {
+    scroll-padding-bottom: 9rem;
+  }
+}
+
 @layer base {
   /* Native radios and checkboxes: kopi by Day, moonlight by Night. */
   :root {
@@ -223,7 +238,8 @@
   }
 
   /* A drawer is open: the floating Cart steps aside instead of sitting
-     over it. */
+     over its links. Focus is already inside the drawer (DrawerFocus), and
+     the pill is back by the time Esc returns focus to it. */
   :root:has(:popover-open) .cart-pill {
     visibility: hidden;
   }

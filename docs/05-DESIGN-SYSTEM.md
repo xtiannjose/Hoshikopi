@@ -220,7 +220,8 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 ## 10. Accessibility checklist (per component and per page)
 
 - Contrast: text 4.5:1 (3:1 for 24 px+ or bold 18.66 px+), UI parts and focus rings 3:1, in both themes.
-- Every control reachable and usable by keyboard; focus always visible and never hidden by sticky elements (WCAG 2.4.11).
+- Every control reachable and usable by keyboard; focus always visible and never hidden by sticky elements (WCAG 2.4.11): `scroll-padding` on the root clears the Category tabs, the floating Cart and the phone Add to order bar.
+- Focus is never lost: a drawer (the phone menu, the Cart) moves focus to its Close button when it opens, closes when focus leaves it and hands focus back on Esc; after a client navigation focus moves to the new page's h1; a refused form focuses the first field to fix (`useFocusInvalid`).
 - Targets at least 24 by 24 px (WCAG 2.5.8); 44 px for primary actions on phones.
 - Option Groups are fieldsets with legends; errors are tied to fields and announced.
 - Price changes, Cart updates and Order Status changes use polite live regions.

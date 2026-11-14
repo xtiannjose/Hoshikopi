@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 
 import { Field, fieldClass } from "@/components/fields";
+import { useFocusInvalid } from "@/components/use-focus-invalid";
 import { now } from "@/lib/clock";
 
 import { signUpAction, type SignupState } from "./actions";
@@ -31,6 +32,7 @@ export function SignupForm({
     signUpAction,
     { status: "idle" }
   );
+  const { form, status } = useFocusInvalid(state.status === "error", state);
   const [started, setStarted] = useState(false);
   useEffect(() => {
     // The first tick runs at once; later ones catch the start while open.
@@ -78,7 +80,7 @@ export function SignupForm({
   }
   const error = (name: string) => state.errors?.[name];
   return (
-    <form action={action} className="mt-4 grid max-w-md gap-4">
+    <form ref={form} action={action} className="mt-4 grid max-w-md gap-4">
       <input type="hidden" name="slug" value={slug} />
       <Field
         name="name"
@@ -120,7 +122,11 @@ export function SignupForm({
         >
           {pending ? "Signing up..." : "Sign up"}
         </button>
-        <p role="status" className="text-destructive font-semibold">
+        <p
+          ref={status}
+          role="status"
+          className="text-destructive font-semibold"
+        >
           {state.status === "error" && state.message}
         </p>
       </div>
