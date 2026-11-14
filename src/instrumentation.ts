@@ -15,6 +15,7 @@ export const onRequestError: Instrumentation.onRequestError = (
     JSON.stringify({
       level: "error",
       message: err?.message ?? String(error),
+      stack: err?.stack,
       digest:
         typeof error === "object" && error !== null && "digest" in error
           ? String(error.digest)

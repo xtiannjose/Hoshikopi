@@ -8,7 +8,12 @@ A concept cafe in Metro Manila, and the website that runs it. The site sells the
 
 ## Status
 
-Phases 0 to 6 (MVP and V1) and Phase 8 (improvements) are built, and the demo is live at https://hoshikopi.vercel.app (Vercel and Neon, Test Mode payments on the `fake` provider). Phase 7, audit fixes: the November audit is finished, with every finding double-checked and ranked in [docs/audit/2026-11-13.md](docs/audit/2026-11-13.md). Now: batches 7.7 to 7.11 from the audit (7.5 finished 2026-11-14), then Phase 9, the portfolio review. See [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
+Built and live at https://hoshikopi.vercel.app (Vercel and Neon, Test Mode payments on the `fake` provider). Phases 0 to 8 are built, including the November audit and its fixes. Phase 9, the portfolio review, closes it out: the [case study](docs/CASE-STUDY.md), the [measured success metrics](docs/METRICS.md) and the [two-minute demo script](docs/DEMO-SCRIPT.md). What is left is in [docs/07-ROADMAP.md](docs/07-ROADMAP.md) and the audit backlog.
+
+| | |
+| --- | --- |
+| ![Home in the Day palette](docs/screenshots/home-day.jpg) | ![Home in the Night palette](docs/screenshots/home-night.jpg) |
+| ![The Bar Screen](docs/screenshots/bar-night.jpg) | ![An Order's live status page on a phone](docs/screenshots/order-phone-night.jpg) |
 
 ## Stack
 
@@ -29,6 +34,9 @@ Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS 4,
 | [docs/07-ROADMAP.md](docs/07-ROADMAP.md) | Phases 0 to 9, batches with checkboxes, exit criteria, decisions, definition of done | Picking the next piece of work |
 | [docs/08-TOOLING.md](docs/08-TOOLING.md) | Which skill fits which job, agents, ports, libraries, machine facts, prompts | Choosing how to work |
 | [docs/ASSETS.md](docs/ASSETS.md) | Every shipped file that is not code, its source and licence; the concept images still to make | Adding a font, image or other asset |
+| [docs/CASE-STUDY.md](docs/CASE-STUDY.md) | The problem, what was built, the decisions, the quality work, what comes next | Reviewing the project |
+| [docs/METRICS.md](docs/METRICS.md) | The PRD's success metrics, measured: order speed, Lighthouse, axe, rule mutations | Checking the numbers |
+| [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md) | The two-minute demo, step by step, with what to say | Showing it to someone |
 | [docs/audit/](docs/audit/) | The November audit: findings, each checker's verdict, and the ranked backlog | Working on Phase 7 |
 | [docs/adr/](docs/adr/) | Decisions and why (0001 to 0015) | Before changing a decision |
 

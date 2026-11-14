@@ -212,6 +212,10 @@ export function CheckoutForm({
                 <span className="font-semibold">Later today</span>
               </label>
               <select
+                // React applies a select's defaultValue only on mount, so
+                // after a refusal the form reset brought back the first
+                // time; a new key mounts it with the kept one.
+                key={keptLater ? keptPickup : "first"}
                 name="pickupLater"
                 aria-label="Time later today"
                 defaultValue={keptLater ? keptPickup : later[0].value}

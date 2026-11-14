@@ -31,6 +31,7 @@ const LISTS = [
     label: "Fine print",
     links: [
       { href: "/privacy", label: "Privacy" },
+      { href: "/accessibility", label: "Accessibility" },
       { href: "/concept", label: "About this concept" },
     ],
   },

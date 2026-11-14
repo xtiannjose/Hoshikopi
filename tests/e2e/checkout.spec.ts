@@ -81,6 +81,14 @@ test("a refused checkout keeps the chosen Pickup Time and Payment Method (audit,
   const later = page.locator('input[name="pickup"]:not([value="asap"])').last();
   const time = await later.getAttribute("value");
   await later.locator("xpath=..").click();
+  // The latest time offered: an early one can fill up while other workers
+  // order, and a time no longer offered rightly falls back to the first.
+  const select = page.getByRole("combobox", { name: "Time later today" });
+  const picked =
+    (await select.count()) > 0
+      ? await select.locator("option").last().getAttribute("value")
+      : null;
+  if (picked) await select.selectOption(picked);
   await page.getByText("Pay at Pickup", { exact: true }).click();
   await page.getByLabel("Email").fill("migs@example.com");
   await page.getByRole("button", { name: /Place order/ }).click();
@@ -88,6 +96,7 @@ test("a refused checkout keeps the chosen Pickup Time and Payment Method (audit,
   await expect(
     page.locator(`input[name="pickup"][value="${time}"]`)
   ).toBeChecked();
+  if (picked) await expect(select).toHaveValue(picked);
   await expect(
     page.getByRole("radio", { name: /Pay at Pickup/ })
   ).toBeChecked();

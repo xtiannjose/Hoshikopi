@@ -229,8 +229,9 @@ export async function dayOrders(day: string) {
       totalCents: o.totalCents,
       paid: o.paidAt !== null,
       ...summaryAndLink(o),
+      // A free Order (a Reward covered it) has nothing to give back.
       refundable:
-        o.status === "picked_up" ||
+        (o.status === "picked_up" && o.totalCents > 0) ||
         (o.status === "cancelled" && o.paidAt !== null) ||
         closedButPaid(o),
       cancellable: [

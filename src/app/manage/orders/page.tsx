@@ -106,8 +106,10 @@ async function Day({
       : today;
   const isToday = day === today;
   const shown = formatDate(new Date(`${day}T04:00:00Z`));
-  const { orders, count, totalCents } = await dayOrders(day);
-  const toRefund = await ordersToRefund();
+  const [{ orders, count, totalCents }, toRefund] = await Promise.all([
+    dayOrders(day),
+    ordersToRefund(),
+  ]);
   const toCollect = orders.filter(
     (o) => o.cancellable && !o.paid && o.paymentMethod === "pay_at_pickup"
   );
