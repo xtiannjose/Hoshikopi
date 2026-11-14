@@ -14,11 +14,16 @@ import { getHours } from "@/modules/cafe";
 import { currentCartOwner } from "@/modules/cart";
 import { currentMember, memberProfile } from "@/modules/identity";
 import { birthdayTreat } from "@/modules/loyalty";
-import { checkoutView, fitsOneOrder } from "@/modules/ordering";
+import {
+  cartFingerprint,
+  checkoutView,
+  fitsOneOrder,
+} from "@/modules/ordering";
 import { demoAllDayOrdering } from "@/modules/payments";
 
 import { CheckoutForm } from "./checkout-form";
 
+import { RewardChoice, SummaryTotal } from "./reward-choice";
 export const metadata: Metadata = {
   title: "Checkout",
   robots: { index: false },
@@ -136,105 +141,105 @@ async function Checkout() {
     ? `, or ${cart.drinks === 1 ? "none" : starCount(cart.drinks - 1)} with your free drink`
     : "";
   return (
-    <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
-      <section
-        aria-labelledby="summary"
-        className="rounded-card border-border border p-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1"
-      >
-        <h2 id="summary" className="font-display text-2xl italic">
-          Your order
-        </h2>
-        {cart.drinks > 0 && (
-          <p className="text-muted-foreground mt-2 flex gap-2 text-sm">
-            <StarIcon aria-hidden size={20} className="shrink-0" />
-            <span>
-              {member ? (
-                `This order lights ${stars} when you pick it up${withReward}.`
-              ) : (
-                <>
-                  <Link href="/sign-in?next=/checkout">Sign in first</Link> and
-                  this order lights {stars}. Your Cart comes with you.
-                </>
-              )}
-            </span>
-          </p>
-        )}
-        <ul className="mt-4 grid gap-2">
-          {cart.lines.map((line) => (
-            <li key={line.id} className="flex justify-between gap-4">
+    <RewardChoice>
+      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+        <section
+          aria-labelledby="summary"
+          className="rounded-card border-border border p-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1"
+        >
+          <h2 id="summary" className="font-display text-2xl italic">
+            Your order
+          </h2>
+          {cart.drinks > 0 && (
+            <p className="text-muted-foreground mt-2 flex gap-2 text-sm">
+              <StarIcon aria-hidden size={20} className="shrink-0" />
               <span>
-                {line.quantity} x {line.name}
-                {line.options.length > 0 && (
-                  <span className="text-muted-foreground block text-sm">
-                    {line.options.map((o) => o.name).join(", ")}
-                  </span>
+                {member ? (
+                  `This order lights ${stars} when you pick it up${withReward}.`
+                ) : (
+                  <>
+                    <Link href="/sign-in?next=/checkout">Sign in first</Link>{" "}
+                    and this order lights {stars}. Your Cart comes with you.
+                  </>
                 )}
               </span>
-              <span className="font-mono whitespace-nowrap">
-                {formatPrice(line.lineCents ?? 0)}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="border-border mt-4 flex justify-between border-t pt-3 text-lg font-semibold">
-          Total{" "}
-          <span className="font-mono whitespace-nowrap">
-            {formatPrice(cart.totalCents)}
-          </span>
-        </p>
-        <p className="text-muted-foreground text-sm">
-          Prices include VAT. No fees on top.{" "}
-          <Link href="/cart">Edit your Cart</Link>
-        </p>
-      </section>
-
-      <div className="grid min-w-0 gap-8">
-        {state.minutesToLastOrder <= 60 && (
-          <p className="text-warning font-semibold">
-            Last order in {state.minutesToLastOrder} min.
-          </p>
-        )}
-
-        {view.busy && first && (
-          <p className="text-warning font-semibold">
-            The bar is extra busy right now, so pickup times are a little longer
-            than usual. Salamat for your patience!
-          </p>
-        )}
-        {demoAllDayOrdering() && (
-          <p className="text-muted-foreground text-sm">
-            This demo takes orders any time of day, so you can try it from
-            anywhere. The cafe&apos;s real hours are on the{" "}
-            <Link href="/cafe">Visit page</Link>.
-          </p>
-        )}
-        {!first ? (
-          <div className="bg-muted rounded-card grid justify-items-start gap-3 p-5">
-            <p>
-              No Pickup Times are left today. Walk in and order at the counter.
             </p>
-            <Link href="/cafe" className={OUTLINE_PILL}>
-              See our hours
-            </Link>
-          </div>
-        ) : (
-          <CheckoutForm
-            asap={{
-              value: "asap",
-              label: `Ready by ${formatTime(first.start)}`,
-            }}
-            windows={later.map((w) => ({
-              value: w.start.toISOString(),
-              label: formatTime(w.start),
-            }))}
-            totalCents={cart.totalCents}
-            totalText={formatPrice(cart.totalCents)}
-            payAtPickupAllowed={view.payAtPickupAllowed}
-            member={member ? { name: member.name, email: member.email } : null}
-            reward={view.reward}
-          />
-        )}
+          )}
+          <ul className="mt-4 grid gap-2">
+            {cart.lines.map((line) => (
+              <li key={line.id} className="flex justify-between gap-4">
+                <span>
+                  {line.quantity} x {line.name}
+                  {line.options.length > 0 && (
+                    <span className="text-muted-foreground block text-sm">
+                      {line.options.map((o) => o.name).join(", ")}
+                    </span>
+                  )}
+                </span>
+                <span className="font-mono whitespace-nowrap">
+                  {formatPrice(line.lineCents ?? 0)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <SummaryTotal totalCents={cart.totalCents} reward={view.reward} />
+          <p className="text-muted-foreground text-sm">
+            Prices include VAT. No fees on top.{" "}
+            <Link href="/cart">Edit your Cart</Link>
+          </p>
+        </section>
+
+        <div className="grid min-w-0 gap-8">
+          {state.minutesToLastOrder <= 60 && (
+            <p className="text-warning font-semibold">
+              Last order in {state.minutesToLastOrder} min.
+            </p>
+          )}
+
+          {view.busy && first && (
+            <p className="text-warning font-semibold">
+              The bar is extra busy right now, so pickup times are a little
+              longer than usual. Salamat for your patience!
+            </p>
+          )}
+          {demoAllDayOrdering() && (
+            <p className="text-muted-foreground text-sm">
+              This demo takes orders any time of day, so you can try it from
+              anywhere. The cafe&apos;s real hours are on the{" "}
+              <Link href="/cafe">Visit page</Link>.
+            </p>
+          )}
+          {!first ? (
+            <div className="bg-muted rounded-card grid justify-items-start gap-3 p-5">
+              <p>
+                No Pickup Times are left today. Walk in and order at the
+                counter.
+              </p>
+              <Link href="/cafe" className={OUTLINE_PILL}>
+                See our hours
+              </Link>
+            </div>
+          ) : (
+            <CheckoutForm
+              asap={{
+                value: "asap",
+                label: `Ready by ${formatTime(first.start)}`,
+              }}
+              windows={later.map((w) => ({
+                value: w.start.toISOString(),
+                label: formatTime(w.start),
+              }))}
+              totalCents={cart.totalCents}
+              cart={cartFingerprint(cart)}
+              payAtPickupAllowed={view.payAtPickupAllowed}
+              member={
+                member ? { name: member.name, email: member.email } : null
+              }
+              reward={view.reward}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </RewardChoice>
   );
 }
