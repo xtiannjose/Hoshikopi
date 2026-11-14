@@ -71,7 +71,7 @@ function faq(cafe: CafeDetails): [string, string][] {
     ],
     [
       "How do Stars work?",
-      `Sign in when you order and every drink earns one Star. ${STARS_PER_REWARD} Stars get you a free drink, any size.`,
+      `Sign in when you order and every drink earns one Star. ${STARS_PER_REWARD} Stars get you a free drink; extras like Large or oat milk still add their price.`,
     ],
     [
       "What about big orders?",

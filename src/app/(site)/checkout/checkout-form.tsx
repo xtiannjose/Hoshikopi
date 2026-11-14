@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useRef, useState, type ReactNode } from "react";
+import { useActionState, useRef, type ReactNode } from "react";
 import { ClockIcon, UserIcon, WalletIcon } from "@phosphor-icons/react";
 
 import { formatPrice } from "@/lib/money";
@@ -11,6 +11,7 @@ import { IconCircle } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { placeOrderAction, type CheckoutState } from "./actions";
+import { useRewardChoice, useTotal } from "./reward-choice";
 
 export type WindowChoice = { value: string; label: string };
 
@@ -84,7 +85,7 @@ export function CheckoutForm({
   asap,
   windows,
   totalCents,
-  totalText,
+  cart,
   payAtPickupAllowed,
   member,
   reward,
@@ -97,7 +98,8 @@ export function CheckoutForm({
   asap: WindowChoice | null;
   windows: WindowChoice[];
   totalCents: number;
-  totalText: string;
+  /** cartFingerprint of the Cart shown, so another tab's change is caught. */
+  cart: string;
 }) {
   const [state, action, pending] = useActionState<CheckoutState, FormData>(
     placeOrderAction,
@@ -136,11 +138,12 @@ export function CheckoutForm({
   )
     ? state.values?.paymentMethod
     : payments[0]?.value;
-  const [useReward, setUseReward] = useState(false);
-  const total = totalCents - (useReward && reward ? reward.discountCents : 0);
+  const [useReward, setUseReward] = useRewardChoice();
+  const total = useTotal(totalCents, reward);
   return (
     <form ref={form} action={action} className="grid gap-8">
       <input type="hidden" name="seenTotalCents" value={total} />
+      <input type="hidden" name="seenCart" value={cart} />
       {reward && (
         <label className="border-star bg-muted rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 py-3">
           <input
@@ -305,34 +308,43 @@ export function CheckoutForm({
         <Legend icon={<WalletIcon size={20} />} step={3}>
           Payment
         </Legend>
-        <div className="clear-both grid gap-3">
-          {payments.map((p) => (
-            <label
-              key={p.value}
-              className="border-input has-[:checked]:border-primary has-[:checked]:bg-muted has-[:focus-visible]:outline-ring rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
-            >
-              <input
-                type="radio"
-                name="paymentMethod"
-                value={p.value}
-                defaultChecked={p.value === keptPayment}
-                className="size-5"
-              />
-              <span className="flex-1">
-                <span className="font-semibold">{p.label}</span>
-                <span className="text-muted-foreground block text-sm">
-                  {p.note}
+        {/* A Reward that covers everything: nothing to pay online
+            (audit journeys:11). */}
+        {total === 0 ? (
+          <p className="clear-both font-semibold">
+            <input type="hidden" name="paymentMethod" value="pay_at_pickup" />
+            Nothing to pay. Your 9 Stars cover it.
+          </p>
+        ) : (
+          <div className="clear-both grid gap-3">
+            {payments.map((p) => (
+              <label
+                key={p.value}
+                className="border-input has-[:checked]:border-primary has-[:checked]:bg-muted has-[:focus-visible]:outline-ring rounded-card flex min-h-14 cursor-pointer items-center gap-3 border px-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={p.value}
+                  defaultChecked={p.value === keptPayment}
+                  className="size-5"
+                />
+                <span className="flex-1">
+                  <span className="font-semibold">{p.label}</span>
+                  <span className="text-muted-foreground block text-sm">
+                    {p.note}
+                  </span>
                 </span>
-              </span>
-              {p.value !== "pay_at_pickup" && (
-                <span className="border-warning text-warning rounded-full border px-2 py-0.5 text-xs font-semibold">
-                  Test Mode
-                </span>
-              )}
-            </label>
-          ))}
-        </div>
-        {!payAtPickupAllowed && (
+                {p.value !== "pay_at_pickup" && (
+                  <span className="border-warning text-warning rounded-full border px-2 py-0.5 text-xs font-semibold">
+                    Test Mode
+                  </span>
+                )}
+              </label>
+            ))}
+          </div>
+        )}
+        {!payAtPickupAllowed && total > 0 && (
           <p className="text-muted-foreground mt-3 text-sm">
             Guests can pay at pickup for up to 4 drinks; pay online for more.
           </p>
@@ -340,23 +352,6 @@ export function CheckoutForm({
       </fieldset>
 
       <div className="grid gap-3">
-        {useReward && reward && (
-          // Display only: the server prices the Order again (ADR 0002).
-          <dl className="grid gap-1">
-            <div className="flex justify-between gap-4">
-              <dt>Free drink (9 Stars)</dt>
-              <dd className="font-mono whitespace-nowrap">
-                &minus;{formatPrice(reward.discountCents)}
-              </dd>
-            </div>
-            <div className="border-border flex justify-between gap-4 border-t pt-2 text-lg font-semibold">
-              <dt>Total</dt>
-              <dd className="font-mono whitespace-nowrap">
-                {formatPrice(total)}
-              </dd>
-            </div>
-          </dl>
-        )}
         <p ref={status} role="status" className="min-h-6 font-semibold">
           {state.message && (
             <span className="text-destructive">{state.message}</span>
@@ -369,7 +364,9 @@ export function CheckoutForm({
         >
           {pending
             ? "Placing your order..."
-            : `Place order, ${useReward ? formatPrice(total) : totalText}`}
+            : total === 0
+              ? "Place order"
+              : `Place order, ${formatPrice(total)}`}
         </button>
       </div>
     </form>

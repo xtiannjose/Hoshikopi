@@ -193,7 +193,7 @@ Starts after Phase 7. Requirement IDs are added to the PRD when each batch start
 The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches. Each batch's items, with the problem and the fix, are in the Next batches table of [`docs/audit/2026-11-13.md`](audit/2026-11-13.md). Work them in order, one branch and pull request each; the owner can reorder them.
 
 - [x] **10.1 Accessibility statement gaps.** Done 2026-11-14: a pressed button keeps focus and a removed control hands it on, placeholder contrast, the header wraps at a larger text size, failed pages are titled, the checkout contact rule belongs to both fields, axe checks Day contrast, and Field ties selects and textareas. `/accessibility` lists what is left.
-- [ ] **10.2 Rewards and checkout copy.** 7 items, effort S each.
+- [x] **10.2 Rewards and checkout copy.** Done 2026-11-14: one total with a Reward, a fully free Order skips online payment, the free drink reads "free with 9 Stars", one Pickup Time everywhere, after Last Order the Customer is told when to walk in and when ordering opens, a Cart changed in another tab says so, and the FAQ no longer promises "any size".
 - [ ] **10.3 Payment failure paths.** 5 items, effort S to M.
 - [ ] **10.4 Orders that never close.** 7 items, effort S to M.
 - [ ] **10.5 Cart and Pickup Times.** 4 items, effort S to M.

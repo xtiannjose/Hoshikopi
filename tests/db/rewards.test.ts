@@ -126,6 +126,47 @@ describe("redeeming a Reward (LOY-03)", () => {
     expect(await balance(HOSHI)).toBe(1);
   });
 
+  // Nothing is left to pay online, so no checkout for PHP 0.00 (audit
+  // journeys:11).
+  it("places a fully free Order with no online Payment, whatever method was chosen", async () => {
+    await giveStars(9);
+    const owner = { memberId: HOSHI };
+    await addLine(owner, {
+      menuItemId: items["hoshi-latte"],
+      optionIds: [
+        ids["Regular"],
+        ids["Whole milk"],
+        ids["100%"],
+        ids["Normal"],
+      ],
+      quantity: 1,
+      note: "",
+    });
+    const result = await placeOrder({
+      owner,
+      memberId: HOSHI,
+      seenTotalCents: 0,
+      customerName: "Hoshi",
+      customerEmail: "hoshi@example.com",
+      customerPhone: "",
+      pickup: { kind: "asap" },
+      paymentMethod: "gcash",
+      useReward: true,
+    });
+    expect(result).toMatchObject({
+      ok: true,
+      totalCents: 0,
+      checkoutUrl: null,
+    });
+    if (!result.ok) return;
+    const placed = await db.order.findUniqueOrThrow({
+      where: { id: result.orderId },
+      include: { payment: true },
+    });
+    expect(placed.paymentMethod).toBe("pay_at_pickup");
+    expect(placed.payment).toBeNull();
+  });
+
   it("lets only one of two tabs spend the same 9 Stars", async () => {
     await giveStars(9);
     const owner = { memberId: HOSHI };

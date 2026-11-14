@@ -11,7 +11,7 @@ import {
   type OrderForEmail,
 } from "./internal/templates";
 
-export type { OrderForEmail } from "./internal/templates";
+export { lineName, orderNoun, type OrderForEmail } from "./internal/templates";
 export { canEmail, isDemoAccount } from "./internal/outbox";
 
 export async function sendSignInLink(email: string, url: string) {

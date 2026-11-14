@@ -47,6 +47,8 @@ export type PlaceOrderInput = {
   paymentMethod: PaymentMethod;
   /** Spend 9 Stars on a free drink (LOY-03). */
   useReward?: boolean;
+  /** cartFingerprint of the Cart the Customer saw, if the form sent it. */
+  seenCart?: string;
 };
 
 export type PlaceOrderResult =
@@ -63,7 +65,7 @@ export type PlaceOrderResult =
     }
   | { ok: false; reason: "invalid"; errors: Partial<Record<string, string>> }
   | { ok: false; reason: "closed" | "paused" | "cart_problem" }
-  | { ok: false; reason: "price_changed"; totalCents: number }
+  | { ok: false; reason: "price_changed" | "cart_changed"; totalCents: number }
   | { ok: false; reason: "pay_at_pickup_limit" }
   | { ok: false; reason: "too_big"; limit: { drinks: number; food: number } }
   | { ok: false; reason: "not_enough_stars" | "reward_unavailable" }
@@ -72,6 +74,17 @@ export type PlaceOrderResult =
   | { ok: false; reason: "window_full"; nextWindow: Date | null };
 
 type Line = CartView["lines"][number];
+
+/**
+ * Which Lines, in what quantities, a Cart holds. Checkout sends it with the
+ * total it showed, so a change from another tab is caught even when the
+ * total stays the same (audit journeys:17).
+ */
+export const cartFingerprint = (cart: CartView) =>
+  cart.lines
+    .map((line) => `${line.id}:${line.quantity}`)
+    .sort()
+    .join(",");
 
 /** A Line's Base Price: its unit price less its Options' Price Deltas. */
 export const baseOf = (line: Line) =>
@@ -181,7 +194,14 @@ export async function placeOrder(
     return { ok: false, reason: "invalid", errors };
   }
   const result = await db.$transaction(
-    async (tx): Promise<PlaceOrderResult> => {
+    async (
+      tx
+    ): Promise<
+      | Exclude<PlaceOrderResult, { ok: true }>
+      | (Extract<PlaceOrderResult, { ok: true }> & {
+          paymentMethod: PaymentMethod;
+        })
+    > => {
       const at = now();
       const day = await orderingDay(at, tx);
       const state = orderingState(at, day);
@@ -207,15 +227,25 @@ export async function placeOrder(
       }
       const totalCents =
         cart.totalCents - (rewardLine ? baseOf(rewardLine) : 0);
+      if (
+        input.seenCart !== undefined &&
+        input.seenCart !== cartFingerprint(cart)
+      ) {
+        return { ok: false, reason: "cart_changed", totalCents };
+      }
       if (totalCents !== input.seenTotalCents) {
         return { ok: false, reason: "price_changed", totalCents };
       }
+      // A Reward that covers everything leaves nothing to pay online, so
+      // the Order goes to the bar like Pay at Pickup (audit journeys:11).
+      const paymentMethod =
+        totalCents === 0 ? "pay_at_pickup" : input.paymentMethod;
       const limit = orderLimit(day.capacity);
       if (!fitsOneOrder(cart, limit)) {
         return { ok: false, reason: "too_big", limit };
       }
       if (
-        input.paymentMethod === "pay_at_pickup" &&
+        paymentMethod === "pay_at_pickup" &&
         input.memberId === null &&
         cart.drinks > GUEST_PAY_AT_PICKUP_MAX_DRINKS
       ) {
@@ -293,7 +323,7 @@ export async function placeOrder(
           customerPhone: normalizePhone(contact.data.customerPhone),
           pickupKind: input.pickup.kind,
           windowStart,
-          paymentMethod: input.paymentMethod,
+          paymentMethod,
           totalCents,
           rewardStars: rewardLine ? STARS_PER_REWARD : 0,
           accessTokenHash: hashToken(accessToken),
@@ -318,24 +348,26 @@ export async function placeOrder(
         accessToken,
         checkoutUrl: null,
         totalCents: order.totalCents,
+        paymentMethod,
       };
     }
   );
   if (!result.ok) return result;
+  const { paymentMethod, ...placed } = result;
   // Pay at Pickup goes to the bar now; online Orders email once paid.
-  if (input.paymentMethod === "pay_at_pickup") {
-    await emailOrderPlaced(result.orderId);
-    return result;
+  if (paymentMethod === "pay_at_pickup") {
+    await emailOrderPlaced(placed.orderId);
+    return placed;
   }
   try {
     const { checkoutUrl } = await startPayment({
-      orderId: result.orderId,
-      orderCode: result.code,
-      amountCents: result.totalCents,
-      method: input.paymentMethod as OnlineMethod,
-      returnUrl: orderLink(result.orderId),
+      orderId: placed.orderId,
+      orderCode: placed.code,
+      amountCents: placed.totalCents,
+      method: paymentMethod as OnlineMethod,
+      returnUrl: orderLink(placed.orderId),
     });
-    return { ...result, checkoutUrl };
+    return { ...placed, checkoutUrl };
   } catch (error) {
     // The Order stays Placed and Expires in 15 minutes, freeing its window.
     console.error("[payments] checkout not started:", error);

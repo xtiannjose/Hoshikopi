@@ -62,13 +62,24 @@ test("a Member earns Stars, redeems a free drink, cancels and gets them back (Ph
     )
   ).toBeVisible();
   await member.getByText("Use 9 Stars for a free Hoshi Latte").click();
+  // One total on the page, and nothing to pay online (audit journeys:5
+  // and 11).
+  const summary = member.getByRole("region", { name: "Your order" });
+  await expect(summary.getByText("Free drink (9 Stars)")).toBeVisible();
+  await expect(summary.getByRole("definition").last()).toHaveText(/^PHP 0/);
   await expect(
-    member.getByRole("button", { name: "Place order, PHP 0" })
+    member.getByText("Nothing to pay. Your 9 Stars cover it.")
   ).toBeVisible();
-  await member.getByText("Pay at Pickup", { exact: true }).click();
+  await expect(member.getByRole("radio", { name: /GCash/ })).toHaveCount(0);
   await member.getByLabel("Name").fill("Migs");
-  await member.getByRole("button", { name: /Place order/ }).click();
+  await member
+    .getByRole("button", { name: "Place order", exact: true })
+    .click();
   await expect(member).toHaveURL(/\/orders\//);
+  // The free drink reads as one (audit journeys:13).
+  await expect(
+    member.getByText(/1 x Hoshi Latte, free with 9 Stars/)
+  ).toBeVisible();
   await member.goto("/account/stars");
   await expect(member.getByText("0 of 9 Stars.")).toBeVisible();
   await expect(member.getByText("Spent on a free drink")).toBeVisible();

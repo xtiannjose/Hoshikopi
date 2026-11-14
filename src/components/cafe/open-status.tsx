@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { formatDate, manila, now } from "@/lib/clock";
-import { addDays, formatClock, openState, type Hours } from "@/lib/hours";
+import { manila, now } from "@/lib/clock";
+import { dayWord, formatClock, openState, type Hours } from "@/lib/hours";
 
 /**
  * "Open now, closes 9:00 PM": reads the clock in the browser, so the page
@@ -39,13 +39,7 @@ export function OpenStatus({
     );
   }
   if (!state.opensAt) return <span>Closed for now</span>;
-  const today = manila(at).day;
-  const when =
-    state.opensDay === today
-      ? "today"
-      : state.opensDay === addDays(today, 1)
-        ? "tomorrow"
-        : `on ${formatDate(new Date(`${state.opensDay}T04:00:00Z`))}`;
+  const when = dayWord(state.opensDay, manila(at).day);
   return (
     <span>
       <span className="font-semibold">Closed now</span>, opens{" "}

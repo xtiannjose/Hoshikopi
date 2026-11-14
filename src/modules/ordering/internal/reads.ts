@@ -99,6 +99,7 @@ export type OrderView = {
     quantity: number;
     lineCents: number;
     note: string | null;
+    isReward: boolean;
   }[];
 };
 
@@ -144,6 +145,7 @@ export async function getOrderForCustomer(
       quantity: line.quantity,
       lineCents: line.lineCents,
       note: line.note,
+      isReward: line.isReward,
     })),
   };
 }

@@ -21,6 +21,7 @@ import { OUTLINE_PILL, Panel, PRIMARY_PILL } from "@/components/panel";
 import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 import { getCafeDetails, getHours } from "@/modules/cafe";
+import { lineName, orderNoun } from "@/modules/notify";
 import { getOrderForCustomer, type OrderView } from "@/modules/ordering";
 import { demoMode } from "@/modules/payments";
 
@@ -74,7 +75,6 @@ const paymentFailed = (order: OrderView) =>
   order.status === "placed" && order.payment?.status === "failed";
 
 function message(order: OrderView): string {
-  const first = order.lines[0]?.name ?? "order";
   switch (order.status) {
     case "placed":
       if (paymentFailed(order)) {
@@ -88,7 +88,7 @@ function message(order: OrderView): string {
     case "accepted":
       return "The bar has your order.";
     case "preparing":
-      return `We're making your ${first}.`;
+      return `We're making your ${orderNoun(order.lines)}.`;
     case "ready":
       return `Ready at the counter. Show code ${order.code}.`;
     case "picked_up":
@@ -245,8 +245,9 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
         )}
         {live && (
           <p className="mt-2 text-lg">
-            Pickup{" "}
-            {order.pickupKind === "asap" ? "as soon as possible, around" : "at"}{" "}
+            {/* One time everywhere: the window the Order is booked in
+                (audit journeys:10). */}
+            {order.pickupKind === "asap" ? "Ready by" : "Pickup at"}{" "}
             <span className="font-semibold">
               {formatTime(order.windowStart)}
             </span>
@@ -405,7 +406,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
             {order.lines.map((line, index) => (
               <li key={index} className="flex justify-between gap-4">
                 <span>
-                  {line.quantity} x {line.name}
+                  {line.quantity} x {lineName(line)}
                   {line.options.length > 0 && (
                     <span className="text-muted-foreground block text-sm">
                       {line.options.map((o) => o.name).join(", ")}

@@ -44,6 +44,8 @@ function messageFor(result: Exclude<PlaceOrderResult, { ok: true }>): string {
       return "Something in your Cart changed. Check your Cart.";
     case "price_changed":
       return `Prices changed: your total is now ${formatPrice(result.totalCents)}. Check it and place your order again.`;
+    case "cart_changed":
+      return `Your Cart changed in another tab: it's now ${formatPrice(result.totalCents)}. Check it and place your order again.`;
     case "too_big":
       return `One order fits one Pickup Window: up to ${result.limit.drinks} drinks and ${result.limit.food} food items. For more, send us an inquiry from the Visit page a day ahead.`;
     case "pay_at_pickup_limit":
@@ -109,6 +111,7 @@ export async function placeOrderAction(
         : { kind: "scheduled", windowStart: new Date(pickup) },
     paymentMethod: METHODS.includes(method) ? method : "pay_at_pickup",
     useReward: form.get("useReward") === "on",
+    seenCart: String(form.get("seenCart") ?? ""),
   });
   if (result.ok) {
     // The header's Cart count lives in the layout, which a redirect keeps.

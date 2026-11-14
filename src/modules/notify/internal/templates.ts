@@ -17,33 +17,43 @@ export type OrderForEmail = {
     options: string[];
     quantity: number;
     lineCents: number;
+    /** The Reward Line: free with 9 Stars, priced at its Options. */
+    isReward?: boolean;
   }[];
 };
+
+/** "Hoshi Latte", or "Hoshi Latte, free with 9 Stars" for the Reward Line. */
+export const lineName = (line: { name: string; isReward?: boolean }) =>
+  line.isReward ? `${line.name}, free with 9 Stars` : line.name;
+
+/** The one drink by name, or "order" when there is more than one thing. */
+export const orderNoun = (lines: { name: string; quantity: number }[]) =>
+  lines.length === 1 && lines[0].quantity === 1 ? lines[0].name : "order";
 
 const FOOTER = [
   "Hoshikopi, Kapitolyo, Pasig. Order here for pickup at the counter. Staying? Walk in and find a seat.",
   "Hoshikopi is a concept cafe. Orders and payments here are for demonstration.",
 ].join("\n");
 
-const pickupText = (order: OrderForEmail) =>
-  order.pickupKind === "asap"
-    ? `as soon as possible, around ${formatTime(order.windowStart)} today`
-    : `at ${formatTime(order.windowStart)} today`;
+// One time everywhere: the start of the window the Order is booked in
+// (audit journeys:10).
+const pickupWhen = (order: OrderForEmail) =>
+  `${order.pickupKind === "asap" ? "ready by" : "pickup at"} ${formatTime(order.windowStart)}`;
 
 /** Order placed (ORD-10), with the receipt and the status link. */
 export function orderPlacedEmail(order: OrderForEmail, link: string): Email {
   const lines = order.lines.map(
     (line) =>
-      `${line.quantity} x ${line.name}${line.options.length ? ` (${line.options.join(", ")})` : ""}: ${formatReceipt(line.lineCents)}`
+      `${line.quantity} x ${lineName(line)}${line.options.length ? ` (${line.options.join(", ")})` : ""}: ${formatReceipt(line.lineCents)}`
   );
   return {
     to: order.customerEmail,
-    subject: `Order ${order.code} at Hoshikopi: pickup around ${formatTime(order.windowStart)}`,
+    subject: `Order ${order.code} at Hoshikopi: ${pickupWhen(order)}`,
     text: [
       `Salamat, ${order.customerName}! We got your order.`,
       "",
       `Order Code: ${order.code}`,
-      `Pickup: ${pickupText(order)}`,
+      `Pickup: ${order.pickupKind === "asap" ? "ready by" : "at"} ${formatTime(order.windowStart)} today`,
       order.paymentMethod === "pay_at_pickup"
         ? "Pay at the counter when you collect."
         : "Paid online.",
@@ -61,12 +71,11 @@ export function orderPlacedEmail(order: OrderForEmail, link: string): Email {
 
 /** Ready for pickup (ORD-10). */
 export function orderReadyEmail(order: OrderForEmail): Email {
-  const first = order.lines[0]?.name ?? "order";
   return {
     to: order.customerEmail,
     subject: `${order.code} is ready for pickup`,
     text: [
-      `Your ${first} is ready at the counter. Show code ${order.code}.`,
+      `Your ${orderNoun(order.lines)} is ready at the counter. Show code ${order.code}.`,
       "",
       "See you in a bit!",
       "",
