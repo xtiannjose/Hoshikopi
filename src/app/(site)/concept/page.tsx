@@ -121,8 +121,11 @@ export default function ConceptPage() {
           <p className="max-w-measure mt-4">
             Research on how Metro Manila cafes take orders, a design that
             follows the cafe&apos;s clock from day to night, and the build
-            itself. The case study comes later; the code is open for anyone to
-            read.
+            itself. The{" "}
+            <a href="https://github.com/xtiannjose/Hoshikopi/blob/main/docs/CASE-STUDY.md">
+              case study
+            </a>{" "}
+            tells the story, and the code is open for anyone to read.
           </p>
         </section>
 
