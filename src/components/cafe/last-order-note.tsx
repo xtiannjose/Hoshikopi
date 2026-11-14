@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 
 import { now } from "@/lib/clock";
-import { formatClock, openState, type Hours } from "@/lib/hours";
+import { afterLastOrder, openState, type Hours } from "@/lib/hours";
 
 /**
- * "Last order in 25 min" in the hour before Last Order; after it, that
- * orders are closed for today (ORD-13). Reads the clock in the browser.
+ * "Last order in 25 min" in the hour before Last Order; after it, when to
+ * walk in and when ordering opens again (ORD-13). Reads the clock in the
+ * browser.
  */
 export function LastOrderNote({ hours }: { hours: Hours }) {
   const [at, setAt] = useState<Date | null>(null);
@@ -27,7 +28,7 @@ export function LastOrderNote({ hours }: { hours: Hours }) {
     <p className="text-warning font-semibold">
       {state.minutesToLastOrder > 0
         ? `Last order in ${state.minutesToLastOrder} min.`
-        : `Orders are closed for today. Walk in until ${formatClock(state.closesAt)}.`}
+        : afterLastOrder(at, hours)}
     </p>
   );
 }

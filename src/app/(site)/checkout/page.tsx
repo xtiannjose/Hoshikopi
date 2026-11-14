@@ -8,7 +8,8 @@ import { OrderLimitNote } from "@/components/order-limit-note";
 import { OpenStatus } from "@/components/cafe/open-status";
 import { PageHeader } from "@/components/page-header";
 import { Empty, OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
-import { formatTime } from "@/lib/clock";
+import { formatTime, now } from "@/lib/clock";
+import { afterLastOrder } from "@/lib/hours";
 import { formatPrice } from "@/lib/money";
 import { getHours } from "@/modules/cafe";
 import { currentCartOwner } from "@/modules/cart";
@@ -22,8 +23,8 @@ import {
 import { demoAllDayOrdering } from "@/modules/payments";
 
 import { CheckoutForm } from "./checkout-form";
-
 import { RewardChoice, SummaryTotal } from "./reward-choice";
+
 export const metadata: Metadata = {
   title: "Checkout",
   robots: { index: false },
@@ -99,8 +100,12 @@ async function Checkout() {
             <p className="text-lg font-semibold">
               We&apos;re not taking orders right now.
             </p>
+            {/* Open for walk-ins after Last Order: not "Open now" under
+                "not taking orders" (audit journeys:16). */}
             <p>
-              <OpenStatus hours={hours} fallback="Check our hours." />
+              {afterLastOrder(now(), hours) ?? (
+                <OpenStatus hours={hours} fallback="Check our hours." />
+              )}
             </p>
           </>
         )}

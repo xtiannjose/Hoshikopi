@@ -15,7 +15,8 @@ import { Empty, PRIMARY_PILL } from "@/components/panel";
 import { PickupLine } from "@/components/pickup-line";
 import { formatTime, now } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
-import { orderingState } from "@/modules/cafe";
+import { afterLastOrder } from "@/lib/hours";
+import { getHours, orderingState } from "@/modules/cafe";
 import {
   currentCartOwner,
   getCart,
@@ -98,6 +99,11 @@ async function Cart() {
   const at = now();
   const day = await orderingDay(at);
   const state = orderingState(at, day);
+  // Open for walk-ins after Last Order: say so (audit journeys:16).
+  const walkIn =
+    !state.canOrder && state.reason === "after_last_order"
+      ? afterLastOrder(at, await getHours())
+      : null;
   const limit = orderLimit(day.capacity);
   const tooBig = !fitsOneOrder(cart, limit);
   return (
@@ -212,8 +218,8 @@ async function Cart() {
             </div>
           ) : (
             <p className="bg-muted rounded-card p-4">
-              We&apos;re closed right now. Your Cart is saved for later.{" "}
-              <Link href="/cafe">See our hours</Link>
+              {walkIn ?? "We're closed right now."} Your Cart is saved for
+              later. <Link href="/cafe">See our hours</Link>
             </p>
           ))}
         <StarsLine

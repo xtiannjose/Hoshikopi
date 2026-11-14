@@ -1,6 +1,6 @@
 // Opening Hours and Special Hours as plain data (Manila wall-clock "HH:MM"),
 // so both the server and the "open now" island can use them. No database.
-import { manila } from "./clock";
+import { formatDate, manila } from "./clock";
 
 export type DayHours = {
   opensAt: string;
@@ -112,4 +112,31 @@ export function openState(at: Date, hours: Hours): OpenState {
     return { open: false, opensAt: h.opensAt, opensDay: next };
   }
   return { open: false, opensAt: null, opensDay: null };
+}
+
+/** "today", "tomorrow" or "on Sat, Dec 26": a Manila day seen from `today`. */
+export function dayWord(day: string, today: string): string {
+  if (day === today) return "today";
+  if (day === addDays(today, 1)) return "tomorrow";
+  return `on ${formatDate(new Date(`${day}T04:00:00Z`))}`;
+}
+
+/**
+ * Between Last Order and closing the cafe is open for walk-ins: say so, and
+ * when ordering opens again (ORD-13, audit journeys:16). Null at any other
+ * time.
+ */
+export function afterLastOrder(at: Date, hours: Hours): string | null {
+  const state = openState(at, hours);
+  if (!state.open || state.minutesToLastOrder > 0) return null;
+  const today = manila(at).day;
+  const walkIn = `Last orders were at ${formatClock(state.lastOrderAt)}. Walk in until ${formatClock(state.closesAt)}`;
+  for (let ahead = 1; ahead <= 14; ahead++) {
+    const day = addDays(today, ahead);
+    const next = hoursOn(day, hours);
+    if (next) {
+      return `${walkIn}, or order ahead from ${formatClock(next.opensAt)} ${dayWord(day, today)}.`;
+    }
+  }
+  return `${walkIn}.`;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hoursOn, openState, type Hours } from "./hours";
+import { afterLastOrder, hoursOn, openState, type Hours } from "./hours";
 
 const everyDay = (weekday: number) => ({
   weekday,
@@ -69,5 +69,26 @@ describe("openState", () => {
       opensAt: "07:00",
       opensDay: "2026-12-26",
     });
+  });
+});
+
+// Between Last Order and closing the cafe is open for walk-ins, and the
+// Customer is told when ordering opens again (ORD-13, audit journeys:16).
+describe("afterLastOrder", () => {
+  it("says when to walk in and when ordering opens again", () => {
+    expect(afterLastOrder(at("2026-11-02T20:40"), HOURS)).toBe(
+      "Last orders were at 8:30 PM. Walk in until 9:00 PM, or order ahead from 7:00 AM tomorrow."
+    );
+  });
+
+  it("names the day when tomorrow is closed", () => {
+    expect(afterLastOrder(at("2026-12-24T20:40"), HOURS)).toBe(
+      "Last orders were at 8:30 PM. Walk in until 9:00 PM, or order ahead from 7:00 AM on Sat, Dec 26."
+    );
+  });
+
+  it("is nothing before Last Order or after closing", () => {
+    expect(afterLastOrder(at("2026-11-02T20:00"), HOURS)).toBeNull();
+    expect(afterLastOrder(at("2026-11-02T21:10"), HOURS)).toBeNull();
   });
 });
