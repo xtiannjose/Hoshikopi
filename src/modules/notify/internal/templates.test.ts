@@ -40,6 +40,28 @@ describe("orderPlacedEmail (ORD-10)", () => {
     ).toBe("Order K-042 at Hoshikopi: pickup at 4:15 PM");
   });
 
+  // The free drink reads as one (audit journeys:13).
+  it("names a Reward Line as free with 9 Stars", () => {
+    const free = orderPlacedEmail(
+      {
+        ...ORDER,
+        lines: [
+          {
+            name: "Hoshi Latte",
+            options: ["Large", "Oat milk"],
+            quantity: 1,
+            lineCents: 6500,
+            isReward: true,
+          },
+        ],
+      },
+      "x"
+    );
+    expect(free.text).toContain(
+      "1 x Hoshi Latte, free with 9 Stars (Large, Oat milk): PHP 65.00"
+    );
+  });
+
   it("lists the Lines, the total with its VAT part, and the status link", () => {
     expect(email.text).toContain("Salamat, Hoshi! We got your order.");
     expect(email.text).toContain(
@@ -57,10 +79,23 @@ describe("orderPlacedEmail (ORD-10)", () => {
 
 describe("orderReadyEmail (ORD-10)", () => {
   it("says it is ready and which code to show", () => {
-    const email = orderReadyEmail(ORDER);
+    const email = orderReadyEmail({ ...ORDER, lines: [ORDER.lines[0]] });
     expect(email.subject).toBe("K-042 is ready for pickup");
     expect(email.text).toContain(
       "Your Hoshi Latte is ready at the counter. Show code K-042."
     );
+  });
+
+  // Not "your Hoshi Latte" for a three-item Order (audit journeys:13).
+  it("says your order when there is more than one thing", () => {
+    expect(orderReadyEmail(ORDER).text).toContain(
+      "Your order is ready at the counter. Show code K-042."
+    );
+    expect(
+      orderReadyEmail({
+        ...ORDER,
+        lines: [{ ...ORDER.lines[0], quantity: 2 }],
+      }).text
+    ).toContain("Your order is ready at the counter.");
   });
 });

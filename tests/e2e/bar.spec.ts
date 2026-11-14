@@ -59,7 +59,8 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
 
   const steps: [string, string][] = [
     ["Accept", "The bar has your order."],
-    ["Start making", "We're making your Hoshi Latte."],
+    // Two drinks: "your order", not the first one's name (audit journeys:13).
+    ["Start making", "We're making your order."],
     ["Ready", `Ready at the counter. Show code ${code}.`],
     ["Paid and picked up", "Enjoy! See you again soon."],
   ];

@@ -17,8 +17,18 @@ export type OrderForEmail = {
     options: string[];
     quantity: number;
     lineCents: number;
+    /** The Reward Line: free with 9 Stars, priced at its Options. */
+    isReward?: boolean;
   }[];
 };
+
+/** "Hoshi Latte", or "Hoshi Latte, free with 9 Stars" for the Reward Line. */
+export const lineName = (line: { name: string; isReward?: boolean }) =>
+  line.isReward ? `${line.name}, free with 9 Stars` : line.name;
+
+/** The one drink by name, or "order" when there is more than one thing. */
+export const orderNoun = (lines: { name: string; quantity: number }[]) =>
+  lines.length === 1 && lines[0].quantity === 1 ? lines[0].name : "order";
 
 const FOOTER = [
   "Hoshikopi, Kapitolyo, Pasig. Order here for pickup at the counter. Staying? Walk in and find a seat.",
@@ -34,7 +44,7 @@ const pickupWhen = (order: OrderForEmail) =>
 export function orderPlacedEmail(order: OrderForEmail, link: string): Email {
   const lines = order.lines.map(
     (line) =>
-      `${line.quantity} x ${line.name}${line.options.length ? ` (${line.options.join(", ")})` : ""}: ${formatReceipt(line.lineCents)}`
+      `${line.quantity} x ${lineName(line)}${line.options.length ? ` (${line.options.join(", ")})` : ""}: ${formatReceipt(line.lineCents)}`
   );
   return {
     to: order.customerEmail,
@@ -61,12 +71,11 @@ export function orderPlacedEmail(order: OrderForEmail, link: string): Email {
 
 /** Ready for pickup (ORD-10). */
 export function orderReadyEmail(order: OrderForEmail): Email {
-  const first = order.lines[0]?.name ?? "order";
   return {
     to: order.customerEmail,
     subject: `${order.code} is ready for pickup`,
     text: [
-      `Your ${first} is ready at the counter. Show code ${order.code}.`,
+      `Your ${orderNoun(order.lines)} is ready at the counter. Show code ${order.code}.`,
       "",
       "See you in a bit!",
       "",

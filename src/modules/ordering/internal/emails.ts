@@ -27,6 +27,7 @@ async function orderForEmail(orderId: string): Promise<OrderForEmail | null> {
       options: (line.options as { name: string }[]).map((o) => o.name),
       quantity: line.quantity,
       lineCents: line.lineCents,
+      isReward: line.isReward,
     })),
   };
 }
