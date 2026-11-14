@@ -14,14 +14,14 @@ import { Empty, PRIMARY_PILL } from "@/components/panel";
 import { PickupLine } from "@/components/pickup-line";
 import { formatTime, now } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
-import { getOrderingDay, orderingState } from "@/modules/cafe";
+import { orderingState } from "@/modules/cafe";
 import {
   currentCartOwner,
   getCart,
   MAX_LINE_QUANTITY,
   type CartLineView,
 } from "@/modules/cart";
-import { MAX_DRINKS_PER_ORDER } from "@/modules/ordering";
+import { MAX_DRINKS_PER_ORDER, orderingDay } from "@/modules/ordering";
 
 import { removeLineAction, setQuantityAction } from "./actions";
 
@@ -95,7 +95,7 @@ async function Cart() {
   const tooManyDrinks = cart.drinks > MAX_DRINKS_PER_ORDER;
   // The same ordering state checkout reads, so the Cart warns first (ORD-07).
   const at = now();
-  const state = orderingState(at, await getOrderingDay(at));
+  const state = orderingState(at, await orderingDay(at));
   return (
     <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
       <ul className="border-border border-t">

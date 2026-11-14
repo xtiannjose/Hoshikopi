@@ -2,7 +2,6 @@ import type { OrderStatus } from "@/generated/prisma/enums";
 import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
 import {
-  getOrderingDay,
   orderingState,
   type OrderingState,
   type PickupWindow,
@@ -11,6 +10,7 @@ import { getCart, type CartOwner, type CartView } from "@/modules/cart";
 import { balance, STARS_PER_REWARD } from "@/modules/loyalty";
 
 import { expireUnpaid } from "./bar";
+import { orderingDay } from "./day";
 import { orderLink, tokenMatches } from "./links";
 import { baseOf, rewardLineOf } from "./place";
 import { customerVersion, drinksAhead } from "./queue";
@@ -38,7 +38,7 @@ export async function checkoutView(
   const at = now();
   // Unpaid online Orders give their windows back before we list them.
   await expireUnpaid(at);
-  const day = await getOrderingDay(at);
+  const day = await orderingDay(at);
   const empty: CartView = {
     lines: [],
     totalCents: 0,

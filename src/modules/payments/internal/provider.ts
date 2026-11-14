@@ -67,6 +67,18 @@ export function demoMode(env: NodeJS.ProcessEnv = process.env): boolean {
   return env.NODE_ENV !== "production" || demoHost(env);
 }
 
+/**
+ * The hosted demo takes Orders all day (ADR 0015 update): a production
+ * build where Demo Mode runs, that is the live demo on *.vercel.app, its
+ * previews and the local e2e build. Local development and tests keep the
+ * cafe's real hours.
+ */
+export function demoAllDayOrdering(
+  env: NodeJS.ProcessEnv = process.env
+): boolean {
+  return env.NODE_ENV === "production" && demoMode(env);
+}
+
 /** Signs an event as the fake checkout page sends it; fake provider only. */
 export function signFakeEvent(event: ProviderEvent) {
   const provider = paymentProvider();

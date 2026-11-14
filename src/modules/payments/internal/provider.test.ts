@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { fakeProvider } from "./fake";
-import { demoMode, providerFor } from "./provider";
+import { demoAllDayOrdering, demoMode, providerFor } from "./provider";
 
 const env = (values: Record<string, string>) =>
   values as unknown as NodeJS.ProcessEnv;
@@ -77,6 +77,39 @@ describe("providerFor (ADR 0003, PAY-06)", () => {
         })
       ).name
     ).toBe("paymongo");
+  });
+});
+
+describe("demoAllDayOrdering (ADR 0015 update, audit journeys:1)", () => {
+  const hosted = {
+    NODE_ENV: "production",
+    NEXT_PUBLIC_SITE_URL: "https://hoshikopi.vercel.app",
+  };
+
+  it("is on for a production build of the demo: the live site and previews", () => {
+    expect(demoAllDayOrdering(env(hosted))).toBe(true);
+    expect(
+      demoAllDayOrdering(env({ NODE_ENV: "production", VERCEL_ENV: "preview" }))
+    ).toBe(true);
+  });
+
+  it("is off in local development and in tests, which keep the real hours", () => {
+    expect(demoAllDayOrdering(env({ NODE_ENV: "development" }))).toBe(false);
+    expect(demoAllDayOrdering(env({ NODE_ENV: "test" }))).toBe(false);
+  });
+
+  it("is off with real payments and on a production domain", () => {
+    expect(
+      demoAllDayOrdering(env({ ...hosted, PAYMENT_PROVIDER: "paymongo" }))
+    ).toBe(false);
+    expect(
+      demoAllDayOrdering(
+        env({
+          NODE_ENV: "production",
+          NEXT_PUBLIC_SITE_URL: "https://hoshikopi.ph",
+        })
+      )
+    ).toBe(false);
   });
 });
 
