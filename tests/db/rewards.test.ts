@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import type { PaymentMethod } from "@/generated/prisma/enums";
 import { freezeClock, unfreezeClock } from "@/lib/clock";
@@ -10,6 +18,7 @@ import {
   placeOrder,
   transition,
 } from "@/modules/ordering";
+import { paymentProvider } from "@/modules/payments";
 
 import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
@@ -27,7 +36,10 @@ beforeEach(async () => {
   for (const i of await db.menuItem.findMany()) items[i.slug] = i.id;
   freezeClock("2026-11-02T01:00:00Z");
 });
-afterEach(unfreezeClock);
+afterEach(() => {
+  unfreezeClock();
+  vi.restoreAllMocks();
+});
 afterAll(() => db.$disconnect());
 
 const giveStars = (stars: number) =>
@@ -165,6 +177,79 @@ describe("redeeming a Reward (LOY-03)", () => {
     });
     expect(placed.paymentMethod).toBe("pay_at_pickup");
     expect(placed.payment).toBeNull();
+  });
+
+  // Untested refusals (audit tests:8).
+  it("refuses a Reward with no drink in the Cart, or for a Guest", async () => {
+    await giveStars(9);
+    const base = {
+      customerName: "Hoshi",
+      customerEmail: "hoshi@example.com",
+      customerPhone: "",
+      pickup: { kind: "asap" as const },
+      paymentMethod: "pay_at_pickup" as const,
+      useReward: true,
+    };
+    const owner = { memberId: HOSHI };
+    await addLine(owner, {
+      menuItemId: items["ube-pandesal"],
+      optionIds: [],
+      quantity: 1,
+      note: "",
+    });
+    expect(
+      await placeOrder({
+        ...base,
+        owner,
+        memberId: HOSHI,
+        seenTotalCents: 7500,
+      })
+    ).toEqual({ ok: false, reason: "reward_unavailable" });
+    const guest = { guestTokenHash: "guest-reward" };
+    await fillCart(guest);
+    expect(
+      await placeOrder({
+        ...base,
+        owner: guest,
+        memberId: null,
+        seenTotalCents: 39000,
+      })
+    ).toEqual({ ok: false, reason: "reward_unavailable" });
+    expect(await db.order.count()).toBe(0);
+    expect(await balance(HOSHI)).toBe(9);
+  });
+
+  // A payment page that won't open gives the Stars back at once, and the
+  // free drink goes back in the Cart on the Line it came from (audit
+  // tests:8, ORD-05).
+  it("gives the Stars and the Lines back when the payment page won't open", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(paymentProvider(), "createCheckout").mockRejectedValueOnce(
+      new Error("provider down")
+    );
+    await giveStars(9);
+    const owner = { memberId: HOSHI };
+    await fillCart(owner);
+    const before = await getCart(owner);
+    expect(
+      await placeOrder({
+        owner,
+        memberId: HOSHI,
+        seenTotalCents: before.totalCents - 18500,
+        customerName: "Hoshi",
+        customerEmail: "hoshi@example.com",
+        customerPhone: "",
+        pickup: { kind: "asap" },
+        paymentMethod: "gcash",
+        useReward: true,
+      })
+    ).toEqual({ ok: false, reason: "payment_start_failed" });
+    expect(await balance(HOSHI)).toBe(9);
+    const after = await getCart(owner);
+    expect(after.lines.map((l) => [l.menuItemId, l.quantity])).toEqual(
+      before.lines.map((l) => [l.menuItemId, l.quantity])
+    );
+    expect(after.totalCents).toBe(before.totalCents);
   });
 
   it("lets only one of two tabs spend the same 9 Stars", async () => {

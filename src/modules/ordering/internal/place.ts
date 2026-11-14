@@ -27,8 +27,9 @@ import {
   orderLimit,
 } from "./rules";
 import { emailOrderPlaced } from "./emails";
+import { putLinesBack } from "./again";
 import { hashToken, orderLink, orderToken } from "./links";
-import { nextOrderCode } from "./status";
+import { nextOrderCode, transition } from "./status";
 import { offeredWindows } from "./windows";
 
 export type Pickup =
@@ -369,8 +370,21 @@ export async function placeOrder(
     });
     return { ...placed, checkoutUrl };
   } catch (error) {
-    // The Order stays Placed and Expires in 15 minutes, freeing its window.
+    // Nothing was charged: let the Order go now, so its window and Stars
+    // come back, and put its Lines back so "Try again" has a Cart (audit
+    // ORD-05, PAY-03). A move refused meanwhile (a Manager cancelled it)
+    // keeps the Lines on that Order.
     console.error("[payments] checkout not started:", error);
+    const moved = await transition(placed.orderId, "expired", {
+      kind: "system",
+    });
+    if (moved.ok) {
+      const lines = await db.orderLine.findMany({
+        where: { orderId: placed.orderId },
+        orderBy: { createdAt: "asc" },
+      });
+      await putLinesBack(lines, input.owner);
+    }
     return { ok: false, reason: "payment_start_failed" };
   }
 }

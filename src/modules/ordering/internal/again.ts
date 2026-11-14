@@ -1,5 +1,6 @@
+import type { OrderLine } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
-import { addLine } from "@/modules/cart";
+import { addLine, type CartOwner } from "@/modules/cart";
 
 /**
  * Order again (ORD-11): a Member's past Order's Lines go back in their Cart,
@@ -15,19 +16,27 @@ export async function orderAgain(
     include: { lines: { orderBy: { createdAt: "asc" } } },
   });
   if (!order) return null;
+  return putLinesBack(order.lines, { memberId });
+}
+
+/**
+ * An Order's Lines back in a Cart, checked and priced today; what can't be
+ * added is named, once each. A Reward Line joins the paid Line it came from.
+ */
+export async function putLinesBack(
+  lines: OrderLine[],
+  owner: CartOwner
+): Promise<{ added: number; skipped: string[] }> {
   let added = 0;
   const skipped = new Set<string>();
-  for (const line of order.lines) {
+  for (const line of lines) {
     const result = line.menuItemId
-      ? await addLine(
-          { memberId },
-          {
-            menuItemId: line.menuItemId,
-            optionIds: line.optionIds,
-            quantity: line.quantity,
-            note: line.note ?? "",
-          }
-        )
+      ? await addLine(owner, {
+          menuItemId: line.menuItemId,
+          optionIds: line.optionIds,
+          quantity: line.quantity,
+          note: line.note ?? "",
+        })
       : { ok: false };
     if (result.ok) added++;
     else skipped.add(line.name);
