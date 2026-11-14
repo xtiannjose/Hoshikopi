@@ -182,6 +182,10 @@ _Avoid_: Loyalty card, punch card, wallet
 What Stars buy: one free drink. Applied at checkout to one unit of the dearest drink in the Order, whose Base Price drops to zero; its Options still add their Price Delta.
 _Avoid_: Voucher, coupon, perk
 
+**Reward Line**:
+The Order Line for the drink a Reward makes free: one unit, priced at its Options' Price Deltas only. Receipts, emails and the Bar Screen name it "free with 9 Stars".
+_Avoid_: Free line, discount line
+
 **Birthday Treat**:
 Nine Stars a Member gets once a year in their birthday month (Manila calendar), which is one free drink through the usual Reward. Given when the Member opens their account or checkout that month; the birth month is in Your details.
 _Avoid_: Birthday reward, birthday voucher
