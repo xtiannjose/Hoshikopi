@@ -102,6 +102,12 @@
     accent-color: var(--color-primary);
   }
 
+  /* Tailwind's half-strength placeholder is 3.2:1 by Day; WCAG 1.4.3 asks
+     4.5:1 of it too (audit a11y:7). */
+  ::placeholder {
+    color: var(--color-muted-foreground);
+  }
+
   /* Links in text are underlined; navigation opts out with no-underline. */
   a {
     text-decoration-line: underline;

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { openIn } from "./axe";
 import { openAllDayToday } from "./db";
 
 const PAGES = [
@@ -213,4 +214,36 @@ test("an unknown address keeps the site's frame and the Concept Notice (8.2)", a
   await expect(
     page.getByRole("contentinfo").getByText(/Hoshikopi is a concept cafe/)
   ).toBeVisible();
+});
+
+// WCAG 1.4.3 covers placeholder text too (audit a11y:7).
+test("placeholder text has 4.5:1 contrast in both palettes", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  for (const palette of ["day", "night"] as const) {
+    await openIn(page, palette, "/menu");
+    const ratio = await page.getByRole("searchbox").evaluate((input) => {
+      // A canvas turns any CSS colour (oklab, color-mix) into sRGB bytes.
+      const rgba = (color: string) => {
+        const ctx = document.createElement("canvas").getContext("2d")!;
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 1, 1);
+        return [...ctx.getImageData(0, 0, 1, 1).data];
+      };
+      const luminance = ([r, g, b]: number[]) => {
+        const [lr, lg, lb] = [r, g, b].map((v) => {
+          const c = v / 255;
+          return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+      };
+      const back = rgba(getComputedStyle(input).backgroundColor);
+      const [r, g, b, a] = rgba(getComputedStyle(input, "::placeholder").color);
+      const text = [r, g, b].map((v, i) => (v * a + back[i] * (255 - a)) / 255);
+      const [hi, lo] = [luminance(text), luminance(back)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    });
+    expect(ratio, palette).toBeGreaterThanOrEqual(4.5);
+  }
 });
