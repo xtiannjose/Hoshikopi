@@ -83,6 +83,19 @@ test("going back from the Test Mode checkout leaves the Order to pay or cancel",
   ).toBeVisible();
 });
 
+// fakePayAction sends the Customer back with ?retry=1 when the webhook
+// refuses (unit-tested beside the action; audit SEC1-17).
+test("a payment the webhook refused can be tried again", async ({ page }) => {
+  await addToCart(page, "kopi-hitam");
+  await checkoutOnline(page);
+  await page.goto(`${page.url()}?retry=1`);
+  await expect(page.getByRole("status")).toHaveText(
+    "That didn't go through, and nothing was paid. Please try again."
+  );
+  await expect(page.getByRole("button", { name: /^Pay PHP/ })).toBeVisible();
+  await expectNoAxeViolations(page);
+});
+
 test("the webhook route refuses an unsigned event", async ({ request }) => {
   const response = await request.post("/api/webhooks/fake", {
     data: { id: "evt_x", type: "paid", checkoutId: "cs", paymentId: "p" },

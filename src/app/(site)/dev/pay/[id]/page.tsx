@@ -36,11 +36,12 @@ const DONE: Record<string, string> = {
 
 export default function FakeCheckoutPage({
   params,
+  searchParams,
 }: PageProps<"/dev/pay/[id]">) {
   return (
     <main id="main" className="mx-auto w-full max-w-md flex-1 px-4 py-10">
       <Suspense fallback={<p>Opening the checkout...</p>}>
-        <Checkout params={params} />
+        <Checkout params={params} searchParams={searchParams} />
       </Suspense>
     </main>
   );
@@ -48,8 +49,11 @@ export default function FakeCheckoutPage({
 
 async function Checkout({
   params,
-}: Pick<PageProps<"/dev/pay/[id]">, "params">) {
+  searchParams,
+}: Pick<PageProps<"/dev/pay/[id]">, "params" | "searchParams">) {
   const { id } = await params;
+  // fakePayAction's flag when the webhook refused: nothing was paid.
+  const { retry } = await searchParams;
   if (paymentProvider().name !== "fake") notFound();
   const payment = await paymentByCheckout(id);
   if (!payment) notFound();
@@ -73,10 +77,18 @@ async function Checkout({
       {/* Still open after a failed try, as PayMongo's is (audit journeys:6). */}
       {checkoutOpen(payment.status) ? (
         <>
+          {/* Always there, so the words are read out when the redirect
+              adds them; a region added already filled may not be. */}
+          <p role="status" className="text-destructive min-h-6 font-semibold">
+            {retry === "1" &&
+              "That didn't go through, and nothing was paid. Please try again."}
+          </p>
           <form action={fakePayAction} className="grid gap-3">
             <input type="hidden" name="checkoutId" value={id} />
             <PayButtons amount={formatReceipt(payment.amountCents)} />
           </form>
+          {/* Like PayMongo's cancel_url: back to the Order page, nothing
+              cancelled there (audit journeys:21). */}
           <Link
             href={back}
             className="text-muted-foreground inline-flex min-h-11 items-center justify-self-center text-sm"
@@ -87,8 +99,6 @@ async function Checkout({
       ) : (
         <>
           <p className="font-semibold">{DONE[payment.status]}</p>
-          {/* Like PayMongo's cancel_url: back to the Order page, nothing
-              cancelled there (audit journeys:21). */}
           <Link href={back} className={`${PRIMARY_PILL} justify-self-start`}>
             Back to your order
           </Link>
