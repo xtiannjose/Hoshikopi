@@ -34,7 +34,7 @@ for (const palette of ["day", "night"] as const) {
     await openIn(page, palette, "/");
     const title =
       palette === "day"
-        ? "Your morning kopi, ready before you get here."
+        ? "Your kopi, ready before you get here."
         : "Your evening kopi, ready before you get here.";
     // Both lines are in the page; only the palette's one is visible.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title, {

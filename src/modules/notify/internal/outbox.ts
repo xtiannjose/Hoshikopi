@@ -6,6 +6,19 @@ import { now } from "@/lib/clock";
 
 export type Email = { to: string; subject: string; text: string };
 
+/** The seeded demo accounts' reserved domain, which never receives mail. */
+export const isDemoAccount = (to: string) => to.endsWith("@hoshikopi.example");
+
+/**
+ * Whether an email to a real address goes anywhere: Resend is set up, or
+ * the build runs off Vercel and writes to the local outbox. False on the
+ * live demo until Resend has a domain (audit journeys:9), so the site must
+ * not say an email was sent.
+ */
+export function canEmail(env: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env.RESEND_API_KEY) || !env.VERCEL;
+}
+
 /**
  * Sends through Resend's REST API when RESEND_API_KEY is set (no SDK).
  * Without a key, emails go to the terminal and data/mail/, where end-to-end
@@ -14,8 +27,7 @@ export type Email = { to: string; subject: string; text: string };
  */
 export async function send(email: Email): Promise<void> {
   const key = process.env.RESEND_API_KEY;
-  // The seeded demo accounts use a reserved domain that never receives mail.
-  const demo = email.to.endsWith("@hoshikopi.example");
+  const demo = isDemoAccount(email.to);
   if (key && !demo) {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",

@@ -12,6 +12,7 @@ import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { IconCircle, Panel } from "@/components/panel";
 import { googleEnabled, safeNext } from "@/modules/identity";
+import { canEmail } from "@/modules/notify";
 
 import { googleSignInAction } from "./actions";
 
@@ -47,7 +48,11 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
               </Suspense>
             }
             title="Sign in"
-            intro="No password. We email you a link, you tap it, you're in. New here? The same link makes your account."
+            intro={
+              canEmail()
+                ? "No password. We email you a link, you tap it, you're in. New here? The same link makes your account."
+                : "No password. This demo sends no emails, so continue with Google below. New here? That makes your account."
+            }
           />
           <Suspense fallback={<div className="min-h-40" />}>
             <Form searchParams={searchParams} />
