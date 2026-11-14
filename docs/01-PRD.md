@@ -128,7 +128,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | ACC-01 | Sign in with an email link or Google; the first sign-in creates the Member | M |
 | ACC-02 | A Member sees past Orders and can reorder (S) | M |
 | ACC-03 | A Member can download and delete their data (Data Privacy Act) | M |
-| LOY-01 | A Member earns 1 Star per drink in an Order when it is Picked Up; Stars from a Refunded Order are taken back | M |
+| LOY-01 | A Member earns 1 Star per drink in an Order when it is Picked Up (a Reward's free drink earns none); Stars from a Refunded Order are taken back | M |
 | LOY-02 | The Star Card shows the balance as 9 spaces and the Rewards available | M |
 | LOY-03 | Redeem 9 Stars for a free drink at checkout (one unit of the dearest drink at zero; its Options still add their Price Delta); Stars return if the Order is Cancelled or Expired | M |
 | LOY-04 | A Birthday Treat once a year in the Member's birthday month | S |

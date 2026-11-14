@@ -55,6 +55,12 @@ test("a Member earns Stars, redeems a free drink, cancels and gets them back (Ph
 
   await addToCart(member, "hoshi-latte");
   await member.goto("/checkout");
+  // The free drink earns no Star (audit journeys:4).
+  await expect(
+    member.getByText(
+      "This order lights 1 Star when you pick it up, or none with your free drink."
+    )
+  ).toBeVisible();
   await member.getByText("Use 9 Stars for a free Hoshi Latte").click();
   await expect(
     member.getByRole("button", { name: "Place order, PHP 0" })
