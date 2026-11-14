@@ -51,18 +51,19 @@ export function WeeklyForm({ event }: { event: WeeklyFormData }) {
           error={error("title")}
         />
         <Field id={`weekday-${key}`} name="weekday" label="Day">
-          <select
-            id={`weekday-${key}`}
-            name="weekday"
-            defaultValue={event.weekday}
-            className={fieldClass}
-          >
-            {DAYS.map((day, index) => (
-              <option key={day} value={index}>
-                {day}
-              </option>
-            ))}
-          </select>
+          {(control) => (
+            <select
+              {...control}
+              defaultValue={event.weekday}
+              className={fieldClass}
+            >
+              {DAYS.map((day, index) => (
+                <option key={day} value={index}>
+                  {day}
+                </option>
+              ))}
+            </select>
+          )}
         </Field>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

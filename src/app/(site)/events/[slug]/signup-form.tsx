@@ -99,18 +99,19 @@ export function SignupForm({
         error={error("email")}
       />
       <Field name="seats" label="Seats" error={error("seats")}>
-        <select
-          id="seats"
-          name="seats"
-          defaultValue={state.values?.seats ?? "1"}
-          className={fieldClass}
-        >
-          {Array.from({ length: Math.min(4, seatsLeft) }, (_, i) => (
-            <option key={i} value={i + 1}>
-              {i + 1}
-            </option>
-          ))}
-        </select>
+        {(control) => (
+          <select
+            {...control}
+            defaultValue={state.values?.seats ?? "1"}
+            className={fieldClass}
+          >
+            {Array.from({ length: Math.min(4, seatsLeft) }, (_, i) => (
+              <option key={i} value={i + 1}>
+                {i + 1}
+              </option>
+            ))}
+          </select>
+        )}
       </Field>
       {price && (
         <p className="text-muted-foreground">Pay {price} a seat at the door.</p>

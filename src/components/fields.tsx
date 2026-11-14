@@ -1,9 +1,27 @@
-import type { FocusEvent, InputHTMLAttributes, ReactNode } from "react";
+import type {
+  FocusEvent,
+  InputHTMLAttributes,
+  MouseEvent,
+  ReactNode,
+} from "react";
 
 export const fieldClass =
   "rounded-card border-input bg-background min-h-11 w-full border px-3 py-2";
 
-/** Label above, error below and tied to the input (docs/05 section 10). */
+/** What ties a control to its label, hint and error. */
+export type Control = {
+  id: string;
+  name: string;
+  "aria-invalid"?: true;
+  "aria-describedby"?: string;
+};
+
+/**
+ * Label above, error below and tied to the input (docs/05 section 10). For
+ * a select or a textarea, pass a function that spreads `control` on it, so
+ * the hint and error reach it too (audit architecture:8). An
+ * aria-describedby or aria-invalid given here adds to Field's own.
+ */
 export function Field({
   name,
   label,
@@ -16,12 +34,18 @@ export function Field({
   label: string;
   error?: string;
   hint?: string;
-  children?: ReactNode;
-} & InputHTMLAttributes<HTMLInputElement>) {
+  children?: (control: Control) => ReactNode;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, "children">) {
   const id = `${input.id ?? name}`;
-  const describedBy =
-    [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") ||
-    undefined;
+  const control: Control = {
+    id,
+    name,
+    "aria-invalid": error || input["aria-invalid"] ? true : undefined,
+    "aria-describedby":
+      [input["aria-describedby"], hint && `${id}-hint`, error && `${id}-error`]
+        .filter(Boolean)
+        .join(" ") || undefined,
+  };
   return (
     <div className="grid gap-1.5">
       <label htmlFor={id} className="font-semibold">
@@ -32,15 +56,10 @@ export function Field({
           {hint}
         </p>
       )}
-      {children ?? (
-        <input
-          {...input}
-          id={id}
-          name={name}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy}
-          className={fieldClass}
-        />
+      {children ? (
+        children(control)
+      ) : (
+        <input {...input} {...control} className={fieldClass} />
       )}
       {error && (
         <p id={`${id}-error`} className="text-destructive text-sm">

@@ -74,18 +74,19 @@ export function ItemForm({
       <fieldset className="grid gap-6">
         <legend className={LEGEND}>The basics</legend>
         <Field name="categoryId" label="Category" error={error("categoryId")}>
-          <select
-            id="categoryId"
-            name="categoryId"
-            defaultValue={item.categoryId}
-            className={fieldClass}
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          {(control) => (
+            <select
+              {...control}
+              defaultValue={item.categoryId}
+              className={fieldClass}
+            >
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          )}
         </Field>
         <Field
           name="name"
@@ -233,22 +234,22 @@ export function ItemForm({
           hint="Shown on its page with a one-tap Add."
           error={error("pairingId")}
         >
-          <select
-            id="pairingId"
-            name="pairingId"
-            defaultValue={item.pairingId}
-            aria-describedby="pairingId-hint"
-            className={fieldClass}
-          >
-            <option value="">Nothing</option>
-            {menuItems
-              .filter((other) => other.id !== item.id)
-              .map((other) => (
-                <option key={other.id} value={other.id}>
-                  {other.name}
-                </option>
-              ))}
-          </select>
+          {(control) => (
+            <select
+              {...control}
+              defaultValue={item.pairingId}
+              className={fieldClass}
+            >
+              <option value="">Nothing</option>
+              {menuItems
+                .filter((other) => other.id !== item.id)
+                .map((other) => (
+                  <option key={other.id} value={other.id}>
+                    {other.name}
+                  </option>
+                ))}
+            </select>
+          )}
         </Field>
       </fieldset>
 

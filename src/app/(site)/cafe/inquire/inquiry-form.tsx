@@ -51,17 +51,18 @@ export function InquiryForm({
   return (
     <form ref={form} action={action} className="grid max-w-xl gap-5">
       <Field name="kind" label="What is it about?" error={error("kind")}>
-        <select
-          id="kind"
-          name="kind"
-          defaultValue={value("kind") ?? kind}
-          className={fieldClass}
-        >
-          <option value="private_event">A private event</option>
-          <option value="large_order">
-            An order of more than a dozen drinks
-          </option>
-        </select>
+        {(control) => (
+          <select
+            {...control}
+            defaultValue={value("kind") ?? kind}
+            className={fieldClass}
+          >
+            <option value="private_event">A private event</option>
+            <option value="large_order">
+              An order of more than a dozen drinks
+            </option>
+          </select>
+        )}
       </Field>
       <Field
         name="name"
@@ -96,31 +97,22 @@ export function InquiryForm({
           error={error("guests")}
         />
       </div>
-      <div className="grid gap-1.5">
-        <label htmlFor="message" className="font-semibold">
-          Tell us about it
-        </label>
-        <p id="message-hint" className="text-muted-foreground text-sm">
-          The day, how many, and any drinks or food you have in mind.
-        </p>
-        <textarea
-          id="message"
-          name="message"
-          rows={5}
-          maxLength={1000}
-          defaultValue={value("message")}
-          aria-invalid={error("message") ? true : undefined}
-          aria-describedby={
-            error("message") ? "message-hint message-error" : "message-hint"
-          }
-          className={`${fieldClass} py-2`}
-        />
-        {error("message") && (
-          <p id="message-error" className="text-destructive text-sm">
-            {error("message")}
-          </p>
+      <Field
+        name="message"
+        label="Tell us about it"
+        hint="The day, how many, and any drinks or food you have in mind."
+        error={error("message")}
+      >
+        {(control) => (
+          <textarea
+            {...control}
+            rows={5}
+            maxLength={1000}
+            defaultValue={value("message")}
+            className={`${fieldClass} py-2`}
+          />
         )}
-      </div>
+      </Field>
       <p className="text-muted-foreground font-mono text-sm">
         Hoshikopi is a concept cafe: an inquiry here reaches a demo inbox, not a
         real cafe.

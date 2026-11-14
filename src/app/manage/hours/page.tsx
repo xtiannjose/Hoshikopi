@@ -100,17 +100,18 @@ async function Editor() {
                   The menu stays up; checkout says when ordering is back.
                 </p>
                 <Field name="minutes" label="Pause for">
-                  <select
-                    id="minutes"
-                    name="minutes"
-                    defaultValue="30"
-                    className="rounded-card border-input bg-background min-h-11 w-full border px-3"
-                  >
-                    <option value="15">15 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="60">1 hour</option>
-                    <option value="120">2 hours</option>
-                  </select>
+                  {(control) => (
+                    <select
+                      {...control}
+                      defaultValue="30"
+                      className="rounded-card border-input bg-background min-h-11 w-full border px-3"
+                    >
+                      <option value="15">15 minutes</option>
+                      <option value="30">30 minutes</option>
+                      <option value="60">1 hour</option>
+                      <option value="120">2 hours</option>
+                    </select>
+                  )}
                 </Field>
                 <Field
                   name="message"
