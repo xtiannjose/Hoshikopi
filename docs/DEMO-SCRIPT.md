@@ -20,7 +20,7 @@ The hosted demo takes Orders all day, and Demo Mode lets you play the barista on
 
 - **"We're not taking orders right now"**: a Manager paused ordering. Sign in as a Manager and resume it from `/manage/hours` or the Bar Screen.
 - **No Pickup Times are left**: the day's windows are full of earlier demo Orders. ASAP still works once the queue moves. A Manager can raise Capacity on `/manage/hours`.
-- **The Test Mode checkout shows an error**: go back to the Order page. While it says Placed, **Finish paying** reopens the checkout. An unpaid online Order lets go of its Pickup Time after 15 minutes.
+- **The Test Mode checkout shows an error**: go back to the Order page. While it says Placed, **Finish paying** reopens the checkout, and after a failed payment **Try paying again** does. An unpaid online Order lets go of its Pickup Time after 15 minutes.
 
 ## Rehearsal
 

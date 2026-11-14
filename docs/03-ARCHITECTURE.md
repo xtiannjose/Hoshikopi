@@ -94,7 +94,7 @@ Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night pale
 3. Lock the chosen Pickup Window's usage row (`SELECT ... FOR UPDATE`), check Capacity for drinks and food, and add this Order's counts. A full window returns `{ ok: false, reason: "window_full" }` with the next free window.
 4. Reserve the Reward's Stars, if any (`loyalty`).
 5. Create the Order with snapshot Lines (name, Options, prices), the next Order Code for the day, and the hash of its status-link token (an HMAC of the Order id, `docs/04-DATA-MODEL.md` section 1).
-6. Online payment: commit, then start the provider checkout (`payments`) and redirect. Pay at Pickup: commit and show the status page.
+6. Online payment: commit, then start the provider checkout (`payments`) and redirect. If the checkout won't start, nothing was charged: the Order Expires at once (window and Stars back) and its Lines go back in the Cart. Pay at Pickup: commit and show the status page.
 
 Expired and cancelled Orders give back their Pickup Window counts and reserved Stars in the same transaction as their transition. A Refund gives nothing more back: the Order was already Cancelled, or was Picked Up and its earned Stars are taken back (section 10).
 
@@ -104,7 +104,7 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 | --- | --- | --- | --- |
 | (none) | `placed` | `placeOrder` | Window counts taken; Stars reserved; "Order placed" email for Pay at Pickup |
 | `placed` (online) | `paid` | Verified provider webhook | "Order placed" email |
-| `placed` (online) | `expired` | 15 minutes unpaid (section 12) | Window and Stars released; checkout session expired |
+| `placed` (online) | `expired` | 15 minutes unpaid (section 12), or at once when its checkout won't start | Window and Stars released; checkout session expired |
 | `placed` (Pay at Pickup), `paid` | `accepted` | Barista (or the visitor in Demo Mode, ADR 0015) | Prep Time starts |
 | `accepted` | `preparing` | Barista (or Demo Mode) | None |
 | `preparing` | `ready` | Barista (or Demo Mode) | "Ready for pickup" email; status page shows it |
