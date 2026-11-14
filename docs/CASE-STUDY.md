@@ -75,6 +75,7 @@ Measured 2026-11-14 ([METRICS.md](METRICS.md)):
 | | |
 | --- | --- |
 | A Guest orders and pays on a throttled phone (4x CPU, slow 4G) | 8.7 to 9.1 s, target under 60 s |
+| Lighthouse on the live site (PageSpeed Insights, mobile and desktop) | 100 for Performance, Accessibility and Best Practices on Home and `/menu` |
 | Mobile Lighthouse Performance, local build | Home 89, `/menu` 91, a Menu Item 91 |
 | Lighthouse Accessibility | 100 on all three |
 | axe violations (WCAG 2.2 AA tags), both palettes, 375 and 1280 px | 0 |
@@ -92,4 +93,4 @@ The project was planned before any code was written. There is a PRD with require
 - **A verified email domain**, so the live demo can send links to any address instead of Google sign-in only.
 - **Push notifications to a locked phone** through an installable app, instead of a chime on an open page.
 - **Server-Sent Events** in place of polling, if the polling cost or delay is ever measured as a problem.
-- **The rest of the audit backlog:** about 130 P2 and 43 P3 items. Among them: editing a drink's Options in the Cart, letting the Manager remove an Event Sign-up, a retention job for old rate-limit rows and abandoned Carts, and getting Home back above 90 on Lighthouse.
+- **The rest of the audit backlog:** about 130 P2 and 43 P3 items. Among them: editing a drink's Options in the Cart, letting the Manager remove an Event Sign-up, and a retention job for old rate-limit rows and abandoned Carts.

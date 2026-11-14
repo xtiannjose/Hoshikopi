@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 
 import { answerSignupAction, type AnswerState } from "../../actions";
+import { busy } from "@/components/fields";
 
 const CANCEL =
   "border-destructive text-destructive inline-flex min-h-11 items-center rounded-full border px-5 font-semibold";
@@ -79,7 +80,7 @@ export function SignupAnswer({
             type="submit"
             name="intent"
             value="confirm"
-            disabled={pending}
+            {...busy(pending)}
             className={PRIMARY_PILL}
           >
             Confirm my seats
@@ -97,7 +98,7 @@ export function SignupAnswer({
           type="submit"
           name="intent"
           value="cancel"
-          disabled={pending}
+          {...busy(pending)}
           className={CANCEL}
         >
           {status === "waiting" ? "Cancel" : "Cancel my Sign-up"}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { Field } from "@/components/fields";
+import { busy, Field } from "@/components/fields";
 
 import { secondFactorAction, type SecondFactorState } from "./actions";
 
@@ -29,8 +29,8 @@ export function SecondFactorForm({ next }: { next: string }) {
         />
         <button
           type="submit"
-          disabled={pending}
-          className="bg-primary text-primary-foreground min-h-12 justify-self-start rounded-full px-6 font-semibold disabled:opacity-60"
+          {...busy(pending)}
+          className="bg-primary text-primary-foreground min-h-12 justify-self-start rounded-full px-6 font-semibold aria-disabled:opacity-60"
         >
           {pending ? "Checking..." : "Continue"}
         </button>

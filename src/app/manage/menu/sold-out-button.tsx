@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { busy } from "@/components/fields";
 
 /** Sold out or Back on inside its form; busy while the change saves. */
 export function SoldOutButton({
@@ -14,9 +15,9 @@ export function SoldOutButton({
   return (
     <button
       type="submit"
-      disabled={pending}
+      {...busy(pending)}
       aria-busy={pending || undefined}
-      className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-semibold disabled:opacity-60 ${soldOut ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-muted"}`}
+      className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-semibold aria-disabled:opacity-60 ${soldOut ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-muted"}`}
     >
       {soldOut ? "Back on" : "Sold out"}
       <span className="sr-only"> for {name}</span>

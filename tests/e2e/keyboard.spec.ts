@@ -104,6 +104,30 @@ test("after a link, focus starts in the new page (a11y:3)", async ({
   expect(await focusInMainShows(page)).not.toBeNull();
 });
 
+test("a pressed button keeps focus, and a removed Cart line hands it on (a11y:5)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a keyboard user on desktop");
+  const focusInMain = () =>
+    page.evaluate(() => !!document.activeElement?.closest("main"));
+  await page.goto("/menu/item/kopi-hitam");
+  const add = page.getByRole("button", { name: /^(Add to order|Adding)/ });
+  await add.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toContainText("Added");
+  await expect(add).toBeFocused();
+
+  await page.goto("/menu/item/hoshi-latte");
+  await page.getByRole("button", { name: "Add to order" }).click();
+  await expect(page.getByRole("status")).toContainText("Added");
+  await page.goto("/cart");
+  const remove = page.getByRole("button", { name: "Remove Kopi Hitam" });
+  await remove.last().focus();
+  await page.keyboard.press("Enter");
+  await expect(remove).toHaveCount(0);
+  await expect.poll(focusInMain).toBe(true);
+});
+
 test("a refused sign-in or Event Sign-up takes focus to the field to fix (a11y:4)", async ({
   page,
 }, testInfo) => {

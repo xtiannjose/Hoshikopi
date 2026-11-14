@@ -190,22 +190,22 @@ Starts after Phase 7. Requirement IDs are added to the PRD when each batch start
 
 ### Phase 10: The rest of the audit backlog (after V1)
 
-The 126 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches. Each batch's items, with the problem and the fix, are in the Next batches table of [`docs/audit/2026-11-13.md`](audit/2026-11-13.md). Work them in order, one branch and pull request each; the owner can reorder them.
+The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches. Each batch's items, with the problem and the fix, are in the Next batches table of [`docs/audit/2026-11-13.md`](audit/2026-11-13.md). Work them in order, one branch and pull request each; the owner can reorder them.
 
-- [ ] **10.1 Accessibility statement gaps.** 7 items, effort S each.
+- [x] **10.1 Accessibility statement gaps.** Done 2026-11-14: a pressed button keeps focus and a removed control hands it on, placeholder contrast, the header wraps at a larger text size, failed pages are titled, the checkout contact rule belongs to both fields, axe checks Day contrast, and Field ties selects and textareas. `/accessibility` lists what is left.
 - [ ] **10.2 Rewards and checkout copy.** 7 items, effort S each.
-- [ ] **10.3 Home back to Lighthouse 90+.** 4 items, effort M.
-- [ ] **10.4 Payment failure paths.** 5 items, effort S to M.
-- [ ] **10.5 Orders that never close.** 7 items, effort S to M.
-- [ ] **10.6 Cart and Pickup Times.** 4 items, effort S to M.
-- [ ] **10.7 Sign-in.** 6 items, effort S each.
-- [ ] **10.8 Staff roles and the Second Factor.** 6 items, effort S to M.
-- [ ] **10.9 Manager inputs.** 6 items, effort S to M.
-- [ ] **10.10 Manager numbers and Sign-ups.** 6 items, effort S each.
-- [ ] **10.11 Bar Screen.** 5 items, effort S each.
-- [ ] **10.12 Database rules.** 5 items, effort S each.
-- [ ] **10.13 Account data and retention.** 5 items, effort S to M.
-- [ ] **10.14 Operations.** 7 items, effort S each.
+- [ ] **10.3 Payment failure paths.** 5 items, effort S to M.
+- [ ] **10.4 Orders that never close.** 7 items, effort S to M.
+- [ ] **10.5 Cart and Pickup Times.** 4 items, effort S to M.
+- [ ] **10.6 Sign-in.** 6 items, effort S each.
+- [ ] **10.7 Staff roles and the Second Factor.** 6 items, effort S to M.
+- [ ] **10.8 Manager inputs.** 6 items, effort S to M.
+- [ ] **10.9 Manager numbers and Sign-ups.** 6 items, effort S each.
+- [ ] **10.10 Bar Screen.** 5 items, effort S each.
+- [ ] **10.11 Database rules.** 5 items, effort S each.
+- [ ] **10.12 Account data and retention.** 5 items, effort S to M.
+- [ ] **10.13 Operations.** 7 items, effort S each.
+- [ ] **10.14 Lighter pages.** 3 items, effort M.
 - [ ] **10.15 Caching and share cards.** 5 items, effort S to M.
 - [ ] **10.16 Motion.** 6 items, effort S each.
 - [ ] **10.17 Page polish.** 9 items, effort S each.

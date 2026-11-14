@@ -7,6 +7,7 @@ import { Empty, OUTLINE_PILL } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { requestSignInLink, type SignInState } from "./actions";
+import { busy } from "@/components/fields";
 
 const initial: SignInState = { status: "idle" };
 
@@ -85,8 +86,8 @@ function EmailForm({
       </div>
       <button
         type="submit"
-        disabled={pending}
-        className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold disabled:opacity-60"
+        {...busy(pending)}
+        className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold aria-disabled:opacity-60"
       >
         {pending ? "Sending..." : "Email me a link"}
       </button>

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { openIn } from "./axe";
 import { openAllDayToday } from "./db";
 
 const PAGES = [
@@ -213,4 +214,75 @@ test("an unknown address keeps the site's frame and the Concept Notice (8.2)", a
   await expect(
     page.getByRole("contentinfo").getByText(/Hoshikopi is a concept cafe/)
   ).toBeVisible();
+});
+
+// Every way a page fails says so in the tab and to a screen reader
+// (audit a11y:9).
+test("a page that is not there is titled so", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  for (const path of [
+    "/no-such-page",
+    "/menu/no-such-category",
+    "/menu/item/no-such-drink",
+    "/events/no-such-event",
+    "/news/no-such-post",
+    "/orders/no-such-order",
+  ]) {
+    await page.goto(path);
+    await expect(page, path).toHaveTitle("Page not found | Hoshikopi");
+  }
+});
+
+// Font settings, not zoom: the header row wraps instead of pushing the
+// Cart and menu buttons off screen (audit a11y:8).
+test("a doubled default text size keeps the header on a phone screen", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "phone", "the header row is for phones");
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32 } });
+  for (const path of PAGES) {
+    await page.goto(path);
+    await expect(
+      page.getByRole("button", { name: "Open the menu" }),
+      path
+    ).toBeInViewport({ ratio: 1 });
+    const header = page.getByRole("banner");
+    const overflow = await header.evaluate(
+      (el) => el.scrollWidth - el.clientWidth
+    );
+    expect(overflow, path).toBeLessThanOrEqual(0);
+  }
+});
+
+// WCAG 1.4.3 covers placeholder text too (audit a11y:7).
+test("placeholder text has 4.5:1 contrast in both palettes", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  for (const palette of ["day", "night"] as const) {
+    await openIn(page, palette, "/menu");
+    const ratio = await page.getByRole("searchbox").evaluate((input) => {
+      // A canvas turns any CSS colour (oklab, color-mix) into sRGB bytes.
+      const rgba = (color: string) => {
+        const ctx = document.createElement("canvas").getContext("2d")!;
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 1, 1);
+        return [...ctx.getImageData(0, 0, 1, 1).data];
+      };
+      const luminance = ([r, g, b]: number[]) => {
+        const [lr, lg, lb] = [r, g, b].map((v) => {
+          const c = v / 255;
+          return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+      };
+      const back = rgba(getComputedStyle(input).backgroundColor);
+      const [r, g, b, a] = rgba(getComputedStyle(input, "::placeholder").color);
+      const text = [r, g, b].map((v, i) => (v * a + back[i] * (255 - a)) / 255);
+      const [hi, lo] = [luminance(text), luminance(back)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    });
+    expect(ratio, palette).toBeGreaterThanOrEqual(4.5);
+  }
 });

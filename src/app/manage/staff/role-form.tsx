@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { setRoleAction, type RoleState } from "./actions";
+import { busy } from "@/components/fields";
 
 const SELECT =
   "rounded-card border-input bg-background min-h-11 border px-3 font-medium";
@@ -84,7 +85,7 @@ export function RoleForm({
             {row && <option value="customer">Member (no staff access)</option>}
           </select>
         </div>
-        <button type="submit" disabled={pending} className={BUTTON}>
+        <button type="submit" {...busy(pending)} className={BUTTON}>
           {row ? "Save" : "Give role"}
           {row && <span className="sr-only"> role for {name}</span>}
         </button>

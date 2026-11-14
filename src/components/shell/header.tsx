@@ -26,7 +26,9 @@ const SMALL_LINKS = [
 
 export function Header() {
   return (
-    <header className="page-width flex items-center justify-between gap-4 py-3">
+    // flex-wrap: with a larger default text size the right group moves to
+    // a second row instead of off screen (audit a11y:8).
+    <header className="page-width flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
       <Link href="/" aria-label="Hoshikopi home" className="no-underline">
         <Logo />
       </Link>
@@ -37,7 +39,7 @@ export function Header() {
           <MainNav live />
         </Suspense>
       </nav>
-      <div className="flex items-center gap-3 lg:gap-5">
+      <div className="flex flex-wrap items-center gap-3 lg:gap-5">
         <div className="hidden lg:block">
           <ThemeSwitch name="theme-header" />
         </div>

@@ -16,8 +16,9 @@ export const metadata: Metadata = {
     "What Hoshikopi aims for so everyone can order, how we check it, and what still falls short.",
 };
 
-// The known gaps come from the audit backlog (docs/audit/2026-11-13.md,
-// a11y:5, 7, 8 and 11); take a line out when its fix ships.
+// Known gaps come from the audit backlog (docs/audit/2026-11-13.md); the
+// four listed at launch (a11y:5, 7, 8 and 11) were fixed in batch 10.1. Add
+// a line here whenever a new one is found, and take it out when it ships.
 const SECTIONS: {
   id: string;
   title: string;
@@ -41,7 +42,7 @@ const SECTIONS: {
     icon: <ListChecksIcon size={20} />,
     points: [
       "Automated axe checks run on the pages people use most and on the Staff screens, in both palettes, at phone and desktop sizes.",
-      "Keyboard tests walk through the menu, a drink's Options and the Cart, and a refused form takes focus to the field to fix.",
+      "Keyboard tests walk through the menu, a drink's Options and the Cart: a pressed button keeps focus, a removed Cart line hands it on, and a refused form takes focus to the field to fix.",
       "Lighthouse gives Home, the menu and a drink's page an accessibility score of 100.",
       "We also try pages by hand with a keyboard and a screen reader.",
     ],
@@ -51,10 +52,7 @@ const SECTIONS: {
     title: "What still falls short",
     icon: <WarningCircleIcon size={20} />,
     points: [
-      "Some buttons lose keyboard focus for a moment while they work, for example Place order.",
-      "Placeholder text in the Day palette is lighter than the contrast we aim for.",
-      "With a larger default text size (not zoom), the phone header can push the Cart and menu buttons off screen.",
-      "At checkout, the note that an email or a mobile number is enough is not tied to either field.",
+      "With a doubled default text size on a phone (font settings, not zoom), the header wraps, but some long words, headings and the email address still run past the screen edge.",
     ],
   },
 ];

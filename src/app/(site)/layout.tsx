@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { CartFloat } from "@/components/shell/cart-float";
 import { DrawerFocus } from "@/components/shell/drawer-focus";
 import { FocusOnNavigate } from "@/components/shell/focus-on-navigate";
+import { KeepFocus } from "@/components/shell/keep-focus";
 import { Footer } from "@/components/shell/footer";
 import { Header } from "@/components/shell/header";
 
@@ -24,6 +25,7 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
       {/* Keyboard focus for drawers and navigation (audit a11y:2, a11y:3);
           usePathname needs its own boundary under Cache Components. */}
       <DrawerFocus />
+      <KeepFocus />
       <Suspense>
         <FocusOnNavigate />
       </Suspense>

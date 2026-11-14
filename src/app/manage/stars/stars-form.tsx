@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useRef } from "react";
 
-import { Field, fieldClass } from "@/components/fields";
+import { busy, Field, fieldClass } from "@/components/fields";
 import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 
 import { adjustStarsAction, type StarsState } from "./actions";
@@ -16,37 +16,42 @@ export function StarsForm() {
   const email = useRef<HTMLInputElement>(null);
   return (
     <form action={action} className="grid gap-5">
-      {/* Own inputs: Field's input does not take aria-invalid from props. */}
-      <Field name="email" label="Member's email">
-        <input
-          ref={email}
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="off"
-          aria-invalid={state.field === "email" || undefined}
-          defaultValue={state.values?.email}
-          className={fieldClass}
-        />
+      {/* Own inputs for the ref and the number limits; the refusal names
+          the field, which Field marks invalid. */}
+      <Field
+        name="email"
+        label="Member's email"
+        aria-invalid={state.field === "email" || undefined}
+      >
+        {(control) => (
+          <input
+            ref={email}
+            {...control}
+            type="email"
+            required
+            autoComplete="off"
+            defaultValue={state.values?.email}
+            className={fieldClass}
+          />
+        )}
       </Field>
       <Field
         name="stars"
         label="Stars to add (use a minus to remove)"
         hint="Nine Stars make a free drink. Up to 50 at a time."
+        aria-invalid={state.field === "stars" || undefined}
       >
-        <input
-          id="stars"
-          name="stars"
-          type="number"
-          min={-50}
-          max={50}
-          required
-          aria-invalid={state.field === "stars" || undefined}
-          aria-describedby="stars-hint"
-          defaultValue={state.values?.stars}
-          className={fieldClass}
-        />
+        {(control) => (
+          <input
+            {...control}
+            type="number"
+            min={-50}
+            max={50}
+            required
+            defaultValue={state.values?.stars}
+            className={fieldClass}
+          />
+        )}
       </Field>
       <Field
         name="reason"
@@ -58,7 +63,7 @@ export function StarsForm() {
       />
       <button
         type="submit"
-        disabled={pending}
+        {...busy(pending)}
         className={`${PRIMARY_PILL} min-h-12 justify-self-start px-6`}
       >
         {pending ? "Saving..." : "Save adjustment"}

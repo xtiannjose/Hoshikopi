@@ -18,6 +18,7 @@ import { useKeptForm } from "@/components/use-kept-form";
 import type { CafeDetails } from "@/modules/cafe";
 
 import { saveCafeAction, type CafeFormState } from "./actions";
+import { busy } from "@/components/fields";
 
 const AMENITIES = [
   ["wifi", "Wi-Fi"],
@@ -191,8 +192,8 @@ export function CafeForm({ cafe }: { cafe: CafeDetails }) {
       <div className="flex flex-wrap items-center gap-4 xl:col-span-2">
         <button
           type="submit"
-          disabled={pending}
-          className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold disabled:opacity-60"
+          {...busy(pending)}
+          className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold aria-disabled:opacity-60"
         >
           {pending ? "Saving..." : "Save cafe details"}
         </button>

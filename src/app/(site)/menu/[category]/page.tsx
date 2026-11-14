@@ -22,7 +22,7 @@ export async function generateMetadata({
 }: PageProps<"/menu/[category]">): Promise<Metadata> {
   const { category } = await params;
   const found = (await getMenu()).find((c) => c.slug === category);
-  return found ? { title: `${found.name} menu` } : {};
+  return found ? { title: `${found.name} menu` } : { title: "Page not found" };
 }
 
 // params are read inside Suspense (see the Menu Item page).

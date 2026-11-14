@@ -32,7 +32,9 @@ export async function generateMetadata({
   params,
 }: PageProps<"/events/[slug]">): Promise<Metadata> {
   const event = await getEvent((await params).slug);
-  return event ? { title: event.title, description: event.summary } : {};
+  return event
+    ? { title: event.title, description: event.summary }
+    : { title: "Page not found" };
 }
 
 export default function EventPage({ params }: PageProps<"/events/[slug]">) {

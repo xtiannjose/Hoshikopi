@@ -12,6 +12,7 @@ import {
   type AddState,
   type FavouriteState,
 } from "./actions";
+import { busy } from "@/components/fields";
 
 const MAX_QUANTITY = 20;
 
@@ -221,8 +222,7 @@ export function OptionPicker({
           </div>
           <button
             type="submit"
-            onClick={() => setLast("add")}
-            disabled={pending}
+            {...busy(pending, () => setLast("add"))}
             className="bg-primary text-primary-foreground relative min-h-12 flex-1 rounded-full px-6 font-semibold disabled:opacity-60 sm:flex-none"
           >
             {pending ? "Adding..." : "Add to order"}
@@ -246,8 +246,7 @@ export function OptionPicker({
           <button
             type="submit"
             formAction={saveFavourite}
-            onClick={() => setLast("favourite")}
-            disabled={saving}
+            {...busy(saving, () => setLast("favourite"))}
             className="border-input min-h-12 rounded-full border px-5 font-semibold disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save as Favourite"}
