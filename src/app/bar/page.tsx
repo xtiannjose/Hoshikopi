@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { BackLink } from "@/components/back-link";
 import { now } from "@/lib/clock";
-import { requireStaff } from "@/modules/identity";
+import { requireStaff, secondFactorEntered } from "@/modules/identity";
 import { barBoard } from "@/modules/ordering";
 
 import { BarScreen } from "./bar-screen";
@@ -22,10 +22,14 @@ export default function BarPage() {
 
 async function Bar() {
   const staff = await requireStaff("barista", "/bar");
+  // Pause, Busy Mode and Cancel need the Second Factor; without it a tap
+  // would leave the board for the code page (audit staff:1).
+  const manager = staff.role === "manager";
+  const unlocked = manager && (await secondFactorEntered());
   return (
     <BarScreen
       initial={JSON.parse(JSON.stringify(await barBoard(now())))}
-      manager={staff.role === "manager"}
+      manager={unlocked}
       staffName={staff.name}
       links={
         <>
@@ -37,6 +41,14 @@ async function Bar() {
           <Link href="/manage/menu" className={`${link} text-sm`}>
             Sold out?
           </Link>
+          {manager && !unlocked && (
+            <Link
+              href="/manage/two-factor?next=%2Fbar"
+              className={`${link} text-sm`}
+            >
+              Enter your code to pause or cancel
+            </Link>
+          )}
         </>
       }
     />

@@ -11,6 +11,7 @@ import {
 import { SpeakerHighIcon, SpeakerSlashIcon } from "@phosphor-icons/react";
 
 import { formatTime, now } from "@/lib/clock";
+import { formatPrice } from "@/lib/money";
 
 import {
   busyAction,
@@ -32,12 +33,14 @@ type Order = {
   windowStart: string;
   placedAt: string;
   payAtPickup: boolean;
+  totalCents: number;
   makeNext: boolean;
   lines: {
     quantity: number;
     name: string;
     options: string[];
     note: string | null;
+    reward: boolean;
   }[];
 };
 type Board = {
@@ -491,7 +494,8 @@ function Card({
       </div>
       {order.payAtPickup && (
         <p className="border-warning text-warning w-fit rounded-full border px-3 py-0.5 text-sm font-semibold">
-          Pay at Pickup
+          Pay at Pickup: collect{" "}
+          <span className="font-mono">{formatPrice(order.totalCents)}</span>
         </p>
       )}
       <ul className="grid gap-2">
@@ -500,6 +504,11 @@ function Card({
             <span className="text-lg font-semibold">
               {line.quantity} x {line.name}
             </span>
+            {line.reward && (
+              <span className="border-star ml-2 rounded-full border px-2 align-middle text-sm font-semibold">
+                Reward
+              </span>
+            )}
             {line.options.length > 0 && (
               <span className="text-muted-foreground block">
                 {line.options.join(" · ")}

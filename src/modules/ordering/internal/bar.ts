@@ -42,6 +42,8 @@ export type BarOrder = {
   windowStart: Date;
   placedAt: Date;
   payAtPickup: boolean;
+  /** What the Customer pays, so the bar knows what to collect at pickup. */
+  totalCents: number;
   /** ASAP, or a Scheduled Order whose Pickup Time minus Prep Time has come. */
   makeNext: boolean;
   lines: {
@@ -49,6 +51,8 @@ export type BarOrder = {
     name: string;
     options: string[];
     note: string | null;
+    /** A Reward: its Base Price is free, its Options are not. */
+    reward: boolean;
   }[];
 };
 
@@ -93,6 +97,7 @@ export async function barBoard(at: Date): Promise<BarBoard> {
     windowStart: order.windowStart,
     placedAt: order.placedAt,
     payAtPickup: order.paymentMethod === "pay_at_pickup",
+    totalCents: order.totalCents,
     makeNext:
       order.pickupKind === "asap" ||
       order.windowStart.getTime() - prep * 60_000 <= at.getTime(),
@@ -101,6 +106,7 @@ export async function barBoard(at: Date): Promise<BarBoard> {
       name: line.name,
       options: (line.options as { name: string }[]).map((o) => o.name),
       note: line.note,
+      reward: line.isReward,
     })),
   }));
   // makeNext turns with the clock and Prep Time, not with a row change, so
