@@ -38,12 +38,16 @@ function tokenMatches(id: string, token: string): boolean {
 }
 
 const SignupInput = z.object({
-  name: z.string().trim().min(1, "Enter your name.").max(80),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Enter your name.")
+    .max(80, "Use 80 characters or fewer."),
   email: z
     .string()
     .trim()
     .toLowerCase()
-    .max(254)
+    .max(254, "Enter an email address, like hoshi@example.com.")
     .regex(
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       "Enter an email address, like hoshi@example.com."

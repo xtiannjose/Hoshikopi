@@ -139,7 +139,11 @@ export function normalizePhone(input: string): string | null {
 
 const Contact = z
   .object({
-    customerName: z.string().trim().min(1, "Enter your name.").max(60),
+    customerName: z
+      .string()
+      .trim()
+      .min(1, "Enter your name.")
+      .max(60, "Use 60 characters or fewer, like your first name."),
     customerEmail: z
       .string()
       .trim()

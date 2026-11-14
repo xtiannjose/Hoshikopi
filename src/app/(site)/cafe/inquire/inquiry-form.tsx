@@ -67,6 +67,7 @@ export function InquiryForm({
         name="name"
         label="Your name"
         autoComplete="name"
+        maxLength={80}
         defaultValue={value("name")}
         error={error("name")}
       />
