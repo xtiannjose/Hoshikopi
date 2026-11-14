@@ -216,6 +216,28 @@ test("an unknown address keeps the site's frame and the Concept Notice (8.2)", a
   ).toBeVisible();
 });
 
+// Font settings, not zoom: the header row wraps instead of pushing the
+// Cart and menu buttons off screen (audit a11y:8).
+test("a doubled default text size keeps the header on a phone screen", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "phone", "the header row is for phones");
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32 } });
+  for (const path of PAGES) {
+    await page.goto(path);
+    await expect(
+      page.getByRole("button", { name: "Open the menu" }),
+      path
+    ).toBeInViewport({ ratio: 1 });
+    const header = page.getByRole("banner");
+    const overflow = await header.evaluate(
+      (el) => el.scrollWidth - el.clientWidth
+    );
+    expect(overflow, path).toBeLessThanOrEqual(0);
+  }
+});
+
 // WCAG 1.4.3 covers placeholder text too (audit a11y:7).
 test("placeholder text has 4.5:1 contrast in both palettes", async ({
   page,
