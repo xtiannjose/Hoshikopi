@@ -95,6 +95,39 @@ test("the skip link and a keyboard-only order", async ({ page }, testInfo) => {
   await expect(page.getByRole("status")).toContainText("Added");
 });
 
+test("under reduced motion, a Day and Night switch starts no transitions (audit motion:1)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "phone", "measured once, on a phone");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/menu");
+  const started = await page.evaluate(() => {
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === "night" ? "day" : "night";
+    // Reading the list flushes style, which is when transitions start.
+    return document.getAnimations().filter((a) => a instanceof CSSTransition)
+      .length;
+  });
+  expect(started).toBe(0);
+});
+
+test("under reduced motion, Add to order still shows Added on a phone (audit motion:2)", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "phone",
+    "the button is the only sign there"
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/menu/item/kopi-hitam");
+  await page.getByRole("button", { name: "Add to order" }).click();
+  // aria-hidden (the status line is what screen readers hear), and
+  // Playwright counts opacity 0 as visible, so read the opacity itself.
+  await expect(
+    page.locator("button span.animate-confirm", { hasText: "Added" })
+  ).toHaveCSS("opacity", "1");
+});
+
 test("the Content-Security-Policy holds and nothing breaks it (ADR 0013)", async ({
   page,
 }, testInfo) => {
