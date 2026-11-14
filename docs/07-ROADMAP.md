@@ -185,7 +185,7 @@ Starts after Phase 7. Requirement IDs are added to the PRD when each batch start
 ### Phase 9: Portfolio review and case study (0.5 week)
 
 - [x] **9.1 Measure.** The success metrics in PRD section 8, written up with numbers. Done 2026-11-14 in [`docs/METRICS.md`](METRICS.md): a throttled phone orders and pays in 8.7 to 9.1 s (target 60, now a test); Lighthouse mobile medians Home 89, `/menu` 91, a Menu Item 91, accessibility 100 (local build; Home 1 point short, live numbers to take at pagespeed.web.dev since the API quota refused); 0 axe violations; 7 of 7 rule mutations caught, after the one miss (Preparing straight to Picked Up) got a test.
-- [ ] **9.2 Case study.** `docs/CASE-STUDY.md`: the problem, the decisions (ADRs), screenshots, what I would do next.
+- [x] **9.2 Case study.** `docs/CASE-STUDY.md`: the problem, the decisions (ADRs), screenshots, what I would do next. Done 2026-11-14: [`docs/CASE-STUDY.md`](CASE-STUDY.md) with seven screenshots in `docs/screenshots/` (Home in both palettes at 1280 px; the menu, a Menu Item, checkout and an Order page at 375 px; the Bar Screen), taken from a local production build with reduced motion.
 - [ ] **9.3 Final review.** Code review, accessibility statement, README screenshots, demo script rehearsed.
 
 ## 13. After V1 (not scheduled)
