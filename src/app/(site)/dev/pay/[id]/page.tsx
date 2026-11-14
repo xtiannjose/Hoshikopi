@@ -6,7 +6,11 @@ import { Suspense } from "react";
 import { PRIMARY_PILL } from "@/components/panel";
 import { formatReceipt } from "@/lib/money";
 import { getOrderBrief, orderLink } from "@/modules/ordering";
-import { paymentByCheckout, paymentProvider } from "@/modules/payments";
+import {
+  checkoutOpen,
+  paymentByCheckout,
+  paymentProvider,
+} from "@/modules/payments";
 
 import { fakePayAction } from "./actions";
 import { PayButtons } from "./pay-buttons";
@@ -26,7 +30,6 @@ const METHOD = {
 /** What a closed checkout says, by Payment status. */
 const DONE: Record<string, string> = {
   paid: "Paid. Your order is on its way to the bar.",
-  failed: "This payment didn't go through.",
   expired: "This checkout timed out.",
   refunded: "This payment was refunded.",
 };
@@ -67,7 +70,8 @@ async function Checkout({
           {formatReceipt(payment.amountCents)}
         </span>
       </p>
-      {payment.status === "pending" ? (
+      {/* Still open after a failed try, as PayMongo's is (audit journeys:6). */}
+      {checkoutOpen(payment.status) ? (
         <>
           <form action={fakePayAction} className="grid gap-3">
             <input type="hidden" name="checkoutId" value={id} />

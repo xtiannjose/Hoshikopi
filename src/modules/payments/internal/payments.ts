@@ -130,7 +130,7 @@ export async function paymentByCheckout(checkoutId: string) {
  */
 export async function closeCheckout(orderId: string): Promise<void> {
   const payment = await db.payment.findUnique({ where: { orderId } });
-  if (!payment || !["pending", "failed"].includes(payment.status)) return;
+  if (!payment || !checkoutOpen(payment.status)) return;
   try {
     await paymentProvider().expireCheckout(payment.providerCheckoutId);
   } catch (error) {
@@ -143,6 +143,14 @@ export async function closeCheckout(orderId: string): Promise<void> {
     data: { status: "expired" },
   });
 }
+
+/**
+ * A checkout that still takes payment: unused, or after a failed try. A
+ * paid event after a failed one still pays the Order (a retry in the same
+ * checkout, docs/03 section 8).
+ */
+export const checkoutOpen = (status: string) =>
+  status === "pending" || status === "failed";
 
 export type RefundOutcome =
   "no_online_payment" | "refunded" | "already_refunded";

@@ -9,6 +9,7 @@ export {
 } from "./internal/provider";
 export type { OnlineMethod, ProviderEvent } from "./internal/types";
 export {
+  checkoutOpen,
   closeCheckout,
   paymentByCheckout,
   recordPaymentEvent,
