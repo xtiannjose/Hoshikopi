@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState } from "react";
 import { CheckCircleIcon } from "@phosphor-icons/react";
 
 import { Field, fieldClass } from "@/components/fields";
 import { Empty, OUTLINE_PILL } from "@/components/panel";
+import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { inquireAction, type InquiryState } from "./actions";
 
@@ -21,17 +22,7 @@ export function InquiryForm({
     inquireAction,
     { status: "idle" }
   );
-  const form = useRef<HTMLFormElement>(null);
-  const status = useRef<HTMLParagraphElement>(null);
-  // After a refusal, take the Customer to the first field to fix, or to why.
-  useEffect(() => {
-    if (state.status !== "error") return;
-    const invalid = form.current?.querySelector<HTMLElement>(
-      '[aria-invalid="true"]'
-    );
-    if (invalid) invalid.focus();
-    else status.current?.scrollIntoView({ block: "center" });
-  }, [state]);
+  const { form, status } = useFocusInvalid(state.status === "error", state);
   if (state.status === "sent") {
     return (
       <Empty icon={<CheckCircleIcon size={24} />}>

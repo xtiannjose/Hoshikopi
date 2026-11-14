@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react";
 
 import { Empty, OUTLINE_PILL } from "@/components/panel";
+import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { requestSignInLink, type SignInState } from "./actions";
 
@@ -32,6 +33,8 @@ function EmailForm({
   onReset: () => void;
 }) {
   const [state, action, pending] = useActionState(requestSignInLink, initial);
+  // The email field carries the error, so focusing it reads it out.
+  const { form } = useFocusInvalid(state.status === "error", state);
 
   if (state.status === "sent") {
     return (
@@ -55,7 +58,7 @@ function EmailForm({
 
   const error = state.status === "error" ? state.message : null;
   return (
-    <form action={action} className="grid gap-4" noValidate>
+    <form ref={form} action={action} className="grid gap-4" noValidate>
       <input type="hidden" name="next" value={next} />
       <div className="grid gap-2">
         <label htmlFor="email" className="font-semibold">

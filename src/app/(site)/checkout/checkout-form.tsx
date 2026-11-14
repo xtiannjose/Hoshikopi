@@ -1,19 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useActionState,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useActionState, useRef, useState, type ReactNode } from "react";
 import { ClockIcon, UserIcon, WalletIcon } from "@phosphor-icons/react";
 
 import { formatPrice } from "@/lib/money";
 
 import { Field, fieldClass } from "@/components/fields";
 import { IconCircle } from "@/components/panel";
+import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { placeOrderAction, type CheckoutState } from "./actions";
 
@@ -108,17 +103,10 @@ export function CheckoutForm({
     placeOrderAction,
     {}
   );
-  const form = useRef<HTMLFormElement>(null);
-  const status = useRef<HTMLParagraphElement>(null);
-  // After a refusal, take the Customer to the first field to fix, or to why.
-  useEffect(() => {
-    if (!state.message && !state.errors) return;
-    const invalid = form.current?.querySelector<HTMLElement>(
-      '[aria-invalid="true"]'
-    );
-    if (invalid) invalid.focus();
-    else status.current?.scrollIntoView({ block: "center" });
-  }, [state]);
+  const { form, status } = useFocusInvalid(
+    Boolean(state.message || state.errors),
+    state
+  );
   const error = (name: string) => state.errors?.[name];
   // After a refusal React resets the form, so the choices come back from the
   // action; one no longer offered falls back to the first.
