@@ -39,6 +39,44 @@ test.describe("budgets (docs/05 section 11)", () => {
   }
 });
 
+// PRD section 8, metric 1: the menu to a Paid Order through the Test Mode
+// checkout, on a phone slowed like Lighthouse's mobile run (4x CPU, slow
+// 4G). The time prints as [metric] for docs/METRICS.md.
+test("a Guest orders and pays end to end in under 60 s on a throttled phone (PRD section 8)", async ({
+  page,
+  context,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "phone", "measured once, on a phone");
+  test.setTimeout(120_000);
+  await openAllDayToday();
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  await cdp.send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: 150,
+    downloadThroughput: (1.6 * 1024 * 1024) / 8,
+    uploadThroughput: (750 * 1024) / 8,
+  });
+  const start = Date.now();
+  await page.goto("/menu/item/kopi-hitam");
+  await page.getByRole("button", { name: "Add to order" }).click();
+  await expect(page.getByRole("status")).toContainText("Added");
+  await page.goto("/checkout");
+  await page.getByText("GCash", { exact: true }).click();
+  await page.getByLabel("Name").fill("Hoshi");
+  await page.getByLabel("Email").fill("hoshi@example.com");
+  await page.getByRole("button", { name: /Place order/ }).click();
+  await page.getByRole("button", { name: /^Pay PHP/ }).click();
+  await expect(page.getByText("Paid online (Test Mode).")).toBeVisible({
+    timeout: 30_000,
+  });
+  const seconds = (Date.now() - start) / 1000;
+  console.log(
+    `[metric] throttled order, menu to Paid: ${seconds.toFixed(1)} s`
+  );
+  expect(seconds).toBeLessThan(60);
+});
+
 test.describe("reflow at 320 px (WCAG 1.4.10)", () => {
   test.use({ viewport: { width: 320, height: 640 } });
   // Skip first, so the desktop project never runs the database setup.
