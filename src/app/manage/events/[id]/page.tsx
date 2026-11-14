@@ -163,7 +163,10 @@ async function Signups({ event }: { event: Saved }) {
               >
                 <span className="min-w-0">
                   {signup.name}{" "}
-                  <a href={`mailto:${signup.email}`} className="break-all">
+                  <a
+                    href={`mailto:${encodeURIComponent(signup.email)}`}
+                    className="break-all"
+                  >
                     {signup.email}
                   </a>
                 </span>

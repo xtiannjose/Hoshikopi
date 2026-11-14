@@ -340,6 +340,21 @@ describe("placeOrder refusals", () => {
     expect(result).toMatchObject({ ok: false, reason: "invalid" });
   });
 
+  it("refuses a long name in plain words, not Zod's (audit journeys:15)", async () => {
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const result = await placeOrder(
+      await input(hoshi, { customerName: "Hoshi ".repeat(11) + "Santos" })
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      errors: {
+        customerName: "Use 60 characters or fewer, like your first name.",
+      },
+    });
+  });
+
   it("refuses a Scheduled window that is past or full, naming the next free one (ORD-04)", async () => {
     const hoshi = guest();
     await addLatte(hoshi, 2);

@@ -19,8 +19,38 @@ export const auth = betterAuth({
     cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
   // Links and Google start only from our Server Actions, which apply our
-  // rate limits; these HTTP routes stay closed.
-  disabledPaths: ["/sign-in/magic-link", "/sign-in/social"],
+  // rate limits; those HTTP routes stay closed. So does every route this
+  // site never uses: /update-user stored any name or image, skipping
+  // updateProfile's checks (audit ID2-04, SEC1-08). Our own auth.api calls
+  // are not routed, so this closes only the HTTP door. Open: the link and
+  // Google callbacks, get-session, sign-out, ok and error.
+  disabledPaths: [
+    "/sign-in/magic-link",
+    "/sign-in/social",
+    "/sign-in/email",
+    "/sign-up/email",
+    "/update-user",
+    "/update-session",
+    "/delete-user",
+    "/delete-user/callback",
+    "/change-email",
+    "/change-password",
+    "/verify-password",
+    "/request-password-reset",
+    "/reset-password",
+    "/send-verification-email",
+    "/verify-email",
+    "/link-social",
+    "/unlink-account",
+    "/list-accounts",
+    "/account-info",
+    "/get-access-token",
+    "/refresh-token",
+    "/list-sessions",
+    "/revoke-session",
+    "/revoke-sessions",
+    "/revoke-other-sessions",
+  ],
   socialProviders: googleEnabled()
     ? {
         google: {

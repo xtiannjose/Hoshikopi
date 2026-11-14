@@ -77,18 +77,25 @@ const EMPTY_LANE: Record<Lane, string> = {
 
 const MUTE_KEY = "hoshikopi-bar-muted";
 
+// One AudioContext for the whole shift: a new one per chime was never
+// closed, so a tablet left on the board piled them up (audit motion:6).
+// Browsers start it suspended until a tap; the sound toggle is one.
+let audio: AudioContext | null = null;
+
 /** A short two-note chime from the Web Audio API (no audio file). */
 function chime() {
   try {
-    const audio = new AudioContext();
+    audio ??= new AudioContext();
+    if (audio.state === "suspended") void audio.resume();
+    const ctx = audio;
     [880, 1320].forEach((frequency, i) => {
-      const tone = audio.createOscillator();
-      const gain = audio.createGain();
-      const start = audio.currentTime + i * 0.18;
+      const tone = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const start = ctx.currentTime + i * 0.18;
       tone.frequency.value = frequency;
       gain.gain.setValueAtTime(0.25, start);
       gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
-      tone.connect(gain).connect(audio.destination);
+      tone.connect(gain).connect(ctx.destination);
       tone.start(start);
       tone.stop(start + 0.35);
     });

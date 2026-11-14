@@ -86,6 +86,7 @@ export function SignupForm({
         name="name"
         label="Your name"
         autoComplete="name"
+        maxLength={80}
         defaultValue={state.values?.name}
         error={error("name")}
       />

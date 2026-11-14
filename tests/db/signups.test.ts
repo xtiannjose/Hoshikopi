@@ -59,6 +59,17 @@ describe("Event Sign-ups (EVT-02)", () => {
     });
   });
 
+  // It reached the Manager's mailto link as a cc and a body (SEC2-01).
+  it("refuses an email with a query in it", async () => {
+    expect(
+      await signUpForEvent(EVENT, person(1, "x@y.zz?cc=a%40b.cc&body=hi"))
+    ).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      errors: { email: "Enter an email address, like hoshi@example.com." },
+    });
+  });
+
   it("takes one Sign-up per email per Event", async () => {
     await signUpForEvent(EVENT, person(1, "hoshi@example.com"));
     expect(await signUpForEvent(EVENT, person(2, "Hoshi@Example.com"))).toEqual(

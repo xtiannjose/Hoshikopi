@@ -245,6 +245,7 @@ export function CheckoutForm({
             defaultValue={state.values?.customerName ?? member?.name}
             label="Name"
             autoComplete="given-name"
+            maxLength={60}
             error={error("customerName")}
           />
           <p className="text-muted-foreground max-w-measure text-sm">

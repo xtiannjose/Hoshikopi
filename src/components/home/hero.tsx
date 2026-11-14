@@ -35,7 +35,7 @@ export function Hero({
   return (
     <section className="grid gap-10 pt-6 lg:grid-cols-[7fr_5fr] lg:gap-16 lg:pt-10">
       <div>
-        <h1 className="font-display pb-1 text-5xl leading-[1.1] italic md:text-6xl xl:text-7xl">
+        <h1 className="font-display pb-1 text-5xl leading-[1.1] text-balance italic md:text-6xl xl:text-7xl">
           <span className="night:hidden">{COPY.day.title}</span>
           <span className="night:inline hidden">{COPY.night.title}</span>
         </h1>

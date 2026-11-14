@@ -31,7 +31,9 @@ export async function refundAction(form: FormData) {
   backToDay(
     form,
     result.ok
-      ? "refunded"
+      ? form.get("cash")
+        ? "refunded_cash"
+        : "refunded"
       : result.reason === "provider_failed"
         ? "failed"
         : "not_allowed"
@@ -44,5 +46,14 @@ export async function cancelAction(form: FormData) {
     await managerActor(),
     String(form.get("reason") ?? "")
   );
-  backToDay(form, result.ok ? "cancelled" : "not_allowed");
+  // Its own outcomes: a refused cancel used to say "can't be refunded"
+  // (audit staff:7).
+  backToDay(
+    form,
+    result.ok
+      ? "cancelled"
+      : result.reason === "reason_required"
+        ? "cancel_reason"
+        : "cancel_not_allowed"
+  );
 }

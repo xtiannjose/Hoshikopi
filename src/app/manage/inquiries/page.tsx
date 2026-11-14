@@ -165,7 +165,9 @@ function Card({ inquiry, done }: { inquiry: InquiryView; done: boolean }) {
         <span className="ml-auto">{STATUS[inquiry.status]}</span>
       </div>
       <p className="break-words">
-        <a href={`mailto:${inquiry.email}`}>{inquiry.email}</a>
+        <a href={`mailto:${encodeURIComponent(inquiry.email)}`}>
+          {inquiry.email}
+        </a>
         {inquiry.wantedOn &&
           `, for ${formatDate(manilaInstant(inquiry.wantedOn, 12 * 60))}`}
         {inquiry.guests && `, ${inquiry.guests} guests or drinks`}

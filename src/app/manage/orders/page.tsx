@@ -57,12 +57,27 @@ function doneLine(done: unknown, code: unknown): ReactNode {
   switch (done) {
     case "refunded":
       return `Refunded ${that}. The Customer sees it on their Order page.`;
+    case "refunded_cash":
+      return `Refunded ${that} in cash. The Customer sees it on their Order page.`;
     case "cancelled":
       return `Cancelled ${that}. Your reason shows on their Order page.`;
     case "failed":
       return (
         <span className="text-destructive">
           The refund for {that} didn&apos;t go through. Try again in a minute.
+        </span>
+      );
+    case "cancel_reason":
+      return (
+        <span className="text-destructive">
+          {that} wasn&apos;t cancelled. Write a reason the Customer will see.
+        </span>
+      );
+    case "cancel_not_allowed":
+      return (
+        <span className="text-destructive">
+          {real ? code : "That Order"} can&apos;t be cancelled now. It was
+          already picked up, cancelled or refunded.
         </span>
       );
     case "not_allowed":
@@ -298,9 +313,22 @@ async function Day({
                           <input type="hidden" name="id" value={order.id} />
                           <input type="hidden" name="code" value={order.code} />
                           <input type="hidden" name="day" value={day} />
-                          <p className="text-sm">
-                            Refund {formatPrice(order.totalCents)} in full?
-                          </p>
+                          {/* Pay at Pickup money is at the counter: no
+                              provider refund, so say to hand it back
+                              (audit staff:18). */}
+                          {order.paymentMethod === "pay_at_pickup" ? (
+                            <>
+                              <input type="hidden" name="cash" value="1" />
+                              <p className="text-sm">
+                                Give {formatPrice(order.totalCents)} back in
+                                cash, then confirm.
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-sm">
+                              Refund {formatPrice(order.totalCents)} in full?
+                            </p>
+                          )}
                           <button
                             type="submit"
                             className="border-destructive text-destructive min-h-11 rounded-full border px-4 font-semibold"

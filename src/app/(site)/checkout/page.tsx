@@ -129,7 +129,12 @@ async function Checkout() {
   }
 
   const [first, ...later] = view.windows;
-  const stars = cart.drinks === 1 ? "1 Star" : `${cart.drinks} Stars`;
+  const starCount = (n: number) => (n === 1 ? "1 Star" : `${n} Stars`);
+  const stars = starCount(cart.drinks);
+  // The free drink earns no Star (LOY-01), so say what using it costs.
+  const withReward = view.reward
+    ? `, or ${cart.drinks === 1 ? "none" : starCount(cart.drinks - 1)} with your free drink`
+    : "";
   return (
     <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
       <section
@@ -144,7 +149,7 @@ async function Checkout() {
             <StarIcon aria-hidden size={20} className="shrink-0" />
             <span>
               {member ? (
-                `This order lights ${stars} when you pick it up.`
+                `This order lights ${stars} when you pick it up${withReward}.`
               ) : (
                 <>
                   <Link href="/sign-in?next=/checkout">Sign in first</Link> and

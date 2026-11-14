@@ -131,8 +131,12 @@ function paymentNote(order: OrderView): string {
       ? "Paid online (Test Mode). The refund is on its way."
       : "Nothing to pay.";
   }
+  // A Reward can make the whole Order free (audit journeys:12).
+  if (order.totalCents === 0) return "Nothing to pay: a free drink.";
   if (order.paymentMethod === "pay_at_pickup") {
-    return "Pay at the counter when you collect.";
+    return order.paidAt
+      ? "Paid at the counter."
+      : "Pay at the counter when you collect.";
   }
   return order.payment?.status === "paid"
     ? "Paid online (Test Mode)."

@@ -71,6 +71,8 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
     });
   }
   await expect(card).toHaveCount(0);
+  // Collected at the counter, not still "Pay at the counter" (journeys:12).
+  await expect(guest.getByText("Paid at the counter.")).toBeVisible();
 });
 
 test("a full Pickup Window is never offered (ORD-04)", async ({ page }) => {

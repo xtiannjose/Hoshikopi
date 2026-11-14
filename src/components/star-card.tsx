@@ -100,10 +100,10 @@ export function StarCard({ balance }: { balance: number }) {
           </p>
           {rewards > 0 ? (
             <p className="text-lg font-semibold text-pretty">
+              {/* One Reward per Order (docs/03 section 5). */}
               {rewards === 1
-                ? "A free drink is ready."
-                : `${rewards} free drinks are ready.`}{" "}
-              Use it at checkout.
+                ? "A free drink is ready. Use it at checkout."
+                : `${rewards} free drinks are ready. Use one per order at checkout.`}
             </p>
           ) : (
             <p className="text-lg text-pretty">

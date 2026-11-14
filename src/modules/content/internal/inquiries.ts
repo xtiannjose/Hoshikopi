@@ -18,16 +18,19 @@ export type InquiryView = {
 
 const InquiryInput = z.object({
   kind: z.enum(["private_event", "large_order"]),
-  name: z.string().trim().min(1, "Enter your name.").max(80),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Enter your name.")
+    .max(80, "Use 80 characters or fewer."),
   email: z
     .string()
     .trim()
     .toLowerCase()
-    .max(254)
-    .regex(
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      "Enter an email address, like hoshi@example.com."
-    ),
+    .max(254, "Enter an email address, like hoshi@example.com.")
+    // z.email, as checkout: the old regex let "x@y.z?cc=a%40b.c" through
+    // into the Manager's mailto links (audit SEC2-01).
+    .pipe(z.email("Enter an email address, like hoshi@example.com.")),
   wantedOn: z
     .string()
     .trim()
