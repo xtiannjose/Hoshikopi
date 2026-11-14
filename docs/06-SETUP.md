@@ -126,6 +126,8 @@ gh pr create --base main --head <branch>
 
 After a merge, update the local copy with `git switch main` and `git pull`. To set up on another computer, clone it (section 3).
 
+**CI** (`.github/workflows/ci.yml`, batch 7.11a) runs on every pull request and on `main`: lint, formatting, the type check, Vitest against a Postgres 17 service, and `npm audit --omit=dev --audit-level=high`. Merge only when it is green (`gh pr checks <number>`). Playwright stays local (`npm run test:e2e`): it builds and serves the app and depends on the Manila clock. **Dependabot** (`.github/dependabot.yml`) opens grouped weekly pull requests for npm packages and the GitHub Actions; review and merge them like any other.
+
 ## 9. Demo deploy (batch 5.4, live since 2026-11-01)
 
 The code is ready for Vercel: `vercel.json` runs `prisma migrate deploy` before `next build` on Production builds only (Preview builds share the production database unless the Neon integration gives each preview its own branch, ADR 0004, so they never migrate it) and calls `/api/cron/daily` at 22:00 UTC (6:00 AM Manila, before opening). A preview of a branch that changes the schema therefore needs a Neon preview branch: in the Vercel project's Neon integration, turn on a database branch for each Preview deployment. In order:

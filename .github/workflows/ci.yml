@@ -1,0 +1,59 @@
+name: CI
+
+# The quality gates on every pull request and on main: lint, formatting,
+# types, Vitest (unit and database tests) and the production dependency
+# audit. Playwright stays local for now: it builds and serves the app and
+# depends on the Manila clock (docs/07-ROADMAP.md, batch 7.11a).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, types and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: hoshikopi_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Throwaway values for the test database only; .env.test is
+      # git-ignored (docs/06-SETUP.md section 5).
+      DATABASE_URL: postgresql://postgres:dev@localhost:5432/hoshikopi_test
+      DIRECT_URL: postgresql://postgres:dev@localhost:5432/hoshikopi_test
+      BETTER_AUTH_SECRET: ci-secret-at-least-32-characters-long
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      PAYMENT_PROVIDER: fake
+      CRON_SECRET: ci-cron-secret
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      # High and critical only, so a new low advisory never blocks an
+      # unrelated pull request.
+      - run: npm audit --omit=dev --audit-level=high
