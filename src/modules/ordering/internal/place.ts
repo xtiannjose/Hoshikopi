@@ -47,6 +47,8 @@ export type PlaceOrderInput = {
   paymentMethod: PaymentMethod;
   /** Spend 9 Stars on a free drink (LOY-03). */
   useReward?: boolean;
+  /** cartFingerprint of the Cart the Customer saw, if the form sent it. */
+  seenCart?: string;
 };
 
 export type PlaceOrderResult =
@@ -63,7 +65,7 @@ export type PlaceOrderResult =
     }
   | { ok: false; reason: "invalid"; errors: Partial<Record<string, string>> }
   | { ok: false; reason: "closed" | "paused" | "cart_problem" }
-  | { ok: false; reason: "price_changed"; totalCents: number }
+  | { ok: false; reason: "price_changed" | "cart_changed"; totalCents: number }
   | { ok: false; reason: "pay_at_pickup_limit" }
   | { ok: false; reason: "too_big"; limit: { drinks: number; food: number } }
   | { ok: false; reason: "not_enough_stars" | "reward_unavailable" }
@@ -72,6 +74,17 @@ export type PlaceOrderResult =
   | { ok: false; reason: "window_full"; nextWindow: Date | null };
 
 type Line = CartView["lines"][number];
+
+/**
+ * Which Lines, in what quantities, a Cart holds. Checkout sends it with the
+ * total it showed, so a change from another tab is caught even when the
+ * total stays the same (audit journeys:17).
+ */
+export const cartFingerprint = (cart: CartView) =>
+  cart.lines
+    .map((line) => `${line.id}:${line.quantity}`)
+    .sort()
+    .join(",");
 
 /** A Line's Base Price: its unit price less its Options' Price Deltas. */
 export const baseOf = (line: Line) =>
@@ -213,6 +226,12 @@ export async function placeOrder(
       const limit = orderLimit(day.capacity);
       if (!fitsOneOrder(cart, limit)) {
         return { ok: false, reason: "too_big", limit };
+      }
+      if (
+        input.seenCart !== undefined &&
+        input.seenCart !== cartFingerprint(cart)
+      ) {
+        return { ok: false, reason: "cart_changed", totalCents };
       }
       if (
         input.paymentMethod === "pay_at_pickup" &&

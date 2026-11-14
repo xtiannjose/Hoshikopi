@@ -9,8 +9,9 @@ import {
 } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
-import { addLine, getCart, type CartOwner } from "@/modules/cart";
+import { addLine, getCart, removeLine, type CartOwner } from "@/modules/cart";
 import {
+  cartFingerprint,
   placeOrder,
   transition,
   type PlaceOrderInput,
@@ -256,6 +257,33 @@ describe("placeOrder refusals", () => {
       ok: false,
       reason: "price_changed",
       totalCents: 26000,
+    });
+  });
+
+  // Another tab changed the Cart: say that, not "prices changed", and
+  // never place Lines this tab did not show (audit journeys:17).
+  it("refuses a Cart changed in another tab, even at the same total", async () => {
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const seen = await input(hoshi, {
+      seenCart: cartFingerprint(await getCart(hoshi)),
+    });
+    await addLatte(hoshi);
+    expect(await placeOrder(seen)).toEqual({
+      ok: false,
+      reason: "cart_changed",
+      totalCents: 50000,
+    });
+
+    const [line] = (await getCart(hoshi)).lines;
+    await removeLine(hoshi, line.id);
+    await addLatte(hoshi);
+    await addLatte(hoshi);
+    // The same Lines and total, but not the Lines this tab showed.
+    expect(await placeOrder({ ...seen, seenTotalCents: 50000 })).toEqual({
+      ok: false,
+      reason: "cart_changed",
+      totalCents: 50000,
     });
   });
 

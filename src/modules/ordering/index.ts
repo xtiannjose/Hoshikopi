@@ -8,6 +8,7 @@ export {
 } from "./internal/rules";
 export { nextOrderCode, transition, type Actor } from "./internal/status";
 export {
+  cartFingerprint,
   placeOrder,
   type PlaceOrderInput,
   type PlaceOrderResult,
