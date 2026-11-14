@@ -67,7 +67,7 @@ The owner works on two PCs, both with PowerShell and Git Bash, the project at `C
 | Node, npm | 24.18.0, 11.16.0 | 24.19.0, 11.17.0 |
 | Docker Desktop | 29.8.2 | 29.8.2 |
 | Chrome (Lighthouse uses it) | 157.0.8103.51 | 156.0.8078.80 |
-| `gh` | 2.101, **not signed in**: run `gh auth login` once | 2.101, signed in |
+| `gh` | 2.101, signed in (2026-11-14) | 2.101, signed in |
 
 - Docker Desktop is installed but not always running; start it before database work. Playwright's Chromium is installed.
 - Each PC has its own `.env.local`, `.env.test` and local databases (git-ignored), so local data differs between them.
