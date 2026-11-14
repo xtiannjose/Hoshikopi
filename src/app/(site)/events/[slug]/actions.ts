@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { clientIp, takeToken } from "@/lib/rate-limit";
 import { cancelSignup, confirmSignup, signUpForEvent } from "@/modules/content";
 import { currentMember } from "@/modules/identity";
-import { sendEventSignup } from "@/modules/notify";
+import { canEmail, sendEventSignup } from "@/modules/notify";
 
 export type SignupState = {
   status: "idle" | "done" | "error";
@@ -15,8 +15,10 @@ export type SignupState = {
   /** What was typed, kept after a refusal (React resets the form). */
   values?: { name: string; email: string; seats: string };
   email?: string;
-  /** A Member's own email needs no link: confirmed at once. */
+  /** A Member's own email, or the live demo, needs no link: confirmed at once. */
   confirmed?: boolean;
+  /** False on the live demo, which sends no emails (audit journeys:9). */
+  emailed?: boolean;
 };
 
 /** Sign-ups that went through, per visitor per Event per day (8.7). */
@@ -73,10 +75,13 @@ export async function signUpAction(
     };
   }
   // A signed-in Member's email is proven already (a link or Google), so
-  // their own address needs no link; anyone else's waits for it.
+  // their own address needs no link; anyone else's waits for it. On the
+  // live demo no link can arrive, so the Sign-up is confirmed here; the
+  // per-visitor limit above still stops one visitor booking out an Event.
   const member = await currentMember();
+  const emailed = canEmail();
   const confirmed =
-    member?.email.toLowerCase() === result.signup.email &&
+    (!emailed || member?.email.toLowerCase() === result.signup.email) &&
     (await confirmSignup(result.signup.id, result.token)).ok;
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   try {
@@ -93,7 +98,7 @@ export async function signUpAction(
   }
   // Seats left on the Event page.
   updateTag("content");
-  return { status: "done", email: result.signup.email, confirmed };
+  return { status: "done", email: result.signup.email, confirmed, emailed };
 }
 
 export type AnswerState = {

@@ -3,7 +3,26 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { send } from "./outbox";
+import { canEmail, isDemoAccount, send } from "./outbox";
+
+describe("canEmail (audit journeys:9)", () => {
+  const env = (values: Record<string, string>) =>
+    values as unknown as NodeJS.ProcessEnv;
+
+  it("is off on Vercel without a Resend key: the live demo today", () => {
+    expect(canEmail(env({ VERCEL: "1" }))).toBe(false);
+  });
+
+  it("is on with a Resend key, and off Vercel (the local outbox)", () => {
+    expect(canEmail(env({ VERCEL: "1", RESEND_API_KEY: "re_x" }))).toBe(true);
+    expect(canEmail(env({}))).toBe(true);
+  });
+
+  it("knows the seeded demo accounts' reserved domain", () => {
+    expect(isDemoAccount("christian@hoshikopi.example")).toBe(true);
+    expect(isDemoAccount("hoshi@example.com")).toBe(false);
+  });
+});
 
 const email = {
   to: "hoshi@example.com",

@@ -6,6 +6,7 @@ import { clientIp, takeToken } from "@/lib/rate-limit";
 import { redirect } from "next/navigation";
 
 import { emailSignInLink, googleSignInUrl } from "@/modules/identity";
+import { canEmail, isDemoAccount } from "@/modules/notify";
 
 export type SignInState =
   | { status: "idle" }
@@ -26,6 +27,16 @@ export async function requestSignInLink(
     return {
       status: "error",
       message: "Enter an email address, like hoshi@example.com.",
+      email,
+    };
+  }
+  // The live demo sends no emails until Resend has a domain; only the
+  // seeded demo accounts' links reach the owner's logs (ADR 0005).
+  if (!canEmail() && !isDemoAccount(email)) {
+    return {
+      status: "error",
+      message:
+        "Email links are switched off on this demo. Continue with Google instead.",
       email,
     };
   }

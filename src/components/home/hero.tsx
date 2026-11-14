@@ -11,9 +11,11 @@ import type { CafeDetails, RoomPhoto } from "@/modules/cafe";
 
 // Both lines are in the page; the palette shows one (INFO-12, ADR 0010).
 const COPY = {
+  // No time of day in the Day copy: it shows from 6 AM to 6 PM, and all
+  // day for a visitor who pins Day (audit UI1-15).
   day: {
-    title: "Your morning kopi, ready before you get here.",
-    line: "Magandang umaga! Order ahead on your way in, pick up at the counter and earn a Star with every drink.",
+    title: "Your kopi, ready before you get here.",
+    line: "Order ahead on your way in, pick up at the counter and earn a Star with every drink.",
   },
   night: {
     title: "Your evening kopi, ready before you get here.",

@@ -526,7 +526,7 @@ export async function seedDatabase(
         endsAt: new Date(evening(7).getTime() + 2 * 60 * 60 * 1000),
         summary: "Pour your first rosetta with Annika. Milk and cups on us.",
         bodyMd:
-          "Bring a friend and learn the basics of milk texture and pouring. We start with hearts and work up to a rosetta. Eight seats at the bar.",
+          "Bring a friend and learn the basics of milk texture and pouring. We start with hearts and work up to a rosetta. Twelve seats at the bar.",
         priceCents: php(350),
         seats: 12,
         isPublished: true,
@@ -535,7 +535,7 @@ export async function seedDatabase(
         slug: "open-mic-under-the-stars",
         title: "Open mic under the stars",
         startsAt: evening(21),
-        endsAt: new Date(evening(21).getTime() + 3 * 60 * 60 * 1000),
+        endsAt: new Date(evening(21).getTime() + 2 * 60 * 60 * 1000),
         summary:
           "Songs, poems and stand-up. Sign up at the counter on the night.",
         bodyMd:

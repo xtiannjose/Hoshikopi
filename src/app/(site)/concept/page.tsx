@@ -10,6 +10,7 @@ import {
 
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, Panel, PRIMARY_PILL } from "@/components/panel";
+import { canEmail } from "@/modules/notify";
 import { demoMode } from "@/modules/payments";
 
 export const metadata: Metadata = {
@@ -61,7 +62,9 @@ const REAL = [
   ],
   [
     "Emails",
-    "Sign-in and order emails go to the address you type. Use one you own.",
+    canEmail()
+      ? "Sign-in and order emails go to the address you type. Use one you own."
+      : "This demo sends no emails: sign in with Google, and Event Sign-ups are confirmed on the spot.",
   ],
   [
     "Your data",
