@@ -20,7 +20,9 @@ export async function endPauseAndBusy() {
 
 /**
  * The server reads the real clock, so tests that order open the cafe all
- * day today (Manila) with Special Hours. Fails only from 23:45 Manila time.
+ * day today (Manila) with Special Hours. The last Pickup Window starts at
+ * 23:30 and the first is now plus Prep Time, so from about 23:20 Manila no
+ * window is left and ordering tests fail; run the suite earlier.
  */
 export async function openAllDayToday() {
   const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10);

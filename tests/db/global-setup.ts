@@ -1,11 +1,18 @@
 import { execSync } from "node:child_process";
+import { rmSync } from "node:fs";
+import path from "node:path";
 
 import { config } from "dotenv";
 
 import { testDatabaseUrl } from "./helpers";
 
-// Bring the test database up to the latest migration once per run.
+// Bring the test database up to the latest migration once per run, and
+// start with an empty test outbox (MAIL_DIR in vitest.config.mts).
 export default function setup() {
+  rmSync(path.join(process.cwd(), "data", "mail-test"), {
+    recursive: true,
+    force: true,
+  });
   config({ path: ".env.test", override: true, quiet: true });
   const url = testDatabaseUrl();
   try {

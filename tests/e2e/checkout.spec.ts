@@ -1,10 +1,8 @@
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
-
 import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations } from "./axe";
 import { openAllDayToday } from "./db";
+import { mailTo } from "./mail";
 import { addToCart } from "./order";
 
 test.beforeEach(openAllDayToday);
@@ -25,7 +23,9 @@ test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
 
   await page.getByText("Pay at Pickup", { exact: true }).click();
   await page.getByLabel("Name").fill("Hoshi");
-  await page.getByLabel("Email").fill("hoshi@example.com");
+  // An address of its own, so only this Order's email can match.
+  const address = `hoshi-${Date.now()}@example.com`;
+  await page.getByLabel("Email").fill(address);
   await page.getByRole("button", { name: /Place order, PHP 260/ }).click();
   await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
   await expect(page.getByRole("status")).toHaveText(
@@ -35,14 +35,11 @@ test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
   // The "Order placed" email went out with the same Order Code (ORD-10).
   const code = await page.getByRole("heading", { level: 1 }).innerText();
   await expect
-    .poll(async () => {
-      const dir = path.join(process.cwd(), "data", "mail");
-      const files = await readdir(dir).catch(() => []);
-      const texts = await Promise.all(
-        files.map((f) => readFile(path.join(dir, f), "utf8"))
-      );
-      return texts.some((t) => t.includes(`Order ${code} at Hoshikopi`));
-    })
+    .poll(async () =>
+      (await mailTo(address)).some((t) =>
+        t.includes(`Order ${code} at Hoshikopi`)
+      )
+    )
     .toBe(true);
   // Next keeps the previous page hidden for Back, so look in this one.
   await expect(
@@ -134,8 +131,13 @@ test("checkout refuses an 11th try from one Cart in 15 minutes", async ({
     (button as HTMLButtonElement).form!.noValidate = true;
   });
   for (let i = 0; i < 10; i++) {
+    // This try's own answer: the checkout Server Action, not any POST, or
+    // the next click can land while this one is still pending and not count.
     const answered = page.waitForResponse(
-      (r) => r.request().method() === "POST"
+      (r) =>
+        r.request().method() === "POST" &&
+        new URL(r.url()).pathname === "/checkout" &&
+        r.request().headers()["next-action"] !== undefined
     );
     await place.click();
     await answered;
@@ -155,9 +157,12 @@ test("Pickup Time offers the next few times as chips and the rest in a list (8.3
   );
   expect(await chips.count()).toBeLessThanOrEqual(6);
   const list = page.getByLabel("Time later today");
-  // An all-day test cafe always has more than 6 windows left.
-  const time = (await list.locator("option").nth(2).textContent())!;
-  await list.selectOption({ index: 2 });
+  // The list holds the windows after the first 6. Late in the evening
+  // (Manila) none may be left today, and the server reads the real clock.
+  const later = await list.locator("option").count();
+  test.skip(later === 0, "no Pickup Window left after the first 6 today");
+  const time = (await list.locator("option").last().textContent())!;
+  await list.selectOption({ index: later - 1 });
   await expect(
     page.locator('input[name="pickup"][value="later"]')
   ).toBeChecked();

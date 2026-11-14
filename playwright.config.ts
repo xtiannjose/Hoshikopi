@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { E2E_MAIL_DIR } from "./tests/e2e/mail";
+
 // Browser tests build and serve the app on port 3100 against the
 // hoshikopi_e2e database, migrated, reset and seeded first, at phone and
 // desktop width.
@@ -70,6 +72,9 @@ export default defineConfig({
       BETTER_AUTH_SECRET: "e2e-secret-at-least-32-characters-long",
       PAYMENT_PROVIDER: "fake",
       CRON_SECRET: "e2e-cron-secret",
+      // Its own outbox, emptied by reset-db.mts, so the developer's
+      // data/mail is untouched and tests only find this run's emails.
+      MAIL_DIR: E2E_MAIL_DIR,
     },
   },
 });

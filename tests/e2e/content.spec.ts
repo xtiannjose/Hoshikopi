@@ -1,13 +1,9 @@
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
-
 import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations, openIn } from "./axe";
 import { e2eQuery } from "./db";
+import { mailTo } from "./mail";
 import { signIn } from "./sign-in";
-
-const MAIL = path.join(process.cwd(), "data", "mail");
 
 for (const palette of ["day", "night"] as const) {
   test(`Events and news in the ${palette} palette (EVT-01, NEWS-01)`, async ({
@@ -178,12 +174,7 @@ test("a visitor signs up for an Event, confirms by email, the Manager sees it an
   );
   let mail = "";
   await expect
-    .poll(async () => {
-      const files = await readdir(MAIL).catch(() => []);
-      const file = files.find((name) => name.endsWith(`${email}.txt`));
-      mail = file ? await readFile(path.join(MAIL, file), "utf8") : "";
-      return mail;
-    })
+    .poll(async () => (mail = (await mailTo(email))[0] ?? ""))
     .toContain("/signup/");
   const link = mail.match(/https?:\/\/\S+\/signup\/\S+/)![0];
   // The visitor's own text never goes into the email.

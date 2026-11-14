@@ -1,26 +1,16 @@
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
-
 import { createOTP } from "@better-auth/utils/otp";
 import { expect, type Page } from "@playwright/test";
 import { symmetricDecrypt } from "better-auth/crypto";
 
 import { e2eQuery } from "./db";
+import { mailTo } from "./mail";
 
 // The e2e server's BETTER_AUTH_SECRET (playwright.config.ts).
 const E2E_AUTH_SECRET = "e2e-secret-at-least-32-characters-long";
-const MAIL = path.join(process.cwd(), "data", "mail");
 
-/**
- * The sign-in link in the outbox whose return path carries `nonce`. Only
- * this address's files are read: the outbox keeps every email ever sent.
- */
+/** The sign-in link sent to `email` whose return path carries `nonce`. */
 async function linkFor(nonce: string, email: string): Promise<string | null> {
-  // The outbox names each file after the address (outbox.ts).
-  const ending = `-${email.replace(/[^\w@.+-]/g, "_")}.txt`;
-  const files = await readdir(MAIL).catch(() => []);
-  for (const file of files.filter((f) => f.endsWith(ending))) {
-    const text = await readFile(path.join(MAIL, file), "utf8");
+  for (const text of await mailTo(email)) {
     const url = text.match(/https?:\/\/\S+/)?.[0];
     if (url?.includes(nonce)) return url;
   }
@@ -91,4 +81,7 @@ export async function signIn(page: Page, email: string, next = "/account") {
   }
   await expect(page).toHaveURL(new RegExp(`t=${nonce}`));
   expect(page.url()).not.toContain("error=");
+  // After the Second Factor the page arrives by client navigation and its
+  // <title> a moment later; let it land before a test checks the page.
+  await expect(page).toHaveTitle(/\S/);
 }

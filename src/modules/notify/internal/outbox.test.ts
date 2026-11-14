@@ -45,20 +45,22 @@ describe("send without RESEND_API_KEY (ADR 0005)", () => {
   });
 });
 
-describe("send to data/mail (local, no key)", () => {
+describe("send to the local outbox (no key)", () => {
   // An Event Sign-up email only needs an @ and a dot, so it can hold "../"
-  // (audit, 7.3): the file must still land inside data/mail.
-  it("keeps the file inside data/mail whatever the address holds", async () => {
+  // (audit, 7.3): the file must still land inside the outbox folder.
+  it("keeps the file inside the outbox whatever the address holds", async () => {
     vi.stubEnv("RESEND_API_KEY", "");
     vi.stubEnv("VERCEL", "");
     vi.spyOn(console, "log").mockImplementation(() => {});
     const marker = `escaped-${Date.now()}`;
-    const data = path.join(process.cwd(), "data");
+    // data/mail-test, set for every Vitest run in vitest.config.mts.
+    const mail = process.env.MAIL_DIR!;
 
     await send({ ...email, to: `a/../../../${marker}@example.com` });
 
-    expect((await readdir(data)).some((f) => f.includes(marker))).toBe(false);
-    const inMail = await readdir(path.join(data, "mail"));
+    const parent = await readdir(path.dirname(mail));
+    expect(parent.some((f) => f.includes(marker))).toBe(false);
+    const inMail = await readdir(mail);
     expect(inMail.some((f) => f.includes(marker))).toBe(true);
   });
 });

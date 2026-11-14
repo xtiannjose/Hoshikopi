@@ -50,7 +50,9 @@ export async function send(email: Email): Promise<void> {
     return;
   }
   console.log(`\n[email] to ${email.to}: ${email.subject}\n${email.text}\n`);
-  const dir = path.join(process.cwd(), "data", "mail");
+  // Test runs point MAIL_DIR at their own folder (playwright.config.ts,
+  // vitest.config.mts), so data/mail stays the developer's own outbox.
+  const dir = process.env.MAIL_DIR ?? path.join(process.cwd(), "data", "mail");
   await mkdir(dir, { recursive: true });
   const stamp = now().toISOString().replace(/[:.]/g, "-");
   // Only these characters reach the file name, so no address (an Event

@@ -8,7 +8,7 @@ A concept cafe in Metro Manila, and the website that runs it. The site sells the
 
 ## Status
 
-Phases 0 to 6 (MVP and V1) and Phase 8 (improvements) are built, and the demo is live at https://hoshikopi.vercel.app (Vercel and Neon, Test Mode payments on the `fake` provider). Phase 7, audit fixes: the November audit is finished, with every finding double-checked and ranked in [docs/audit/2026-11-13.md](docs/audit/2026-11-13.md). Now: the last part of 7.5 (the flaky Playwright run), then batches 7.7 to 7.11 from the audit, then Phase 9, the portfolio review. See [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
+Phases 0 to 6 (MVP and V1) and Phase 8 (improvements) are built, and the demo is live at https://hoshikopi.vercel.app (Vercel and Neon, Test Mode payments on the `fake` provider). Phase 7, audit fixes: the November audit is finished, with every finding double-checked and ranked in [docs/audit/2026-11-13.md](docs/audit/2026-11-13.md). Now: batches 7.7 to 7.11 from the audit (7.5 finished 2026-11-14), then Phase 9, the portfolio review. See [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
 
 ## Stack
 
