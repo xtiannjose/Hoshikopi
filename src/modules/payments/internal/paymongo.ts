@@ -102,12 +102,10 @@ export function payMongoProvider(
       const resource = event.data.attributes.data;
       return {
         id: event.data.id,
-        type:
-          type === "checkout_session.payment.paid"
-            ? "paid"
-            : type === "payment.failed"
-              ? "failed"
-              : "other",
+        // Only the checkout session's own paid event counts. payment.failed
+        // names a pay_ resource, never the session, and the hosted checkout
+        // stays open for another try, so it changes nothing (audit PAY-06).
+        type: type === "checkout_session.payment.paid" ? "paid" : "other",
         checkoutId: resource?.id ?? null,
         paymentId: resource?.attributes?.payments?.[0]?.id ?? null,
       };
