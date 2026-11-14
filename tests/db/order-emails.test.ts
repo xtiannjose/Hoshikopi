@@ -21,9 +21,9 @@ beforeEach(async () => {
 afterEach(unfreezeClock);
 afterAll(() => db.$disconnect());
 
-/** Emails written to data/mail/ for an address (no RESEND_API_KEY in tests). */
+/** Emails written to the test outbox for an address (no RESEND_API_KEY). */
 async function mailTo(address: string): Promise<string[]> {
-  const dir = path.join(process.cwd(), "data", "mail");
+  const dir = process.env.MAIL_DIR!;
   const files = (await readdir(dir).catch(() => [])).filter((f) =>
     f.endsWith(`-${address}.txt`)
   );

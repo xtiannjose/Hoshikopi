@@ -35,7 +35,7 @@ Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): the 
 
 ## Environment
 
-- Windows 10 Pro, PowerShell and Git Bash. Use `npm`. In Git Bash, prefix commands with `/paths` arguments with `MSYS_NO_PATHCONV=1`.
+- Two PCs: Windows 11 Home and Windows 10 Pro (`docs/08-TOOLING.md` section 5), both with PowerShell and Git Bash. Use `npm`. In Git Bash, prefix commands with `/paths` arguments with `MSYS_NO_PATHCONV=1`.
 - Local database: Docker container `hoshikopi-db` on port 5434 (`hoshikopi`, `hoshikopi_test`, `hoshikopi_e2e`); see `docs/06-SETUP.md` section 6.
 - Never commit `.env*` except `.env.example`.
 - Stop every server you start (ports in `docs/08-TOOLING.md` section 3).

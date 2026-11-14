@@ -11,9 +11,18 @@ export async function e2eQuery(sql: string, values: unknown[] = []) {
   }
 }
 
+/** Ends a pause and Busy Mode, so a failed @cafe-wide test leaves neither. */
+export async function endPauseAndBusy() {
+  await e2eQuery(
+    "UPDATE cafe_settings SET ordering_paused_until = NULL, pause_message = NULL, busy_minutes = 0, busy_until = NULL"
+  );
+}
+
 /**
  * The server reads the real clock, so tests that order open the cafe all
- * day today (Manila) with Special Hours. Fails only from 23:45 Manila time.
+ * day today (Manila) with Special Hours. The last Pickup Window starts at
+ * 23:30 and the first is now plus Prep Time, so from about 23:20 Manila no
+ * window is left and ordering tests fail; run the suite earlier.
  */
 export async function openAllDayToday() {
   const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10);

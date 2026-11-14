@@ -1,5 +1,8 @@
-// Truncates and re-seeds the end-to-end database. Run by the Playwright
-// webServer command before the app builds and starts.
+// Truncates and re-seeds the end-to-end database and empties its outbox.
+// Run by the Playwright webServer command before the app builds and starts.
+import { rm } from "node:fs/promises";
+import path from "node:path";
+
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../../src/generated/prisma/client";
@@ -18,4 +21,10 @@ try {
   await seedDatabase(db);
 } finally {
   await db.$disconnect();
+}
+
+// The e2e outbox only (MAIL_DIR in playwright.config.ts), never data/mail.
+const mail = process.env.MAIL_DIR ?? "";
+if (path.basename(mail) === "mail-e2e") {
+  await rm(mail, { recursive: true, force: true });
 }

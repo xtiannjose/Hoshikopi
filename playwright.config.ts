@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { E2E_MAIL_DIR } from "./tests/e2e/mail";
+
 // Browser tests build and serve the app on port 3100 against the
 // hoshikopi_e2e database, migrated, reset and seeded first, at phone and
 // desktop width.
@@ -11,18 +13,27 @@ const E2E_DATABASE_URL = (process.env.E2E_DATABASE_URL ??=
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: true,
+  // Parallel workers place Orders into the same Pickup Window, and
+  // placement waits its turn on that window's lock, so allow 10 s.
+  expect: { timeout: 10_000 },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   use: {
     baseURL: BASE_URL,
-    trace: "on-first-retry",
+    // Keep the evidence of a failure even without retries.
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
     // Motion off (docs/05 section 7): axe checks the settled page, never a
     // card halfway through a fade.
     reducedMotion: "reduce",
   },
+  // Tests tagged @cafe-wide change what every other test sees (pause,
+  // Special Hours, Busy Mode, a price, Sold Out), so they run in their own
+  // project after the other two, one at a time.
   projects: [
     {
       name: "phone",
+      grepInvert: /@cafe-wide/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 375, height: 812 },
@@ -30,6 +41,17 @@ export default defineConfig({
     },
     {
       name: "desktop",
+      grepInvert: /@cafe-wide/,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1280, height: 800 },
+      },
+    },
+    {
+      name: "cafe-wide",
+      grep: /@cafe-wide/,
+      dependencies: ["phone", "desktop"],
+      workers: 1,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 800 },
@@ -50,6 +72,9 @@ export default defineConfig({
       BETTER_AUTH_SECRET: "e2e-secret-at-least-32-characters-long",
       PAYMENT_PROVIDER: "fake",
       CRON_SECRET: "e2e-cron-secret",
+      // Its own outbox, emptied by reset-db.mts, so the developer's
+      // data/mail is untouched and tests only find this run's emails.
+      MAIL_DIR: E2E_MAIL_DIR,
     },
   },
 });
