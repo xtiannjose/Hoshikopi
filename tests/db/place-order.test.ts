@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart, type CartOwner } from "@/modules/cart";
@@ -122,6 +130,38 @@ describe("placeOrder: a Guest pays at pickup (ORD-03 to ORD-08, PAY-02)", () => 
       where: { orderId: result.ok ? result.orderId : "" },
     });
     expect(line).toMatchObject({ name: "Hoshi Latte", unitCents: 25000 });
+  });
+});
+
+describe("placeOrder on the hosted demo (ADR 0015 update, audit journeys:1)", () => {
+  // A production build of the demo, as on hoshikopi.vercel.app.
+  beforeEach(() => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://hoshikopi.vercel.app");
+    vi.stubEnv("PAYMENT_PROVIDER", "fake");
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("takes an Order at 10 PM Manila, after the real Last Order", async () => {
+    const hoshi = guest();
+    await addLatte(hoshi);
+    freezeClock(at("22:00"));
+    const placed = await placeOrder(await input(hoshi));
+    expect(placed.ok).toBe(true);
+  });
+
+  it("still refuses while Ordering is Paused", async () => {
+    const hoshi = guest();
+    await addLatte(hoshi);
+    freezeClock(at("22:00"));
+    await db.cafeSettings.update({
+      where: { id: 1 },
+      data: { orderingPausedUntil: at("23:00") },
+    });
+    expect(await placeOrder(await input(hoshi))).toEqual({
+      ok: false,
+      reason: "paused",
+    });
   });
 });
 

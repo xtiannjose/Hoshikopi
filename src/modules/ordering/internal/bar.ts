@@ -1,8 +1,9 @@
 import { dayValue, manila } from "@/lib/clock";
 import { db } from "@/lib/db";
-import { getOrderingDay, prepMinutes } from "@/modules/cafe";
+import { prepMinutes } from "@/modules/cafe";
 import { closeCheckout } from "@/modules/payments";
 
+import { orderingDay } from "./day";
 import { transition } from "./status";
 import { drinksQueuedAhead } from "./windows";
 
@@ -62,7 +63,7 @@ export type BarBoard = {
 /** Today's live Orders for the Bar Screen, by Pickup Time (STAFF-02). */
 export async function barBoard(at: Date): Promise<BarBoard> {
   await expireUnpaid(at);
-  const day = await getOrderingDay(at);
+  const day = await orderingDay(at);
   const prep = prepMinutes(await drinksQueuedAhead(db, day.day), day.prep);
   const rows = await db.order.findMany({
     where: {

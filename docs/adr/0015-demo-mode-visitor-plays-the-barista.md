@@ -13,6 +13,10 @@ While **Demo Mode** is on, the Order page shows a "Be the barista" panel. Its on
 
 The concept page gets a "Try it in two minutes" guide while Demo Mode is on.
 
+## Update 2026-11-14: the hosted demo takes Orders all day
+
+The November audit found the two-minute demo closed from 8:30 PM to 7:00 AM Manila time, which is most of a reviewer's day in the US and Europe (audit journeys:1, a P0). So **a production build where Demo Mode runs takes Orders all day**: `demoAllDayOrdering()` in the `payments` module, true on the live demo on `*.vercel.app`, its previews and the local e2e build, false in local development and in tests, which keep the cafe's real hours. The `ordering` module reads the day through `orderingDay()`, which then swaps in 00:00 to 23:45 (closing 23:59) for checkout, placement, the Cart and the Bar Screen. Pause, Busy Mode, Capacity and Prep Time still apply, and the Visit page, the hero and Opening Hours still show the real hours; checkout says the demo takes orders any time and points to them. Ordering ahead for tomorrow (ORD-03's V1 part, audit ORD-09) stays out of scope.
+
 ## Considered options
 
 - **A demo Staff sign-in ("Try the Bar Screen").** Rejected: it means minting sessions without an email, and every visitor could move every other visitor's Orders.

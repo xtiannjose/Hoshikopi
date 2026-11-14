@@ -19,6 +19,10 @@ test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
   await expect(
     page.getByText("Hoshikopi is a concept cafe.").first()
   ).toBeVisible();
+  // The e2e build is a hosted demo: ordering is open all day (ADR 0015).
+  await expect(
+    page.getByText("This demo takes orders any time of day")
+  ).toBeVisible();
   await expectNoAxeViolations(page);
 
   await page.getByText("Pay at Pickup", { exact: true }).click();

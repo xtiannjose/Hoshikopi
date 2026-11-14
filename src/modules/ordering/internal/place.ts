@@ -5,12 +5,7 @@ import { z } from "zod";
 import type { PaymentMethod } from "@/generated/prisma/enums";
 import { dayValue, now } from "@/lib/clock";
 import { db } from "@/lib/db";
-import {
-  getOrderingDay,
-  orderingState,
-  pickupWindows,
-  type Counts,
-} from "@/modules/cafe";
+import { orderingState, pickupWindows, type Counts } from "@/modules/cafe";
 import {
   clearCart,
   getCart,
@@ -25,6 +20,7 @@ import {
 } from "@/modules/loyalty";
 import { startPayment, type OnlineMethod } from "@/modules/payments";
 
+import { orderingDay } from "./day";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS, MAX_DRINKS_PER_ORDER } from "./rules";
 import { emailOrderPlaced } from "./emails";
 import { hashToken, orderLink, orderToken } from "./links";
@@ -178,7 +174,7 @@ export async function placeOrder(
   const result = await db.$transaction(
     async (tx): Promise<PlaceOrderResult> => {
       const at = now();
-      const day = await getOrderingDay(at, tx);
+      const day = await orderingDay(at, tx);
       const state = orderingState(at, day);
       if (!state.canOrder) {
         return {

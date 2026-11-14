@@ -14,6 +14,7 @@ import { currentCartOwner } from "@/modules/cart";
 import { currentMember, memberProfile } from "@/modules/identity";
 import { birthdayTreat } from "@/modules/loyalty";
 import { checkoutView } from "@/modules/ordering";
+import { demoAllDayOrdering } from "@/modules/payments";
 
 import { CheckoutForm } from "./checkout-form";
 
@@ -181,6 +182,13 @@ async function Checkout() {
           <p className="text-warning font-semibold">
             The bar is extra busy right now, so pickup times are a little longer
             than usual. Salamat for your patience!
+          </p>
+        )}
+        {demoAllDayOrdering() && (
+          <p className="text-muted-foreground text-sm">
+            This demo takes orders any time of day, so you can try it from
+            anywhere. The cafe&apos;s real hours are on the{" "}
+            <Link href="/cafe">Visit page</Link>.
           </p>
         )}
         {!first ? (
