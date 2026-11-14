@@ -22,11 +22,22 @@ export async function refundOrder(
   if (!manager && actor.kind !== "system") {
     return { ok: false, reason: "not_allowed" };
   }
-  const order = await db.order.findUnique({ where: { id: orderId } });
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: { payment: { select: { status: true } } },
+  });
   if (!order) return { ok: false, reason: "not_found" };
+  // Paid after it Expired or was Cancelled: the Order never counted as
+  // Paid, so only the money goes back and its status stays (audit ops:1).
+  const paidLate =
+    manager &&
+    order.paidAt === null &&
+    (order.status === "expired" || order.status === "cancelled") &&
+    order.payment?.status === "paid";
   const eligible =
     (order.status === "picked_up" && manager) ||
-    (order.status === "cancelled" && order.paidAt !== null);
+    (order.status === "cancelled" && order.paidAt !== null) ||
+    paidLate;
   if (!eligible) return { ok: false, reason: "not_allowed" };
 
   let outcome;
@@ -43,8 +54,10 @@ export async function refundOrder(
   if (outcome === "already_refunded") {
     return { ok: false, reason: "not_allowed" };
   }
-  const moved = await transition(orderId, "refunded", actor);
-  if (!moved.ok) return { ok: false, reason: "not_allowed" };
+  if (!paidLate) {
+    const moved = await transition(orderId, "refunded", actor);
+    if (!moved.ok) return { ok: false, reason: "not_allowed" };
+  }
   await emailOrderRefunded(orderId);
   return { ok: true };
 }

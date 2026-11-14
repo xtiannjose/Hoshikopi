@@ -15,7 +15,7 @@ import { formatDate, formatTime, manila, now } from "@/lib/clock";
 import { addDays } from "@/lib/hours";
 import { formatPrice } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
-import { dayOrders } from "@/modules/ordering";
+import { dayOrders, ordersToRefund } from "@/modules/ordering";
 
 import { cancelAction, refundAction } from "./actions";
 
@@ -92,6 +92,7 @@ async function Day({
   const isToday = day === today;
   const shown = formatDate(new Date(`${day}T04:00:00Z`));
   const { orders, count, totalCents } = await dayOrders(day);
+  const toRefund = await ordersToRefund();
   const toCollect = orders.filter(
     (o) => o.cancellable && !o.paid && o.paymentMethod === "pay_at_pickup"
   );
@@ -156,6 +157,41 @@ async function Day({
         <p role="status" className="font-semibold">
           {line}
         </p>
+      )}
+
+      {/* Money still held for an Order that is over, any day: it used to
+          show only in a log line Vercel keeps for an hour (audit ops:1). */}
+      {toRefund.length > 0 && (
+        <section
+          aria-labelledby="to-refund"
+          className="border-destructive rounded-card grid gap-2 border-2 p-4"
+        >
+          <h2 id="to-refund" className="text-lg font-semibold">
+            Needs a refund
+          </h2>
+          <p className="text-sm">
+            Paid after it closed, or its refund didn&apos;t go through. Open its
+            day and refund it there.
+          </p>
+          <ul className="grid gap-1">
+            {toRefund.map((o) => {
+              const orderDay = o.serviceDay.toISOString().slice(0, 10);
+              return (
+                <li key={o.id} className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href={`/manage/orders?day=${orderDay}`}
+                    className="font-mono"
+                  >
+                    {o.code}
+                  </Link>
+                  <span>{formatDate(new Date(`${orderDay}T04:00:00Z`))}</span>
+                  <OrderStatusPill status={o.status} />
+                  <span className="font-mono">{formatPrice(o.totalCents)}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       <ul className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">

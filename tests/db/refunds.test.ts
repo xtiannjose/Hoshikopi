@@ -5,6 +5,8 @@ import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
 import {
   cancelByCustomer,
+  dayOrders,
+  ordersToRefund,
   placeOrder,
   receivePaymentWebhook,
   refundOrder,
@@ -147,6 +149,37 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
       where: { orderId: placed.orderId },
     });
     expect(payment.status).toBe("expired");
+  });
+
+  // A payment that lands after the Order expired, whose automatic refund
+  // failed: once only a console line, now a button (audit ops:1).
+  it("refunds an Order paid after it closed, and lists it until then", async () => {
+    const placed = await order("gcash", false);
+    await transition(placed.orderId, "expired", { kind: "system" });
+    await db.payment.update({
+      where: { orderId: placed.orderId },
+      data: { status: "paid", providerPaymentId: "fake_pay_late" },
+    });
+    expect(await ordersToRefund()).toEqual([
+      expect.objectContaining({ id: placed.orderId, status: "expired" }),
+    ]);
+    const [row] = (await dayOrders("2026-11-02")).orders;
+    expect(row).toMatchObject({ id: placed.orderId, refundable: true });
+
+    expect(await refundOrder(placed.orderId, annika)).toEqual({
+      ok: false,
+      reason: "not_allowed",
+    });
+    expect(await refundOrder(placed.orderId, christian)).toEqual({ ok: true });
+    // The Order was never Paid in its own record, so it stays Expired.
+    const after = await db.order.findUniqueOrThrow({
+      where: { id: placed.orderId },
+      include: { payment: { include: { refunds: true } } },
+    });
+    expect(after.status).toBe("expired");
+    expect(after.payment?.status).toBe("refunded");
+    expect(after.payment?.refunds).toHaveLength(1);
+    expect(await ordersToRefund()).toEqual([]);
   });
 
   it("refuses an Order that was never paid", async () => {

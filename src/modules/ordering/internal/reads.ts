@@ -168,6 +168,39 @@ function summaryAndLink(order: {
   };
 }
 
+/**
+ * Money still held for an Order that is over: paid after it Expired or was
+ * Cancelled, or its automatic Refund failed. A Manager refunds it by hand.
+ */
+const closedButPaid = (o: {
+  status: string;
+  payment: { status: string } | null;
+}) =>
+  (o.status === "expired" || o.status === "cancelled") &&
+  o.payment?.status === "paid";
+
+/**
+ * Every Order that still needs a Refund, any day, for the top of
+ * /manage/orders: the only place this used to show was a log line that
+ * Vercel keeps for an hour (audit ops:1).
+ */
+export async function ordersToRefund() {
+  return db.order.findMany({
+    where: {
+      status: { in: ["expired", "cancelled"] },
+      payment: { status: "paid" },
+    },
+    orderBy: { placedAt: "asc" },
+    select: {
+      id: true,
+      code: true,
+      status: true,
+      serviceDay: true,
+      totalCents: true,
+    },
+  });
+}
+
 /** A day's Orders and totals for the Manager (STAFF-07). */
 export async function dayOrders(day: string) {
   const orders = await db.order.findMany({
@@ -198,7 +231,8 @@ export async function dayOrders(day: string) {
       ...summaryAndLink(o),
       refundable:
         o.status === "picked_up" ||
-        (o.status === "cancelled" && o.paidAt !== null),
+        (o.status === "cancelled" && o.paidAt !== null) ||
+        closedButPaid(o),
       cancellable: [
         "placed",
         "paid",
