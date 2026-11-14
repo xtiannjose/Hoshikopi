@@ -227,6 +227,7 @@ export function CapacityForm({
                       type="number"
                       min={0}
                       max={200}
+                      required
                       name={`drinks-${row.weekday}`}
                       defaultValue={row.drinks}
                       aria-label={`${name} drinks per window`}
@@ -238,6 +239,7 @@ export function CapacityForm({
                       type="number"
                       min={0}
                       max={200}
+                      required
                       name={`food-${row.weekday}`}
                       defaultValue={row.food}
                       aria-label={`${name} food Lines per window`}
@@ -261,6 +263,7 @@ export function CapacityForm({
           name="baseMinutes"
           label="Base minutes"
           inputMode="decimal"
+          required
           defaultValue={prep.baseMinutes}
           error={state.errors?.baseMinutes}
         />
@@ -268,6 +271,7 @@ export function CapacityForm({
           name="perDrinkMinutes"
           label="Minutes per drink ahead"
           inputMode="decimal"
+          required
           defaultValue={prep.perDrinkMinutes}
           error={state.errors?.perDrinkMinutes}
         />

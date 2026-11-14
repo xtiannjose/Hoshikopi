@@ -6,6 +6,7 @@ import {
   getOrderingDay,
   pauseOrdering,
   resumeOrdering,
+  saveCafeDetails,
   saveCapacity,
   saveSpecialHours,
   saveWeeklyHours,
@@ -73,6 +74,17 @@ describe("Special Hours", () => {
     );
     expect((await getOrderingDay(new Date(MONDAY_9AM))).hours).toBeNull();
   });
+
+  it("refuses a day already gone (audit staff:5)", async () => {
+    const result = await saveSpecialHours(
+      { day: "2026-11-01", isClosed: true },
+      christian
+    );
+    expect(result).toEqual({
+      ok: false,
+      errors: { day: "Choose today or a later date." },
+    });
+  });
 });
 
 describe("Capacity", () => {
@@ -93,6 +105,46 @@ describe("Capacity", () => {
       capacity: { drinks: 15, food: 8 },
       prep: { baseMinutes: 3, perDrinkMinutes: 2 },
     });
+  });
+
+  // A cleared cell used to save 0 drinks: no Pickup Times that weekday.
+  it("refuses blank cells and Prep Time finer than a tenth (audit staff:5)", async () => {
+    const rows = [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({
+      weekday,
+      drinks: weekday === 1 ? " " : "12",
+      food: "8",
+    }));
+    expect(
+      await saveCapacity(
+        rows,
+        { baseMinutes: "", perDrinkMinutes: "1.25" },
+        christian
+      )
+    ).toEqual({
+      ok: false,
+      errors: {
+        "1": "Use whole numbers from 0 to 200.",
+        baseMinutes: "Use minutes from 0 to 60, like 4 or 1.5.",
+        perDrinkMinutes: "Use minutes from 0 to 60, like 4 or 1.5.",
+      },
+    });
+    expect(
+      (await getOrderingDay(new Date(MONDAY_9AM))).capacity.drinks
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe("Cafe details (STAFF-09)", () => {
+  it("refuses a blank map pin instead of saving 0,0 (audit staff:5)", async () => {
+    const result = await saveCafeDetails(
+      { mapLat: "", mapLng: "121.03" },
+      christian
+    );
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.errors).toMatchObject({
+      mapLat: "Enter the map pin.",
+    });
+    expect(!result.ok && result.errors.mapLng).toBeUndefined();
   });
 });
 
