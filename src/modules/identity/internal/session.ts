@@ -67,12 +67,24 @@ export async function currentStaff(
 }
 
 /**
+ * Whether this session has entered the Second Factor. The Bar Screen shows a
+ * Manager's Pause, Busy Mode and Cancel only then: their actions need it
+ * (audit staff:1).
+ */
+export async function secondFactorEntered(): Promise<boolean> {
+  const user = await currentUser();
+  return !!user && (await secondFactorPassed(user.sessionId));
+}
+
+/**
  * Staff on /manage/two-factor: signed in, Second Factor not yet entered in
- * this session. `next` is kept to /manage pages; already entered goes there.
+ * this session. `next` is kept to /manage pages and the Bar Screen; already
+ * entered goes there.
  */
 export async function staffAwaitingSecondFactor(next: string | undefined) {
   const safe = safeNext(next);
-  const target = safe.startsWith("/manage") ? safe : "/manage";
+  const target =
+    safe.startsWith("/manage") || safe === "/bar" ? safe : "/manage";
   const user = await currentUser();
   if (!user) redirect(`/sign-in?next=${encodeURIComponent(target)}`);
   if (user.role === "customer") notFound();

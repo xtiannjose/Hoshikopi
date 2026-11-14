@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations } from "./axe";
 import { e2eQuery, endPauseAndBusy, openAllDayToday } from "./db";
-import { signIn } from "./sign-in";
+import { enterSecondFactor, signIn } from "./sign-in";
 
 test.beforeEach(openAllDayToday);
 test.afterEach(async ({}, testInfo) => {
@@ -53,7 +53,8 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
   }
   await expect(card).toContainText("Hoshi");
   await expect(card).toContainText("less ice please");
-  await expect(card).toContainText("Pay at Pickup");
+  // What to collect, so a Barista needs no Manager screen (audit journeys:7).
+  await expect(card).toContainText(/Pay at Pickup: collect PHP \d/);
   await expectNoAxeViolations(bar);
 
   const steps: [string, string][] = [
@@ -114,6 +115,23 @@ test("the Bar Screen says it stopped when its session ends (audit, 7.4)", async 
   await expect(
     alert.getByRole("link", { name: "Sign in again" })
   ).toHaveAttribute("href", "/sign-in?next=%2Fbar");
+});
+
+test("a Manager without the Second Factor gets a link to it, not controls that drop the tap (audit staff:1)", async ({
+  page,
+}) => {
+  const email = "christian@hoshikopi.example";
+  await signIn(page, email, "/bar");
+  const controls = page.getByRole("button", {
+    name: /^(Pause|Resume) ordering/,
+  });
+  await expect(controls).toHaveCount(0);
+  await page
+    .getByRole("link", { name: "Enter your code to pause or cancel" })
+    .click();
+  await enterSecondFactor(page, email);
+  await expect(page).toHaveURL(/\/bar$/);
+  await expect(controls).toHaveCount(1);
 });
 
 test(

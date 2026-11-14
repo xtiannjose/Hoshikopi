@@ -15,6 +15,7 @@ export {
   memberByEmail,
   requireMember,
   requireStaff,
+  secondFactorEntered,
   signOut,
   staffAwaitingSecondFactor,
   type Staff,

@@ -78,15 +78,27 @@ describe("barBoard (STAFF-02)", () => {
       status: "placed",
       firstName: "Hoshi",
       payAtPickup: true,
+      totalCents: 18500,
       lines: [
         {
           quantity: 1,
           name: "Hoshi Latte",
           options: ["Large", "Oat milk"],
           note: "less ice please",
+          reward: false,
         },
       ],
     });
+  });
+
+  it("marks a Reward Line, so the bar knows what to collect (audit journeys:7)", async () => {
+    const { id } = await order("09:15");
+    await db.orderLine.updateMany({
+      where: { orderId: id },
+      data: { isReward: true },
+    });
+    const [card] = (await barBoard(at("09:00"))).orders;
+    expect(card.lines[0].reward).toBe(true);
   });
 
   it("marks Scheduled Orders as make-next from Pickup Time minus Prep Time", async () => {

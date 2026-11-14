@@ -211,10 +211,10 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 
 - Night palette, very high contrast, landscape first.
 - Columns by Order Status: New (Placed and Paid), Making (Accepted and Preparing), Ready. Within a column, sorted by Pickup Time, then placement time.
-- Each card: the Order Code in 32 px+, the Pickup Time, the Customer's first name, Lines with Options as short tags ("L · Oat · 50% · Less ice"), notes highlighted, a Pay at Pickup tag.
+- Each card: the Order Code in 32 px+, the Pickup Time, the Customer's first name, Lines with Options as short tags ("L · Oat · 50% · Less ice"), notes highlighted, a Pay at Pickup tag with the amount to collect ("Pay at Pickup: collect PHP 450"), and a "Reward" tag on a Reward Line.
 - One big button per card for the next step (64 px tall); cancel sits behind a confirm.
 - A new Order plays a short sound (with a mute toggle); its card slides in with a gold edge and pulses once (section 7).
-- Shows "Ordering Paused" and a one-tap pause and resume for Managers.
+- Shows "Ordering Paused" and a one-tap pause and resume for Managers. Pause, Busy Mode and Cancel show only once the Manager has entered the Second Factor in this session; until then the header links to the code page, which comes back to the Bar Screen.
 - Batch 8.10: the header links to Your account, Manage and Sold out, beside a Manila clock. An empty lane says what comes next in its own words, and an empty board says "All caught up. Salamat, team!". As soon as possible cards show when they were placed. Every tap gets feedback (a short notice in a live region). A lane puts a second card beside the first only when each keeps 17rem, about 1900 px wide and up; the tablet keeps one card per row.
 
 ## 10. Accessibility checklist (per component and per page)

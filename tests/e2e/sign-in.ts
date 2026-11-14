@@ -29,7 +29,7 @@ async function clearLinkLimits(email: string) {
 }
 
 /** Types the code Staff's authenticator would show, from the e2e database. */
-async function enterSecondFactor(page: Page, email: string) {
+export async function enterSecondFactor(page: Page, email: string) {
   const code = page.getByLabel("6-digit code");
   await expect(code).toBeVisible();
   const { rows } = await e2eQuery(
