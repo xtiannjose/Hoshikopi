@@ -31,6 +31,8 @@ export function ErrorPanel({
       : null;
   return (
     <main id="main" className="page-width flex-1 pt-8 pb-16">
+      {/* Error boundaries cannot export metadata (audit a11y:9). */}
+      <title>Something went wrong | Hoshikopi</title>
       <PageHeader
         eyebrow="Something went wrong"
         title="Sorry, that didn't work"

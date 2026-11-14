@@ -216,6 +216,23 @@ test("an unknown address keeps the site's frame and the Concept Notice (8.2)", a
   ).toBeVisible();
 });
 
+// Every way a page fails says so in the tab and to a screen reader
+// (audit a11y:9).
+test("a page that is not there is titled so", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  for (const path of [
+    "/no-such-page",
+    "/menu/no-such-category",
+    "/menu/item/no-such-drink",
+    "/events/no-such-event",
+    "/news/no-such-post",
+    "/orders/no-such-order",
+  ]) {
+    await page.goto(path);
+    await expect(page, path).toHaveTitle("Page not found | Hoshikopi");
+  }
+});
+
 // Font settings, not zoom: the header row wraps instead of pushing the
 // Cart and menu buttons off screen (audit a11y:8).
 test("a doubled default text size keeps the header on a phone screen", async ({

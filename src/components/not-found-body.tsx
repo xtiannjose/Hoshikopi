@@ -3,7 +3,9 @@ import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 
-/** A 404 inside whichever frame it lands in, with the next places to go. */
+/** A 404 inside whichever frame it lands in, with the next places to go.
+ * The <title> covers pages whose metadata cannot know the lookup failed,
+ * such as an Order link (audit a11y:9). */
 export function NotFoundBody({
   links,
 }: {
@@ -11,6 +13,7 @@ export function NotFoundBody({
 }) {
   return (
     <main id="main" className="page-width flex-1 pt-8 pb-16">
+      <title>Page not found | Hoshikopi</title>
       <PageHeader
         eyebrow="404"
         title="This page could not be found"

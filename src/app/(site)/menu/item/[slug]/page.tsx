@@ -29,7 +29,7 @@ export async function generateMetadata({
   params,
 }: PageProps<"/menu/item/[slug]">): Promise<Metadata> {
   const item = await getMenuItem((await params).slug);
-  if (!item) return {};
+  if (!item) return { title: "Page not found" };
   return {
     title: item.name,
     description: `${item.description} ${formatPrice(item.baseCents)}.`,

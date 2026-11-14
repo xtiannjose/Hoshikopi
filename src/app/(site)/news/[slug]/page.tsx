@@ -26,7 +26,7 @@ export async function generateMetadata({
         description: post.excerpt,
         openGraph: { type: "article" },
       }
-    : {};
+    : { title: "Page not found" };
 }
 
 export default function PostPage({ params }: PageProps<"/news/[slug]">) {
