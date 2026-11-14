@@ -31,7 +31,9 @@ export async function refundAction(form: FormData) {
   backToDay(
     form,
     result.ok
-      ? "refunded"
+      ? form.get("cash")
+        ? "refunded_cash"
+        : "refunded"
       : result.reason === "provider_failed"
         ? "failed"
         : "not_allowed"
