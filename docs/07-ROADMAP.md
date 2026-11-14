@@ -2,11 +2,11 @@
 
 Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has small batches (one branch each) and exit criteria that must be observably true before the next phase starts. Scope is `docs/01-PRD.md`; requirement IDs (MENU-01, ORD-03...) link the two. Weeks are estimates for one developer working part time; dates move, the order does not.
 
-## 0. Where we are (updated 2026-11-13)
+## 0. Where we are (updated 2026-11-14)
 
 - **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written (ADRs 0011 to 0015 followed during the build). Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
 - **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 6 done (3.4 skipped: there is no PayMongo account and PayMongo paused new sign-ups in November 2026, so the demo runs on `fake`; 6.5 dropped). The demo is live on Vercel and Neon; 5.4's last steps are listed in its batch. The November audit (`docs/audit/`) is finished: 16 areas reviewed, 371 findings, each double-checked by a second reviewer, merged into 205 open items and ranked in `docs/audit/2026-11-13.md` (2 P0, 18 P1, 142 P2, 43 P3; 48 already fixed, 16 out of scope, 1 refuted). Its P0 and P1 items became batches 7.7 to 7.11. 7.1 to 7.4 (the serious bugs), 7.6 Performance budget, 8.1 Demo mode for visitors, 8.2 What the docs promise, 8.3 Phone experience, 8.4 Busy Mode, 8.5 Staff management, 8.6 Order page handoff, 8.7 Event Sign-up protection, 8.8 Database driver warning, 8.9 Motion pass and 8.10 Page polish (the last two added at the owner's request) are done. **Next: 7.7 to 7.11, then Phase 9 (portfolio review)** (owner, 2026-11-08; 7.7 to 7.11 added 2026-11-13; 7.5 done 2026-11-14, its flaky Playwright run fixed in 7.5a and 7.5b); 5.4's last steps wait on the owner. Real photos are on hold (owner, 2026-11-07). Google sign-in is live (2026-11-07, ADR 0005 update), and the account page was redesigned (PR #53).
+- **Build:** Phases 0 to 6 done (3.4 skipped: there is no PayMongo account and PayMongo paused new sign-ups in November 2026, so the demo runs on `fake`; 6.5 dropped). The demo is live on Vercel and Neon; 5.4's last steps are listed in its batch. The November audit (`docs/audit/`) is finished: 16 areas reviewed, 371 findings, each double-checked by a second reviewer, merged into 205 open items and ranked in `docs/audit/2026-11-13.md` (2 P0, 18 P1, 142 P2, 43 P3; 48 already fixed, 16 out of scope, 1 refuted). Its P0 and P1 items became batches 7.7 to 7.11. 7.1 to 7.4 (the serious bugs), 7.6 Performance budget, 8.1 Demo mode for visitors, 8.2 What the docs promise, 8.3 Phone experience, 8.4 Busy Mode, 8.5 Staff management, 8.6 Order page handoff, 8.7 Event Sign-up protection, 8.8 Database driver warning, 8.9 Motion pass and 8.10 Page polish (the last two added at the owner's request) are done. 7.5 to 7.12 and Phase 9 are done (2026-11-14): both P0s and 17 of the 18 P1s are fixed, and ops:8 waits on the owner. **Next: Phase 10, the rest of the audit backlog** (ranked 2026-11-14); 5.4's last steps wait on the owner. Real photos are on hold (owner, 2026-11-07). Google sign-in is live (2026-11-07, ADR 0005 update), and the account page was redesigned (PR #53).
 - **Copy:** the project lives on GitHub (https://github.com/xtiannjose/Hoshikopi), its only copy.
 
 ## 1. Timeline at a glance
@@ -146,7 +146,7 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 
 **Exit criteria:** each V1 item works end to end with tests; budgets from Phase 5 still hold.
 
-## 12. Phases 7 to 9: audit fixes, improvements, portfolio review
+## 12. Phases 7 to 10: audit fixes, improvements, portfolio review, the rest of the backlog
 
 ### Phase 7: Audit fixes (1 week)
 
@@ -187,6 +187,32 @@ Starts after Phase 7. Requirement IDs are added to the PRD when each batch start
 - [x] **9.1 Measure.** The success metrics in PRD section 8, written up with numbers. Done 2026-11-14 in [`docs/METRICS.md`](METRICS.md): a throttled phone orders and pays in 8.7 to 9.1 s (target 60, now a test); Lighthouse mobile medians Home 89, `/menu` 91, a Menu Item 91, accessibility 100 (local build; Home 1 point short, live numbers to take at pagespeed.web.dev since the API quota refused); 0 axe violations; 7 of 7 rule mutations caught, after the one miss (Preparing straight to Picked Up) got a test.
 - [x] **9.2 Case study.** `docs/CASE-STUDY.md`: the problem, the decisions (ADRs), screenshots, what I would do next. Done 2026-11-14: [`docs/CASE-STUDY.md`](CASE-STUDY.md) with seven screenshots in `docs/screenshots/` (Home in both palettes at 1280 px; the menu, a Menu Item, checkout and an Order page at 375 px; the Bar Screen), taken from a local production build with reduced motion.
 - [x] **9.3 Final review.** Code review, accessibility statement, README screenshots, demo script rehearsed. Done 2026-11-14: `/accessibility` states the target (WCAG 2.2 AA in both palettes), how it is checked and the four known gaps from the backlog, linked from the footer and axe-checked; `docs/DEMO-SCRIPT.md` is the two-minute demo with what to do, what to say and what to do if it goes wrong, every step a passing e2e test (the spoken run on the live site is the owner's last check); the README shows the status, four screenshots and links to the case study, metrics and demo script; the concept page links the case study. A medium code review of the 7.8b to 9.3 branch found 10 items: 6 fixed (a cash refund shown as a Test Mode refund, a PHP 0 refund offered, an unhandled `audio.resume()` rejection, two serial reads, the auth test covering 3 of 25 routes, no stack in the error line), 4 left as low impact (the cash message chosen by a form field, one rule written three times, no OrderEvent for a late-paid refund since the Refund row records it, `%40` in mailto links, which RFC 6068 allows).
+
+### Phase 10: The rest of the audit backlog (after V1)
+
+The 126 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches. Each batch's items, with the problem and the fix, are in the Next batches table of [`docs/audit/2026-11-13.md`](audit/2026-11-13.md). Work them in order, one branch and pull request each; the owner can reorder them.
+
+- [ ] **10.1 Accessibility statement gaps.** 7 items, effort S each.
+- [ ] **10.2 Rewards and checkout copy.** 7 items, effort S each.
+- [ ] **10.3 Home back to Lighthouse 90+.** 4 items, effort M.
+- [ ] **10.4 Payment failure paths.** 5 items, effort S to M.
+- [ ] **10.5 Orders that never close.** 7 items, effort S to M.
+- [ ] **10.6 Cart and Pickup Times.** 4 items, effort S to M.
+- [ ] **10.7 Sign-in.** 6 items, effort S each.
+- [ ] **10.8 Staff roles and the Second Factor.** 6 items, effort S to M.
+- [ ] **10.9 Manager inputs.** 6 items, effort S to M.
+- [ ] **10.10 Manager numbers and Sign-ups.** 6 items, effort S each.
+- [ ] **10.11 Bar Screen.** 5 items, effort S each.
+- [ ] **10.12 Database rules.** 5 items, effort S each.
+- [ ] **10.13 Account data and retention.** 5 items, effort S to M.
+- [ ] **10.14 Operations.** 7 items, effort S each.
+- [ ] **10.15 Caching and share cards.** 5 items, effort S to M.
+- [ ] **10.16 Motion.** 6 items, effort S each.
+- [ ] **10.17 Page polish.** 9 items, effort S each.
+- [ ] **10.18 Home for Members and the demo.** 4 items, effort S to M.
+- [ ] **10.19 Tests.** 7 items, effort S to M.
+- [ ] **10.20 Code health.** 5 items, effort S to M.
+- [ ] **10.21 Docs.** 10 items, effort S each.
 
 ## 13. After V1 (not scheduled)
 
