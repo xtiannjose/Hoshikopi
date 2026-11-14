@@ -64,7 +64,7 @@ export async function receivePaymentWebhook(
       return { status: 200, result: "refunded_late" };
     } catch (error) {
       console.error(
-        `[payments] paid after the Order closed, refund by hand: ${outcome.lateOrderId}`,
+        `[payments] paid after the Order closed; refund it from /manage/orders: ${outcome.lateOrderId}`,
         error
       );
     }
