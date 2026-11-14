@@ -25,10 +25,10 @@ const FOOTER = [
   "Hoshikopi is a concept cafe. Orders and payments here are for demonstration.",
 ].join("\n");
 
-const pickupText = (order: OrderForEmail) =>
-  order.pickupKind === "asap"
-    ? `as soon as possible, around ${formatTime(order.windowStart)} today`
-    : `at ${formatTime(order.windowStart)} today`;
+// One time everywhere: the start of the window the Order is booked in
+// (audit journeys:10).
+const pickupWhen = (order: OrderForEmail) =>
+  `${order.pickupKind === "asap" ? "ready by" : "pickup at"} ${formatTime(order.windowStart)}`;
 
 /** Order placed (ORD-10), with the receipt and the status link. */
 export function orderPlacedEmail(order: OrderForEmail, link: string): Email {
@@ -38,12 +38,12 @@ export function orderPlacedEmail(order: OrderForEmail, link: string): Email {
   );
   return {
     to: order.customerEmail,
-    subject: `Order ${order.code} at Hoshikopi: pickup around ${formatTime(order.windowStart)}`,
+    subject: `Order ${order.code} at Hoshikopi: ${pickupWhen(order)}`,
     text: [
       `Salamat, ${order.customerName}! We got your order.`,
       "",
       `Order Code: ${order.code}`,
-      `Pickup: ${pickupText(order)}`,
+      `Pickup: ${order.pickupKind === "asap" ? "ready by" : "at"} ${formatTime(order.windowStart)} today`,
       order.paymentMethod === "pay_at_pickup"
         ? "Pay at the counter when you collect."
         : "Paid online.",

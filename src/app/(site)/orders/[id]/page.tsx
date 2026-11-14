@@ -245,8 +245,9 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
         )}
         {live && (
           <p className="mt-2 text-lg">
-            Pickup{" "}
-            {order.pickupKind === "asap" ? "as soon as possible, around" : "at"}{" "}
+            {/* One time everywhere: the window the Order is booked in
+                (audit journeys:10). */}
+            {order.pickupKind === "asap" ? "Ready by" : "Pickup at"}{" "}
             <span className="font-semibold">
               {formatTime(order.windowStart)}
             </span>

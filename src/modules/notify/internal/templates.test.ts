@@ -29,11 +29,15 @@ const ORDER: OrderForEmail = {
 describe("orderPlacedEmail (ORD-10)", () => {
   const email = orderPlacedEmail(ORDER, "https://hoshikopi.test/orders/x?t=y");
 
+  // One time everywhere, the window the Order is booked in (audit
+  // journeys:10).
   it("names the Order Code and Pickup Time in the subject", () => {
     expect(email.to).toBe("hoshi@example.com");
-    expect(email.subject).toBe(
-      "Order K-042 at Hoshikopi: pickup around 4:15 PM"
-    );
+    expect(email.subject).toBe("Order K-042 at Hoshikopi: ready by 4:15 PM");
+    expect(email.text).toContain("Pickup: ready by 4:15 PM today");
+    expect(
+      orderPlacedEmail({ ...ORDER, pickupKind: "scheduled" }, "x").subject
+    ).toBe("Order K-042 at Hoshikopi: pickup at 4:15 PM");
   });
 
   it("lists the Lines, the total with its VAT part, and the status link", () => {
