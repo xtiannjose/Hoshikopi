@@ -128,8 +128,8 @@ export function SaveBar({
     <div className="flex flex-wrap items-center gap-4">
       <button
         type="submit"
-        disabled={pending}
-        className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold disabled:opacity-60"
+        {...busy(pending)}
+        className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold aria-disabled:opacity-60"
       >
         {pending ? "Saving..." : label}
       </button>
@@ -141,6 +141,22 @@ export function SaveBar({
       </p>
     </div>
   );
+}
+
+/**
+ * A submit button while its form is pending. `disabled` would drop keyboard
+ * focus to <body> the moment it is pressed (audit a11y:5), so the button
+ * stays focusable, says it is unavailable, and ignores another press.
+ * Style it with aria-disabled:, not disabled:.
+ */
+export function busy(pending: boolean, onPress?: () => void) {
+  return {
+    "aria-disabled": pending || undefined,
+    onClick: (event: MouseEvent) => {
+      if (pending) event.preventDefault();
+      else onPress?.();
+    },
+  };
 }
 
 export const ALLERGEN_LABELS = [

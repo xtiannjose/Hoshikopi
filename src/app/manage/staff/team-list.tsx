@@ -7,6 +7,7 @@ import type { StaffMember } from "@/modules/identity";
 
 import { endSessionsAction, type RoleState } from "./actions";
 import { RoleForm } from "./role-form";
+import { busy } from "@/components/fields";
 
 const ROLE = { barista: "Barista", manager: "Manager" };
 
@@ -145,7 +146,7 @@ function SignOutEverywhere({
         </p>
         <input type="hidden" name="userId" value={userId} />
         <input type="hidden" name="label" value={label} />
-        <button type="submit" disabled={pending} className={OUTLINE_PILL}>
+        <button type="submit" {...busy(pending)} className={OUTLINE_PILL}>
           Yes, sign {label} out
         </button>
       </form>

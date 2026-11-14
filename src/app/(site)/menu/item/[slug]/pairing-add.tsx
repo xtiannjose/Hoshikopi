@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { addToCartAction, type AddState } from "./actions";
+import { busy } from "@/components/fields";
 
 /** One tap adds the Pairing with its default Options (MENU-08). */
 export function PairingAdd({
@@ -28,8 +29,8 @@ export function PairingAdd({
       <input type="hidden" name="quantity" value="1" />
       <button
         type="submit"
-        disabled={pending}
-        className="border-input min-h-11 rounded-full border px-5 font-semibold disabled:opacity-60"
+        {...busy(pending)}
+        className="border-input min-h-11 rounded-full border px-5 font-semibold aria-disabled:opacity-60"
       >
         {pending ? "Adding..." : "Add"}
         <span className="sr-only"> {name}</span>

@@ -1,8 +1,8 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { Field } from "./fields";
+import { busy, Field } from "./fields";
 
 describe("Field", () => {
   // A select gets the same ties as an input (audit architecture:8).
@@ -33,5 +33,27 @@ describe("Field", () => {
     );
     expect(html).toContain('aria-invalid="true"');
     expect(html).toContain('aria-describedby="contact-rule"');
+  });
+});
+
+describe("busy", () => {
+  // `disabled` would drop focus to <body> (audit a11y:5).
+  it("keeps the button focusable and ignores a press while pending", () => {
+    const press = vi.fn();
+    const event = { preventDefault: vi.fn() };
+    const props = busy(true, press);
+    props.onClick(event as never);
+    expect(props["aria-disabled"]).toBe(true);
+    expect(props).not.toHaveProperty("disabled");
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(press).not.toHaveBeenCalled();
+  });
+
+  it("lets the press through when idle", () => {
+    const press = vi.fn();
+    const event = { preventDefault: vi.fn() };
+    busy(false, press).onClick(event as never);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(press).toHaveBeenCalled();
   });
 });

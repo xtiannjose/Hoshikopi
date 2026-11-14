@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { PRIMARY_PILL } from "@/components/panel";
+import { busy } from "@/components/fields";
 
 /** Save my details: "Saving..." while the form sends, then a quiet thanks. */
 export function SaveDetailsButton() {
@@ -17,7 +18,7 @@ export function SaveDetailsButton() {
   }
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <button type="submit" disabled={pending} className={PRIMARY_PILL}>
+      <button type="submit" {...busy(pending)} className={PRIMARY_PILL}>
         {pending ? "Saving..." : "Save my details"}
       </button>
       {/* Always in the page, so screen readers hear the line when it lands. */}

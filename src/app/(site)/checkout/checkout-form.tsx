@@ -6,7 +6,7 @@ import { ClockIcon, UserIcon, WalletIcon } from "@phosphor-icons/react";
 
 import { formatPrice } from "@/lib/money";
 
-import { Field, fieldClass } from "@/components/fields";
+import { busy, Field, fieldClass } from "@/components/fields";
 import { IconCircle } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 
@@ -364,8 +364,8 @@ export function CheckoutForm({
         </p>
         <button
           type="submit"
-          disabled={pending}
-          className="bg-primary text-primary-foreground min-h-14 rounded-full px-8 text-lg font-semibold disabled:opacity-60"
+          {...busy(pending)}
+          className="bg-primary text-primary-foreground min-h-14 rounded-full px-8 text-lg font-semibold aria-disabled:opacity-60"
         >
           {pending
             ? "Placing your order..."

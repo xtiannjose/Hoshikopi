@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { CheckCircleIcon } from "@phosphor-icons/react";
 
-import { Field, fieldClass } from "@/components/fields";
+import { busy, Field, fieldClass } from "@/components/fields";
 import { Empty, OUTLINE_PILL } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 
@@ -120,8 +120,8 @@ export function InquiryForm({
       <div className="flex flex-wrap items-center gap-4">
         <button
           type="submit"
-          disabled={pending}
-          className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold disabled:opacity-60"
+          {...busy(pending)}
+          className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold aria-disabled:opacity-60"
         >
           {pending ? "Sending..." : "Send inquiry"}
         </button>

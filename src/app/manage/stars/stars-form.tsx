@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useRef } from "react";
 
-import { Field, fieldClass } from "@/components/fields";
+import { busy, Field, fieldClass } from "@/components/fields";
 import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 
 import { adjustStarsAction, type StarsState } from "./actions";
@@ -63,7 +63,7 @@ export function StarsForm() {
       />
       <button
         type="submit"
-        disabled={pending}
+        {...busy(pending)}
         className={`${PRIMARY_PILL} min-h-12 justify-self-start px-6`}
       >
         {pending ? "Saving..." : "Save adjustment"}
