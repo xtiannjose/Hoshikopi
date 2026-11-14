@@ -1,6 +1,8 @@
 import type { OrderStatus, PickupKind } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
+import { ON_BAR } from "./windows";
+
 type Place = {
   id: string;
   status: OrderStatus;
@@ -31,13 +33,8 @@ export async function drinksAhead(order: Place): Promise<number | null> {
         serviceDay: order.serviceDay,
         id: { not: order.id },
         AND: [
-          // On the Bar Screen and not made yet.
-          {
-            OR: [
-              { status: { in: ["paid", "accepted", "preparing"] } },
-              { status: "placed", paymentMethod: "pay_at_pickup" },
-            ],
-          },
+          // On the Bar Screen and not made yet: what Prep Time counts too.
+          ON_BAR,
           {
             OR: [
               { windowStart: { lt: order.windowStart } },

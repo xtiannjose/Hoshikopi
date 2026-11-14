@@ -9,7 +9,23 @@ import {
   type PickupWindow,
 } from "@/modules/cafe";
 
-/** Drinks in Orders the bar is making now, for Prep Time (ADR 0007). */
+/**
+ * Orders on the Bar Screen and not made yet: Paid, Accepted, Preparing,
+ * and Placed Pay at Pickup (an unpaid online Order may never come).
+ */
+export const ON_BAR: Prisma.OrderWhereInput = {
+  OR: [
+    { status: { in: ["paid", "accepted", "preparing"] } },
+    { status: "placed", paymentMethod: "pay_at_pickup" },
+  ],
+};
+
+/**
+ * Drinks the bar makes before a new As Soon As Possible Order, for Prep
+ * Time (ADR 0007): those it is making (Accepted, Preparing) and the ASAP
+ * Orders waiting on the Bar Screen. A Scheduled Order still waiting is
+ * made near its own time, so it does not hold up ASAP ones.
+ */
 export async function drinksQueuedAhead(client: Client, serviceDay: string) {
   const sum = await client.orderLine.aggregate({
     _sum: { quantity: true },
@@ -17,7 +33,10 @@ export async function drinksQueuedAhead(client: Client, serviceDay: string) {
       isDrink: true,
       order: {
         serviceDay: dayValue(serviceDay),
-        status: { in: ["accepted", "preparing"] },
+        OR: [
+          { status: { in: ["accepted", "preparing"] } },
+          { pickupKind: "asap", AND: [ON_BAR] },
+        ],
       },
     },
   });
@@ -27,7 +46,9 @@ export async function drinksQueuedAhead(client: Client, serviceDay: string) {
 /**
  * Prep Time now and the Pickup Windows with room for `need`, from the
  * day's pickup_window_usage. Checkout shows these; placeOrder re-checks the
- * chosen one under a lock.
+ * chosen one under a lock. Prep Time counts this Order's drinks beyond the
+ * first (the base covers one): the Glossary's "the current queue and the
+ * Lines in the Order". The Bar Screen's make-next counts the queue only.
  */
 export async function offeredWindows(
   client: Client | Prisma.TransactionClient,
@@ -44,7 +65,9 @@ export async function offeredWindows(
       { drinks: u.drinks, food: u.food },
     ])
   );
-  const prep = prepMinutes(await drinksQueuedAhead(client, day.day), day.prep);
+  const ahead =
+    (await drinksQueuedAhead(client, day.day)) + Math.max(0, need.drinks - 1);
+  const prep = prepMinutes(ahead, day.prep);
   return {
     prepMinutes: prep,
     windows: pickupWindows(at, day, { prepMinutes: prep, need, used }),

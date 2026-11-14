@@ -129,7 +129,7 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 
 - A day is cut into 15-minute Pickup Windows from opening to the last order time. Capacity per window (drinks, food Lines) is set per day of the week; Special Hours close or shorten a day.
 - `pickup_window_usage(day, window_start)` holds counts taken; `placeOrder` locks and updates it.
-- **Prep Time** for As Soon As Possible: `base_minutes + per_drink_minutes × drinks queued ahead in Accepted or Preparing + Busy Mode minutes`, rounded up to the next 5 minutes; both numbers are Manager settings (defaults 4 and 1.5). ASAP takes the earliest window that starts after now + Prep Time and has room.
+- **Prep Time** for As Soon As Possible: `base_minutes + per_drink_minutes × (drinks ahead + this Order's drinks − 1) + Busy Mode minutes`, rounded up to the next 5 minutes; both numbers are Manager settings (defaults 4 and 1.5). Drinks ahead are those the bar is making (Accepted, Preparing) and the As Soon As Possible Orders waiting on the Bar Screen (Paid, or Placed Pay at Pickup); Scheduled Orders still waiting do not count (ADR 0007 update). ASAP takes the earliest window that starts after now + Prep Time and has room, and checkout shows it as "Ready by" that window.
 - The checkout lists only windows with room; the server checks again when placing.
 
 ## 10. Loyalty

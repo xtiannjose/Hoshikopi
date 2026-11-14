@@ -20,7 +20,6 @@ import { offeredWindows } from "./windows";
 export type CheckoutView = {
   state: OrderingState;
   cart: CartView;
-  prepMinutes: number;
   /** Busy Mode is on: Prep Time and the windows are longer than usual. */
   busy: boolean;
   windows: PickupWindow[];
@@ -47,7 +46,7 @@ export async function checkoutView(
     blocked: false,
   };
   const cart = owner ? await getCart(owner) : empty;
-  const { prepMinutes, windows } = await offeredWindows(db, at, day, {
+  const { windows } = await offeredWindows(db, at, day, {
     drinks: cart.drinks,
     food: cart.foodLines,
   });
@@ -59,7 +58,6 @@ export async function checkoutView(
   return {
     state: orderingState(at, day),
     cart,
-    prepMinutes,
     busy: day.busy !== null,
     windows,
     reward,
