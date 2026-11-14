@@ -7,7 +7,7 @@ The five portfolio targets in `docs/01-PRD.md` section 8, measured on 2026-11-14
 | # | Target | Result | Met |
 | --- | --- | --- | --- |
 | 1 | End-to-end order under 60 s on a throttled phone | 8.7, 8.9 and 9.1 s, menu to Paid | Yes |
-| 2 | Mobile Lighthouse Performance 90+ on Home and `/menu` | Home 89, `/menu` 91 (local medians) | `/menu` yes; Home 1 point short locally |
+| 2 | Mobile Lighthouse Performance 90+ on Home and `/menu` | Live: 100 on both (PageSpeed Insights, mobile). Local medians: Home 89, `/menu` 91 | Yes, on the live site |
 | 2 | Zero axe violations on every page | 0 in the full e2e run, both palettes, 375 and 1280 px | Yes |
 | 3 | Every price, Reward, Capacity and Order Status rule covered by a test that fails without it | 7 of 7 rule mutations caught (6 of 7 before one test was widened) | Yes |
 | 4 | A two-minute demo script | Every step runs in the e2e suite; the written script is 9.3 | See 9.3 |
@@ -31,7 +31,8 @@ Three runs on their own took **8.7, 8.9 and 9.1 seconds**. Inside the full suite
 
 - **Home is 1 point under 90 locally**, down from 93 on 2026-11-08 (7.6). Total blocking time is the part that moved (113 to 203 ms). Since then the site gained the focus helpers (7.8a) and the Bar Screen and checkout changes. Runs on one PC also swing a few points with background load (85 to 89 for Home here).
 - **LCP reads about 3 s locally on every page.** On localhost the scripts arrive before the first paint and Lighthouse's simulation charges them to it (7.6). The live site measured 1.7 to 2.5 s before 7.6, so LCP is judged there.
-- **Live numbers were not taken this time.** The PageSpeed Insights API refused anonymous calls ("Quota exceeded ... Queries per day"). To measure the live site, run Home and `/menu` at [pagespeed.web.dev](https://pagespeed.web.dev) and add the scores here.
+- **The live site scores higher.** On 2026-11-14 PageSpeed Insights (pagespeed.web.dev, run by the owner) gave Home and `/menu` 100 for Performance, Accessibility and Best Practices, on mobile and on desktop. One Lighthouse 12.8.2 mobile run from the PC against the live site the same day gave Home 97 (LCP 2.3 s, total blocking time 120 ms) and `/menu` 94 (LCP 2.4 s, 200 ms), so LCP is under 2.5 s live.
+- **SEO scores 60 on purpose.** Its one failing check is "Page is blocked from indexing": every page asks search engines not to list it (`robots: { index: false, follow: false }` in `src/app/layout.tsx`, since 8.2), so an invented cafe never shows up in search as a real one (ADR 0006). Every other SEO check passes.
 
 **axe** (`@axe-core/playwright`, WCAG 2.0, 2.1 and 2.2 A and AA tags) runs at 37 places in 17 specs, many in both palettes. Every spec runs at 375 and 1280 px. The last full run reported **0 violations**. Lighthouse's own accessibility score is 100 on all three pages.
 
