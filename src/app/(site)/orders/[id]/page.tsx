@@ -208,6 +208,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
           code={order.code}
           status={order.status}
           version={order.version}
+          windowStart={order.windowStart.getTime()}
         />
         {order.status === "placed" &&
           order.payment &&
