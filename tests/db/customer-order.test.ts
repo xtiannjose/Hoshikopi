@@ -27,7 +27,7 @@ beforeEach(async () => {
 afterEach(unfreezeClock);
 afterAll(() => db.$disconnect());
 
-async function placed() {
+async function placed(paymentMethod: PaymentMethod = "pay_at_pickup") {
   const item = await db.menuItem.findUniqueOrThrow({
     where: { slug: "ube-pandesal" },
   });
@@ -45,7 +45,7 @@ async function placed() {
     customerEmail: "hoshi@example.com",
     customerPhone: "",
     pickup: { kind: "asap" },
-    paymentMethod: "pay_at_pickup",
+    paymentMethod,
   });
   if (!result.ok) throw new Error(result.reason);
   return result;
@@ -172,6 +172,26 @@ describe("drinks ahead on the Order page (FEAT-03)", () => {
 });
 
 describe("orderVersion (polling, ADR 0009)", () => {
+  // Nothing else may sweep while the Customer watches the page: the poll
+  // itself lets the Order go, so the page refreshes to say so (audit
+  // PERF-16, ORD-19).
+  it("lets an Order unpaid for 15 minutes go, so an open Order page refreshes", async () => {
+    const order = await placed("gcash");
+    const before = await orderVersion(order.orderId, order.accessToken);
+    freezeClock("2026-11-02T01:14:00Z");
+    expect(await orderVersion(order.orderId, order.accessToken)).toEqual(
+      before
+    );
+    freezeClock("2026-11-02T01:16:00Z");
+    const after = await orderVersion(order.orderId, order.accessToken);
+    expect(after?.status).toBe("expired");
+    expect(after?.version).not.toBe(before?.version);
+    expect(
+      (await db.payment.findFirstOrThrow({ where: { orderId: order.orderId } }))
+        .status
+    ).toBe("expired");
+  });
+
   it("changes when the Order Status changes, and needs the token", async () => {
     const order = await placed();
     const before = await orderVersion(order.orderId, order.accessToken);

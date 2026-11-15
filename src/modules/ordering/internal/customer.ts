@@ -1,6 +1,9 @@
 import type { OrderStatus } from "@/generated/prisma/enums";
+import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
+import { closeCheckout } from "@/modules/payments";
 
+import { expireIfUnpaid } from "./bar";
 import { tokenMatches } from "./links";
 import { customerVersion, drinksAhead } from "./queue";
 import { cancelOrder } from "./refund";
@@ -36,12 +39,20 @@ export async function cancelByCustomer(
   return cancelOrder(order.id, { kind: "customer" });
 }
 
-/** A small answer for the status page's polling (ADR 0009). */
+/**
+ * A small answer for the status page's polling (ADR 0009). An Order unpaid
+ * past its 15 minutes Expires here, so the page refreshes to say so even
+ * when nothing else sweeps (audit PERF-16, ORD-19).
+ */
 export async function orderVersion(
   id: string,
   token: string
 ): Promise<{ status: OrderStatus; version: string } | null> {
-  const order = await orderWithToken(id, token);
+  let order = await orderWithToken(id, token);
+  if (order && (await expireIfUnpaid(order.id, now()))) {
+    await closeCheckout(order.id);
+    order = await orderWithToken(id, token);
+  }
   return order
     ? {
         status: order.status,
