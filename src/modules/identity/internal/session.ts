@@ -16,7 +16,14 @@ async function currentUser() {
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) return null;
   const user = await db.user.findUnique({
-    where: { id: session.user.id, deletedAt: null },
+    // The session row too: Better Auth trusts its 5-minute cookie cache, so
+    // without this a session ended elsewhere (Sign out everywhere) kept the
+    // Bar Screen working (audit staff:17). Still one read.
+    where: {
+      id: session.user.id,
+      deletedAt: null,
+      sessions: { some: { id: session.session.id } },
+    },
     select: { id: true, name: true, email: true, role: true },
   });
   return user && { ...user, sessionId: session.session.id };

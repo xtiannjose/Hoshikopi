@@ -170,3 +170,23 @@ test(
     await expect(banner).toHaveCount(0);
   }
 );
+
+// Better Auth trusted its 5-minute cookie cache, so a session ended from
+// Sign out everywhere kept the board going (audit staff:17).
+test("the Bar Screen stops at once when its session is ended elsewhere", async ({
+  page,
+  context,
+}) => {
+  await signIn(page, "annika@hoshikopi.example", "/bar");
+  await expect(page.getByRole("heading", { name: "Bar Screen" })).toBeVisible();
+  const cookie = (await context.cookies()).find((c) =>
+    c.name.endsWith("session_token")
+  )!;
+  // Only this page's session, so other specs signed in as Annika keep theirs.
+  await e2eQuery("DELETE FROM sessions WHERE token = $1", [
+    decodeURIComponent(cookie.value).split(".")[0],
+  ]);
+  await expect(
+    page.getByRole("alert").filter({ hasText: "signed out" })
+  ).toBeVisible({ timeout: 10_000 });
+});
