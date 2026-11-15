@@ -300,6 +300,58 @@ describe("placeOrder refusals", () => {
     });
   });
 
+  // ASAP means the earliest window with room: when another Order takes
+  // the last of the first one before this one's lock, it takes the next
+  // (audit ORD-06).
+  it("takes the next window for ASAP when the first fills before its lock", async () => {
+    const probe = guest();
+    await addLatte(probe);
+    const first = await placeOrder(
+      await input(probe, { paymentMethod: "card" })
+    );
+    if (!first.ok) throw new Error(first.reason);
+    const window = first.windowStart;
+    // Room for one more drink in that window, so ASAP offers it.
+    await db.pickupWindowUsage.update({
+      where: { windowStart: window },
+      data: { drinks: 11 },
+    });
+    // Another Order holds the window's row and fills it while this
+    // placement waits on the lock, after it read the window as offered.
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const other = db.$transaction(
+      async (tx) => {
+        await tx.$queryRaw`SELECT 1 FROM pickup_window_usage WHERE window_start = ${window} FOR UPDATE`;
+        await held;
+        await tx.pickupWindowUsage.update({
+          where: { windowStart: window },
+          data: { drinks: 12 },
+        });
+      },
+      { timeout: 20_000 }
+    );
+    const hoshi = guest();
+    await addLatte(hoshi);
+    const placing = placeOrder(await input(hoshi, { paymentMethod: "card" }));
+    await expect
+      .poll(
+        async () =>
+          (
+            await db.$queryRaw<{ waiting: number }[]>`
+              SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted`
+          )[0].waiting
+      )
+      .toBeGreaterThan(0);
+    release();
+    await other;
+    const placed = await placing;
+    expect(placed.ok).toBe(true);
+    expect(placed.ok && placed.windowStart.getTime()).not.toBe(
+      window.getTime()
+    );
+  });
+
   it("refuses an empty Cart or one with a Line that can't be ordered", async () => {
     expect(await placeOrder(await input(guest()))).toEqual({
       ok: false,

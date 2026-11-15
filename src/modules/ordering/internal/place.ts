@@ -266,36 +266,54 @@ export async function placeOrder(
         day,
         need
       );
-      let windowStart: Date;
-      if (input.pickup.kind === "asap") {
-        if (!offered[0]) return { ok: false, reason: "no_window" };
-        windowStart = offered[0].start;
-      } else {
-        windowStart = input.pickup.windowStart;
+      if (input.pickup.kind === "scheduled") {
+        const chosen = input.pickup.windowStart.getTime();
         const valid = pickupWindows(at, day, {
           prepMinutes: prep,
           need: { drinks: 0, food: 0 },
           used: new Map(),
-        }).some((w) => w.start.getTime() === windowStart.getTime());
+        }).some((w) => w.start.getTime() === chosen);
         if (!valid) return { ok: false, reason: "window_unavailable" };
       }
-      const nextAfter = () =>
-        offered.find((w) => w.start.getTime() > windowStart.getTime())?.start ??
-        null;
 
-      // Lock the window's row and check Capacity under the lock (ADR 0007).
-      await tx.$executeRaw`
-      INSERT INTO pickup_window_usage (window_start, service_day, drinks, food, updated_at)
-      VALUES (${windowStart}, ${dayValue(day.day)}::date, 0, 0, now())
-      ON CONFLICT (window_start) DO NOTHING`;
-      const [locked] = await tx.$queryRaw<{ drinks: number; food: number }[]>`
-      SELECT drinks, food FROM pickup_window_usage
-      WHERE window_start = ${windowStart} FOR UPDATE`;
-      if (
-        locked.drinks + need.drinks > day.capacity.drinks ||
-        locked.food + need.food > day.capacity.food
-      ) {
-        return { ok: false, reason: "window_full", nextWindow: nextAfter() };
+      // Lock a window's row and check Capacity under the lock (ADR 0007).
+      // ASAP walks the offered windows in order, so one that filled after
+      // it was offered passes to the next with room (audit ORD-06).
+      const roomUnderLock = async (start: Date) => {
+        await tx.$executeRaw`
+        INSERT INTO pickup_window_usage (window_start, service_day, drinks, food, updated_at)
+        VALUES (${start}, ${dayValue(day.day)}::date, 0, 0, now())
+        ON CONFLICT (window_start) DO NOTHING`;
+        const [locked] = await tx.$queryRaw<{ drinks: number; food: number }[]>`
+        SELECT drinks, food FROM pickup_window_usage
+        WHERE window_start = ${start} FOR UPDATE`;
+        return (
+          locked.drinks + need.drinks <= day.capacity.drinks &&
+          locked.food + need.food <= day.capacity.food
+        );
+      };
+      let windowStart: Date | undefined;
+      if (input.pickup.kind === "asap") {
+        for (const { start } of offered) {
+          if (await roomUnderLock(start)) {
+            windowStart = start;
+            break;
+          }
+        }
+        if (!windowStart) return { ok: false, reason: "no_window" };
+      } else {
+        const chosen = input.pickup.windowStart;
+        if (!(await roomUnderLock(chosen))) {
+          const next = offered.find(
+            (w) => w.start.getTime() > chosen.getTime()
+          );
+          return {
+            ok: false,
+            reason: "window_full",
+            nextWindow: next?.start ?? null,
+          };
+        }
+        windowStart = chosen;
       }
       await tx.pickupWindowUsage.update({
         where: { windowStart },
