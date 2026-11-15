@@ -55,7 +55,23 @@ export async function forgetMember(memberId: string) {
   await db.$transaction([
     db.session.deleteMany({ where: { userId: memberId } }),
     db.account.deleteMany({ where: { userId: memberId } }),
-    db.verification.deleteMany({ where: { identifier: user.email } }),
+    // Better Auth keys a sign-in link "magic-link:<token hash>" and keeps
+    // the email in its JSON value (audit ID2-03).
+    db.verification.deleteMany({
+      where: {
+        identifier: { startsWith: "magic-link:" },
+        value: { contains: `"email":${JSON.stringify(user.email)}` },
+      },
+    }),
+    // Its sign-in limits name the email, one with the IP it came from.
+    db.rateLimit.deleteMany({
+      where: {
+        OR: [
+          { key: `link:${user.email}` },
+          { key: { startsWith: `link-pair:${user.email}:` } },
+        ],
+      },
+    }),
     db.user.update({
       where: { id: memberId },
       data: {
