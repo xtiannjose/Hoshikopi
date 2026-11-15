@@ -24,6 +24,7 @@ import { demoAllDayOrdering } from "@/modules/payments";
 
 import { CheckoutForm } from "./checkout-form";
 import { RewardChoice, SummaryTotal } from "./reward-choice";
+import { roomHint } from "./room-hint";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -233,6 +234,7 @@ async function Checkout() {
               windows={later.map((w) => ({
                 value: w.start.toISOString(),
                 label: formatTime(w.start),
+                hint: roomHint(w.drinksLeft),
               }))}
               totalCents={cart.totalCents}
               cart={cartFingerprint(cart)}

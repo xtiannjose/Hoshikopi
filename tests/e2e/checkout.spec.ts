@@ -190,6 +190,37 @@ test("checkout refuses an 11th try from one Cart in 15 minutes", async ({
   await expect(page.getByText("Too many tries.")).toBeVisible();
 });
 
+// A Pickup Time close to full says so in words (audit FEAT-03).
+test("a nearly full Pickup Time says how many drinks are left", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  await addToCart(page, "kopi-hitam");
+  await page.goto("/checkout");
+  // The last chip: later than any other test's ASAP Order lands.
+  const chip = page.locator('input[name="pickup"]:not([value="asap"])');
+  const window = await chip.nth(5).getAttribute("value");
+  if (!window) throw new Error("no sixth Pickup Time");
+  // The e2e cafe takes 200 drinks a window: leave room for 2.
+  await e2eQuery(
+    `INSERT INTO pickup_window_usage (window_start, service_day, drinks, food, updated_at)
+     VALUES ($1, ($1::timestamptz AT TIME ZONE 'Asia/Manila')::date, 198, 0, now())
+     ON CONFLICT (window_start) DO UPDATE SET drinks = 198`,
+    [window]
+  );
+  try {
+    await page.reload();
+    await expect(
+      page.locator(`label:has(input[value="${window}"])`)
+    ).toContainText("2 drinks left");
+  } finally {
+    await e2eQuery(
+      "UPDATE pickup_window_usage SET drinks = 0 WHERE window_start = $1",
+      [window]
+    );
+  }
+});
+
 // One IP may place only so many unpaid Guest Orders a day; the rest pay
 // online or sign in (audit ORD-14, SEC2-03).
 test("a Guest's Pay at Pickup Orders are limited per day", async ({
