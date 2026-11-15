@@ -63,7 +63,7 @@ async function Step({
         </h1>
         <p className="max-w-measure mt-2">
           Open your authenticator app and type the 6-digit code for Hoshikopi.
-          We ask once each time you sign in to the staff pages.
+          We ask when you sign in to the staff pages, and again after 12 hours.
         </p>
         <SecondFactorForm next={staff.next} />
       </div>
