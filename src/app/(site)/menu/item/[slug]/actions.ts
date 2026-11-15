@@ -1,10 +1,13 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
 
 import {
   addLine,
   cartOwnerForWrite,
+  changeLine,
+  currentCartOwner,
   MAX_LINE_QUANTITY,
   saveFavourite,
 } from "@/modules/cart";
@@ -48,6 +51,38 @@ export async function addToCartAction(
     status: "added",
     count: (prev.status === "added" ? prev.count : 0) + 1,
   };
+}
+
+/**
+ * Change a Cart Line's Options, quantity and note, then back to the Cart;
+ * the server checks and prices them (PRD ORD-02, audit journeys:14).
+ */
+export async function changeLineAction(
+  _prev: AddState,
+  form: FormData
+): Promise<AddState> {
+  const owner = await currentCartOwner();
+  const quantity = Number(form.get("quantity"));
+  const result = owner
+    ? await changeLine(owner, String(form.get("lineId") ?? ""), {
+        menuItemId: String(form.get("menuItemId") ?? ""),
+        optionIds: optionIdsOf(form),
+        quantity: Number.isInteger(quantity) ? quantity : 1,
+        note: String(form.get("note") ?? ""),
+      })
+    : ({ ok: false, reason: "not_found" } as const);
+  if (!result.ok) {
+    return {
+      status: "error",
+      message:
+        result.reason === "not_found"
+          ? "This is no longer in your Cart."
+          : MESSAGES[result.reason],
+    };
+  }
+  // The header's Cart count lives in the layout, which a redirect keeps.
+  refresh();
+  redirect("/cart");
 }
 
 export type FavouriteState =

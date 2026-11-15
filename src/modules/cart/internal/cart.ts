@@ -128,6 +128,52 @@ export async function addLine(
   });
 }
 
+/**
+ * Change a Line's Options, quantity and note, priced again (PRD ORD-02,
+ * audit journeys:14). The Menu Item stays; a Line that already has the new
+ * choices takes this one's quantity, as adding it again would.
+ */
+export async function changeLine(
+  owner: CartOwner,
+  lineId: string,
+  input: NewLine,
+  client: Client = db
+): Promise<AddResult | { ok: false; reason: "not_found" }> {
+  const { note, optionIds, quantityOk } = tidy(input);
+  if (!quantityOk) return { ok: false, reason: "invalid_options" };
+  return inTransaction(client, async (tx) => {
+    await lockCart(owner, tx);
+    const line = await tx.cartLine.findFirst({
+      where: { id: lineId, cart: ownerWhere(owner) },
+    });
+    if (!line) return { ok: false, reason: "not_found" } as const;
+    const [priced] = await priceChoices(
+      [{ menuItemId: line.menuItemId, optionIds }],
+      tx
+    );
+    if (!priced.ok) return priced;
+    const key = choiceKey({ menuItemId: line.menuItemId, optionIds, note });
+    const same = await tx.cartLine.findUnique({
+      where: { cartId_choiceKey: { cartId: line.cartId, choiceKey: key } },
+    });
+    const joins = same !== null && same.id !== line.id;
+    const quantity = input.quantity + (joins ? same.quantity : 0);
+    if (quantity > MAX_LINE_QUANTITY) {
+      return { ok: false, reason: "too_many" } as const;
+    }
+    if (joins) {
+      await tx.cartLine.update({ where: { id: same.id }, data: { quantity } });
+      await tx.cartLine.delete({ where: { id: line.id } });
+    } else {
+      await tx.cartLine.update({
+        where: { id: line.id },
+        data: { optionIds, note, choiceKey: key, quantity },
+      });
+    }
+    return { ok: true } as const;
+  });
+}
+
 /** The Cart with every Line priced on the server (ORD-02, ORD-06). */
 export async function getCart(
   owner: CartOwner,

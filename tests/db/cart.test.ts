@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
   addLine,
+  changeLine,
   getCart,
   mergeGuestCart,
   removeLine,
@@ -137,6 +138,65 @@ describe("adding at once", () => {
     const cart = await getCart(hoshi);
     expect(cart.lines).toHaveLength(1);
     expect(cart.lines[0].quantity).toBe(6);
+  });
+});
+
+// A Line's Options, quantity and note change in the Cart (PRD ORD-02,
+// audit journeys:14).
+describe("changeLine", () => {
+  it("changes a Line's Options, quantity and note, priced again", async () => {
+    await addLine(hoshi, latte("Oat milk"));
+    const [line] = (await getCart(hoshi)).lines;
+    expect(
+      await changeLine(
+        hoshi,
+        line.id,
+        latte("Whole milk", { quantity: 2, note: "less ice please" })
+      )
+    ).toEqual({ ok: true });
+    const cart = await getCart(hoshi);
+    expect(cart.lines).toHaveLength(1);
+    expect(cart.lines[0]).toMatchObject({
+      id: line.id,
+      quantity: 2,
+      note: "less ice please",
+      unitCents: 18500,
+    });
+    expect(cart.lines[0].options.map((o) => o.name)).toContain("Whole milk");
+  });
+
+  it("joins a Line that already has those choices", async () => {
+    await addLine(hoshi, latte("Oat milk"));
+    await addLine(hoshi, latte("Whole milk", { quantity: 2 }));
+    const oat = (await getCart(hoshi)).lines[0];
+    expect(await changeLine(hoshi, oat.id, latte("Whole milk"))).toEqual({
+      ok: true,
+    });
+    const cart = await getCart(hoshi);
+    expect(cart.lines).toHaveLength(1);
+    expect(cart.lines[0].quantity).toBe(3);
+  });
+
+  it("refuses more than 20 of one choice, choices the menu doesn't allow, and another Cart's Line", async () => {
+    await addLine(hoshi, latte("Oat milk", { quantity: 15 }));
+    await addLine(hoshi, latte("Whole milk", { quantity: 10 }));
+    const [oat] = (await getCart(hoshi)).lines;
+    expect(
+      await changeLine(hoshi, oat.id, latte("Whole milk", { quantity: 15 }))
+    ).toEqual({ ok: false, reason: "too_many" });
+    expect(
+      await changeLine(hoshi, oat.id, {
+        ...latte("Oat milk"),
+        optionIds: [ids["Oat milk"]],
+      })
+    ).toMatchObject({ ok: false, reason: "invalid_options" });
+    expect(await changeLine(migs, oat.id, latte("Whole milk"))).toEqual({
+      ok: false,
+      reason: "not_found",
+    });
+    expect((await getCart(hoshi)).lines.map((l) => l.quantity)).toEqual([
+      15, 10,
+    ]);
   });
 });
 

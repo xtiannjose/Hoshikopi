@@ -8,6 +8,7 @@ import type { OptionGroupView } from "@/modules/menu";
 
 import {
   addToCartAction,
+  changeLineAction,
   saveFavouriteAction,
   type AddState,
   type FavouriteState,
@@ -18,9 +19,19 @@ const MAX_QUANTITY = 20;
 
 type Picked = Record<string, string[]>;
 
-function initialPicks(groups: OptionGroupView[]): Picked {
+function initialPicks(
+  groups: OptionGroupView[],
+  chosen: string[] | undefined
+): Picked {
   const picked: Picked = {};
   for (const group of groups) {
+    // Changing a Cart Line starts from its own choices (audit journeys:14).
+    if (chosen) {
+      picked[group.id] = group.options
+        .filter((option) => chosen.includes(option.id))
+        .map((option) => option.id);
+      continue;
+    }
     const available = group.options.filter((option) => !option.soldOut);
     let ids = available
       .filter((option) => option.isDefault)
@@ -37,7 +48,8 @@ function initialPicks(groups: OptionGroupView[]): Picked {
 /**
  * Option Groups as native radios and checkboxes with the running price
  * (MENU-02); Add to order sends the choices only, and the server prices
- * the Line (ORD-01, ORD-06).
+ * the Line (ORD-01, ORD-06). Given `editing`, it changes that Cart Line
+ * instead and goes back to the Cart (PRD ORD-02).
  */
 export function OptionPicker({
   icons,
@@ -47,6 +59,7 @@ export function OptionPicker({
   groups,
   categorySlug,
   categoryName,
+  editing,
 }: {
   /** Rendered by the page, so no icon code ships with the picker. */
   icons: { minus: ReactNode; plus: ReactNode; check: ReactNode };
@@ -56,11 +69,20 @@ export function OptionPicker({
   groups: OptionGroupView[];
   categorySlug: string;
   categoryName: string;
+  /** The Cart Line being changed, with its choices. */
+  editing?: {
+    lineId: string;
+    optionIds: string[];
+    quantity: number;
+    note: string;
+  };
 }) {
-  const [picked, setPicked] = useState(() => initialPicks(groups));
-  const [quantity, setQuantity] = useState(1);
+  const [picked, setPicked] = useState(() =>
+    initialPicks(groups, editing?.optionIds)
+  );
+  const [quantity, setQuantity] = useState(editing?.quantity ?? 1);
   const [state, action, pending] = useActionState<AddState, FormData>(
-    addToCartAction,
+    editing ? changeLineAction : addToCartAction,
     { status: "idle" }
   );
   const [favourite, saveFavourite, saving] = useActionState<
@@ -92,6 +114,7 @@ export function OptionPicker({
       className="mt-8 grid gap-6"
     >
       <input type="hidden" name="menuItemId" value={menuItemId} />
+      {editing && <input type="hidden" name="lineId" value={editing.lineId} />}
       {groups.map((group) =>
         group.maxSelect === 1 ? (
           <fieldset key={group.id}>
@@ -171,6 +194,7 @@ export function OptionPicker({
           id="note"
           name="note"
           maxLength={140}
+          defaultValue={editing?.note}
           placeholder="Extra hot, please"
           className="rounded-card border-input bg-background min-h-11 border px-3"
         />
@@ -223,9 +247,15 @@ export function OptionPicker({
           <button
             type="submit"
             {...busy(pending, () => setLast("add"))}
-            className="bg-primary text-primary-foreground relative min-h-12 flex-1 rounded-full px-6 font-semibold disabled:opacity-60 sm:flex-none"
+            className="bg-primary text-primary-foreground relative min-h-12 flex-1 rounded-full px-6 font-semibold aria-disabled:opacity-60 sm:flex-none"
           >
-            {pending ? "Adding..." : "Add to order"}
+            {editing
+              ? pending
+                ? "Updating..."
+                : "Update order"
+              : pending
+                ? "Adding..."
+                : "Add to order"}
             {/* A short "Added" on the button itself; the status line below
                 is what screen readers hear. A new add restarts it. */}
             {last === "add" && state.status === "added" && (
@@ -242,16 +272,18 @@ export function OptionPicker({
         </div>
       </div>
       <div className="-mt-2 grid gap-3">
-        <div>
-          <button
-            type="submit"
-            formAction={saveFavourite}
-            {...busy(saving, () => setLast("favourite"))}
-            className="border-input min-h-12 rounded-full border px-5 font-semibold disabled:opacity-60"
-          >
-            {saving ? "Saving..." : "Save as Favourite"}
-          </button>
-        </div>
+        {!editing && (
+          <div>
+            <button
+              type="submit"
+              formAction={saveFavourite}
+              {...busy(saving, () => setLast("favourite"))}
+              className="border-input min-h-12 rounded-full border px-5 font-semibold aria-disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save as Favourite"}
+            </button>
+          </div>
+        )}
         <p role="status" className="min-h-6">
           {last === "favourite" && favourite.status === "saved" && (
             <>

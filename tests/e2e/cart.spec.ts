@@ -37,6 +37,40 @@ test("a Guest adds customized drinks and the Cart merges and prices them", async
   await expect(page.getByText("Your Cart is empty.")).toBeVisible();
 });
 
+// Options change in the Cart, not only the quantity (PRD ORD-02, audit
+// journeys:14).
+test("a Line's Options, quantity and note change in the Cart", async ({
+  page,
+}) => {
+  await page.goto("/menu/item/hoshi-latte");
+  await page.getByText("Oat milk", { exact: true }).click();
+  await page.getByRole("button", { name: "Add to order" }).click();
+  await expect(page.getByRole("status")).toContainText("Added");
+
+  await page.goto("/cart");
+  await page.getByRole("link", { name: "Change Hoshi Latte" }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Change your Hoshi Latte" })
+  ).toBeVisible();
+  await expect(page.getByRole("radio", { name: /Oat milk/ })).toBeChecked();
+  await page.getByText("Whole milk", { exact: true }).click();
+  await page.getByText("Large", { exact: true }).click();
+  await page.getByRole("button", { name: "One more" }).click();
+  await page
+    .getByRole("textbox", { name: /Note for the barista/ })
+    .fill("less ice please");
+  await page.getByRole("button", { name: "Update order" }).click();
+
+  await expect(page).toHaveURL(/\/cart$/);
+  await expect(page.getByRole("heading", { name: "Hoshi Latte" })).toHaveCount(
+    1
+  );
+  await expect(page.getByText("Large, Whole milk, 100%, Normal")).toBeVisible();
+  await expect(page.getByText("less ice please")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Cart 2 items/ })).toBeVisible();
+  await expectNoAxeViolations(page);
+});
+
 for (const palette of ["day", "night"] as const) {
   test(`the Cart in the ${palette} palette has no axe violations`, async ({
     page,
