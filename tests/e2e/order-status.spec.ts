@@ -6,6 +6,50 @@ import { addToCart, placeGuestOrder } from "./order";
 
 test.beforeEach(openAllDayToday);
 
+// One forgotten tab kept the database awake (audit ops:14): the page stops
+// asking 3 hours past its Pickup Time and says so; the tab coming back still
+// checks once.
+test("the Order page stops asking 3 hours after its Pickup Time and says so", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  await addToCart(page, "kopi-hitam");
+  const id = await placeGuestOrder(page, "Migs");
+  try {
+    await e2eQuery(
+      "UPDATE orders SET window_start = now() + interval '1 hour' WHERE id = $1",
+      [id]
+    );
+    await page.clock.install();
+    await page.reload();
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1_000));
+    const notice = page.getByText(
+      "No news for 3 hours, so this page stopped checking. Reload it to see where your order is."
+    );
+    const asking = page.waitForRequest(/\/api\/orders\/.+\/status/);
+    await page.clock.fastForward("03:30:00");
+    await asking;
+    await expect(notice).toHaveCount(0);
+    await page.clock.fastForward("01:00:00");
+    await expect(notice).toBeVisible();
+    let asked = 0;
+    await page.route("**/api/orders/*/status*", (route) => {
+      asked++;
+      return route.continue();
+    });
+    await page.clock.runFor("01:00");
+    await page.evaluate(() =>
+      document.dispatchEvent(new Event("visibilitychange"))
+    );
+    await expect.poll(() => asked).toBe(1);
+  } finally {
+    await e2eQuery(
+      "UPDATE orders SET status = 'picked_up', picked_up_at = now(), updated_at = now() WHERE id = $1",
+      [id]
+    );
+  }
+});
+
 test("the Order page follows the bar live (ORD-08)", async ({ page }) => {
   await addToCart(page, "spanish-latte");
   const id = await placeGuestOrder(page);

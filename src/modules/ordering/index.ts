@@ -36,7 +36,7 @@ export {
   orderVersion,
 } from "./internal/customer";
 export { orderLink } from "./internal/links";
-export { barBoard, expireUnpaid } from "./internal/bar";
+export { barBoard, cancelUncollected, expireUnpaid } from "./internal/bar";
 export { orderingDay } from "./internal/day";
 export { receivePaymentWebhook } from "./internal/webhook";
 export { cancelOrder, refundOrder } from "./internal/refund";

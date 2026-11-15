@@ -36,6 +36,12 @@ export async function openAllDayToday() {
   // Per-Cart limits stay: each test has its own Cart, and checkout.spec
   // counts one Cart's tries while other specs run this.
   await e2eQuery("DELETE FROM rate_limits WHERE key LIKE 'checkout-ip:%'");
+  // The daily Guest Pay at Pickup limit too, except for the test addresses
+  // (203.0.113.x) a test sets for itself, so its own count stays.
+  await e2eQuery(
+    `DELETE FROM rate_limits WHERE key LIKE 'pay-at-pickup-ip:%'
+       AND key NOT LIKE 'pay-at-pickup-ip:203.0.113.%'`
+  );
   // Parallel specs order into the same windows; room for all of them, so
   // only the test that fills a window on purpose ever sees one full.
   await e2eQuery(

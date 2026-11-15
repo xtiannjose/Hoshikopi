@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations } from "./axe";
-import { openAllDayToday } from "./db";
+import { e2eQuery, openAllDayToday } from "./db";
 import { mailTo } from "./mail";
 import { addToCart } from "./order";
 
@@ -188,6 +188,38 @@ test("checkout refuses an 11th try from one Cart in 15 minutes", async ({
   }
   await place.click();
   await expect(page.getByText("Too many tries.")).toBeVisible();
+});
+
+// One IP may place only so many unpaid Guest Orders a day; the rest pay
+// online or sign in (audit ORD-14, SEC2-03).
+test("a Guest's Pay at Pickup Orders are limited per day", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  const ip = "203.0.113.12";
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": ip });
+  // Today's ten, as the limiter counts them (one UTC day per bucket).
+  const day = 24 * 60 * 60 * 1000;
+  await e2eQuery(
+    `INSERT INTO rate_limits (key, window_start, count) VALUES ($1, $2, 10)
+     ON CONFLICT (key, window_start) DO UPDATE SET count = 10`,
+    [`pay-at-pickup-ip:${ip}`, new Date(Math.floor(Date.now() / day) * day)]
+  );
+  await addToCart(page, "kopi-hitam");
+  await page.goto("/checkout");
+  await page.getByText("Pay at Pickup", { exact: true }).click();
+  await page.getByLabel("Name").fill("Migs");
+  await page.getByLabel("Email").fill("migs@example.com");
+  await page.getByRole("button", { name: /Place order/ }).click();
+  await expect(
+    page.getByText(
+      "That's all the Pay at Pickup orders we take from one guest today. Pay online, or sign in to order more."
+    )
+  ).toBeVisible();
+  // Paying online still works.
+  await page.getByText("GCash", { exact: true }).click();
+  await page.getByRole("button", { name: /Place order/ }).click();
+  await expect(page).toHaveURL(/\/dev\/pay\/fake_cs_/);
 });
 
 test("Pickup Time offers the next few times as chips and the rest in a list (8.3)", async ({

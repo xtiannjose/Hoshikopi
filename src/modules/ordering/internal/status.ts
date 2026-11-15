@@ -1,5 +1,5 @@
 import type { Order, OrderStatus, Prisma } from "@/generated/prisma/client";
-import { dayValue, now } from "@/lib/clock";
+import { dayValue, manila, now } from "@/lib/clock";
 import { db, inTransaction, type Client } from "@/lib/db";
 
 import {
@@ -60,6 +60,14 @@ function allowed(order: Order, to: OrderStatus, actor: Actor): boolean {
     case "cancelled":
       if (actor.kind === "customer")
         return from === "placed" || from === "paid";
+      // The daily cron: a Pay at Pickup Order nobody took by the end of its
+      // day (audit ORD-13).
+      if (actor.kind === "system")
+        return (
+          from === "placed" &&
+          !ONLINE(order) &&
+          order.serviceDay.getTime() < dayValue(manila(now()).day).getTime()
+        );
       return (
         isManager(actor) &&
         ["placed", "paid", "accepted", "preparing", "ready"].includes(from)

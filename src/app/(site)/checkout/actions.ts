@@ -18,6 +18,9 @@ import {
 
 const METHODS: PaymentMethod[] = ["gcash", "maya", "card", "pay_at_pickup"];
 const FIFTEEN_MINUTES = 15 * 60;
+const ONE_DAY = 24 * 60 * 60;
+/** Guest Pay at Pickup Orders one IP may place a day (audit ORD-14). */
+const GUEST_PAY_AT_PICKUP_A_DAY = 10;
 
 export type CheckoutState = {
   message?: string;
@@ -87,29 +90,46 @@ export async function placeOrderAction(
   const kept = { ...values, pickup, paymentMethod: method };
   // Every try counts, so nobody can hold Pickup Windows with a flood of Orders.
   const cartKey = "memberId" in owner ? owner.memberId : owner.guestTokenHash;
+  const ip = clientIp(await headers());
   const allowed =
     (await takeToken(`checkout:${cartKey}`, 10, FIFTEEN_MINUTES)) &&
-    (await takeToken(
-      `checkout-ip:${clientIp(await headers())}`,
-      20,
-      FIFTEEN_MINUTES
-    ));
+    (await takeToken(`checkout-ip:${ip}`, 20, FIFTEEN_MINUTES));
   if (!allowed) {
     return {
       message: "Too many tries. Wait 15 minutes, then place your order.",
       values: kept,
     };
   }
+  const memberId = (await currentMember())?.id ?? null;
+  const paymentMethod = METHODS.includes(method) ? method : "pay_at_pickup";
+  // An unpaid Guest Order costs nothing to leave uncollected, so one IP may
+  // place only so many a day; the morning cron cancels any nobody took
+  // (audit ORD-14, SEC2-03, ORD-13).
+  if (
+    memberId === null &&
+    paymentMethod === "pay_at_pickup" &&
+    !(await takeToken(
+      `pay-at-pickup-ip:${ip}`,
+      GUEST_PAY_AT_PICKUP_A_DAY,
+      ONE_DAY
+    ))
+  ) {
+    return {
+      message:
+        "That's all the Pay at Pickup orders we take from one guest today. Pay online, or sign in to order more.",
+      values: kept,
+    };
+  }
   const result = await placeOrder({
     owner,
-    memberId: (await currentMember())?.id ?? null,
+    memberId,
     seenTotalCents: Number(form.get("seenTotalCents")),
     ...values,
     pickup:
       pickup === "asap"
         ? { kind: "asap" }
         : { kind: "scheduled", windowStart: new Date(pickup) },
-    paymentMethod: METHODS.includes(method) ? method : "pay_at_pickup",
+    paymentMethod,
     useReward: form.get("useReward") === "on",
     seenCart: String(form.get("seenCart") ?? ""),
   });

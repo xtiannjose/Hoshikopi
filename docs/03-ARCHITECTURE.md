@@ -104,24 +104,25 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 | --- | --- | --- | --- |
 | (none) | `placed` | `placeOrder` | Window counts taken; Stars reserved; "Order placed" email for Pay at Pickup |
 | `placed` (online) | `paid` | Verified provider webhook | "Order placed" email |
-| `placed` (online) | `expired` | 15 minutes unpaid (section 12), or at once when its checkout won't start | Window and Stars released; checkout session expired |
+| `placed` (online) | `expired` | 15 minutes unpaid (section 12; the payment webhook and the Order page's poll check too), or at once when its checkout won't start | Window and Stars released; checkout session expired |
 | `placed` (Pay at Pickup), `paid` | `accepted` | Barista (or the visitor in Demo Mode, ADR 0015) | Prep Time starts |
 | `accepted` | `preparing` | Barista (or Demo Mode) | None |
 | `preparing` | `ready` | Barista (or Demo Mode) | "Ready for pickup" email; status page shows it |
 | `ready` | `picked_up` | Barista, or Demo Mode (marks paid at the counter for Pay at Pickup) | Stars earned (`loyalty`); Redemption final |
 | `placed`, `paid` | `cancelled` | Customer, before `accepted` | Window and Stars released; a paid Order goes on to `refunded` |
 | any before `picked_up` | `cancelled` | Manager | Same as above; reason required |
+| `placed` (Pay at Pickup), after its service day | `cancelled` | The daily cron (system) | Window and Stars released; reason "The day ended before it was picked up" |
 | `cancelled` (was paid), `picked_up` | `refunded` | Manager; also the system, right after a Customer cancels a paid Order | Full refund through the provider (cash at the counter for Pay at Pickup); Stars earned are taken back |
 
-`transition(orderId, to, actor)` checks the table, locks the Order row, applies side effects and writes an `order_events` row. Anything else is a bug and throws. An Order left `ready` at closing stays `ready` for the Manager to close (V1 may add "not collected").
+`transition(orderId, to, actor)` checks the table, locks the Order row, applies side effects and writes an `order_events` row. Anything else is a bug and throws. A Pay at Pickup Order still `placed` after its service day is cancelled by the daily cron, so a Reward's Stars come back (audit ORD-13). One left `accepted`, `preparing` or `ready` stays for the Manager to close.
 
 ## 8. Payments
 
 - Business code talks to a `PaymentProvider` interface: `createCheckout`, `expireCheckout`, `refund`, `verifyWebhook`, `parseEvent` ([ADR 0003](adr/0003-payments-paymongo-test-mode.md)). Adapters: `paymongo` and `fake`.
 - **PayMongo in Test Mode only.** The adapter refuses to start if its secret key is not a test key (`sk_test_`), on every environment.
 - **`fake`** has a hosted checkout at `/dev/pay/[id]` whose Pay button sends a signed webhook, so demos and tests run without a PayMongo account. It refuses to run when `NODE_ENV=production` and the host is not a preview or local address.
-- The webhook route has the provider verify its signature header (`Paymongo-Signature`, or `fake-signature` for `fake`) over the raw body, then inserts the event under a unique `(provider, provider_event_id)`; a repeat is acknowledged and ignored. Only then does it transition the Order. The Payment row is locked while an event is decided, so two events for one checkout never overwrite each other. A paid event still counts after a failed attempt (a retry in the same checkout) and after the Order Expired or was Cancelled: the money was taken, so the Order is refunded in full right after the commit (a Refund row with actor `webhook`). Closing a checkout marks the Payment `expired` only after the provider confirms; a checkout with a payment going through stays open. The browser's return page reads the Order, never the URL, to decide what to show.
-- Refunds are full only (PRD PAY-05); the Refund row records the provider refund id.
+- The webhook route has the provider verify its signature header (`Paymongo-Signature`, or `fake-signature` for `fake`) over the raw body, then inserts the event under a unique `(provider, provider_event_id)`; a repeat is acknowledged and ignored. Only then does it transition the Order. The Payment row is locked while an event is decided, so two events for one checkout never overwrite each other. A paid event still counts after a failed attempt (a retry in the same checkout) and after the Order Expired or was Cancelled: the money was taken, so the Order is refunded in full right after the commit (a Refund row with actor `webhook`). A paid event for an Order still Placed past its 15 minutes Expires it first, in the same transaction, so it takes that late path too (audit PAY-07). Closing a checkout marks the Payment `expired` only after the provider confirms; a checkout with a payment going through stays open. The browser's return page reads the Order, never the URL, to decide what to show.
+- Refunds are full only (PRD PAY-05); the Refund row records the provider refund id. A refund that stopped after the provider refunded (Payment `refunded`, Refund row written, Order not moved) is finished by trying again; one still at the provider, with no Refund row, is left alone until refund webhooks exist (ADR 0003).
 - Money that needs a person: an Order Expired or Cancelled whose Payment is still `paid` (the late refund above threw, or a Cancel's automatic Refund failed) is listed as **Needs a refund** at the top of `/manage/orders`, any day, and `refundOrder` takes it from the Manager. A late-paid Order was never Paid in its own record, so only the money goes back and its Order Status stays. Every server error is also one JSON line in the logs (`src/instrumentation.ts`, `onRequestError`), path without its query.
 
 ## 9. Pickup Windows, Capacity and Prep Time
@@ -146,12 +147,12 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 ([ADR 0009](adr/0009-live-updates-by-polling.md))
 
 - The Bar Screen fetches `/api/bar` every 3 seconds with the last-seen board version; the server answers "no change" cheaply. The version covers the Orders, the pause, Busy Mode, the Prep Time and how many Orders are make-next, so a Scheduled Order coming due refreshes the board. A new Order plays a sound and highlights its card. Signed out, `/api/bar` answers 401 JSON (not a redirect), and the board stops polling and says so, with a link to sign in again.
-- The Order status page polls every 5 seconds until `ready`, then every 30 seconds until `picked_up` or closed.
+- The Order status page polls every 5 seconds until `ready` (15 while the tab is hidden, so it can still alert), then every 30 seconds while the tab shows, until `picked_up` or closed. It stops 3 hours past the Pickup Time and its last change, says so, and checks once when the tab comes back, so a forgotten tab can't keep the database awake (audit ops:14).
 - Server-Sent Events or a hosted realtime service are a later upgrade if polling cost or delay is measured as a problem.
 
 ## 12. Jobs and time
 
-- Vercel Hobby runs cron once a day, so time-critical work does not wait for cron: unpaid online Orders older than 15 minutes are expired **on read** whenever Pickup Windows, the Bar Screen or an Order are loaded, in the same transaction style as section 6. The daily cron (`/api/cron/daily`, before opening) sweeps anything left and refreshes the `menu` tag so yesterday's Sold Out marks clear; Order Codes restart by themselves each service day.
+- Vercel Hobby runs cron once a day, so time-critical work does not wait for cron: unpaid online Orders older than 15 minutes are expired **on read** whenever Pickup Windows, the Bar Screen or an Order are loaded, including each poll of the Order page, and by the payment webhook before it pays one, in the same transaction style as section 6. The daily cron (`/api/cron/daily`, before opening) sweeps anything left, cancels earlier days' Pay at Pickup Orders still Placed (section 7), and refreshes the `menu` tag so yesterday's Sold Out marks clear; Order Codes restart by themselves each service day.
 - All "now" values come from one `clock` helper so tests can freeze time.
 
 ## 13. Accounts, Staff and security

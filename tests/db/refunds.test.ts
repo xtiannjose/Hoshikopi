@@ -20,7 +20,11 @@ import {
   refundOrder,
   transition,
 } from "@/modules/ordering";
-import { fakeProvider, paymentProvider } from "@/modules/payments";
+import {
+  fakeProvider,
+  paymentProvider,
+  refundPayment,
+} from "@/modules/payments";
 
 import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
@@ -214,6 +218,48 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
     expect(after.payment).toMatchObject({ status: "paid", refunds: [] });
     expect(await refundOrder(placed.orderId, christian)).toEqual({ ok: true });
     expect(await db.refund.count()).toBe(1);
+  });
+
+  // The money went back but the Order never moved, so every retry was
+  // refused and a Picked Up Order kept its Stars (audit PAY-04).
+  it("finishes a refund that stopped after the money went back", async () => {
+    const placed = await order("card");
+    await pickUp(placed.orderId);
+    expect(await refundPayment(placed.orderId, "seed-manager")).toBe(
+      "refunded"
+    );
+    const refund = vi.spyOn(paymentProvider(), "refund");
+    expect(await refundOrder(placed.orderId, christian)).toEqual({ ok: true });
+    expect(refund).not.toHaveBeenCalled();
+    expect(
+      (await db.order.findUniqueOrThrow({ where: { id: placed.orderId } }))
+        .status
+    ).toBe("refunded");
+    expect(await db.refund.count()).toBe(1);
+    expect(await refundOrder(placed.orderId, christian)).toEqual({
+      ok: false,
+      reason: "not_allowed",
+    });
+  });
+
+  it("leaves an Order alone while its Payment is claimed with no Refund row", async () => {
+    const placed = await order("card");
+    await pickUp(placed.orderId);
+    await db.payment.update({
+      where: { orderId: placed.orderId },
+      data: { status: "refunded" },
+    });
+    const refund = vi.spyOn(paymentProvider(), "refund");
+    expect(await refundOrder(placed.orderId, christian)).toEqual({
+      ok: false,
+      reason: "not_allowed",
+    });
+    expect(refund).not.toHaveBeenCalled();
+    expect(
+      (await db.order.findUniqueOrThrow({ where: { id: placed.orderId } }))
+        .status
+    ).toBe("picked_up");
+    expect(await db.refund.count()).toBe(0);
   });
 
   it("refuses an Order that was never paid", async () => {

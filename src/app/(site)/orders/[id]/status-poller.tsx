@@ -1,9 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+import { now } from "@/lib/clock";
 
 const CLOSED = ["picked_up", "cancelled", "expired", "refunded"];
+
+/** How long past its Pickup Time, and its last change, a page keeps asking. */
+const KEEP_ASKING = 3 * 60 * 60_000;
 
 // Browsers allow sound only after a tap; the Notify button's tap unlocks it.
 let audio: AudioContext | null = null;
@@ -64,9 +69,11 @@ function announceReady(code: string) {
 
 /**
  * Asks every 5 seconds until Ready (every 15 while the tab is hidden, so a
- * background tab can still alert), then every 30 until the Order closes,
- * and re-renders the page when it changed (ADR 0009). On the change to
- * Ready it chimes, vibrates, retitles the tab and notifies if allowed.
+ * background tab can still alert), then every 30 while the tab shows, and
+ * re-renders the page when it changed (ADR 0009). On the change to Ready it
+ * chimes, vibrates, retitles the tab and notifies if allowed. One forgotten
+ * tab kept Neon Free awake (audit ops:14), so it stops 3 hours past the
+ * Pickup Time and the last change; the tab coming back still checks once.
  */
 export function StatusPoller({
   id,
@@ -74,15 +81,20 @@ export function StatusPoller({
   code,
   status,
   version,
+  windowStart,
 }: {
   id: string;
   token: string;
   code: string;
   status: string;
   version: string;
+  /** The Pickup Time, in milliseconds. */
+  windowStart: number;
 }) {
   const router = useRouter();
   const seen = useRef(status);
+  // The version the page stopped asking at; a newer one starts it again.
+  const [stoppedAt, setStoppedAt] = useState<string | null>(null);
   const permission = useSyncExternalStore(
     subscribe,
     readPermission,
@@ -98,6 +110,8 @@ export function StatusPoller({
     if (CLOSED.includes(status)) return;
     let last = 0;
     const check = async () => {
+      // Ready has already alerted, so a hidden tab need not ask.
+      if (status === "ready" && document.hidden) return;
       const gap =
         status === "ready" ? 30_000 : document.hidden ? 15_000 : 5_000;
       if (Date.now() - last < gap - 500) return;
@@ -110,7 +124,12 @@ export function StatusPoller({
       const latest = (await response.json()) as { version: string };
       if (latest.version !== version) router.refresh();
     };
-    const timer = setInterval(check, 5_000);
+    const stopAt = Math.max(now().getTime(), windowStart) + KEEP_ASKING;
+    const timer = setInterval(() => {
+      if (now().getTime() < stopAt) return void check();
+      clearInterval(timer);
+      setStoppedAt(version);
+    }, 5_000);
     const onShow = () => {
       last = 0;
       void check();
@@ -120,9 +139,18 @@ export function StatusPoller({
       clearInterval(timer);
       document.removeEventListener("visibilitychange", onShow);
     };
-  }, [id, token, status, version, router]);
+  }, [id, token, status, version, windowStart, router]);
 
-  if (CLOSED.includes(status) || status === "ready") return null;
+  if (CLOSED.includes(status)) return null;
+  if (stoppedAt === version) {
+    return (
+      <p className="text-muted-foreground mt-2">
+        No news for 3 hours, so this page stopped checking. Reload it to see
+        where your order is.
+      </p>
+    );
+  }
+  if (status === "ready") return null;
   if (permission === "granted") {
     return (
       <p className="text-muted-foreground mt-2">

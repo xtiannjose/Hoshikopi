@@ -14,6 +14,7 @@ import { addLine, getCart, type CartOwner } from "@/modules/cart";
 import { balance } from "@/modules/loyalty";
 import {
   cancelByCustomer,
+  cancelUncollected,
   expireUnpaid,
   placeOrder,
   transition,
@@ -250,6 +251,18 @@ describe("redeeming a Reward (LOY-03)", () => {
       before.lines.map((l) => [l.menuItemId, l.quantity])
     );
     expect(after.totalCents).toBe(before.totalCents);
+  });
+
+  // Nobody collected it: the morning cron gives the 9 Stars back (audit
+  // ORD-13).
+  it("gives the Stars back when nobody collects a Pay at Pickup Reward Order by the next morning", async () => {
+    await giveStars(9);
+    expect((await order(true)).ok).toBe(true);
+    expect(await balance(HOSHI)).toBe(0);
+    const morning = new Date("2026-11-02T22:00:00Z");
+    freezeClock(morning);
+    expect(await cancelUncollected(morning)).toBe(1);
+    expect(await balance(HOSHI)).toBe(9);
   });
 
   it("lets only one of two tabs spend the same 9 Stars", async () => {

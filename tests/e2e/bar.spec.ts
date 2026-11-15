@@ -103,7 +103,11 @@ test("the daily cron needs its secret", async ({ request }) => {
     headers: { authorization: "Bearer e2e-cron-secret" },
   });
   expect(ok.status()).toBe(200);
-  expect(await ok.json()).toMatchObject({ expired: expect.any(Number) });
+  // Expiry, and the Pay at Pickup Orders nobody took (audit ORD-13).
+  expect(await ok.json()).toMatchObject({
+    expired: expect.any(Number),
+    cancelled: expect.any(Number),
+  });
 });
 
 test("the Bar Screen says it stopped when its session ends (audit, 7.4)", async ({

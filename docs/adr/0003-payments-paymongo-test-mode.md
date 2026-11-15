@@ -23,6 +23,10 @@ Pay at Pickup needs no provider: the Barista marks the Order paid at the counter
 - Unpaid online Orders Expire after 15 minutes; the checkout session is expired through the interface as well.
 - Refunds are full only in the MVP.
 
+## Update 2026-11-15
+
+The webhook applies the 15 minutes itself: a paid event for an Order still Placed past them Expires it first, as the system, and the payment goes back through the late-payment refund (batch 10.4). A refund that stopped after the provider refunded is finished by trying again; one that died at the provider before the Refund row was written waits for refund webhooks.
+
 ## Update 2026-11-14
 
 An online Order whose checkout won't start (the provider refuses or can't be reached) Expires at once, as nothing was charged: its window and Stars come back and its Lines go back in the Cart (batch 10.3). After a failed try, the same checkout takes another one. PayMongo keeps its hosted checkout open and `payment.failed` is ignored, so the Order page keeps offering Finish paying; the `fake` checkout records the failure, and the Order page then offers "Try paying again".
