@@ -54,6 +54,27 @@ describe("Opening Hours (STAFF-05)", () => {
     );
   });
 
+  // A day ticked Closed still needed its three times, and the form greys
+  // them out (audit staff:19).
+  it("closes a day without its times, keeping the stored ones", async () => {
+    expect(
+      await saveWeeklyHours(
+        everyDay({
+          isClosed: "on",
+          opensAt: "",
+          lastOrderAt: "",
+          closesAt: "",
+        }),
+        christian
+      )
+    ).toEqual({ ok: true });
+    const monday = await db.openingHours.findUniqueOrThrow({
+      where: { weekday: 1 },
+    });
+    expect(monday.isClosed).toBe(true);
+    expect(monday.opensAt.toISOString().slice(11, 16)).toBe("07:00");
+  });
+
   it("refuses Last Order after closing", async () => {
     const result = await saveWeeklyHours(
       everyDay({ lastOrderAt: "21:30" }),

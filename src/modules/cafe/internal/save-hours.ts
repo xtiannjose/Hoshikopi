@@ -24,13 +24,19 @@ const ordered = (h: {
 
 const ORDER_MESSAGE = "Last order must be after opening and by closing.";
 
-const WeeklyRow = z.object({
-  weekday: z.coerce.number().int().min(0).max(6),
-  isClosed: z.coerce.boolean(),
-  opensAt: time,
-  lastOrderAt: time,
-  closesAt: time,
-});
+// A day ticked Closed may leave its times empty: the form greys them out
+// (audit staff:19).
+const WeeklyRow = z
+  .object({
+    weekday: z.coerce.number().int().min(0).max(6),
+    isClosed: z.coerce.boolean(),
+    opensAt: time.or(z.literal("")),
+    lastOrderAt: time.or(z.literal("")),
+    closesAt: time.or(z.literal("")),
+  })
+  .refine(
+    (row) => row.isClosed || (row.opensAt && row.lastOrderAt && row.closesAt)
+  );
 
 /** All seven days' Opening Hours; errors are keyed by weekday. */
 export async function saveWeeklyHours(
@@ -53,16 +59,27 @@ export async function saveWeeklyHours(
   await db.$transaction(async (tx) => {
     for (const row of parsed) {
       if (!row) continue;
-      const data = {
-        isClosed: row.isClosed,
-        opensAt: asTime(row.opensAt),
-        lastOrderAt: asTime(row.lastOrderAt),
-        closesAt: asTime(row.closesAt),
-      };
+      // Empty times on a closed day keep the stored ones (the columns are
+      // NOT NULL); a day never saved before takes the usual hours.
+      const times =
+        row.opensAt && row.lastOrderAt && row.closesAt
+          ? {
+              opensAt: asTime(row.opensAt),
+              lastOrderAt: asTime(row.lastOrderAt),
+              closesAt: asTime(row.closesAt),
+            }
+          : {};
       await tx.openingHours.upsert({
         where: { weekday: row.weekday },
-        update: data,
-        create: { weekday: row.weekday, ...data },
+        update: { isClosed: row.isClosed, ...times },
+        create: {
+          weekday: row.weekday,
+          isClosed: row.isClosed,
+          opensAt: asTime("07:00"),
+          lastOrderAt: asTime("20:30"),
+          closesAt: asTime("21:00"),
+          ...times,
+        },
       });
     }
     await audit(
