@@ -1,3 +1,6 @@
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "@/generated/prisma/client";
@@ -27,4 +30,13 @@ export async function resetDb(db: PrismaClient): Promise<void> {
       FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations';
       EXECUTE 'TRUNCATE ' || t || ' CASCADE';
     END $$;`);
+}
+
+/** Emails written to the test outbox for an address (no RESEND_API_KEY). */
+export async function mailTo(address: string): Promise<string[]> {
+  const dir = process.env.MAIL_DIR!;
+  const files = (await readdir(dir).catch(() => [])).filter((f) =>
+    f.endsWith(`-${address}.txt`)
+  );
+  return Promise.all(files.map((f) => readFile(path.join(dir, f), "utf8")));
 }

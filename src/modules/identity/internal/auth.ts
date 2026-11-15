@@ -61,6 +61,10 @@ export const auth = betterAuth({
     : {},
   plugins: [
     magicLink({
+      // Keep only a SHA-256 of each link's token: a database read or a
+      // backup cannot sign anyone in (audit SEC1-13). The emailed link is
+      // unchanged.
+      storeToken: "hashed",
       // Better Auth allows 5 link checks a minute per IP by default. Many
       // phones share one carrier IP and a link is a single-use 32-character
       // token, so a looser limit is safe; sending links is limited by our
