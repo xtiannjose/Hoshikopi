@@ -1,5 +1,6 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { dayValue, manila } from "@/lib/clock";
-import { db } from "@/lib/db";
+import { db, type Client } from "@/lib/db";
 import { prepMinutes } from "@/modules/cafe";
 import { closeCheckout } from "@/modules/payments";
 
@@ -9,18 +10,22 @@ import { drinksQueuedAhead } from "./windows";
 
 export const PAYMENT_MINUTES = 15;
 
+/** Online Orders still unpaid after their 15 minutes (PAY-04). */
+const unpaid = (at: Date) =>
+  ({
+    status: "placed",
+    paymentMethod: { not: "pay_at_pickup" },
+    placedAt: { lt: new Date(at.getTime() - PAYMENT_MINUTES * 60_000) },
+  }) satisfies Prisma.OrderWhereInput;
+
 /**
  * Expire online Orders still unpaid after 15 minutes, freeing their windows
- * (PAY-04). Runs on read (Bar Screen, checkout) and in the daily cron,
- * because cron on Vercel Hobby runs once a day (ADR 0007).
+ * (PAY-04). Runs on read (Bar Screen, checkout, the Order page) and in the
+ * daily cron, because cron on Vercel Hobby runs once a day (ADR 0007).
  */
 export async function expireUnpaid(at: Date): Promise<number> {
   const stale = await db.order.findMany({
-    where: {
-      status: "placed",
-      paymentMethod: { not: "pay_at_pickup" },
-      placedAt: { lt: new Date(at.getTime() - PAYMENT_MINUTES * 60_000) },
-    },
+    where: unpaid(at),
     select: { id: true },
   });
   let expired = 0;
@@ -31,6 +36,32 @@ export async function expireUnpaid(at: Date): Promise<number> {
     }
   }
   return expired;
+}
+
+/**
+ * Expire one Order if it is still unpaid after its 15 minutes, in the
+ * caller's transaction: the payment webhook before it pays (audit PAY-07)
+ * and the Order page's poll (PERF-16, ORD-19). Closing the checkout is the
+ * caller's to do. True when it expired.
+ */
+export async function expireIfUnpaid(
+  orderId: string,
+  at: Date,
+  client: Client = db
+): Promise<boolean> {
+  const stale = await client.order.findFirst({
+    where: { id: orderId, ...unpaid(at) },
+    select: { id: true },
+  });
+  if (!stale) return false;
+  const moved = await transition(
+    orderId,
+    "expired",
+    { kind: "system" },
+    undefined,
+    client
+  );
+  return moved.ok;
 }
 
 export type BarOrder = {

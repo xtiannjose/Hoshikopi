@@ -293,6 +293,45 @@ describe("expiry (PAY-04)", () => {
     ]);
   });
 
+  // Paid after its 15 minutes with no sweep in between: the webhook lets
+  // the Order go first and the money goes back (audit PAY-07).
+  it("refunds a payment that lands after 15 minutes with no sweep since", async () => {
+    const order = await onlineOrder();
+    freezeClock("2026-11-02T01:16:00Z");
+    expect(await webhook({ id: "evt_late" })).toEqual({
+      status: 200,
+      result: "refunded_late",
+    });
+    const after = await db.order.findUniqueOrThrow({
+      where: { id: order.orderId },
+    });
+    expect(after).toMatchObject({ status: "expired", paidAt: null });
+    expect(
+      await db.orderEvent.findFirstOrThrow({
+        where: { orderId: order.orderId, toStatus: "expired" },
+      })
+    ).toMatchObject({ fromStatus: "placed", actorKind: "system" });
+    expect(await db.orderEvent.count({ where: { toStatus: "paid" } })).toBe(0);
+    const payment = await db.payment.findFirstOrThrow();
+    expect(payment.status).toBe("refunded");
+    expect(await db.refund.count({ where: { paymentId: payment.id } })).toBe(1);
+    expect(
+      await db.pickupWindowUsage.findUniqueOrThrow({
+        where: { windowStart: after.windowStart },
+      })
+    ).toMatchObject({ drinks: 0 });
+  });
+
+  it("still pays an Order at exactly 15 minutes", async () => {
+    const order = await onlineOrder();
+    freezeClock("2026-11-02T01:15:00Z");
+    expect((await webhook({ id: "evt_edge" })).result).toBe("paid");
+    expect(
+      (await db.order.findUniqueOrThrow({ where: { id: order.orderId } }))
+        .status
+    ).toBe("paid");
+  });
+
   it("still pays the Order when a retry succeeds after a failed attempt", async () => {
     const order = await onlineOrder();
     expect((await webhook({ id: "evt_fail", type: "failed" })).result).toBe(

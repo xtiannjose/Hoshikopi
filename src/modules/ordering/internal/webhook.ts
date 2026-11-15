@@ -1,3 +1,4 @@
+import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
 import {
   recordPaymentEvent,
@@ -5,6 +6,7 @@ import {
   verifyWebhookEvent,
 } from "@/modules/payments";
 
+import { expireIfUnpaid } from "./bar";
 import { emailOrderPlaced } from "./emails";
 import { transition } from "./status";
 
@@ -25,7 +27,8 @@ export type WebhookResponse = {
  * A payment provider's webhook (PAY-03, ADR 0003): verify the signature,
  * store the event once, and only then move the Order to Paid, in one
  * transaction. The Order placed email follows the commit. A payment that
- * lands after its Order Expired or was Cancelled is refunded in full.
+ * lands after its 15 minutes, or after its Order Expired or was Cancelled,
+ * is refunded in full.
  */
 export async function receivePaymentWebhook(
   routeProvider: string,
@@ -42,6 +45,9 @@ export async function receivePaymentWebhook(
       rawBody
     );
     if (recorded.kind !== "paid") return { result: recorded.kind };
+    // Still Placed past its 15 minutes with no sweep since: it Expires
+    // first, so this payment takes the late path and goes back (PAY-07).
+    await expireIfUnpaid(recorded.orderId, now(), tx);
     const moved = await transition(
       recorded.orderId,
       "paid",
