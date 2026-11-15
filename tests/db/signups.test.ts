@@ -36,6 +36,30 @@ const person = (seats: number | string, email = `p${++n}@example.com`) => ({
 });
 
 describe("Event Sign-ups (EVT-02)", () => {
+  // A NUL in a name gave a 500 (audit SEC2-10).
+  it("finds no Event for a slug with a hidden character", async () => {
+    expect(await signUpForEvent("\u0000", person(1))).toEqual({
+      ok: false,
+      reason: "closed",
+    });
+  });
+
+  it("refuses a hidden character in a Sign-up name", async () => {
+    expect(
+      await signUpForEvent(EVENT, { ...person(1), name: "Guest\u0000" })
+    ).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      errors: {
+        name: "This has a hidden character we can't save. Try typing it again.",
+      },
+    });
+    expect(await signUpForEvent(EVENT, person(1))).toMatchObject({
+      ok: true,
+      seatsLeft: 11,
+    });
+  });
+
   it("takes Sign-ups until the Seats run out", async () => {
     expect(await signUpForEvent(EVENT, person(4))).toMatchObject({
       ok: true,

@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 
 import { clientIp, takeToken } from "@/lib/rate-limit";
+import { isPlainText } from "@/lib/text";
 import { redirect } from "next/navigation";
 
 import { emailSignInLink, googleSignInUrl, safeNext } from "@/modules/identity";
@@ -23,7 +24,7 @@ export async function requestSignInLink(
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
-  if (!EMAIL.test(email) || email.length > 254) {
+  if (!EMAIL.test(email) || !isPlainText(email) || email.length > 254) {
     return {
       status: "error",
       message: "Enter an email address, like hoshi@example.com.",

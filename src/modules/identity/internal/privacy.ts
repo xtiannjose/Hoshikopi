@@ -1,5 +1,6 @@
 import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
+import { withoutControl } from "@/lib/text";
 
 export type MemberProfile = {
   name: string;
@@ -35,7 +36,7 @@ export async function updateProfile(
   await db.user.update({
     where: { id: memberId },
     data: {
-      name: input.name.trim().slice(0, 60),
+      name: withoutControl(input.name).trim().slice(0, 60),
       marketingOptIn: input.marketingOptIn,
       birthMonth:
         Number.isInteger(month) && month! >= 1 && month! <= 12 ? month : null,

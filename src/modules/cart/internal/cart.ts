@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { db, inTransaction, type Client } from "@/lib/db";
 import { addMoney } from "@/lib/money";
+import { isPlainText, withoutControl } from "@/lib/text";
 import {
   priceChoices,
   type ChoiceRefusal,
@@ -64,7 +65,8 @@ export type AddResult =
 
 /** A Line's choices as the Cart keeps them: sorted Options, a trimmed note. */
 function tidy(input: NewLine) {
-  const note = input.note.trim().slice(0, MAX_NOTE_LENGTH);
+  // Hidden characters left out: Postgres refuses a NUL (audit SEC2-10).
+  const note = withoutControl(input.note).trim().slice(0, MAX_NOTE_LENGTH);
   const optionIds = [...input.optionIds].sort();
   const key = choiceKey({ menuItemId: input.menuItemId, optionIds, note });
   const quantityOk = Number.isInteger(input.quantity) && input.quantity >= 1;
@@ -141,6 +143,8 @@ export async function changeLine(
 ): Promise<AddResult | { ok: false; reason: "not_found" }> {
   const { note, optionIds, quantityOk } = tidy(input);
   if (!quantityOk) return { ok: false, reason: "invalid_options" };
+  // No Line id has a NUL; Postgres would refuse it (audit SEC2-10).
+  if (!isPlainText(lineId)) return { ok: false, reason: "not_found" };
   return inTransaction(client, async (tx) => {
     await lockCart(owner, tx);
     const line = await tx.cartLine.findFirst({
@@ -233,7 +237,9 @@ export async function updateQuantity(
   quantity: number,
   client: Client = db
 ): Promise<void> {
-  if (!Number.isInteger(quantity) || quantity < 0) return;
+  if (!Number.isInteger(quantity) || quantity < 0 || !isPlainText(lineId)) {
+    return;
+  }
   if (quantity === 0) return removeLine(owner, lineId, client);
   await client.cartLine.updateMany({
     where: { id: lineId, cart: ownerWhere(owner) },
@@ -246,6 +252,7 @@ export async function removeLine(
   lineId: string,
   client: Client = db
 ): Promise<void> {
+  if (!isPlainText(lineId)) return;
   await client.cartLine.deleteMany({
     where: { id: lineId, cart: ownerWhere(owner) },
   });

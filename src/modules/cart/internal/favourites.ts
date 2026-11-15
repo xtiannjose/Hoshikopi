@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { isPlainText } from "@/lib/text";
 import { priceChoices, type ChoiceRefusal } from "@/modules/menu";
 
 import { choiceKey } from "./cart";
@@ -104,5 +105,7 @@ export async function removeFavourite(
   memberId: string,
   favouriteId: string
 ): Promise<void> {
+  // No Favourite id has a NUL; Postgres would refuse it (audit SEC2-10).
+  if (!isPlainText(favouriteId)) return;
   await db.favourite.deleteMany({ where: { id: favouriteId, memberId } });
 }

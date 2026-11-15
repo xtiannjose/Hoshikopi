@@ -1,6 +1,7 @@
 import { manila, now } from "@/lib/clock";
 import { db, type Client } from "@/lib/db";
 import { addMoney } from "@/lib/money";
+import { isPlainText } from "@/lib/text";
 
 export type Choice = { menuItemId: string; optionIds: string[] };
 
@@ -72,7 +73,13 @@ export async function priceChoices(
   const today = manila(now()).day;
   const soldOut = (on: Date | null) => on?.toISOString().slice(0, 10) === today;
   const items = await client.menuItem.findMany({
-    where: { id: { in: [...new Set(choices.map((c) => c.menuItemId))] } },
+    // An id with a NUL is no Menu Item, and Postgres would refuse it with a
+    // 500 (audit SEC2-10): it prices as unavailable.
+    where: {
+      id: {
+        in: [...new Set(choices.map((c) => c.menuItemId).filter(isPlainText))],
+      },
+    },
     include: {
       category: { select: { isHidden: true } },
       optionGroups: {

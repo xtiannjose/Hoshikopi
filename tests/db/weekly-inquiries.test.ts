@@ -82,6 +82,34 @@ const inquiry = {
 };
 
 describe("Inquiries (INFO-11)", () => {
+  // Postgres refuses a NUL, so a script sending one got a 500 (audit
+  // SEC2-10); line breaks and tabs still go through.
+  it("refuses a hidden character in the name or message", async () => {
+    expect(
+      await submitInquiry({
+        ...inquiry,
+        name: "Lia\u0000",
+        message: "Hello\u0000world",
+      })
+    ).toEqual({
+      ok: false,
+      errors: {
+        name: "This has a hidden character we can't save. Try typing it again.",
+        message:
+          "This has a hidden character we can't save. Try typing it again.",
+      },
+    });
+    expect(await db.inquiry.count()).toBe(0);
+    expect(
+      (
+        await submitInquiry({
+          ...inquiry,
+          message: "Line one\nLine two\tthanks",
+        })
+      ).ok
+    ).toBe(true);
+  });
+
   it("saves one for the Manager", async () => {
     const result = await submitInquiry(inquiry);
     expect(result).toMatchObject({

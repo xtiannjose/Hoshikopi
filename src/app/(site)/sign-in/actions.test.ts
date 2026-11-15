@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { takeToken } from "@/lib/rate-limit";
 import { googleSignInUrl } from "@/modules/identity";
 
-import { googleSignInAction } from "./actions";
+import { googleSignInAction, requestSignInLink } from "./actions";
 
 vi.mock("next/headers", () => ({
   headers: async () =>
@@ -36,6 +36,20 @@ const form = (next: string) => {
 };
 
 afterEach(() => vi.clearAllMocks());
+
+// A NUL in the email would make Postgres refuse the rate-limit write
+// with a 500 (audit SEC2-10): it is refused before any of that.
+describe("requestSignInLink", () => {
+  it("refuses an email with a hidden character before taking any token", async () => {
+    const data = new FormData();
+    data.set("email", "a\u0000@example.com");
+    expect(await requestSignInLink({ status: "idle" }, data)).toMatchObject({
+      status: "error",
+      message: "Enter an email address, like hoshi@example.com.",
+    });
+    expect(takeToken).not.toHaveBeenCalled();
+  });
+});
 
 // Each start writes a verifications row for Google's state, so it is
 // limited like the email link (audit ID2-10).

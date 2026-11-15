@@ -180,3 +180,15 @@ describe("deleting an account (ACC-03)", () => {
     expect(await memberProfile(HOSHI)).toBeNull();
   });
 });
+
+// Postgres refuses a NUL, so a name with one gave a 500 (audit SEC2-10).
+describe("Your details", () => {
+  it("leaves hidden characters out of the name", async () => {
+    await updateProfile(HOSHI, {
+      name: "Hoshi\u0000 S.",
+      marketingOptIn: false,
+      birthMonth: null,
+    });
+    expect((await memberProfile(HOSHI))?.name).toBe("Hoshi S.");
+  });
+});
