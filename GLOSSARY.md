@@ -123,7 +123,7 @@ How the customer pays: GCash, Maya, Card (online, through the payment provider: 
 _Avoid_: Payment type, channel, tender
 
 **Payment**:
-One attempt to pay an Order online, with its provider id and status. An Order has at most one successful Payment.
+One checkout to pay an Order online, with its provider id and status. A failed try leaves it open for another; an Order has one Payment at most.
 _Avoid_: Charge, transaction (alone)
 
 **Test Mode**:

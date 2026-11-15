@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import type { PaymentMethod } from "@/generated/prisma/enums";
 import { freezeClock, unfreezeClock } from "@/lib/clock";
@@ -12,7 +20,7 @@ import {
   refundOrder,
   transition,
 } from "@/modules/ordering";
-import { fakeProvider } from "@/modules/payments";
+import { fakeProvider, paymentProvider } from "@/modules/payments";
 
 import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
@@ -31,7 +39,10 @@ beforeEach(async () => {
   await seedDatabase(db);
   freezeClock("2026-11-02T01:00:00Z");
 });
-afterEach(unfreezeClock);
+afterEach(() => {
+  unfreezeClock();
+  vi.restoreAllMocks();
+});
 afterAll(() => db.$disconnect());
 
 async function order(paymentMethod: PaymentMethod, pay = true) {
@@ -180,6 +191,29 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
     expect(after.payment?.status).toBe("refunded");
     expect(after.payment?.refunds).toHaveLength(1);
     expect(await ordersToRefund()).toEqual([]);
+  });
+
+  // The claim on the Payment is undone, so a Manager can try again
+  // (audit tests:8).
+  it("keeps the Payment paid when the provider refuses, so the Manager can try again", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const placed = await order("card");
+    await pickUp(placed.orderId);
+    vi.spyOn(paymentProvider(), "refund").mockRejectedValueOnce(
+      new Error("provider down")
+    );
+    expect(await refundOrder(placed.orderId, christian)).toEqual({
+      ok: false,
+      reason: "provider_failed",
+    });
+    const after = await db.order.findUniqueOrThrow({
+      where: { id: placed.orderId },
+      include: { payment: { include: { refunds: true } } },
+    });
+    expect(after.status).toBe("picked_up");
+    expect(after.payment).toMatchObject({ status: "paid", refunds: [] });
+    expect(await refundOrder(placed.orderId, christian)).toEqual({ ok: true });
+    expect(await db.refund.count()).toBe(1);
   });
 
   it("refuses an Order that was never paid", async () => {

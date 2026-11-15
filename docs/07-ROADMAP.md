@@ -194,7 +194,7 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 
 - [x] **10.1 Accessibility statement gaps.** Done 2026-11-14: a pressed button keeps focus and a removed control hands it on, placeholder contrast, the header wraps at a larger text size, failed pages are titled, the checkout contact rule belongs to both fields, axe checks Day contrast, and Field ties selects and textareas. `/accessibility` lists what is left.
 - [x] **10.2 Rewards and checkout copy.** Done 2026-11-14: one total with a Reward, a fully free Order skips online payment, the free drink reads "free with 9 Stars", one Pickup Time everywhere, after Last Order the Customer is told when to walk in and when ordering opens, a Cart changed in another tab says so, and the FAQ no longer promises "any size".
-- [ ] **10.3 Payment failure paths.** 5 items, effort S to M.
+- [x] **10.3 Payment failure paths.** Done 2026-11-14: a failed online payment can be paid again from the Order page, a checkout that won't start lets the Order go and refills the Cart, PayMongo's payment.failed changes nothing, the Test Mode back link says it cancels nothing, a refused fake webhook can be tried again, a wrong Order link says how to find the Order, and the provider's failure branches are tested.
 - [ ] **10.4 Orders that never close.** 7 items, effort S to M.
 - [ ] **10.5 Cart and Pickup Times.** 4 items, effort S to M.
 - [ ] **10.6 Sign-in.** 6 items, effort S each.

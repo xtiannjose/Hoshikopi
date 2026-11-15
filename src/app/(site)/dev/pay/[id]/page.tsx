@@ -6,7 +6,11 @@ import { Suspense } from "react";
 import { PRIMARY_PILL } from "@/components/panel";
 import { formatReceipt } from "@/lib/money";
 import { getOrderBrief, orderLink } from "@/modules/ordering";
-import { paymentByCheckout, paymentProvider } from "@/modules/payments";
+import {
+  checkoutOpen,
+  paymentByCheckout,
+  paymentProvider,
+} from "@/modules/payments";
 
 import { fakePayAction } from "./actions";
 import { PayButtons } from "./pay-buttons";
@@ -26,18 +30,18 @@ const METHOD = {
 /** What a closed checkout says, by Payment status. */
 const DONE: Record<string, string> = {
   paid: "Paid. Your order is on its way to the bar.",
-  failed: "This payment didn't go through.",
   expired: "This checkout timed out.",
   refunded: "This payment was refunded.",
 };
 
 export default function FakeCheckoutPage({
   params,
+  searchParams,
 }: PageProps<"/dev/pay/[id]">) {
   return (
     <main id="main" className="mx-auto w-full max-w-md flex-1 px-4 py-10">
       <Suspense fallback={<p>Opening the checkout...</p>}>
-        <Checkout params={params} />
+        <Checkout params={params} searchParams={searchParams} />
       </Suspense>
     </main>
   );
@@ -45,8 +49,11 @@ export default function FakeCheckoutPage({
 
 async function Checkout({
   params,
-}: Pick<PageProps<"/dev/pay/[id]">, "params">) {
+  searchParams,
+}: Pick<PageProps<"/dev/pay/[id]">, "params" | "searchParams">) {
   const { id } = await params;
+  // fakePayAction's flag when the webhook refused: nothing was paid.
+  const { retry } = await searchParams;
   if (paymentProvider().name !== "fake") notFound();
   const payment = await paymentByCheckout(id);
   if (!payment) notFound();
@@ -67,17 +74,26 @@ async function Checkout({
           {formatReceipt(payment.amountCents)}
         </span>
       </p>
-      {payment.status === "pending" ? (
+      {/* Still open after a failed try, as PayMongo's is (audit journeys:6). */}
+      {checkoutOpen(payment.status) ? (
         <>
+          {/* Always there, so the words are read out when the redirect
+              adds them; a region added already filled may not be. */}
+          <p role="status" className="text-destructive min-h-6 font-semibold">
+            {retry === "1" &&
+              "That didn't go through, and nothing was paid. Please try again."}
+          </p>
           <form action={fakePayAction} className="grid gap-3">
             <input type="hidden" name="checkoutId" value={id} />
             <PayButtons amount={formatReceipt(payment.amountCents)} />
           </form>
+          {/* Like PayMongo's cancel_url: back to the Order page, nothing
+              cancelled there (audit journeys:21). */}
           <Link
             href={back}
             className="text-muted-foreground inline-flex min-h-11 items-center justify-self-center text-sm"
           >
-            Cancel and go back
+            Go back without paying
           </Link>
         </>
       ) : (

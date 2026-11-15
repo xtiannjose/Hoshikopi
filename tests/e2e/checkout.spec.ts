@@ -124,6 +124,8 @@ test("a Guest can't pay at pickup for more than 4 drinks (PAY-02)", async ({
   await expect(page.getByText("Pay at Pickup", { exact: true })).toHaveCount(0);
 });
 
+// A wrong, cut or token-less Order link says how to find the Order
+// (audit journeys:18). It stays 200: notFound() runs after the page streams.
 test("an Order page needs its link token", async ({ page }) => {
   await addToCart(page, "kopi-hitam");
   await page.goto("/checkout");
@@ -132,11 +134,30 @@ test("an Order page needs its link token", async ({ page }) => {
   await page.getByLabel("Mobile number").fill("0917 123 4567");
   await page.getByRole("button", { name: /Place order/ }).click();
   await expect(page).toHaveURL(/\/orders\/[\w-]+\?t=/);
-  const url = new URL(page.url());
-  await page.goto(url.pathname + "?t=wrong");
-  await expect(
-    page.getByRole("heading", { name: /could not be found/i })
-  ).toBeVisible();
+  const { pathname } = new URL(page.url());
+  for (const path of [
+    `${pathname}?t=wrong`,
+    pathname,
+    "/orders/no-such-order?t=x",
+  ]) {
+    await page.goto(path);
+    const main = page.getByRole("main");
+    await expect(
+      main.getByRole("heading", {
+        level: 1,
+        name: "We couldn't open this order",
+      }),
+      path
+    ).toBeVisible();
+    await expect(
+      main.getByText(
+        "Use the full link you got when you ordered, or sign in to see Your orders."
+      )
+    ).toBeVisible();
+    await expect(
+      main.getByRole("link", { name: "Your orders" })
+    ).toHaveAttribute("href", "/account#orders");
+  }
 });
 
 test("checkout refuses an 11th try from one Cart in 15 minutes", async ({

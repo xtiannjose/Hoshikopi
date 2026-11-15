@@ -23,7 +23,7 @@ import { formatPrice } from "@/lib/money";
 import { getCafeDetails, getHours } from "@/modules/cafe";
 import { lineName, orderNoun } from "@/modules/notify";
 import { getOrderForCustomer, type OrderView } from "@/modules/ordering";
-import { demoMode } from "@/modules/payments";
+import { checkoutOpen, demoMode } from "@/modules/payments";
 
 import { orderAgainAction } from "../../account/actions";
 
@@ -157,16 +157,17 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
   const closed = ["cancelled", "expired", "refunded"].includes(order.status);
   const canCancel = order.status === "placed" || order.status === "paid";
   const failed = paymentFailed(order);
-  // Still to collect: where, when and what to show.
-  const live = !closed && order.status !== "picked_up" && !failed;
+  // Still to collect: where, when and what to show. A failed try is still
+  // open: the checkout takes another (audit journeys:6).
+  const live = !closed && order.status !== "picked_up";
   // An unpaid online Order is not on the bar yet.
   const onBar =
     order.status !== "placed" || order.paymentMethod === "pay_at_pickup";
   // Demo Mode: nobody is behind this bar, so the visitor plays the barista.
   const demoStep =
     demoMode() && live && onBar ? DEMO_STEP[order.status] : undefined;
-  // Where to go next once this Order is done, or can't go on.
-  const nextSteps = closed || order.status === "picked_up" || failed;
+  // Where to go next once this Order is done.
+  const nextSteps = closed || order.status === "picked_up";
   const timeline = steps(order);
   const currentIndex = timeline.findIndex(
     (step) => step.label === CURRENT[order.status]
@@ -208,18 +209,20 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
           status={order.status}
           version={order.version}
         />
-        {order.status === "placed" && order.payment?.status === "pending" && (
-          <a
-            href={order.payment.checkoutUrl}
-            className={`${PRIMARY_PILL} mt-4`}
-          >
-            Finish paying
-          </a>
-        )}
+        {order.status === "placed" &&
+          order.payment &&
+          checkoutOpen(order.payment.status) && (
+            <a
+              href={order.payment.checkoutUrl}
+              className={`${PRIMARY_PILL} mt-4`}
+            >
+              {failed ? "Try paying again" : "Finish paying"}
+            </a>
+          )}
         {failed && (
-          <p className="text-destructive max-w-measure mt-4 font-semibold">
-            Your payment didn&apos;t go through. This order will be let go in a
-            few minutes; place it again, or choose Pay at Pickup.
+          <p className="text-muted-foreground max-w-measure mt-2">
+            We hold an unpaid order for 15 minutes after you place it. Not
+            ordering after all? Cancel it below.
           </p>
         )}
         {nextSteps && (

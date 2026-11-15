@@ -182,6 +182,32 @@ describe("PayMongo webhook signature", () => {
       paymentId: "pay_7",
     });
   });
+
+  // payment.failed names a pay_ resource, never the checkout session, and
+  // PayMongo keeps the session open for another try, so it changes nothing
+  // here (audit PAY-06).
+  it("ignores payment.failed, which names a payment, not the checkout", () => {
+    const provider = providerFor(
+      env({
+        PAYMENT_PROVIDER: "paymongo",
+        PAYMONGO_SECRET_KEY: "sk_test_abc",
+        PAYMONGO_WEBHOOK_SECRET: "whsk_test",
+      })
+    );
+    const body = JSON.stringify({
+      data: {
+        id: "evt_124",
+        attributes: {
+          type: "payment.failed",
+          data: { id: "pay_8", attributes: {} },
+        },
+      },
+    });
+    expect(provider.parseEvent(body)).toMatchObject({
+      id: "evt_124",
+      type: "other",
+    });
+  });
 });
 
 describe("demoMode (ADR 0015)", () => {

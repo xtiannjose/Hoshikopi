@@ -1,13 +1,27 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
 import {
+  dayOrders,
   expireUnpaid,
+  ordersToRefund,
   placeOrder,
   receivePaymentWebhook,
 } from "@/modules/ordering";
-import { fakeProvider, type ProviderEvent } from "@/modules/payments";
+import {
+  fakeProvider,
+  paymentProvider,
+  type ProviderEvent,
+} from "@/modules/payments";
 
 import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
@@ -21,7 +35,10 @@ beforeEach(async () => {
   await seedDatabase(db);
   freezeClock("2026-11-02T01:00:00Z");
 });
-afterEach(unfreezeClock);
+afterEach(() => {
+  unfreezeClock();
+  vi.restoreAllMocks();
+});
 afterAll(() => db.$disconnect());
 
 async function onlineOrder(drinks = 5) {
@@ -86,6 +103,59 @@ describe("online checkout (PAY-01)", () => {
       (await db.order.findUniqueOrThrow({ where: { id: order.orderId } }))
         .status
     ).toBe("placed");
+  });
+});
+
+// Nothing was charged when the payment page won't open: the Order lets go
+// of its window at once and its Lines go back in the Cart, so "Try again"
+// is true (audit tests:8, ORD-05, PAY-03).
+describe("a payment page that won't open", () => {
+  it("lets the Order go and refills the Cart", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(paymentProvider(), "createCheckout").mockRejectedValueOnce(
+      new Error("provider down")
+    );
+    const owner = { guestTokenHash: "guest-down" };
+    const item = await db.menuItem.findUniqueOrThrow({
+      where: { slug: "ube-pandesal" },
+    });
+    await addLine(owner, {
+      menuItemId: item.id,
+      optionIds: [],
+      quantity: 2,
+      note: "less sugar",
+    });
+    const seen = await getCart(owner);
+    expect(
+      await placeOrder({
+        owner,
+        memberId: null,
+        seenTotalCents: seen.totalCents,
+        customerName: "Hoshi",
+        customerEmail: "hoshi@example.com",
+        customerPhone: "",
+        pickup: { kind: "asap" },
+        paymentMethod: "gcash",
+      })
+    ).toEqual({ ok: false, reason: "payment_start_failed" });
+    const order = await db.order.findFirstOrThrow({
+      include: { payment: true },
+    });
+    expect(order).toMatchObject({ status: "expired", payment: null });
+    expect(
+      await db.pickupWindowUsage.findUniqueOrThrow({
+        where: { windowStart: order.windowStart },
+      })
+    ).toMatchObject({ drinks: 0, food: 0 });
+    expect(await dayOrders("2026-11-02")).toMatchObject({
+      count: 0,
+      totalCents: 0,
+    });
+    const cart = await getCart(owner);
+    expect(cart.lines.map((l) => [l.menuItemId, l.quantity, l.note])).toEqual([
+      [item.id, 2, "less sugar"],
+    ]);
+    expect(cart.totalCents).toBe(seen.totalCents);
   });
 });
 
@@ -198,6 +268,29 @@ describe("expiry (PAY-04)", () => {
       providerPaymentId: "fake_pay_1",
     });
     expect(await db.refund.count({ where: { paymentId: payment.id } })).toBe(1);
+  });
+
+  // The refund of a late payment fails at the provider: the Payment stays
+  // paid and the Order waits under "Needs a refund" (audit tests:8).
+  it("leaves a late payment for a Manager when its refund fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const order = await onlineOrder();
+    await expireUnpaid(new Date("2026-11-02T01:16:00Z"));
+    vi.spyOn(paymentProvider(), "refund").mockRejectedValueOnce(
+      new Error("timeout")
+    );
+    expect(await webhook({ id: "evt_late" })).toEqual({
+      status: 200,
+      result: "paid_late",
+    });
+    expect(await db.payment.findFirstOrThrow()).toMatchObject({
+      status: "paid",
+      providerPaymentId: "fake_pay_1",
+    });
+    expect(await db.refund.count()).toBe(0);
+    expect(await ordersToRefund()).toEqual([
+      expect.objectContaining({ id: order.orderId, status: "expired" }),
+    ]);
   });
 
   it("still pays the Order when a retry succeeds after a failed attempt", async () => {
