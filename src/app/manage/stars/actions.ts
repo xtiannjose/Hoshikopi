@@ -16,6 +16,8 @@ const REASONS = {
   not_allowed: "Only Managers adjust Stars.",
   reason_required: "Give a reason and a number of Stars other than 0.",
   below_zero: "That would take the balance below zero.",
+  too_many: "Use up to 50 Stars at a time, either way.",
+  self: "You can't adjust your own Stars. Ask another Manager.",
 };
 
 const stars = (n: number) => `${n} ${n === 1 ? "Star" : "Stars"}`;
