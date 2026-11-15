@@ -24,10 +24,11 @@ export async function advanceOrder(id: string, from: keyof typeof NEXT) {
 
 /**
  * A Manager cancels with a reason, behind a confirm. A cancel can refund, so
- * it needs the Second Factor like /manage/orders (ADR 0014).
+ * it needs the Second Factor: requireStaff asks for it at Manager level and
+ * brings them back to the Bar Screen (ADR 0014).
  */
 export async function cancelAtBar(id: string, reason: string) {
-  const staff = await requireStaff("manager", "/manage/orders");
+  const staff = await requireStaff("manager", "/bar");
   const result = await cancelOrder(
     id,
     { kind: "staff", id: staff.id, role: staff.role },

@@ -33,9 +33,9 @@ export type Staff = { id: string; name: string; role: "barista" | "manager" };
 
 /**
  * The signed-in Staff member with at least `role` (a Manager may do what a
- * Barista does). Signed out goes to sign-in; anyone else gets a 404. Under
- * /manage the session also needs the Second Factor; the Bar Screen does not
- * (ADR 0005).
+ * Barista does). Signed out goes to sign-in; anyone else gets a 404. The
+ * session also needs a Second Factor under 12 hours old, except for
+ * Barista-level work on the Bar Screen (ADR 0014).
  */
 export async function requireStaff(
   role: "barista" | "manager",
@@ -46,10 +46,10 @@ export async function requireStaff(
   const allowed =
     user.role === "manager" || (role === "barista" && user.role === "barista");
   if (!allowed) notFound();
-  if (
-    next.startsWith("/manage") &&
-    !(await secondFactorPassed(user.sessionId))
-  ) {
+  // Only Barista-level work on the Bar Screen skips it: the check no
+  // longer rides on where `next` points (audit ID2-07).
+  const barScreen = role === "barista" && next === "/bar";
+  if (!barScreen && !(await secondFactorPassed(user.sessionId))) {
     redirect(`/manage/two-factor?next=${encodeURIComponent(next)}`);
   }
   // `allowed` above rules out Members.
