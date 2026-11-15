@@ -126,3 +126,45 @@ test("a Manager makes a Member a Barista, then takes the role back (STAFF-10)", 
     page.getByRole("listitem").filter({ hasText: "(you)" }).getByRole("button")
   ).toHaveCount(0);
 });
+
+// Add Staff defaulted to Barista, so a Manager's email demoted them; and a
+// row warned only before Member (audit staff:16).
+test("Add Staff never demotes a Manager, and a row warns before any lower role", async ({
+  page,
+  browser,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  const email = `bea-${Date.now()}@example.com`;
+  const person = await (await browser.newContext()).newPage();
+  await signIn(person, email, "/account");
+
+  await signIn(page, "christian@hoshikopi.example", "/manage/staff");
+  const add = async (role?: string) => {
+    await page.getByLabel("Email they signed in with").fill(email);
+    if (role) await page.getByLabel("Role", { exact: true }).selectOption(role);
+    await page.getByRole("button", { name: "Give role" }).click();
+  };
+  await add("manager");
+  await expect(page.getByRole("status").first()).toContainText(
+    "is now a Manager."
+  );
+  await add();
+  await expect(page.getByRole("status").first()).toContainText(
+    "is already a Manager. To lower their role, use Save on their row in the team list."
+  );
+
+  const row = page.getByRole("listitem").filter({ hasText: email });
+  await expect(row.getByRole("combobox")).toHaveValue("manager");
+  await row.getByRole("combobox").selectOption("barista");
+  await expect(
+    row.getByText("They lose Manager access and are signed out now.")
+  ).toBeVisible();
+  await row.getByRole("combobox").selectOption("customer");
+  await expect(
+    row.getByText("They lose staff access and are signed out now.")
+  ).toBeVisible();
+  await row.getByRole("button", { name: /^Save role for/ }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "is now a Member" })
+  ).toBeVisible();
+});

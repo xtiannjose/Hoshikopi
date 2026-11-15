@@ -26,7 +26,8 @@ export async function staffMembers(): Promise<StaffMember[]> {
 
 export type RoleResult =
   | { ok: true; name: string }
-  | { ok: false; reason: "not_found" | "self" | "not_allowed" };
+  | { ok: false; reason: "not_found" | "self" | "not_allowed" }
+  | { ok: false; reason: "lower"; name: string; role: Role };
 
 /**
  * A Manager gives someone with an account a role: Barista, Manager, or back
@@ -34,12 +35,14 @@ export type RoleResult =
  * actor must still be a Manager when the change runs, with every Manager row
  * locked, so the last Manager always stays, even when two Managers demote
  * each other at once. Losing access ends the person's sessions; every change
- * is logged (STAFF-01, STAFF-10).
+ * is logged (STAFF-01, STAFF-10). Lowering a role needs `from`, the role the
+ * Manager saw on that person's row, so Add Staff never demotes anyone.
  */
 export async function setRole(
   actor: { id: string },
   email: string,
-  role: Role
+  role: Role,
+  from?: Role
 ): Promise<RoleResult> {
   return db.$transaction(async (tx) => {
     const managers = await tx.$queryRaw<{ id: string }[]>`
@@ -54,9 +57,20 @@ export async function setRole(
     });
     if (!person) return { ok: false, reason: "not_found" };
     if (person.id === actor.id) return { ok: false, reason: "self" };
+    const lower = RANK[role] < RANK[person.role];
+    // Add Staff (no `from`) or a row out of date never lowers anyone
+    // (audit staff:16).
+    if (lower && from !== person.role) {
+      return {
+        ok: false,
+        reason: "lower",
+        name: person.name,
+        role: person.role,
+      };
+    }
     if (person.role !== role) {
       await tx.user.update({ where: { id: person.id }, data: { role } });
-      if (RANK[role] < RANK[person.role]) {
+      if (lower) {
         await tx.session.deleteMany({ where: { userId: person.id } });
       }
       await audit(
