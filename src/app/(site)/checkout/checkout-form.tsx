@@ -13,7 +13,12 @@ import { useFocusInvalid } from "@/components/use-focus-invalid";
 import { placeOrderAction, type CheckoutState } from "./actions";
 import { useRewardChoice, useTotal } from "./reward-choice";
 
-export type WindowChoice = { value: string; label: string };
+export type WindowChoice = {
+  value: string;
+  label: string;
+  /** "Filling up" or "2 drinks left" when nearly full (audit FEAT-03). */
+  hint?: string | null;
+};
 
 const PAYMENTS = [
   {
@@ -196,7 +201,7 @@ export function CheckoutForm({
                 {chips.map((w) => (
                   <label
                     key={w.value}
-                    className="border-input has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary has-[:focus-visible]:outline-ring inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-3 font-mono text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+                    className="border-input has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary has-[:focus-visible]:outline-ring inline-flex min-h-11 cursor-pointer flex-col items-center justify-center rounded-full border px-3 py-1 font-mono text-sm leading-tight has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
                   >
                     <input
                       type="radio"
@@ -206,6 +211,7 @@ export function CheckoutForm({
                       className="sr-only"
                     />
                     {w.label}
+                    {w.hint && <span className="font-sans">{w.hint}</span>}
                   </label>
                 ))}
               </div>
@@ -243,7 +249,7 @@ export function CheckoutForm({
                   <optgroup key={group.hour} label={group.hour}>
                     {group.windows.map((w) => (
                       <option key={w.value} value={w.value}>
-                        {w.label}
+                        {w.hint ? `${w.label} (${w.hint})` : w.label}
                       </option>
                     ))}
                   </optgroup>

@@ -84,6 +84,7 @@ Theme ([ADR 0010](adr/0010-theme-follows-manila-time.md)): the Day or Night pale
 - `priceChoices` (menu) validates the choice against the Menu Item's Option Groups (required groups present, min and max picks, no Sold Out or Hidden Option) and returns the Base Price (or today's Promo) plus the Price Deltas. The Cart stores choices, never prices.
 - `getCart` prices every Line on each read and returns Line totals and the Order total. `placeOrder` applies at most one Reward (one unit of the dearest drink at zero; its Options still charge their Price Delta). VAT is included in prices; the receipt shows the VAT part with one rounding rule ([ADR 0002](adr/0002-money-as-integer-centavos.md)).
 - A Line whose Menu Item became Sold Out or Hidden is flagged in the Cart and blocks checkout until removed.
+- Adds and changes to one Cart wait their turn on its row, so none overwrites another; the Cart itself is created with an insert that does nothing when another request made it first. A Line's Options, quantity and note change from the Cart (`changeLine`, the Change link to `/cart/line/[id]`); a change that matches another Line joins it, up to 20.
 
 ## 6. Checkout and order placement
 
@@ -132,7 +133,7 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 - A day is cut into 15-minute Pickup Windows from opening to the last order time. Capacity per window (drinks, food Lines) is set per day of the week; Special Hours close or shorten a day.
 - `pickup_window_usage(day, window_start)` holds counts taken; `placeOrder` locks and updates it.
 - **Prep Time** for As Soon As Possible: `base_minutes + per_drink_minutes × (drinks ahead + this Order's drinks − 1) + Busy Mode minutes`, rounded up to the next 5 minutes; both numbers are Manager settings (defaults 4 and 1.5). Drinks ahead are those the bar is making (Accepted, Preparing) and the As Soon As Possible Orders waiting on the Bar Screen (Paid, or Placed Pay at Pickup); Scheduled Orders still waiting do not count (ADR 0007 update). ASAP takes the earliest window that starts after now + Prep Time and has room, and checkout shows it as "Ready by" that window.
-- The checkout lists only windows with room; the server checks again when placing.
+- The checkout lists only windows with room, and says "Filling up" or "2 drinks left" on one close to full; the server checks again when placing. As Soon As Possible walks the offered windows in order under each one's row lock and takes the first with room, so a window that filled after it was offered passes to the next.
 
 ## 10. Loyalty
 

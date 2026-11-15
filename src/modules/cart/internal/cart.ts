@@ -1,4 +1,6 @@
-import { db, type Client } from "@/lib/db";
+import { randomUUID } from "node:crypto";
+
+import { db, inTransaction, type Client } from "@/lib/db";
 import { addMoney } from "@/lib/money";
 import {
   priceChoices,
@@ -60,47 +62,116 @@ export const choiceKey = (line: {
 export type AddResult =
   { ok: true } | { ok: false; reason: ChoiceRefusal["reason"] | "too_many" };
 
-/** Add a Menu Item with its Options to the Cart (ORD-01). */
+/** A Line's choices as the Cart keeps them: sorted Options, a trimmed note. */
+function tidy(input: NewLine) {
+  const note = input.note.trim().slice(0, MAX_NOTE_LENGTH);
+  const optionIds = [...input.optionIds].sort();
+  const key = choiceKey({ menuItemId: input.menuItemId, optionIds, note });
+  const quantityOk = Number.isInteger(input.quantity) && input.quantity >= 1;
+  return { note, optionIds, key, quantityOk };
+}
+
+/**
+ * The owner's Cart, created if missing. Two first adds at once both get it:
+ * the insert does nothing when the other one already made it.
+ */
+async function ensureCart(owner: CartOwner, client: Client) {
+  const memberId = "memberId" in owner ? owner.memberId : null;
+  const guestTokenHash = "memberId" in owner ? null : owner.guestTokenHash;
+  await client.$executeRaw`
+    INSERT INTO carts (id, member_id, guest_token_hash, updated_at)
+    VALUES (${randomUUID()}, ${memberId}, ${guestTokenHash}, now())
+    ON CONFLICT DO NOTHING`;
+}
+
+/**
+ * Add a Menu Item with its Options to the Cart (ORD-01). Adds to one Cart
+ * wait their turn on its row, so none overwrites another (audit tests:9).
+ */
 export async function addLine(
   owner: CartOwner,
   input: NewLine,
   client: Client = db
 ): Promise<AddResult> {
-  const note = input.note.trim().slice(0, MAX_NOTE_LENGTH);
-  const optionIds = [...input.optionIds].sort();
-  if (!Number.isInteger(input.quantity) || input.quantity < 1) {
-    return { ok: false, reason: "invalid_options" };
-  }
+  const { note, optionIds, key, quantityOk } = tidy(input);
+  if (!quantityOk) return { ok: false, reason: "invalid_options" };
   const [priced] = await priceChoices(
     [{ menuItemId: input.menuItemId, optionIds }],
     client
   );
   if (!priced.ok) return priced;
-  const key = choiceKey({ menuItemId: input.menuItemId, optionIds, note });
-  const cart = await client.cart.upsert({
-    where: ownerWhere(owner),
-    update: {},
-    create: ownerWhere(owner),
-    select: { id: true },
+  await ensureCart(owner, client);
+  return inTransaction(client, async (tx): Promise<AddResult> => {
+    await lockCart(owner, tx);
+    const cart = await tx.cart.findUniqueOrThrow({
+      where: ownerWhere(owner),
+      select: { id: true },
+    });
+    const existing = await tx.cartLine.findUnique({
+      where: { cartId_choiceKey: { cartId: cart.id, choiceKey: key } },
+    });
+    const quantity = (existing?.quantity ?? 0) + input.quantity;
+    if (quantity > MAX_LINE_QUANTITY) return { ok: false, reason: "too_many" };
+    await tx.cartLine.upsert({
+      where: { cartId_choiceKey: { cartId: cart.id, choiceKey: key } },
+      update: { quantity },
+      create: {
+        cartId: cart.id,
+        menuItemId: input.menuItemId,
+        optionIds,
+        quantity,
+        note,
+        choiceKey: key,
+      },
+    });
+    return { ok: true };
   });
-  const existing = await client.cartLine.findUnique({
-    where: { cartId_choiceKey: { cartId: cart.id, choiceKey: key } },
+}
+
+/**
+ * Change a Line's Options, quantity and note, priced again (PRD ORD-02,
+ * audit journeys:14). The Menu Item stays; a Line that already has the new
+ * choices takes this one's quantity, as adding it again would.
+ */
+export async function changeLine(
+  owner: CartOwner,
+  lineId: string,
+  input: NewLine,
+  client: Client = db
+): Promise<AddResult | { ok: false; reason: "not_found" }> {
+  const { note, optionIds, quantityOk } = tidy(input);
+  if (!quantityOk) return { ok: false, reason: "invalid_options" };
+  return inTransaction(client, async (tx) => {
+    await lockCart(owner, tx);
+    const line = await tx.cartLine.findFirst({
+      where: { id: lineId, cart: ownerWhere(owner) },
+    });
+    if (!line) return { ok: false, reason: "not_found" } as const;
+    const [priced] = await priceChoices(
+      [{ menuItemId: line.menuItemId, optionIds }],
+      tx
+    );
+    if (!priced.ok) return priced;
+    const key = choiceKey({ menuItemId: line.menuItemId, optionIds, note });
+    const same = await tx.cartLine.findUnique({
+      where: { cartId_choiceKey: { cartId: line.cartId, choiceKey: key } },
+    });
+    const joins = same !== null && same.id !== line.id;
+    const quantity = input.quantity + (joins ? same.quantity : 0);
+    if (quantity > MAX_LINE_QUANTITY) {
+      return { ok: false, reason: "too_many" } as const;
+    }
+    if (joins) {
+      await tx.cartLine.update({ where: { id: same.id }, data: { quantity } });
+      await tx.cartLine.delete({ where: { id: line.id } });
+    } else {
+      await tx.cartLine.update({
+        where: { id: line.id },
+        data: { optionIds, note, choiceKey: key, quantity },
+      });
+    }
+    return { ok: true } as const;
   });
-  const quantity = (existing?.quantity ?? 0) + input.quantity;
-  if (quantity > MAX_LINE_QUANTITY) return { ok: false, reason: "too_many" };
-  await client.cartLine.upsert({
-    where: { cartId_choiceKey: { cartId: cart.id, choiceKey: key } },
-    update: { quantity },
-    create: {
-      cartId: cart.id,
-      menuItemId: input.menuItemId,
-      optionIds,
-      quantity,
-      note,
-      choiceKey: key,
-    },
-  });
-  return { ok: true };
 }
 
 /** The Cart with every Line priced on the server (ORD-02, ORD-06). */

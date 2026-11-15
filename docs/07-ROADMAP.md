@@ -196,7 +196,7 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.2 Rewards and checkout copy.** Done 2026-11-14: one total with a Reward, a fully free Order skips online payment, the free drink reads "free with 9 Stars", one Pickup Time everywhere, after Last Order the Customer is told when to walk in and when ordering opens, a Cart changed in another tab says so, and the FAQ no longer promises "any size".
 - [x] **10.3 Payment failure paths.** Done 2026-11-14: a failed online payment can be paid again from the Order page, a checkout that won't start lets the Order go and refills the Cart, PayMongo's payment.failed changes nothing, the Test Mode back link says it cancels nothing, a refused fake webhook can be tried again, a wrong Order link says how to find the Order, and the provider's failure branches are tested.
 - [x] **10.4 Orders that never close.** Done 2026-11-15: the Order page's poll and the payment webhook apply the 15 minutes, the morning cron closes Pay at Pickup Orders nobody took, one IP may place 10 Guest Pay at Pickup Orders a day, the Order page stops asking 3 hours past its Pickup Time, and trying again finishes a refund that stopped half way.
-- [ ] **10.5 Cart and Pickup Times.** 4 items, effort S to M.
+- [x] **10.5 Cart and Pickup Times.** Done 2026-11-15: a drink's Options, quantity and note change in the Cart (PRD ORD-02), adds at once to one Cart no longer overwrite each other, ASAP takes the next window with room when the first fills, and a nearly full Pickup Time says how many drinks are left.
 - [ ] **10.6 Sign-in.** 6 items, effort S each.
 - [ ] **10.7 Staff roles and the Second Factor.** 6 items, effort S to M.
 - [ ] **10.8 Manager inputs.** 6 items, effort S to M.

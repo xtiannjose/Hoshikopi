@@ -177,6 +177,16 @@ async function Cart() {
                   </button>
                 </form>
               </div>
+              {/* Its Options, quantity and note (PRD ORD-02, audit
+                  journeys:14); a Line that can't be ordered is removed. */}
+              {line.problem === null && (
+                <Link
+                  href={`/cart/line/${line.id}`}
+                  className="inline-flex min-h-11 items-center px-2 underline underline-offset-4"
+                >
+                  Change<span className="sr-only"> {line.name}</span>
+                </Link>
+              )}
               <form action={removeLineAction}>
                 <input type="hidden" name="lineId" value={line.id} />
                 <button
