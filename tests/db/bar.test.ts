@@ -3,7 +3,12 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { PaymentMethod } from "@/generated/prisma/enums";
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { startBusyMode } from "@/modules/cafe";
-import { barBoard, expireUnpaid, transition } from "@/modules/ordering";
+import {
+  barBoard,
+  cancelUncollected,
+  expireUnpaid,
+  transition,
+} from "@/modules/ordering";
 
 import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
@@ -152,6 +157,35 @@ describe("expireUnpaid (PAY-04, ADR 0007)", () => {
         where: { windowStart: at("09:30") },
       })
     ).toMatchObject({ drinks: 2 });
+  });
+});
+
+// A Pay at Pickup Order nobody took is closed the next morning, giving its
+// window and Stars back; anything the bar started stays for the Manager
+// (audit ORD-13).
+describe("cancelUncollected (ORD-13)", () => {
+  it("cancels earlier days' Placed Pay at Pickup Orders with a reason and leaves the rest", async () => {
+    const waiting = await order("09:30");
+    const started = await order("09:45");
+    await transition(started.id, "accepted", annika);
+    const online = await order("09:30", "gcash", "08:58");
+    freezeClock(at("23:59"));
+    expect(await cancelUncollected(at("23:59"))).toBe(0);
+    const next = new Date("2026-11-03T06:00:00+08:00");
+    freezeClock(next);
+    expect(await cancelUncollected(next)).toBe(1);
+    const read = (id: string) => db.order.findUniqueOrThrow({ where: { id } });
+    expect(await read(waiting.id)).toMatchObject({
+      status: "cancelled",
+      cancelReason: "The day ended before it was picked up",
+    });
+    expect((await read(started.id)).status).toBe("accepted");
+    expect((await read(online.id)).status).toBe("placed");
+    expect(
+      await db.pickupWindowUsage.findUniqueOrThrow({
+        where: { windowStart: at("09:30") },
+      })
+    ).toMatchObject({ drinks: 1 });
   });
 });
 

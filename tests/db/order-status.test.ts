@@ -1,6 +1,7 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { PaymentMethod } from "@/generated/prisma/enums";
+import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { nextOrderCode, transition, type Actor } from "@/modules/ordering";
 
 import { seedDatabase } from "../../prisma/seed-data";
@@ -19,6 +20,7 @@ beforeEach(async () => {
   await resetDb(db);
   await seedDatabase(db);
 });
+afterEach(unfreezeClock);
 afterAll(() => db.$disconnect());
 
 /** An Order of 2 drinks and 1 food Line holding room in WINDOW. */
@@ -152,6 +154,42 @@ describe("transition: online payment", () => {
 });
 
 describe("transition: cancelling (ORD-09)", () => {
+  // The daily cron closes a Pay at Pickup Order nobody took by the end of
+  // its day, and nothing else (audit ORD-13).
+  it("lets the system cancel only an earlier day's Placed Pay at Pickup Order", async () => {
+    freezeClock("2026-11-02T20:00:00+08:00");
+    const today = await placedOrder();
+    expect(await transition(today.id, "cancelled", system, "x")).toEqual({
+      ok: false,
+      reason: "not_allowed",
+      status: "placed",
+    });
+
+    freezeClock("2026-11-03T06:00:00+08:00");
+    const online = await placedOrder("gcash");
+    expect((await transition(online.id, "cancelled", system, "x")).ok).toBe(
+      false
+    );
+    const accepted = await placedOrder();
+    await transition(accepted.id, "accepted", annika);
+    expect((await transition(accepted.id, "cancelled", system, "x")).ok).toBe(
+      false
+    );
+    expect((await transition(today.id, "cancelled", system, "x")).ok).toBe(
+      true
+    );
+    const after = await db.order.findUniqueOrThrow({
+      where: { id: today.id },
+      include: { events: { orderBy: { at: "desc" }, take: 1 } },
+    });
+    expect(after.cancelReason).toBe("x");
+    expect(after.events[0]).toMatchObject({
+      fromStatus: "placed",
+      toStatus: "cancelled",
+      actorKind: "system",
+    });
+  });
+
   it("lets the Customer cancel before Accepted and gives back the window", async () => {
     const order = await placedOrder();
     expect((await transition(order.id, "cancelled", customer)).ok).toBe(true);

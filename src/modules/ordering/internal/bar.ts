@@ -64,6 +64,35 @@ export async function expireIfUnpaid(
   return moved.ok;
 }
 
+const NOT_COLLECTED = "The day ended before it was picked up";
+
+/**
+ * Cancel earlier days' Pay at Pickup Orders the bar never accepted, giving
+ * their windows and any Reward's Stars back (audit ORD-13). The daily cron
+ * runs it before opening; anything the bar started stays for the Manager.
+ */
+export async function cancelUncollected(at: Date): Promise<number> {
+  const left = await db.order.findMany({
+    where: {
+      status: "placed",
+      paymentMethod: "pay_at_pickup",
+      serviceDay: { lt: dayValue(manila(at).day) },
+    },
+    select: { id: true },
+  });
+  let cancelled = 0;
+  for (const { id } of left) {
+    const moved = await transition(
+      id,
+      "cancelled",
+      { kind: "system" },
+      NOT_COLLECTED
+    );
+    if (moved.ok) cancelled++;
+  }
+  return cancelled;
+}
+
 export type BarOrder = {
   id: string;
   code: string;
