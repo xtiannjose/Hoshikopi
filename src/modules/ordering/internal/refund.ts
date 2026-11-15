@@ -13,6 +13,7 @@ export type RefundResult =
  * provider first (Pay at Pickup is refunded in cash at the counter), then
  * the Order moves to Refunded and the Customer gets an email. Managers
  * refund; the system refunds a paid Order its Customer cancelled (ORD-09).
+ * Trying again finishes a Refund that stopped after the money went back.
  */
 export async function refundOrder(
   orderId: string,
@@ -50,10 +51,16 @@ export async function refundOrder(
     console.error("[payments] refund refused by the provider:", error);
     return { ok: false, reason: "provider_failed" };
   }
-  // Someone else is refunding this Order right now.
-  if (outcome === "already_refunded") {
+  // Another refund still holds the Payment, or a late-paid Order (no Order
+  // Status to finish) was just refunded by someone else.
+  if (
+    outcome === "being_refunded" ||
+    (outcome === "already_refunded" && paidLate)
+  ) {
     return { ok: false, reason: "not_allowed" };
   }
+  // already_refunded: an earlier try refunded the money and stopped before
+  // the Order moved, so this one finishes it (audit PAY-04).
   if (!paidLate) {
     const moved = await transition(orderId, "refunded", actor);
     if (!moved.ok) return { ok: false, reason: "not_allowed" };

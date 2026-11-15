@@ -153,12 +153,15 @@ export const checkoutOpen = (status: string) =>
   status === "pending" || status === "failed";
 
 export type RefundOutcome =
-  "no_online_payment" | "refunded" | "already_refunded";
+  "no_online_payment" | "refunded" | "already_refunded" | "being_refunded";
 
 /**
  * Refund an Order's online Payment in full (PAY-05). The Payment is claimed
  * paid -> refunded first, so two refunds at once cannot both reach the
- * provider; the claim is undone if the provider refuses.
+ * provider; the claim is undone if the provider refuses. A repeat answers
+ * already_refunded once the Refund row exists, and being_refunded while
+ * another refund holds the claim (or one died at the provider before
+ * writing the row, which waits for refund webhooks, ADR 0003).
  */
 export async function refundPayment(
   orderId: string,
@@ -171,9 +174,14 @@ export async function refundPayment(
     data: { status: "refunded" },
   });
   if (claimed.count === 0) {
-    return payment.status === "refunded"
-      ? "already_refunded"
-      : "no_online_payment";
+    // Read again: another refund may have claimed it since the read above.
+    const current = await db.payment.findUniqueOrThrow({
+      where: { id: payment.id },
+      select: { status: true, _count: { select: { refunds: true } } },
+    });
+    if (current.status !== "refunded") return "no_online_payment";
+    // The Refund row is written once the provider has refunded.
+    return current._count.refunds > 0 ? "already_refunded" : "being_refunded";
   }
   try {
     const { refundId } = await paymentProvider().refund(
