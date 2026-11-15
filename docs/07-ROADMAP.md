@@ -199,7 +199,7 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.5 Cart and Pickup Times.** Done 2026-11-15: a drink's Options, quantity and note change in the Cart (PRD ORD-02), adds at once to one Cart no longer overwrite each other, ASAP takes the next window with room when the first fills, and a nearly full Pickup Time says how many drinks are left.
 - [x] **10.6 Sign-in.** Done 2026-11-15: sign-in tokens are stored only as hashes, deleting an account ends its pending links, a stranger can't use up someone's links, Google sign-in starts are limited per IP, a used link says so and keeps where it was going, and a hidden character or a broken address no longer gives a 500.
 - [x] **10.7 Staff roles and the Second Factor.** Done 2026-11-15: a Manager-level check always asks for the Second Factor and a pass lasts 12 hours, Sign out everywhere stops the Bar Screen at once, Add Staff never demotes anyone, every Staff action is tested for its role, and Baristas mark Sold Out on the Bar Screen without an authenticator.
-- [ ] **10.8 Manager inputs.** 6 items, effort S to M.
+- [x] **10.8 Manager inputs.** Done 2026-11-15: a price over PHP 100,000 gets plain words, Stars adjustments stop at 50 and never touch a Manager's own, a Closed day needs no times, the Barista Pick refusal names the picks, Special Hours for today say how many Orders are booked after closing, and Options can be Hidden while an unused Option Group or a draft Post can be deleted.
 - [ ] **10.9 Manager numbers and Sign-ups.** 6 items, effort S each.
 - [ ] **10.10 Bar Screen.** 5 items, effort S each.
 - [ ] **10.11 Database rules.** 5 items, effort S each.
