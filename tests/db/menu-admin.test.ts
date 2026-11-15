@@ -110,15 +110,44 @@ describe("saveMenuItem", () => {
 });
 
 describe("Barista Picks and Pairings (INFO-13, MENU-08)", () => {
+  // A Seasonal item past its date still held its pick, so Home showed two
+  // and the Manager was told the slots were full (audit staff:20).
+  it("does not count a pick whose Seasonal date has passed", async () => {
+    const [first] = await db.menuItem.findMany({
+      where: { badges: { has: "barista_pick" } },
+      orderBy: { name: "asc" },
+    });
+    await db.menuItem.update({
+      where: { id: first.id },
+      data: { availableUntil: new Date("2026-11-01") },
+    });
+    const coldBrew = await itemInput("cold-brew", {
+      badges: ["barista_pick"],
+    });
+    expect(
+      (await saveMenuItem(coldBrew.id, coldBrew.input, christian)).ok
+    ).toBe(true);
+  });
+
   it("allows three Barista Picks per palette", async () => {
     // The seed picks three for Day and three for Night.
     const coldBrew = await itemInput("cold-brew", {
       badges: ["barista_pick"],
     });
+    // It names the three, so the Manager knows which to untick (audit
+    // staff:20).
+    const picks = (
+      await db.menuItem.findMany({
+        where: { badges: { has: "barista_pick" } },
+        orderBy: { name: "asc" },
+        select: { name: true },
+      })
+    ).map((item) => item.name);
+    const [a, b, c] = picks;
     expect(await saveMenuItem(coldBrew.id, coldBrew.input, christian)).toEqual({
       ok: false,
       errors: {
-        badges: "Three Day Barista Picks already. Untick one of them first.",
+        badges: `Three Day Barista Picks already: ${a}, ${b} and ${c}. Untick one of them first.`,
       },
     });
     const night = await itemInput("cold-brew", { badges: ["night_pick"] });
@@ -194,6 +223,7 @@ describe("saveOption", () => {
         name: "Oat milk",
         priceDelta: "35",
         isDefault: "on",
+        isHidden: undefined,
         addsAllergens: [],
         sort: String(oat.sort),
       },

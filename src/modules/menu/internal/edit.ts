@@ -152,10 +152,13 @@ const MenuItemInput = z.object({
 export type MenuItemInput = z.input<typeof MenuItemInput>;
 
 const PICKS_PER_PALETTE = 3;
-const PICK_FULL = {
-  barista_pick: "Three Day Barista Picks already. Untick one of them first.",
-  night_pick: "Three Night Barista Picks already. Untick one of them first.",
-} as const;
+const PICK_PALETTE = { barista_pick: "Day", night_pick: "Night" } as const;
+
+/** "A, B and C" */
+const names = (list: string[]) =>
+  list.length > 1
+    ? `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`
+    : (list[0] ?? "");
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -239,11 +242,25 @@ export async function saveMenuItem(
   // INFO-13: the Manager picks three for each palette.
   for (const pick of ["barista_pick", "night_pick"] as const) {
     if (!data.badges.includes(pick)) continue;
-    const others = await db.menuItem.count({
-      where: { badges: { has: pick }, ...(id ? { id: { not: id } } : {}) },
+    // A Seasonal item past its date no longer shows on Home, so its pick
+    // does not count (audit staff:20).
+    const others = await db.menuItem.findMany({
+      where: {
+        badges: { has: pick },
+        ...(id ? { id: { not: id } } : {}),
+        OR: [{ availableUntil: null }, { availableUntil: { gte: today() } }],
+      },
+      orderBy: { name: "asc" },
+      select: { name: true },
     });
-    if (others >= PICKS_PER_PALETTE) {
-      return { ok: false, errors: { badges: PICK_FULL[pick] } };
+    if (others.length >= PICKS_PER_PALETTE) {
+      const taken = names(others.map((item) => item.name));
+      return {
+        ok: false,
+        errors: {
+          badges: `Three ${PICK_PALETTE[pick]} Barista Picks already: ${taken}. Untick one of them first.`,
+        },
+      };
     }
   }
   const fields = {
@@ -371,6 +388,7 @@ const OptionInput = z.object({
   name: z.string().trim().min(1, "Enter a name.").max(40),
   priceDelta: pesos("the Price Delta"),
   isDefault: checkbox,
+  isHidden: checkbox,
   addsAllergens: z.array(z.enum(ALLERGEN_KEYS)),
   sort: z.coerce.number().int().min(0).max(999),
 });
@@ -407,7 +425,7 @@ export async function saveOption(
       actor,
       id ? "menu.option.update" : "menu.option.create",
       { type: "option", id: option.id },
-      { deltaCents: option.deltaCents },
+      { deltaCents: option.deltaCents, isHidden: option.isHidden },
       tx
     );
   });
