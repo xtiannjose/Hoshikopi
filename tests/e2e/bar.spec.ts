@@ -190,3 +190,47 @@ test("the Bar Screen stops at once when its session is ended elsewhere", async (
     page.getByRole("alert").filter({ hasText: "signed out" })
   ).toBeVisible({ timeout: 10_000 });
 });
+
+// Sold Out was only on /manage/menu, behind the Second Factor, so a Barista
+// who never set up an authenticator could not mark it (STAFF-03, audit
+// staff:8).
+test("a Barista with no authenticator marks Sold Out and back on the Bar Screen @cafe-wide", async ({
+  page,
+}) => {
+  const id = `e2e-${Date.now()}`;
+  const email = `${id}@hoshikopi.example`;
+  await e2eQuery(
+    `INSERT INTO users (id, name, email, email_verified, role, updated_at)
+     VALUES ($1, 'Lia', $2, true, 'barista', now())`,
+    [id, email]
+  );
+  try {
+    await signIn(page, email, "/bar");
+    await expect(page.getByRole("link", { name: "Sold out?" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Manage" })).toHaveCount(0);
+    await page.locator("summary", { hasText: "Sold out today" }).click();
+    await page
+      .getByRole("button", { name: "Sold out for Butter Croissant" })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Back on for Butter Croissant" })
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/bar/);
+    await expectNoAxeViolations(page);
+    await page
+      .getByRole("button", { name: "Back on for Butter Croissant" })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Sold out for Butter Croissant" })
+    ).toBeVisible();
+    const { rows } = await e2eQuery(
+      "SELECT 1 FROM two_factors WHERE user_id = $1",
+      [id]
+    );
+    expect(rows).toHaveLength(0);
+  } finally {
+    await e2eQuery(
+      "UPDATE menu_items SET sold_out_on = NULL WHERE slug = 'butter-croissant'"
+    );
+  }
+});

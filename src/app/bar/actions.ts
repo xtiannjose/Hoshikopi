@@ -1,6 +1,9 @@
 "use server";
 
+import { updateTag } from "next/cache";
+
 import { requireStaff } from "@/modules/identity";
+import { setMenuItemSoldOut, setOptionSoldOut } from "@/modules/menu";
 import { cancelOrder, transition } from "@/modules/ordering";
 
 const NEXT = {
@@ -35,4 +38,22 @@ export async function cancelAtBar(id: string, reason: string) {
     reason
   );
   return result.ok;
+}
+
+/**
+ * Sold Out today or back on, from the Bar Screen and /manage/menu: no
+ * Second Factor, like the bar's other taps, so a Barista who never set up
+ * an authenticator can do it (STAFF-03, audit staff:8). Signed out, it
+ * goes to sign-in and back to the Bar Screen.
+ */
+export async function toggleSoldOut(form: FormData) {
+  const staff = await requireStaff("barista", "/bar");
+  const field = (name: string) => String(form.get(name) ?? "");
+  const soldOut = field("soldOut") === "1";
+  if (field("kind") === "option") {
+    await setOptionSoldOut(field("id"), soldOut, staff);
+  } else {
+    await setMenuItemSoldOut(field("id"), soldOut, staff);
+  }
+  updateTag("menu");
 }

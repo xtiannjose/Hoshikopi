@@ -9,8 +9,6 @@ import {
   saveMenuItem,
   saveOption,
   saveOptionGroup,
-  setMenuItemSoldOut,
-  setOptionSoldOut,
   storeMenuPhoto,
   type MenuItemInput,
   type OptionFormInput,
@@ -26,18 +24,6 @@ export type FormState = {
 const text = (form: FormData, name: string) => String(form.get(name) ?? "");
 const all = (form: FormData, name: string) =>
   form.getAll(name).map((value) => String(value));
-
-/** Sold Out today or back on: Baristas and Managers (STAFF-03). */
-export async function toggleSoldOut(form: FormData) {
-  const staff = await requireStaff("barista", "/manage/menu");
-  const soldOut = text(form, "soldOut") === "1";
-  if (text(form, "kind") === "option") {
-    await setOptionSoldOut(text(form, "id"), soldOut, staff);
-  } else {
-    await setMenuItemSoldOut(text(form, "id"), soldOut, staff);
-  }
-  updateTag("menu");
-}
 
 export async function saveMenuItemAction(
   _prev: FormState,
