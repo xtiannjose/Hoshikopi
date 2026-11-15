@@ -113,7 +113,10 @@ export async function priceChoices(
     const options: PricedOption[] = [];
     let optionSoldOut = false;
     for (const { optionGroup: group } of item.optionGroups) {
-      const inGroup = group.options.filter((option) => picked.has(option.id));
+      // A Hidden Option is not on offer (audit staff:9).
+      const inGroup = group.options.filter(
+        (option) => !option.isHidden && picked.has(option.id)
+      );
       if (
         inGroup.length < group.minSelect ||
         inGroup.length > group.maxSelect

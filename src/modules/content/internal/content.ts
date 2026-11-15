@@ -269,6 +269,21 @@ export async function saveEvent(
   }
 }
 
+/**
+ * Deletes a draft Post; false for a published one, which Managers unpublish
+ * instead (audit staff:9).
+ */
+export async function deletePost(id: string, actor: Staff): Promise<boolean> {
+  return db.$transaction(async (tx) => {
+    const { count } = await tx.post.deleteMany({
+      where: { id, publishedAt: null },
+    });
+    if (count === 0) return false;
+    await audit(actor, "content.post.delete", { type: "post", id }, {}, tx);
+    return true;
+  });
+}
+
 export async function savePost(
   id: string | null,
   input: z.input<typeof PostInput>,

@@ -2,8 +2,11 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import {
+  deleteOptionGroup,
+  priceChoices,
   saveMenuItem,
   saveOption,
+  saveOptionGroup,
   setMenuItemSoldOut,
   type MenuItemInput,
 } from "@/modules/menu";
@@ -233,5 +236,72 @@ describe("saveOption", () => {
       where: { optionGroupId: milk.id, isDefault: true },
     });
     expect(defaults.map((o) => o.name)).toEqual(["Oat milk"]);
+  });
+
+  // A mistyped or discontinued Option stayed on every Menu Item that used
+  // its group (audit staff:9).
+  it("hides an Option, and a Hidden Option is never priced", async () => {
+    const latte = await db.menuItem.findUniqueOrThrow({
+      where: { slug: "hoshi-latte" },
+      include: {
+        optionGroups: {
+          include: { optionGroup: { include: { options: true } } },
+        },
+      },
+    });
+    const milk = latte.optionGroups.find(
+      (g) => g.optionGroup.name === "Milk"
+    )!.optionGroup;
+    const oat = milk.options.find((o) => o.name === "Oat milk")!;
+    const optionIds = latte.optionGroups.flatMap(({ optionGroup }) =>
+      optionGroup.id === milk.id
+        ? [oat.id]
+        : optionGroup.options
+            .filter((o) => o.isDefault)
+            .slice(0, Math.max(optionGroup.minSelect, 1))
+            .map((o) => o.id)
+    );
+    const choice = { menuItemId: latte.id, optionIds };
+    expect((await priceChoices([choice]))[0].ok).toBe(true);
+    await saveOption(
+      oat.id,
+      {
+        optionGroupId: milk.id,
+        name: oat.name,
+        priceDelta: String(oat.deltaCents / 100),
+        isDefault: undefined,
+        isHidden: "on",
+        addsAllergens: oat.addsAllergens as never,
+        sort: String(oat.sort),
+      },
+      christian
+    );
+    expect(await priceChoices([choice])).toEqual([
+      { ok: false, reason: "invalid_options" },
+    ]);
+  });
+});
+
+describe("deleteOptionGroup (audit staff:9)", () => {
+  it("deletes an Option Group no Menu Item offers, never one in use", async () => {
+    const milk = await db.optionGroup.findFirstOrThrow({
+      where: { name: "Milk" },
+    });
+    expect(await deleteOptionGroup(milk.id, christian)).toBe(false);
+    expect(await db.optionGroup.count({ where: { id: milk.id } })).toBe(1);
+
+    const added = await saveOptionGroup(
+      null,
+      { name: "Test group", minSelect: "0", maxSelect: "1" },
+      christian
+    );
+    if (!added.ok) throw new Error("not saved");
+    expect(await deleteOptionGroup(added.id, christian)).toBe(true);
+    expect(await db.optionGroup.count({ where: { id: added.id } })).toBe(0);
+    expect(
+      await db.auditLog.count({
+        where: { action: "menu.option_group.delete", targetId: added.id },
+      })
+    ).toBe(1);
   });
 });

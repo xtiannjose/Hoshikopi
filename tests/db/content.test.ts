@@ -6,6 +6,7 @@ import {
   readEvents,
   readPosts,
   saveEvent,
+  deletePost,
   savePost,
 } from "@/modules/content";
 
@@ -134,5 +135,35 @@ describe("Posts (NEWS-01)", () => {
     expect(
       staff.posts.find((p) => p.slug === "ube-season")?.publishedAt
     ).toBeNull();
+  });
+
+  // Test and abandoned drafts stayed in the Staff list for good (audit
+  // staff:9).
+  it("deletes a draft Post, never a published one", async () => {
+    const published = await db.post.findUniqueOrThrow({
+      where: { slug: "our-beans-from-benguet" },
+    });
+    expect(await deletePost(published.id, christian)).toBe(false);
+    expect(await db.post.count({ where: { id: published.id } })).toBe(1);
+
+    const draft = await savePost(
+      null,
+      {
+        title: "Test draft",
+        slug: "test-draft",
+        excerpt: "Nothing yet.",
+        bodyMd: "Draft.",
+        isPublished: undefined,
+      },
+      christian
+    );
+    if (!draft.ok) throw new Error("not saved");
+    expect(await deletePost(draft.id, christian)).toBe(true);
+    expect(await db.post.count({ where: { id: draft.id } })).toBe(0);
+    expect(
+      await db.auditLog.count({
+        where: { action: "content.post.delete", targetId: draft.id },
+      })
+    ).toBe(1);
   });
 });

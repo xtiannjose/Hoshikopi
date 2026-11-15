@@ -431,3 +431,27 @@ export async function saveOption(
   });
   return { ok: true };
 }
+
+/**
+ * Deletes an Option Group no Menu Item offers, with its Options; false when
+ * one does (audit staff:9). Orders keep their own copies of Option names.
+ */
+export async function deleteOptionGroup(
+  id: string,
+  actor: Staff
+): Promise<boolean> {
+  return db.$transaction(async (tx) => {
+    const { count } = await tx.optionGroup.deleteMany({
+      where: { id, menuItems: { none: {} } },
+    });
+    if (count === 0) return false;
+    await audit(
+      actor,
+      "menu.option_group.delete",
+      { type: "option_group", id },
+      {},
+      tx
+    );
+    return true;
+  });
+}

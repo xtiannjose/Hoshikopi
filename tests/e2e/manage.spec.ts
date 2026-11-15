@@ -168,3 +168,40 @@ test("Add Staff never demotes a Manager, and a row warns before any lower role",
     page.getByRole("status").filter({ hasText: "is now a Member" })
   ).toBeVisible();
 });
+
+// Nothing could be deleted, so test records stayed in every Staff list
+// (audit staff:9). A Delete asks once, and only for what nothing uses.
+test("a Manager deletes an unused Option Group and a draft Post, asked once", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  const key = `${testInfo.workerIndex}-${Date.now()}`;
+  await e2eQuery(
+    `INSERT INTO option_groups (id, name, min_select, max_select, updated_at)
+     VALUES ($1, $2, 0, 1, now())`,
+    [`og-${key}`, `Test toppings ${key}`]
+  );
+  await e2eQuery(
+    `INSERT INTO posts (id, slug, title, excerpt, body_md, updated_at)
+     VALUES ($1, $2, $3, 'Nothing yet.', 'Draft.', now())`,
+    [`post-${key}`, `test-draft-${key}`, `Test draft ${key}`]
+  );
+
+  await signIn(
+    page,
+    "christian@hoshikopi.example",
+    `/manage/menu/options/og-${key}`
+  );
+  await page.getByText("Delete this Option Group").click();
+  await expectNoAxeViolations(page);
+  await page.getByRole("button", { name: "Yes, delete it" }).click();
+  await expect(page).toHaveURL(/\/manage\/menu$/);
+  // The page it came from stays in the DOM, hidden, for Back.
+  await expect(page.getByText(`Test toppings ${key}`)).toBeHidden();
+
+  await page.goto(`/manage/posts/post-${key}`);
+  await page.getByText("Delete this draft").click();
+  await page.getByRole("button", { name: "Yes, delete it" }).click();
+  await expect(page).toHaveURL(/\/manage\/posts$/);
+  await expect(page.getByText(`Test draft ${key}`)).toBeHidden();
+});

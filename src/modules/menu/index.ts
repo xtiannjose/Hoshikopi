@@ -11,6 +11,7 @@ export {
   type Pairing,
 } from "./internal/queries";
 export {
+  deleteOptionGroup,
   saveCategory,
   saveMenuItem,
   saveOption,
