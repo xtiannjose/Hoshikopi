@@ -23,3 +23,9 @@ ADR 0005 says Staff sign in with the email link and must turn on a second factor
 - No backup codes: a Staff member who loses their phone asks a Manager, who deletes their `two_factors` row (`docs/06-SETUP.md`); the next visit enrols again. A lost Manager phone is fixed the same way by whoever runs the database.
 - A code can be used again within its 90-second window. Accepted: it also needs the Staff member's email-link session.
 - End-to-end tests read the secret from the e2e database to type the code, as an authenticator would.
+
+## Update 2026-11-15 (batch 10.7)
+
+- The check no longer rides on the path a guard returns to. `requireStaff` asks for the Second Factor on every call except Barista-level work on the Bar Screen (`role` barista and `next` `/bar`): moving Orders, and Sold Out, also when `/manage/menu` posts it. Any Manager-level call asks, so a Manager's Cancel on the Bar Screen asks and comes back to it (audit ID2-07).
+- A pass lasts 12 hours, about one long day at the cafe, while the session slides for 7 days with use; then the next Manager page or control asks again (audit SEC1-14).
+- Each guard also checks that the session row still exists, so Sign out everywhere stops the Bar Screen on its next request (audit staff:17).

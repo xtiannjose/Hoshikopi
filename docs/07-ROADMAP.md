@@ -198,7 +198,7 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.4 Orders that never close.** Done 2026-11-15: the Order page's poll and the payment webhook apply the 15 minutes, the morning cron closes Pay at Pickup Orders nobody took, one IP may place 10 Guest Pay at Pickup Orders a day, the Order page stops asking 3 hours past its Pickup Time, and trying again finishes a refund that stopped half way.
 - [x] **10.5 Cart and Pickup Times.** Done 2026-11-15: a drink's Options, quantity and note change in the Cart (PRD ORD-02), adds at once to one Cart no longer overwrite each other, ASAP takes the next window with room when the first fills, and a nearly full Pickup Time says how many drinks are left.
 - [x] **10.6 Sign-in.** Done 2026-11-15: sign-in tokens are stored only as hashes, deleting an account ends its pending links, a stranger can't use up someone's links, Google sign-in starts are limited per IP, a used link says so and keeps where it was going, and a hidden character or a broken address no longer gives a 500.
-- [ ] **10.7 Staff roles and the Second Factor.** 6 items, effort S to M.
+- [x] **10.7 Staff roles and the Second Factor.** Done 2026-11-15: a Manager-level check always asks for the Second Factor and a pass lasts 12 hours, Sign out everywhere stops the Bar Screen at once, Add Staff never demotes anyone, every Staff action is tested for its role, and Baristas mark Sold Out on the Bar Screen without an authenticator.
 - [ ] **10.8 Manager inputs.** 6 items, effort S to M.
 - [ ] **10.9 Manager numbers and Sign-ups.** 6 items, effort S each.
 - [ ] **10.10 Bar Screen.** 5 items, effort S each.
