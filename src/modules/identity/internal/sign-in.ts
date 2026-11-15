@@ -17,10 +17,18 @@ export function safeNext(next: string | null | undefined): string {
     : "/account";
 }
 
-/** Email a sign-in link that returns to `next`. */
+/**
+ * Email a sign-in link that returns to `next`. A used or expired link comes
+ * back to sign-in, which says so and keeps `next` (audit ID1-11).
+ */
 export async function emailSignInLink(email: string, next: string) {
+  const callbackURL = safeNext(next);
   await auth.api.signInMagicLink({
-    body: { email, callbackURL: safeNext(next) },
+    body: {
+      email,
+      callbackURL,
+      errorCallbackURL: `/sign-in?link=expired&next=${encodeURIComponent(callbackURL)}`,
+    },
     headers: await headers(),
   });
 }

@@ -123,6 +123,30 @@ test("a Member gets a Birthday Treat in their birthday month (LOY-04)", async ({
   await expect(page.getByLabel("Birthday month")).toHaveValue(String(month));
 });
 
+// A used or expired link says so and keeps where it was going; a person
+// still signed in just gets the page (audit ID1-11).
+test("a used sign-in link says so and keeps the page it was for", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  const { url, target, nonce } = await signIn(page, newMember(), "/account");
+  await page.goto(url);
+  await expect(page).toHaveURL(new RegExp(`/account\\?t=${nonce}`));
+  await expect(
+    page.getByText("That link has expired", { exact: false })
+  ).toHaveCount(0);
+  await page.context().clearCookies();
+  await page.goto(url);
+  await expect(page).toHaveURL(/\/sign-in\?link=expired&/);
+  expect(new URL(page.url()).searchParams.get("next")).toBe(target);
+  await expect(
+    page.getByText("That link has expired or was already used.", {
+      exact: false,
+    })
+  ).toBeVisible();
+  await expectNoAxeViolations(page);
+});
+
 // A stranger's requests used to lock a known address out for 15 minutes
 // (audit ID2-05): now they use up only their own share.
 test("a stranger's link requests don't lock someone out, and an address still gets at most 5", async ({
