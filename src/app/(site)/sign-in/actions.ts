@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { clientIp, takeToken } from "@/lib/rate-limit";
 import { redirect } from "next/navigation";
 
-import { emailSignInLink, googleSignInUrl } from "@/modules/identity";
+import { emailSignInLink, googleSignInUrl, safeNext } from "@/modules/identity";
 import { canEmail, isDemoAccount } from "@/modules/notify";
 
 export type SignInState =
@@ -70,8 +70,17 @@ export async function requestSignInLink(
   }
 }
 
-/** Starts Google sign-in when its keys are set (ACC-01). */
+/**
+ * Starts Google sign-in when its keys are set (ACC-01), 30 per IP in 15
+ * minutes: each start writes a verifications row for Google's state (audit
+ * ID2-10).
+ */
 export async function googleSignInAction(form: FormData) {
-  const url = await googleSignInUrl(String(form.get("next") ?? ""));
+  const next = safeNext(String(form.get("next") ?? ""));
+  const ip = clientIp(await headers());
+  if (!(await takeToken(`google-ip:${ip}`, 30, FIFTEEN_MINUTES))) {
+    redirect(`/sign-in?${new URLSearchParams({ next, google: "limited" })}`);
+  }
+  const url = await googleSignInUrl(next);
   if (url) redirect(url);
 }

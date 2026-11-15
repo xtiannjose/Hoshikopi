@@ -118,6 +118,15 @@ async function Form({ searchParams }: Search) {
             >
               Continue with Google
             </button>
+            {/* Always there, so the words are read out when the redirect
+                adds them (audit ID2-10). */}
+            <p
+              role="status"
+              className="text-destructive mt-2 text-center text-sm"
+            >
+              {google === "limited" &&
+                "Too many Google sign-ins from here. Try again in 15 minutes."}
+            </p>
           </form>
           <p className="text-muted-foreground text-center text-sm">or</p>
         </>
