@@ -7,6 +7,7 @@ import {
   barBoard,
   cancelUncollected,
   expireUnpaid,
+  ordersBookedAfter,
   transition,
 } from "@/modules/ordering";
 
@@ -157,6 +158,23 @@ describe("expireUnpaid (PAY-04, ADR 0007)", () => {
         where: { windowStart: at("09:30") },
       })
     ).toMatchObject({ drinks: 2 });
+  });
+});
+
+// Closing or shortening today left Orders booked after the new closing
+// with no warning (audit ORD-20).
+describe("ordersBookedAfter", () => {
+  it("counts today's open Orders in windows from a time on", async () => {
+    await order("09:30");
+    const later = await order("09:45");
+    await order("10:00", "gcash", "08:58");
+    const done = await order("10:15");
+    for (const to of ["accepted", "preparing", "ready", "picked_up"] as const) {
+      await transition(done.id, to, annika);
+    }
+    await transition(later.id, "accepted", annika);
+    expect(await ordersBookedAfter(at("09:40"))).toBe(2);
+    expect(await ordersBookedAfter(at("10:30"))).toBe(0);
   });
 });
 
