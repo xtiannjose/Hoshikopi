@@ -125,6 +125,21 @@ describe("Cart (ORD-01, ORD-02)", () => {
   });
 });
 
+// Adds read the quantity and wrote it back with no lock, so adds at once
+// overwrote each other, and two first adds raced on the new Cart (audit
+// tests:9, ORD-10).
+describe("adding at once", () => {
+  it("adds up six adds to one Line, with no error", async () => {
+    const results = await Promise.all(
+      Array.from({ length: 6 }, () => addLine(hoshi, latte("Oat milk")))
+    );
+    expect(results.every((result) => result.ok)).toBe(true);
+    const cart = await getCart(hoshi);
+    expect(cart.lines).toHaveLength(1);
+    expect(cart.lines[0].quantity).toBe(6);
+  });
+});
+
 describe("mergeGuestCart (sign-in, docs/03 section 5)", () => {
   it("moves a Guest's Lines into the Member's Cart, adding identical ones", async () => {
     await db.user.create({
