@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { dayValue, manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
-import { parsePesos } from "@/lib/money";
+import { MAX_PRICE_CENTS, parsePesos } from "@/lib/money";
 import { audit, type Staff } from "@/modules/identity";
 
 // Staff writes to the menu (STAFF-03, STAFF-04). Callers check the role and
@@ -43,6 +43,10 @@ const pesos = (label: string) =>
         code: "custom",
         message: `Enter ${label} in pesos, like 185 or 35.50.`,
       });
+      return z.NEVER;
+    }
+    if (cents > MAX_PRICE_CENTS) {
+      ctx.addIssue({ code: "custom", message: "Use PHP 100,000 or less." });
       return z.NEVER;
     }
     return cents;

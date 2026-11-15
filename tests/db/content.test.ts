@@ -59,6 +59,29 @@ describe("Events (EVT-01)", () => {
     expect(past.map((e) => e.slug)).toEqual(["old-cupping"]);
   });
 
+  // A price past the column's range gave a 500 (audit staff:6).
+  it("refuses an Event price over PHP 100,000", async () => {
+    const result = await saveEvent(
+      null,
+      {
+        title: "Big night",
+        slug: "big-night",
+        startsAt: "2026-11-12T19:00",
+        endsAt: "2026-11-12T21:00",
+        summary: "One line.",
+        bodyMd: "Body.",
+        price: "250000",
+        signupUrl: "",
+        isPublished: "on",
+      },
+      christian
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      errors: { price: "Use PHP 100,000 or less, or leave it empty for free." },
+    });
+  });
+
   it("saves an Event in Manila time and refuses an end before the start", async () => {
     const input = {
       title: "Home brewing basics",

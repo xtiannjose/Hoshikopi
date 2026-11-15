@@ -83,6 +83,16 @@ describe("saveMenuItem", () => {
     expect(item.optionGroups).toHaveLength(6);
   });
 
+  // The column holds up to PHP 21 million, so a bigger price gave a 500
+  // and lost the form (audit staff:6).
+  it("refuses a price over PHP 100,000 in plain words", async () => {
+    const { id, input } = await latteInput({ basePrice: "100001" });
+    const result = await saveMenuItem(id, input, christian);
+    expect(!result.ok && result.errors.basePrice).toBe(
+      "Use PHP 100,000 or less."
+    );
+  });
+
   it("refuses a negative or unclear price", async () => {
     const { id, input } = await latteInput({ basePrice: "-5" });
     const result = await saveMenuItem(id, input, christian);

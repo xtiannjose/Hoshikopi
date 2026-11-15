@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { manilaInstant, now } from "@/lib/clock";
 import { db } from "@/lib/db";
-import { parsePesos } from "@/lib/money";
+import { MAX_PRICE_CENTS, parsePesos } from "@/lib/money";
 import { audit, type Staff } from "@/modules/identity";
 
 import { heldSignups } from "./signups";
@@ -207,6 +207,10 @@ const EventInput = z
   .refine((e) => e.price === "" || parsePesos(e.price) !== null, {
     path: ["price"],
     message: "Enter pesos, like 250, or leave it empty for free.",
+  })
+  .refine((e) => (parsePesos(e.price) ?? 0) <= MAX_PRICE_CENTS, {
+    path: ["price"],
+    message: "Use PHP 100,000 or less, or leave it empty for free.",
   });
 
 const PostInput = z.object({
