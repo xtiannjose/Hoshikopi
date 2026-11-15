@@ -22,3 +22,7 @@ The Bar Screen asks for changes every 3 seconds, sending the last Order version 
 
 - Poll responses carry a version number and stay under 5 kB when nothing changed (budget in `docs/05-DESIGN-SYSTEM.md` section 11).
 - Polling pauses when the tab is hidden and resumes on focus.
+
+## Update 2026-11-15: the Order page stops asking
+
+One forgotten Order page polled for as long as its Order stayed open, and a Pay at Pickup or Ready Order nobody closed never stopped it, which could keep Neon Free's compute awake around the clock and use up its monthly allowance (audit ops:14). The page now stops 3 hours past the Pickup Time and its last change, says "No news for 3 hours, so this page stopped checking", and checks once when the tab comes back. A hidden tab stops asking once the Order is Ready, since Ready has already alerted. Each poll also expires an Order unpaid past its 15 minutes, so an open page sees it go (audit PERF-16).
