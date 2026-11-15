@@ -23,8 +23,8 @@ async function linkFor(nonce: string, email: string): Promise<string | null> {
  */
 async function clearLinkLimits(email: string) {
   await e2eQuery(
-    "DELETE FROM rate_limits WHERE key = $1 OR key LIKE $2 OR key LIKE $3",
-    [`link:${email}`, "link-ip:%", "second-factor:%"]
+    "DELETE FROM rate_limits WHERE key = $1 OR key LIKE $2 OR key LIKE $3 OR key LIKE $4",
+    [`link:${email}`, `link-pair:${email}:%`, "link-ip:%", "second-factor:%"]
   );
 }
 

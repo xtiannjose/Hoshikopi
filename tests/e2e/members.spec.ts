@@ -122,3 +122,41 @@ test("a Member gets a Birthday Treat in their birthday month (LOY-04)", async ({
   await page.reload();
   await expect(page.getByLabel("Birthday month")).toHaveValue(String(month));
 });
+
+// A stranger's requests used to lock a known address out for 15 minutes
+// (audit ID2-05): now they use up only their own share.
+test("a stranger's link requests don't lock someone out, and an address still gets at most 5", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  // Clear of the end of a 15-minute window, which would reset the counts;
+  // the wait and the eight asks need more than the default 30 s.
+  test.setTimeout(120_000);
+  const left = 900_000 - (Date.now() % 900_000);
+  if (left < 60_000) await page.waitForTimeout(left + 1_000);
+  const email = newMember();
+  const sent = () =>
+    expect(page.getByRole("status").filter({ hasText: email })).toBeVisible();
+  const refused = () =>
+    expect(
+      page.getByText("Too many links asked for. Try again in 15 minutes.")
+    ).toBeVisible();
+  const ask = async (ip: string) => {
+    await page.setExtraHTTPHeaders({ "x-forwarded-for": ip });
+    await page.goto("/sign-in");
+    await page.getByRole("textbox", { name: "Email" }).fill(email);
+    await page.getByRole("button", { name: "Email me a link" }).click();
+  };
+  for (let i = 0; i < 3; i++) {
+    await ask("198.51.100.31");
+    await sent();
+  }
+  await ask("198.51.100.31");
+  await refused();
+  for (let i = 0; i < 2; i++) {
+    await ask("192.0.2.44");
+    await sent();
+  }
+  await ask("203.0.113.45");
+  await refused();
+});

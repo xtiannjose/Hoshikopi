@@ -42,8 +42,14 @@ export async function requestSignInLink(
   }
   const ip = clientIp(await headers());
   const allowed =
-    (await takeToken(`link:${email}`, 3, FIFTEEN_MINUTES)) &&
-    (await takeToken(`link-ip:${ip}`, 30, FIFTEEN_MINUTES));
+  // IP first, then this address from this IP, then the address from
+  // anywhere; a refused step spends nothing after it. A stranger on
+  // another connection uses up only their own share, so the person keeps
+  // links of their own, and an address still gets at most 5 emails in 15
+  // minutes (audit ID2-05).
+    (await takeToken(`link-ip:${ip}`, 30, FIFTEEN_MINUTES)) &&
+    (await takeToken(`link-pair:${email}:${ip}`, 3, FIFTEEN_MINUTES)) &&
+    (await takeToken(`link:${email}`, 5, FIFTEEN_MINUTES));
   if (!allowed) {
     return {
       status: "error",
