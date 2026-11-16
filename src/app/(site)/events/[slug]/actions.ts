@@ -4,7 +4,12 @@ import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 
 import { clientIp, takeToken } from "@/lib/rate-limit";
-import { cancelSignup, confirmSignup, signUpForEvent } from "@/modules/content";
+import {
+  cancelSignup,
+  confirmSignup,
+  SIGNUPS_PER_VISITOR,
+  signUpForEvent,
+} from "@/modules/content";
 import { currentMember } from "@/modules/identity";
 import { canEmail, sendEventSignup } from "@/modules/notify";
 
@@ -20,9 +25,6 @@ export type SignupState = {
   /** False on the live demo, which sends no emails (audit journeys:9). */
   emailed?: boolean;
 };
-
-/** Sign-ups that went through, per visitor per Event per day (8.7). */
-const PER_VISITOR = 2;
 
 /** Sign up for an Event with Seats (EVT-02); confirmed by email. */
 export async function signUpAction(
@@ -43,7 +45,13 @@ export async function signUpAction(
     };
   }
   const slug = String(form.get("slug") ?? "");
-  const result = await signUpForEvent(slug, values);
+  // The live demo sends no email, so no link could confirm it.
+  const emailed = canEmail();
+  const result = await signUpForEvent(slug, values, {
+    key: ip,
+    memberEmail: (await currentMember())?.email,
+    confirmNow: !emailed,
+  });
   if (!result.ok) {
     const message = {
       invalid: "Some fields need a fix.",
@@ -51,6 +59,7 @@ export async function signUpAction(
       already:
         "That email is already signed up for this Event. Check your inbox for the link.",
       full: "Fully booked, sorry. Every seat is taken.",
+      visitor_limit: `That's ${SIGNUPS_PER_VISITOR} Sign-ups for this Event from here today. For more seats, email the cafe.`,
       too_many_seats:
         "seatsLeft" in result
           ? `Only ${result.seatsLeft} ${result.seatsLeft === 1 ? "seat is" : "seats are"} left. Choose fewer.`
@@ -63,26 +72,7 @@ export async function signUpAction(
       values,
     };
   }
-  // Only Sign-ups that went through count, so a typo costs nothing; one
-  // past the limit is undone (SEC2-02: one visitor can't book out an Event).
-  const key = `signup-event:${result.event.slug}:${ip}`;
-  if (!(await takeToken(key, PER_VISITOR, 86_400))) {
-    await cancelSignup(result.signup.id, result.token);
-    return {
-      status: "error",
-      message: `That's ${PER_VISITOR} Sign-ups for this Event from here today. For more seats, email the cafe.`,
-      values,
-    };
-  }
-  // A signed-in Member's email is proven already (a link or Google), so
-  // their own address needs no link; anyone else's waits for it. On the
-  // live demo no link can arrive, so the Sign-up is confirmed here; the
-  // per-visitor limit above still stops one visitor booking out an Event.
-  const member = await currentMember();
-  const emailed = canEmail();
-  const confirmed =
-    (!emailed || member?.email.toLowerCase() === result.signup.email) &&
-    (await confirmSignup(result.signup.id, result.token)).ok;
+  const { confirmed } = result;
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   try {
     await sendEventSignup({

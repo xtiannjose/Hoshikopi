@@ -5,6 +5,7 @@ export {
   changeLine,
   clearCart,
   deleteMemberCart,
+  pruneGuestCarts,
   getCart,
   lockCart,
   mergeGuestCart,

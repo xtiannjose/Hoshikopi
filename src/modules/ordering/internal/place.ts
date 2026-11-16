@@ -351,6 +351,7 @@ export async function placeOrder(
           lines: { create: snapshotLines(cart.lines, rewardLine) },
           events: {
             create: {
+              at,
               toStatus: "placed",
               actorKind: "customer",
               actorId: input.memberId,

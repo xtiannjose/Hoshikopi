@@ -1,5 +1,5 @@
 import { now } from "@/lib/clock";
-import { db } from "@/lib/db";
+import { db, inTransaction, type Client } from "@/lib/db";
 import { withoutControl } from "@/lib/text";
 
 export type MemberProfile = {
@@ -50,30 +50,30 @@ export async function updateProfile(
  * email, and every way back in (sessions, Google links, pending sign-in
  * links) is removed.
  */
-export async function forgetMember(memberId: string) {
-  const user = await db.user.findUnique({ where: { id: memberId } });
-  if (!user) return;
-  await db.$transaction([
-    db.session.deleteMany({ where: { userId: memberId } }),
-    db.account.deleteMany({ where: { userId: memberId } }),
+export async function forgetMember(memberId: string, client: Client = db) {
+  await inTransaction(client, async (tx) => {
+    const user = await tx.user.findUnique({ where: { id: memberId } });
+    if (!user) return;
+    await tx.session.deleteMany({ where: { userId: memberId } });
+    await tx.account.deleteMany({ where: { userId: memberId } });
     // Better Auth keys a sign-in link "magic-link:<token hash>" and keeps
     // the email in its JSON value (audit ID2-03).
-    db.verification.deleteMany({
+    await tx.verification.deleteMany({
       where: {
         identifier: { startsWith: "magic-link:" },
         value: { contains: `"email":${JSON.stringify(user.email)}` },
       },
-    }),
+    });
     // Its sign-in limits name the email, one with the IP it came from.
-    db.rateLimit.deleteMany({
+    await tx.rateLimit.deleteMany({
       where: {
         OR: [
           { key: `link:${user.email}` },
           { key: { startsWith: `link-pair:${user.email}:` } },
         ],
       },
-    }),
-    db.user.update({
+    });
+    await tx.user.update({
       where: { id: memberId },
       data: {
         name: "",
@@ -84,6 +84,6 @@ export async function forgetMember(memberId: string) {
         marketingOptIn: false,
         deletedAt: now(),
       },
-    }),
-  ]);
+    });
+  });
 }

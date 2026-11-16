@@ -26,7 +26,10 @@ async function main() {
     console.log("Already seeded; run `npm run db:reset` to start over.");
     return;
   }
-  await seedDatabase(db);
+  // All or nothing: a run that failed part way used to leave the menu
+  // without cafe_settings or the people, and a rerun said "Already seeded"
+  // (audit DATA-12).
+  await db.$transaction((tx) => seedDatabase(tx), { timeout: 60_000 });
   console.log("Seed complete.");
 }
 

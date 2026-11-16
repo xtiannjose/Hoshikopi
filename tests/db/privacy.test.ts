@@ -9,19 +9,17 @@ import {
 } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
-import { addLine, deleteMemberCart, getCart } from "@/modules/cart";
+import { deleteAccountData } from "@/app/(site)/account/delete-account";
+import { addLine, getCart } from "@/modules/cart";
+import { guestRecordsFor } from "@/modules/content";
 import {
   emailSignInLink,
   forgetMember,
   memberProfile,
   updateProfile,
 } from "@/modules/identity";
-import { forgetStars, starHistory } from "@/modules/loyalty";
-import {
-  deidentifyOrders,
-  ordersForExport,
-  placeOrder,
-} from "@/modules/ordering";
+import { starHistory } from "@/modules/loyalty";
+import { ordersForExport, placeOrder } from "@/modules/ordering";
 
 import { seedDatabase } from "../../prisma/seed-data";
 import { createTestDb, resetDb } from "./helpers";
@@ -52,7 +50,7 @@ async function hoshiOrders() {
     menuItemId: item.id,
     optionIds: [],
     quantity: 1,
-    note: "",
+    note: "Warm it up",
   });
   const result = await placeOrder({
     owner,
@@ -67,6 +65,24 @@ async function hoshiOrders() {
   if (!result.ok) throw new Error(result.reason);
   await db.starEntry.create({
     data: { memberId: HOSHI, kind: "adjust", stars: 2, reason: "test" },
+  });
+  // A Sign-up and an Inquiry sent with the same email.
+  const event = await db.event.findFirstOrThrow();
+  await db.eventSignup.create({
+    data: {
+      eventId: event.id,
+      name: "Hoshi Santos",
+      email: "hoshi@hoshikopi.example",
+      seats: 2,
+    },
+  });
+  await db.inquiry.create({
+    data: {
+      kind: "private_event",
+      name: "Hoshi Santos",
+      email: "Hoshi@hoshikopi.example",
+      message: "A birthday for 12, my number is 0917 123 4567.",
+    },
   });
   // Something left in the Cart.
   await addLine(owner, {
@@ -104,19 +120,38 @@ describe("Your details (ACC-03)", () => {
 });
 
 describe("data export (ACC-03)", () => {
-  it("includes the profile, Orders and Star history", async () => {
+  // It left out the contact details, Pickup Time and notes on each Order,
+  // and Sign-ups and Inquiries under the Member's email (ID2-09, SEC1-19).
+  it("includes the profile, Orders with contact and notes, Stars, Sign-ups and Inquiries", async () => {
     const placed = await hoshiOrders();
     const orders = await ordersForExport(HOSHI);
     expect(orders).toEqual([
       expect.objectContaining({
         code: placed.code,
         totalCents: 7500,
+        customerName: "Hoshi Santos",
+        customerEmail: "hoshi@hoshikopi.example",
+        customerPhone: "+639171234567",
+        windowStart: expect.any(Date),
         lines: [
-          { name: "Ube Pandesal", quantity: 1, lineCents: 7500, options: [] },
+          {
+            name: "Ube Pandesal",
+            quantity: 1,
+            lineCents: 7500,
+            options: [],
+            note: "Warm it up",
+          },
         ],
       }),
     ]);
     expect(await starHistory(HOSHI)).toHaveLength(1);
+    const guest = await guestRecordsFor("hoshi@hoshikopi.example");
+    expect(guest.signups).toEqual([
+      expect.objectContaining({ name: "Hoshi Santos", seats: 2 }),
+    ]);
+    expect(guest.inquiries).toEqual([
+      expect.objectContaining({ kind: "private_event", status: "new" }),
+    ]);
   });
 });
 
@@ -153,12 +188,12 @@ describe("deleting an account (ACC-03)", () => {
     ).toBe(1);
   });
 
+  // One transaction (architecture:9); Star entries stay so past totals
+  // don't change (DATA-08); Sign-ups and Inquiries lose the person
+  // (SEC1-19).
   it("keeps Orders for the cafe's records without the Member, and forgets the rest", async () => {
     const placed = await hoshiOrders();
-    await deidentifyOrders(HOSHI);
-    await forgetStars(HOSHI);
-    await deleteMemberCart(HOSHI);
-    await forgetMember(HOSHI);
+    await deleteAccountData({ id: HOSHI, email: "hoshi@hoshikopi.example" });
 
     const order = await db.order.findUniqueOrThrow({
       where: { id: placed.orderId },
@@ -170,8 +205,23 @@ describe("deleting an account (ACC-03)", () => {
       customerPhone: null,
       totalCents: 7500,
     });
-    expect(await db.starEntry.count({ where: { memberId: HOSHI } })).toBe(0);
+    const stars = await db.starEntry.findMany({ where: { memberId: HOSHI } });
+    expect(stars).toEqual([
+      expect.objectContaining({ kind: "adjust", stars: 2, reason: null }),
+    ]);
     expect(await db.cart.count({ where: { memberId: HOSHI } })).toBe(0);
+    expect(await guestRecordsFor("hoshi@hoshikopi.example")).toEqual({
+      signups: [],
+      inquiries: [],
+    });
+    const signup = await db.eventSignup.findFirstOrThrow();
+    expect(signup).toMatchObject({ name: "Deleted guest", seats: 2 });
+    expect(signup.email).toMatch(/^deleted-.+@hoshikopi\.invalid$/);
+    expect(await db.inquiry.findFirstOrThrow()).toMatchObject({
+      name: "Deleted customer",
+      email: "deleted@hoshikopi.invalid",
+      message: "Removed when its sender deleted their account.",
+    });
     const user = await db.user.findUniqueOrThrow({ where: { id: HOSHI } });
     expect(user.deletedAt).not.toBeNull();
     expect(user.email).not.toContain("hoshi@");

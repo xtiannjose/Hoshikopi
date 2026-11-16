@@ -328,9 +328,28 @@ export async function mergeGuestCart(
 }
 
 /** Deleting an account removes the Member's Cart and Favourites (ACC-03). */
-export async function deleteMemberCart(memberId: string) {
-  await db.$transaction([
-    db.cart.deleteMany({ where: { memberId } }),
-    db.favourite.deleteMany({ where: { memberId } }),
-  ]);
+export async function deleteMemberCart(memberId: string, client: Client = db) {
+  await inTransaction(client, async (tx) => {
+    await tx.cart.deleteMany({ where: { memberId } });
+    await tx.favourite.deleteMany({ where: { memberId } });
+  });
+}
+
+/** A guest Cart's cookie lasts 30 days; after that nobody can reach it. */
+const GUEST_CART_DAYS = 30;
+
+/**
+ * Deletes guest Carts nobody touched for 30 days, the cookie's lifetime
+ * (audit ops:9). A Member's Cart stays with their account.
+ */
+export async function pruneGuestCarts(at: Date): Promise<number> {
+  const before = new Date(at.getTime() - GUEST_CART_DAYS * 86_400_000);
+  const { count } = await db.cart.deleteMany({
+    where: {
+      memberId: null,
+      updatedAt: { lt: before },
+      lines: { none: { updatedAt: { gte: before } } },
+    },
+  });
+  return count;
 }

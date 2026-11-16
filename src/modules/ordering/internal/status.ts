@@ -184,6 +184,7 @@ function move(
     }
     await tx.orderEvent.create({
       data: {
+        at: now(),
         orderId: order.id,
         fromStatus: order.status,
         toStatus: to,

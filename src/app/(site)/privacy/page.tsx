@@ -31,6 +31,7 @@ const SECTIONS: {
     points: [
       "For an Order: your name, and an email or a mobile number so we can reach you about it.",
       "For an account: your email, your name if you give it, your Orders and your Star history.",
+      "For an Event Sign-up or a message from the Visit page: your name, your email and what you wrote.",
       "Nothing about cards or wallets: payments happen on the payment page, not here.",
     ],
   },
@@ -50,6 +51,7 @@ const SECTIONS: {
     points: [
       "Your account stays until you delete it.",
       "Orders stay as the cafe's records. If you delete your account, they stay without your name, email or phone.",
+      "If you delete your account, your Star history stays in the cafe's totals without any notes, and Event Sign-ups and messages sent with its email stay without your name or email.",
     ],
   },
   {

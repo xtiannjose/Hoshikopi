@@ -79,7 +79,7 @@ audit_log, rate_limits (identity)
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `star_entries` | `id`, `member_id` FK, `order_id` FK null, `kind` enum (`earn`, `reserve`, `release`, `reverse`, `adjust`, `birthday` (+9 once a year, LOY-04)), `stars` int (signed), `reason` null, `actor_id` null, `created_at`; index (`member_id`) | Balance = sum of `stars` |
+| `star_entries` | `id`, `member_id` FK, `order_id` FK null, `kind` enum (`earn`, `reserve`, `release`, `reverse`, `adjust`, `birthday` (+9 once a year, LOY-04)), `stars` int (signed), `reason` null, `actor_id` null, `created_at` (from `lib/clock`); index (`member_id`); unique (`order_id`, `kind`) for `earn`, `reserve`, `release` and `reverse`, and (`member_id`, `reason`) for `birthday` (DATA-04) | Balance = sum of `stars`. Kept when the Member deletes their account, with `adjust` reasons cleared, so the Manager's past totals hold (DATA-08) |
 
 ### Content (module `content`)
 

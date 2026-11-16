@@ -3,20 +3,11 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
-import {
-  addLine,
-  deleteMemberCart,
-  favouritesFor,
-  removeFavourite,
-} from "@/modules/cart";
-import {
-  forgetMember,
-  requireMember,
-  signOut,
-  updateProfile,
-} from "@/modules/identity";
-import { forgetStars } from "@/modules/loyalty";
-import { deidentifyOrders, orderAgain } from "@/modules/ordering";
+import { addLine, favouritesFor, removeFavourite } from "@/modules/cart";
+import { requireMember, signOut, updateProfile } from "@/modules/identity";
+import { orderAgain } from "@/modules/ordering";
+
+import { deleteAccountData } from "./delete-account";
 
 export async function signOutAction() {
   await signOut();
@@ -42,11 +33,8 @@ export async function updateProfileAction(form: FormData) {
  */
 export async function deleteAccountAction() {
   const member = await requireMember("/account");
-  await deidentifyOrders(member.id);
-  await forgetStars(member.id);
-  await deleteMemberCart(member.id);
   await signOut();
-  await forgetMember(member.id);
+  await deleteAccountData(member);
   refresh();
   redirect("/");
 }

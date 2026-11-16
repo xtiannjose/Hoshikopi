@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { PaymentMethod } from "@/generated/prisma/enums";
-import { freezeClock, unfreezeClock } from "@/lib/clock";
+import { freezeClock, now, unfreezeClock } from "@/lib/clock";
 import { nextOrderCode, transition, type Actor } from "@/modules/ordering";
 
 import { seedDatabase } from "../../prisma/seed-data";
@@ -47,7 +47,8 @@ async function placedOrder(paymentMethod: PaymentMethod = "pay_at_pickup") {
       paymentMethod,
       totalCents: 44500,
       accessTokenHash: "x",
-      placedAt: new Date(),
+      // The cafe clock, like placeOrder (audit architecture:16).
+      placedAt: now(),
       lines: {
         create: [
           {
@@ -68,7 +69,9 @@ async function placedOrder(paymentMethod: PaymentMethod = "pay_at_pickup") {
           },
         ],
       },
-      events: { create: { toStatus: "placed", actorKind: "customer" } },
+      events: {
+        create: { at: now(), toStatus: "placed", actorKind: "customer" },
+      },
     },
   });
 }
