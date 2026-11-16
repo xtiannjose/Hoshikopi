@@ -83,3 +83,20 @@ describe("send to the local outbox (no key)", () => {
     expect(inMail.some((f) => f.includes(marker))).toBe(true);
   });
 });
+
+// A slow Resend held the Ready tap, the webhook and checkout, and a refusal
+// logged only its status code (audit ops:6).
+describe("send through Resend", () => {
+  it("gives up after 5 seconds and says why Resend refused", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response('{"message":"The from address is not verified"}', {
+        status: 422,
+      })
+    );
+    await expect(send(email)).rejects.toThrow(
+      /422.*The from address is not verified/
+    );
+    expect(fetch.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+  });
+});

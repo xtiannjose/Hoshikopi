@@ -41,9 +41,13 @@ export async function send(email: Email): Promise<void> {
         subject: email.subject,
         text: email.text,
       }),
+      // It runs inside the Ready tap, the webhook and checkout (ops:6).
+      signal: AbortSignal.timeout(5_000),
     });
     if (!response.ok) {
-      throw new Error(`Resend refused the email: ${response.status}`);
+      throw new Error(
+        `Resend refused the email: ${response.status} ${await response.text()}`
+      );
     }
     return;
   }
