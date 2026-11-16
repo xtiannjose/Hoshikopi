@@ -105,7 +105,9 @@ export async function readPosts(): Promise<PostCard[]> {
 // and the one-minute lifetime moves Events from upcoming to past.
 export async function getEvents() {
   "use cache";
-  cacheTag("content");
+  // "events" too, so a Sign-up leaves Posts and the weekly list cached
+  // (audit PERF-14).
+  cacheTag("content", "events");
   cacheLife("minutes");
   return readEvents();
 }

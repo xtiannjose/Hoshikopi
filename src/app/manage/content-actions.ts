@@ -71,7 +71,7 @@ export async function saveEventAction(
 /** A Manager removes a Sign-up (audit staff:10, SEC2-02). */
 export async function removeSignupAction(form: FormData) {
   const staff = await requireStaff("manager", "/manage/events");
-  if (await removeSignup(text(form, "id"), staff)) updateTag("content");
+  if (await removeSignup(text(form, "id"), staff)) updateTag("events");
 }
 
 export async function savePostAction(
