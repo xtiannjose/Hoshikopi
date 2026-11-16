@@ -119,6 +119,13 @@ function chime() {
   }
 }
 
+/** A copy of `set` without `ids`. */
+function without(set: Set<string>, ids: string[]) {
+  const next = new Set(set);
+  ids.forEach((id) => next.delete(id));
+  return next;
+}
+
 /**
  * The Bar Screen (STAFF-02): polls every 3 seconds with its version, chimes
  * and highlights new Orders, and moves an Order on with one tap.
@@ -138,7 +145,8 @@ export function BarScreen({
   const [board, setBoard] = useState(initial);
   const [tapped, setTapped] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-  const [clock, setClock] = useState(() => formatTime(now()));
+  // The time on a 30 s tick: the clock, and which Orders are late.
+  const [at, setAt] = useState(() => now());
   const lanes = useRef<Partial<Record<Lane, HTMLHeadingElement | null>>>({});
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [muted, setMuted] = useState(false);
@@ -183,8 +191,11 @@ export function BarScreen({
     setBoard(data);
     if (arrived.length > 0) {
       if (!mutedRef.current) chime();
-      setFresh(new Set(arrived.map((o) => o.id)));
-      setTimeout(() => setFresh(new Set()), 4_000);
+      // Each arrival keeps its own 4 seconds; a later one no longer clears
+      // it early (audit motion:5).
+      const ids = arrived.map((o) => o.id);
+      setFresh((prev) => new Set([...prev, ...ids]));
+      setTimeout(() => setFresh((prev) => without(prev, ids)), 4_000);
     }
   }, []);
 
@@ -198,7 +209,7 @@ export function BarScreen({
 
   // A Manila clock for the counter; it shows no seconds, so 30 s will do.
   useEffect(() => {
-    const timer = setInterval(() => setClock(formatTime(now())), 30_000);
+    const timer = setInterval(() => setAt(now()), 30_000);
     return () => clearInterval(timer);
   }, []);
 
@@ -235,6 +246,7 @@ export function BarScreen({
 
   const advance = (order: Order) => {
     setTapped(order.id);
+    setFresh((prev) => without(prev, [order.id]));
     startTransition(async () => {
       const moved = await advanceOrder(order.id, order.status);
       await poll();
@@ -248,6 +260,7 @@ export function BarScreen({
 
   const cancel = (order: Order, reason: string) => {
     setTapped(order.id);
+    setFresh((prev) => without(prev, [order.id]));
     startTransition(async () => {
       const cancelled = await cancelAtBar(order.id, reason);
       await poll();
@@ -263,7 +276,13 @@ export function BarScreen({
     <Card
       key={order.id}
       order={order}
-      fresh={fresh.has(order.id)}
+      // The arrival glow belongs to the New lane only (audit motion:5).
+      fresh={
+        fresh.has(order.id) &&
+        (order.status === "placed" || order.status === "paid")
+      }
+      // Past the time the Customer was told, and not Ready yet (staff:14).
+      late={order.status !== "ready" && new Date(order.windowStart) < at}
       manager={manager}
       busy={pending && tapped === order.id}
       onAdvance={() => advance(order)}
@@ -336,7 +355,7 @@ export function BarScreen({
             <span className="text-muted-foreground text-sm">{staffName}</span>
             {/* Server and browser may be a minute apart on first paint. */}
             <span className="font-mono" suppressHydrationWarning>
-              {clock}
+              {formatTime(at)}
             </span>
             {!muted && !soundReady && (
               <button
@@ -523,6 +542,7 @@ export function BarScreen({
 function Card({
   order,
   fresh,
+  late,
   manager,
   busy,
   onAdvance,
@@ -530,6 +550,7 @@ function Card({
 }: {
   order: Order;
   fresh: boolean;
+  late: boolean;
   manager: boolean;
   busy: boolean;
   onAdvance: () => void;
@@ -539,7 +560,7 @@ function Card({
   return (
     <article
       aria-label={`Order ${order.code}`}
-      className={`bg-background rounded-card grid gap-3 border p-4 ${fresh ? "border-star animate-arrive" : "border-border"}`}
+      className={`bg-background rounded-card grid gap-3 border p-4 ${fresh ? "border-star animate-arrive" : late ? "border-warning border-2" : "border-border"}`}
     >
       {/* The code never breaks at its hyphen; the time wraps under it on a
           narrow card (audit staff:13). */}
@@ -553,11 +574,16 @@ function Card({
               <>
                 ASAP
                 <span className="text-muted-foreground text-sm">
-                  , placed {formatTime(new Date(order.placedAt))}
+                  , due {formatTime(new Date(order.windowStart))}
                 </span>
               </>
             ) : (
               formatTime(new Date(order.windowStart))
+            )}
+            {late && (
+              <span className="bg-warning text-night ml-2 rounded px-2 align-middle font-sans text-sm font-semibold">
+                Late
+              </span>
             )}
           </span>
           <span className="text-muted-foreground">{order.firstName}</span>
