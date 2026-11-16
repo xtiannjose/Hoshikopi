@@ -202,8 +202,8 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.8 Manager inputs.** Done 2026-11-15: a price over PHP 100,000 gets plain words, Stars adjustments stop at 50 and never touch a Manager's own, a Closed day needs no times, the Barista Pick refusal names the picks, Special Hours for today say how many Orders are booked after closing, and Options can be Hidden while an unused Option Group or a draft Post can be deleted.
 - [x] **10.9 Manager numbers and Sign-ups.** Done 2026-11-16: a New Inquiry is never cut off, Reports show Stars given and taken apart, the day's total reads Booked while Sales means Picked Up only, Busy Mode shows on Manage and ends from Hours, and a Manager removes a Sign-up (audited, Seats back) and is warned before stranding guests.
 - [x] **10.10 Bar Screen.** Done 2026-11-16: the Order Code never breaks on a tablet, cards show when they're due and turn Late, after a reload the board says to tap for sound, the tablet stays awake, and the arrival glow stays in New.
-- [ ] **10.11 Database rules.** 5 items, effort S each.
-- [ ] **10.12 Account data and retention.** 5 items, effort S to M.
+- [x] **10.11 Database rules.** Done 2026-11-16: Star entries happen once and take the cafe's clock, CHECK rules refuse NULL, every database rule has a test, and the seed runs in one transaction.
+- [x] **10.12 Account data and retention.** Done 2026-11-16: Download my data holds everything kept about a Member, deleting an account is one transaction that de-identifies Sign-ups and Inquiries and keeps past Star totals, the Sign-up limits live in the content module, and abandoned guest Carts are deleted after 30 days.
 - [ ] **10.13 Operations.** 7 items, effort S each.
 - [ ] **10.14 Lighter pages.** 3 items, effort M.
 - [ ] **10.15 Caching and share cards.** 5 items, effort S to M.
