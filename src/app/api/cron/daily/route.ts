@@ -2,6 +2,7 @@ import { revalidateTag } from "next/cache";
 import { connection } from "next/server";
 
 import { now } from "@/lib/clock";
+import { pruneRateLimits } from "@/lib/rate-limit";
 import { cancelUncollected, expireUnpaid } from "@/modules/ordering";
 
 /**
@@ -19,6 +20,8 @@ export async function GET(request: Request) {
   const at = now();
   const expired = await expireUnpaid(at);
   const cancelled = await cancelUncollected(at);
+  // Rate-limit rows hold emails and IPs; keep only the last day's.
+  await pruneRateLimits(at);
   revalidateTag("menu", "max");
   return Response.json({ expired, cancelled });
 }

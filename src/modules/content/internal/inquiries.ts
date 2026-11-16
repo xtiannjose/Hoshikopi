@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { plainText } from "@/lib/text";
+
 import { dayValue, manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
 import { audit, type Staff } from "@/modules/identity";
@@ -18,8 +20,7 @@ export type InquiryView = {
 
 const InquiryInput = z.object({
   kind: z.enum(["private_event", "large_order"]),
-  name: z
-    .string()
+  name: plainText
     .trim()
     .min(1, "Enter your name.")
     .max(80, "Use 80 characters or fewer."),
@@ -42,8 +43,7 @@ const InquiryInput = z.object({
       (v) => v === "" || (/^\d+$/.test(v) && +v >= 1 && +v <= 500),
       "Enter a number of guests from 1 to 500."
     ),
-  message: z
-    .string()
+  message: plainText
     .trim()
     .min(1, "Tell us a little about it.")
     .max(1000, "Keep it under 1,000 characters."),

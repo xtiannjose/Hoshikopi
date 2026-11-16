@@ -23,8 +23,8 @@ async function linkFor(nonce: string, email: string): Promise<string | null> {
  */
 async function clearLinkLimits(email: string) {
   await e2eQuery(
-    "DELETE FROM rate_limits WHERE key = $1 OR key LIKE $2 OR key LIKE $3",
-    [`link:${email}`, "link-ip:%", "second-factor:%"]
+    "DELETE FROM rate_limits WHERE key = $1 OR key LIKE $2 OR key LIKE $3 OR key LIKE $4",
+    [`link:${email}`, `link-pair:${email}:%`, "link-ip:%", "second-factor:%"]
   );
 }
 
@@ -56,7 +56,10 @@ export async function signIn(page: Page, email: string, next = "/account") {
   await page.goto(`/sign-in?next=${encodeURIComponent(target)}`);
   await page.getByRole("textbox", { name: "Email" }).fill(email);
   await page.getByRole("button", { name: "Email me a link" }).click();
-  await expect(page.getByRole("status")).toContainText(email);
+  // The email form's status; the Google form has its own when Google is on.
+  await expect(
+    page.getByRole("status").filter({ hasText: email })
+  ).toBeVisible();
   let url: string | null = null;
   await expect
     .poll(async () => (url = await linkFor(nonce, email)), { timeout: 10_000 })
@@ -84,4 +87,5 @@ export async function signIn(page: Page, email: string, next = "/account") {
   // After the Second Factor the page arrives by client navigation and its
   // <title> a moment later; let it land before a test checks the page.
   await expect(page).toHaveTitle(/\S/);
+  return { url: url!, target, nonce };
 }

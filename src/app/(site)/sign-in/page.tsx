@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import {
   ArrowsClockwiseIcon,
@@ -11,7 +12,7 @@ import {
 import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { IconCircle, Panel } from "@/components/panel";
-import { googleEnabled, safeNext } from "@/modules/identity";
+import { currentMember, googleEnabled, safeNext } from "@/modules/identity";
 import { canEmail } from "@/modules/notify";
 
 import { googleSignInAction } from "./actions";
@@ -91,13 +92,20 @@ async function Back({ searchParams }: Search) {
 }
 
 async function Form({ searchParams }: Search) {
-  const { next, out } = await searchParams;
+  const { next, out, link, google } = await searchParams;
   const target = safeNext(typeof next === "string" ? next : null);
+  // A used link opened again by someone still signed in: just the page.
+  if (link === "expired" && (await currentMember())) redirect(target);
   return (
     <div className="grid gap-6">
       {out === "1" && (
         <p aria-live="polite" className="bg-muted rounded-card p-4">
           You&apos;re signed out. Salamat, see you at the counter!
+        </p>
+      )}
+      {link === "expired" && (
+        <p aria-live="polite" className="bg-muted rounded-card p-4">
+          That link has expired or was already used. Ask for a new one below.
         </p>
       )}
       {googleEnabled() && (
@@ -110,6 +118,15 @@ async function Form({ searchParams }: Search) {
             >
               Continue with Google
             </button>
+            {/* Always there, so the words are read out when the redirect
+                adds them (audit ID2-10). */}
+            <p
+              role="status"
+              className="text-destructive mt-2 text-center text-sm"
+            >
+              {google === "limited" &&
+                "Too many Google sign-ins from here. Try again in 15 minutes."}
+            </p>
           </form>
           <p className="text-muted-foreground text-center text-sm">or</p>
         </>

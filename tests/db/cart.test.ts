@@ -129,6 +129,28 @@ describe("Cart (ORD-01, ORD-02)", () => {
 // Adds read the quantity and wrote it back with no lock, so adds at once
 // overwrote each other, and two first adds raced on the new Cart (audit
 // tests:9, ORD-10).
+// A NUL in a note gave a 500; it is left out (audit SEC2-10).
+describe("hidden characters", () => {
+  it("refuses an id with one, as a script might send", async () => {
+    expect(
+      await addLine(hoshi, { ...latte("Oat milk"), menuItemId: "\u0000" })
+    ).toEqual({ ok: false, reason: "unavailable" });
+    expect(await changeLine(hoshi, "\u0000", latte("Oat milk"))).toEqual({
+      ok: false,
+      reason: "not_found",
+    });
+    await updateQuantity(hoshi, "\u0000", 2);
+    await removeLine(hoshi, "\u0000");
+  });
+
+  it("leaves them out of a note", async () => {
+    expect(
+      await addLine(hoshi, latte("Oat milk", { note: "less ice\u0000" }))
+    ).toEqual({ ok: true });
+    expect((await getCart(hoshi)).lines[0].note).toBe("less ice");
+  });
+});
+
 describe("adding at once", () => {
   it("adds up six adds to one Line, with no error", async () => {
     const results = await Promise.all(

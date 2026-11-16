@@ -1,5 +1,6 @@
 import type { OrderStatus } from "@/generated/prisma/enums";
 import { now } from "@/lib/clock";
+import { isPlainText } from "@/lib/text";
 import { db } from "@/lib/db";
 import { closeCheckout } from "@/modules/payments";
 
@@ -10,6 +11,8 @@ import { cancelOrder } from "./refund";
 import { transition, type TransitionResult } from "./status";
 
 async function orderWithToken(id: string, token: string) {
+  // No Order id has a NUL; Postgres would refuse it (audit SEC2-10).
+  if (!isPlainText(id)) return null;
   const order = await db.order.findUnique({
     where: { id },
     select: {

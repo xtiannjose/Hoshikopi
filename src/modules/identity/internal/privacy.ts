@@ -1,5 +1,6 @@
 import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
+import { withoutControl } from "@/lib/text";
 
 export type MemberProfile = {
   name: string;
@@ -35,7 +36,7 @@ export async function updateProfile(
   await db.user.update({
     where: { id: memberId },
     data: {
-      name: input.name.trim().slice(0, 60),
+      name: withoutControl(input.name).trim().slice(0, 60),
       marketingOptIn: input.marketingOptIn,
       birthMonth:
         Number.isInteger(month) && month! >= 1 && month! <= 12 ? month : null,
@@ -55,7 +56,23 @@ export async function forgetMember(memberId: string) {
   await db.$transaction([
     db.session.deleteMany({ where: { userId: memberId } }),
     db.account.deleteMany({ where: { userId: memberId } }),
-    db.verification.deleteMany({ where: { identifier: user.email } }),
+    // Better Auth keys a sign-in link "magic-link:<token hash>" and keeps
+    // the email in its JSON value (audit ID2-03).
+    db.verification.deleteMany({
+      where: {
+        identifier: { startsWith: "magic-link:" },
+        value: { contains: `"email":${JSON.stringify(user.email)}` },
+      },
+    }),
+    // Its sign-in limits name the email, one with the IP it came from.
+    db.rateLimit.deleteMany({
+      where: {
+        OR: [
+          { key: `link:${user.email}` },
+          { key: { startsWith: `link-pair:${user.email}:` } },
+        ],
+      },
+    }),
     db.user.update({
       where: { id: memberId },
       data: {

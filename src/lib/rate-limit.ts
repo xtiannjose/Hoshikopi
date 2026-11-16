@@ -23,11 +23,28 @@ export async function takeToken(
   return row.count <= limit;
 }
 
-/** The caller's IP as the host reports it, for per-IP limits. */
+/**
+ * The caller's IP as the host reports it, for per-IP limits.
+ * ponytail: trusts the first X-Forwarded-For entry, which Vercel overwrites
+ * with the real client IP (the e2e tests set it to get their own buckets).
+ * Off Vercel, read the platform's client-IP header or the right-most
+ * trusted hop instead (audit ID1-08, SEC1-09).
+ */
 export function clientIp(headers: Headers): string {
   return (
     headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     headers.get("x-real-ip") ||
     "unknown"
   );
+}
+
+/**
+ * Forget rate-limit rows older than a day, each morning: the sign-in keys
+ * hold emails and IPs, and a window past is never read again.
+ */
+export async function pruneRateLimits(at: Date): Promise<number> {
+  const { count } = await db.rateLimit.deleteMany({
+    where: { windowStart: { lt: new Date(at.getTime() - 24 * 60 * 60_000) } },
+  });
+  return count;
 }

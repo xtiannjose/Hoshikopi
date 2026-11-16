@@ -352,6 +352,23 @@ describe("placeOrder refusals", () => {
     );
   });
 
+  // A NUL in the name gave a 500 (audit SEC2-10).
+  it("refuses a hidden character in the checkout name", async () => {
+    const hoshi = guest();
+    await addLatte(hoshi);
+    expect(
+      await placeOrder(await input(hoshi, { customerName: "Hoshi\u0000" }))
+    ).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      errors: {
+        customerName:
+          "This has a hidden character we can't save. Try typing it again.",
+      },
+    });
+    expect((await getCart(hoshi)).lines).toHaveLength(1);
+  });
+
   it("refuses an empty Cart or one with a Line that can't be ordered", async () => {
     expect(await placeOrder(await input(guest()))).toEqual({
       ok: false,

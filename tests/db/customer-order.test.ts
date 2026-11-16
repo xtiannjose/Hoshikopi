@@ -171,6 +171,22 @@ describe("drinks ahead on the Order page (FEAT-03)", () => {
   });
 });
 
+// No Order id has a NUL; Postgres would refuse it with a 500 (audit
+// SEC2-10).
+describe("an Order id with a hidden character", () => {
+  it("is not found", async () => {
+    expect(await orderVersion("\u0000", "a")).toBeNull();
+    expect(await cancelByCustomer("\u0000", "a")).toEqual({
+      ok: false,
+      reason: "not_found",
+    });
+    expect(await advanceInDemo("\u0000", "a", "placed")).toMatchObject({
+      ok: false,
+      reason: "not_found",
+    });
+  });
+});
+
 describe("orderVersion (polling, ADR 0009)", () => {
   // Nothing else may sweep while the Customer watches the page: the poll
   // itself lets the Order go, so the page refreshes to say so (audit

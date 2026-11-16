@@ -1,6 +1,3 @@
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
-
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
@@ -8,7 +5,7 @@ import { addLine, getCart } from "@/modules/cart";
 import { placeOrder, transition } from "@/modules/ordering";
 
 import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, mailTo, resetDb } from "./helpers";
 
 const db = createTestDb();
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
@@ -20,15 +17,6 @@ beforeEach(async () => {
 });
 afterEach(unfreezeClock);
 afterAll(() => db.$disconnect());
-
-/** Emails written to the test outbox for an address (no RESEND_API_KEY). */
-async function mailTo(address: string): Promise<string[]> {
-  const dir = process.env.MAIL_DIR!;
-  const files = (await readdir(dir).catch(() => [])).filter((f) =>
-    f.endsWith(`-${address}.txt`)
-  );
-  return Promise.all(files.map((f) => readFile(path.join(dir, f), "utf8")));
-}
 
 describe("Order emails (ORD-10)", () => {
   it("sends Order placed for Pay at Pickup and Ready for pickup", async () => {

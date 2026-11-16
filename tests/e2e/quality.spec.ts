@@ -286,3 +286,27 @@ test("placeholder text has 4.5:1 contrast in both palettes", async ({
     expect(ratio, palette).toBeGreaterThanOrEqual(4.5);
   }
 });
+
+// A broken percent-encoding gave a bare untitled 500, and a NUL failed in
+// Postgres; both get the site's not-found page (audit SEC2-10).
+test("a broken or NUL address gets the not-found page", async ({
+  page,
+  request,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  for (const path of [
+    "/menu/item/%E0%A4%A",
+    "/events/%E0%A4%A/calendar",
+    "/api/orders/%00/status?t=a",
+  ]) {
+    expect((await request.get(path)).status(), path).toBe(404);
+  }
+  for (const path of ["/menu/item/%E0%A4%A", "/menu/item/%00x"]) {
+    await page.goto(path);
+    await expect(page, path).toHaveTitle("Page not found | Hoshikopi");
+    await expect(
+      page.getByRole("contentinfo").getByText(/Hoshikopi is a concept cafe/)
+    ).toBeVisible();
+  }
+  expect((await request.get("/menu/item/hoshi%2Dlatte")).status()).toBe(200);
+});

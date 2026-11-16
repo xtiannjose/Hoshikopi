@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import { z } from "zod";
 
+import { plainText } from "@/lib/text";
+
 import type { PaymentMethod } from "@/generated/prisma/enums";
 import { dayValue, now } from "@/lib/clock";
 import { db } from "@/lib/db";
@@ -153,8 +155,7 @@ export function normalizePhone(input: string): string | null {
 
 const Contact = z
   .object({
-    customerName: z
-      .string()
+    customerName: plainText
       .trim()
       .min(1, "Enter your name.")
       .max(60, "Use 60 characters or fewer, like your first name."),

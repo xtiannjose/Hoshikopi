@@ -2,6 +2,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { z } from "zod";
 
+import { isPlainText, plainText } from "@/lib/text";
+
 import { Prisma } from "@/generated/prisma/client";
 import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
@@ -38,8 +40,7 @@ function tokenMatches(id: string, token: string): boolean {
 }
 
 const SignupInput = z.object({
-  name: z
-    .string()
+  name: plainText
     .trim()
     .min(1, "Enter your name.")
     .max(80, "Use 80 characters or fewer."),
@@ -103,6 +104,8 @@ export async function signUpForEvent(
       errors[String(issue.path[0])] ??= issue.message;
     return { ok: false, reason: "invalid", errors };
   }
+  // No Event slug has a NUL; Postgres would refuse it (audit SEC2-10).
+  if (!isPlainText(slug)) return { ok: false, reason: "closed" };
   const { name, email } = parsed.data;
   const seats = Number(parsed.data.seats);
   const at = now();

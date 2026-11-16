@@ -1,8 +1,21 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, deleteMemberCart, getCart } from "@/modules/cart";
-import { forgetMember, memberProfile, updateProfile } from "@/modules/identity";
+import {
+  emailSignInLink,
+  forgetMember,
+  memberProfile,
+  updateProfile,
+} from "@/modules/identity";
 import { forgetStars, starHistory } from "@/modules/loyalty";
 import {
   deidentifyOrders,
@@ -15,6 +28,12 @@ import { createTestDb, resetDb } from "./helpers";
 
 const db = createTestDb();
 const HOSHI = "seed-member";
+
+// emailSignInLink reads the request's headers, and a test has no request.
+vi.mock("next/headers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/headers")>()),
+  headers: async () => new Headers(),
+}));
 
 beforeEach(async () => {
   await resetDb(db);
@@ -102,6 +121,38 @@ describe("data export (ACC-03)", () => {
 });
 
 describe("deleting an account (ACC-03)", () => {
+  // A link sent just before the delete would have signed in and made a
+  // fresh, empty account (audit ID2-03).
+  it("ends sign-in links sent before the delete, and only that person's", async () => {
+    await emailSignInLink("hoshi@hoshikopi.example", "/account");
+    await emailSignInLink("tala@hoshikopi.example", "/account");
+    const window = new Date("2026-11-02T01:00:00Z");
+    await db.rateLimit.createMany({
+      data: [
+        { key: "link:hoshi@hoshikopi.example", windowStart: window, count: 1 },
+        {
+          key: "link-pair:hoshi@hoshikopi.example:203.0.113.1",
+          windowStart: window,
+          count: 1,
+        },
+        { key: "link:tala@hoshikopi.example", windowStart: window, count: 1 },
+      ],
+    });
+    const pending = (email: string) =>
+      db.verification.count({ where: { value: { contains: email } } });
+    expect(await pending("hoshi@hoshikopi.example")).toBe(1);
+    await forgetMember(HOSHI);
+    expect(await pending("hoshi@hoshikopi.example")).toBe(0);
+    expect(await pending("tala@hoshikopi.example")).toBe(1);
+    // Its sign-in limit rows go too; another person's stay.
+    expect(
+      await db.rateLimit.count({ where: { key: { contains: "hoshi@" } } })
+    ).toBe(0);
+    expect(
+      await db.rateLimit.count({ where: { key: { contains: "tala@" } } })
+    ).toBe(1);
+  });
+
   it("keeps Orders for the cafe's records without the Member, and forgets the rest", async () => {
     const placed = await hoshiOrders();
     await deidentifyOrders(HOSHI);
@@ -127,5 +178,17 @@ describe("deleting an account (ACC-03)", () => {
     expect(user.name).toBe("");
     expect(await db.session.count({ where: { userId: HOSHI } })).toBe(0);
     expect(await memberProfile(HOSHI)).toBeNull();
+  });
+});
+
+// Postgres refuses a NUL, so a name with one gave a 500 (audit SEC2-10).
+describe("Your details", () => {
+  it("leaves hidden characters out of the name", async () => {
+    await updateProfile(HOSHI, {
+      name: "Hoshi\u0000 S.",
+      marketingOptIn: false,
+      birthMonth: null,
+    });
+    expect((await memberProfile(HOSHI))?.name).toBe("Hoshi S.");
   });
 });

@@ -3,9 +3,10 @@
 import { headers } from "next/headers";
 
 import { clientIp, takeToken } from "@/lib/rate-limit";
+import { isPlainText } from "@/lib/text";
 import { redirect } from "next/navigation";
 
-import { emailSignInLink, googleSignInUrl } from "@/modules/identity";
+import { emailSignInLink, googleSignInUrl, safeNext } from "@/modules/identity";
 import { canEmail, isDemoAccount } from "@/modules/notify";
 
 export type SignInState =
@@ -23,7 +24,7 @@ export async function requestSignInLink(
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
-  if (!EMAIL.test(email) || email.length > 254) {
+  if (!EMAIL.test(email) || !isPlainText(email) || email.length > 254) {
     return {
       status: "error",
       message: "Enter an email address, like hoshi@example.com.",
@@ -41,9 +42,15 @@ export async function requestSignInLink(
     };
   }
   const ip = clientIp(await headers());
+  // IP first, then this address from this IP, then the address from
+  // anywhere; a refused step spends nothing after it. A stranger on
+  // another connection uses up only their own share, so the person keeps
+  // links of their own, and an address still gets at most 5 emails in 15
+  // minutes (audit ID2-05).
   const allowed =
-    (await takeToken(`link:${email}`, 3, FIFTEEN_MINUTES)) &&
-    (await takeToken(`link-ip:${ip}`, 30, FIFTEEN_MINUTES));
+    (await takeToken(`link-ip:${ip}`, 30, FIFTEEN_MINUTES)) &&
+    (await takeToken(`link-pair:${email}:${ip}`, 3, FIFTEEN_MINUTES)) &&
+    (await takeToken(`link:${email}`, 5, FIFTEEN_MINUTES));
   if (!allowed) {
     return {
       status: "error",
@@ -64,8 +71,17 @@ export async function requestSignInLink(
   }
 }
 
-/** Starts Google sign-in when its keys are set (ACC-01). */
+/**
+ * Starts Google sign-in when its keys are set (ACC-01), 30 per IP in 15
+ * minutes: each start writes a verifications row for Google's state (audit
+ * ID2-10).
+ */
 export async function googleSignInAction(form: FormData) {
-  const url = await googleSignInUrl(String(form.get("next") ?? ""));
+  const next = safeNext(String(form.get("next") ?? ""));
+  const ip = clientIp(await headers());
+  if (!(await takeToken(`google-ip:${ip}`, 30, FIFTEEN_MINUTES))) {
+    redirect(`/sign-in?${new URLSearchParams({ next, google: "limited" })}`);
+  }
+  const url = await googleSignInUrl(next);
   if (url) redirect(url);
 }

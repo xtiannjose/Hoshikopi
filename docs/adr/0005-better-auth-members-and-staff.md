@@ -30,3 +30,7 @@ Google sign-in is on for the live demo: an OAuth client "Hoshikopi web" in the G
 Mobile number sign-in (SMS codes) was considered again and stays deferred: every text costs money and Philippine senders must be registered, and without a provider the codes would only reach the logs, so visitors still could not use it. The owner chose Google instead. Adding phone sign-in later needs a new ADR.
 
 There is no Staff invite: a Manager gives a role at `/manage/staff`, by email, to someone who has signed in once (batch 8.5, STAFF-10), and taking a role away ends that person's sessions.
+
+## Update 2026-11-15
+
+Sign-in links are limited per IP first, then per address from that IP (3 in 15 minutes), then per address from anywhere (5 in 15 minutes), so a stranger on another connection uses up only their own share (audit ID2-05). One on the same IP, or with several connections, still can, since any per-address cap can be used up by others; Google sign-in and a session already open are the way around it. A link's token is stored only as a SHA-256 hash (`storeToken: "hashed"`), and starting Google sign-in is limited per IP like the link (batch 10.6).

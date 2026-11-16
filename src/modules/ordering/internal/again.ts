@@ -1,5 +1,6 @@
 import type { OrderLine } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
+import { isPlainText } from "@/lib/text";
 import { addLine, type CartOwner } from "@/modules/cart";
 
 /**
@@ -11,6 +12,8 @@ export async function orderAgain(
   orderId: string,
   memberId: string
 ): Promise<{ added: number; skipped: string[] } | null> {
+  // No Order id has a NUL; Postgres would refuse it (audit SEC2-10).
+  if (!isPlainText(orderId)) return null;
   const order = await db.order.findFirst({
     where: { id: orderId, memberId },
     include: { lines: { orderBy: { createdAt: "asc" } } },
