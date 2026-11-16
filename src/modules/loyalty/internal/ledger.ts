@@ -34,6 +34,19 @@ export async function starHistory(memberId: string) {
   });
 }
 
+// Earn, reserve, release, reverse and the Birthday Treat happen once (a
+// unique index, audit DATA-04): a repeat is skipped, never an error that
+// would undo the caller's transaction. Every entry takes lib/clock's time
+// (architecture:16).
+const once = (
+  tx: Prisma.TransactionClient,
+  data: Prisma.StarEntryCreateManyInput
+) =>
+  tx.starEntry.createMany({
+    data: { createdAt: now(), ...data },
+    skipDuplicates: true,
+  });
+
 const lockMember = (tx: Prisma.TransactionClient, memberId: string) =>
   tx.$queryRaw`SELECT id FROM users WHERE id = ${memberId} FOR UPDATE`;
 
@@ -46,13 +59,11 @@ export async function earnForOrder(
   order: { id: string; memberId: string | null; drinks: number }
 ) {
   if (!order.memberId || order.drinks <= 0) return;
-  await tx.starEntry.create({
-    data: {
-      memberId: order.memberId,
-      orderId: order.id,
-      kind: "earn",
-      stars: order.drinks,
-    },
+  await once(tx, {
+    memberId: order.memberId,
+    orderId: order.id,
+    kind: "earn",
+    stars: order.drinks,
   });
 }
 
@@ -73,9 +84,7 @@ export async function reverseForOrder(
   await lockMember(tx, memberId);
   const take = Math.min(net, await balance(memberId, tx));
   if (take <= 0) return;
-  await tx.starEntry.create({
-    data: { memberId, orderId, kind: "reverse", stars: -take },
-  });
+  await once(tx, { memberId, orderId, kind: "reverse", stars: -take });
 }
 
 export type AdjustResult =
@@ -121,6 +130,7 @@ export async function adjustStars(
         stars,
         reason: why,
         actorId: managerId,
+        createdAt: now(),
       },
     });
     await audit(
@@ -153,8 +163,11 @@ export async function reserveRedemption(
   memberId: string,
   orderId: string
 ) {
-  await tx.starEntry.create({
-    data: { memberId, orderId, kind: "reserve", stars: -STARS_PER_REWARD },
+  await once(tx, {
+    memberId,
+    orderId,
+    kind: "reserve",
+    stars: -STARS_PER_REWARD,
   });
 }
 
@@ -168,13 +181,11 @@ export async function releaseRedemption(
   });
   const held = -entries.reduce((sum, e) => sum + e.stars, 0);
   if (held <= 0) return;
-  await tx.starEntry.create({
-    data: {
-      memberId: entries[0].memberId,
-      orderId,
-      kind: "release",
-      stars: held,
-    },
+  await once(tx, {
+    memberId: entries[0].memberId,
+    orderId,
+    kind: "release",
+    stars: held,
   });
 }
 
@@ -206,14 +217,12 @@ export async function birthdayTreat(
       },
     });
     if (given) return "given";
-    await tx.starEntry.create({
-      data: {
-        memberId,
-        kind: "birthday",
-        stars: STARS_PER_REWARD,
-        reason: `Birthday Treat ${year}`,
-        createdAt: at,
-      },
+    await once(tx, {
+      memberId,
+      kind: "birthday",
+      stars: STARS_PER_REWARD,
+      reason: `Birthday Treat ${year}`,
+      createdAt: at,
     });
     return "granted";
   });

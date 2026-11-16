@@ -2,7 +2,12 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
-import { adjustStars, balance, starHistory } from "@/modules/loyalty";
+import {
+  adjustStars,
+  balance,
+  earnForOrder,
+  starHistory,
+} from "@/modules/loyalty";
 import { placeOrder, refundOrder, transition } from "@/modules/ordering";
 
 import { seedDatabase } from "../../prisma/seed-data";
@@ -107,6 +112,28 @@ describe("earning Stars (LOY-01)", () => {
       ["reverse", -2],
       ["earn", 2],
     ]);
+  });
+});
+
+// The database took a second earn for one Order, and entries and Order
+// events took the database's clock, not lib/clock (DATA-04, architecture:16).
+describe("once-only entries on the cafe's clock", () => {
+  it("earns once even if asked twice, and every row takes lib/clock's time", async () => {
+    const id = await order(HOSHI);
+    await pickUp(id);
+    // A repeat is a no-op, not an error that would undo its transaction.
+    await db.$transaction((tx) =>
+      earnForOrder(tx, { id, memberId: HOSHI, drinks: 2 })
+    );
+    expect(
+      await db.starEntry.count({ where: { orderId: id, kind: "earn" } })
+    ).toBe(1);
+    const frozen = new Date("2026-11-02T01:00:00Z");
+    const entries = await db.starEntry.findMany({ where: { orderId: id } });
+    const events = await db.orderEvent.findMany({ where: { orderId: id } });
+    expect(entries.map((e) => e.createdAt)).toEqual(entries.map(() => frozen));
+    expect(events.map((e) => e.at)).toEqual(events.map(() => frozen));
+    expect(events.length).toBe(5);
   });
 });
 
