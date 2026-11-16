@@ -55,7 +55,7 @@ Rules:
 | `/cafe` | Everyone | Prerendered; tagged `hours`: the space, Amenities, visit FAQ, story, directions. The "open now" badge is a tiny client island that reads the clock. Edits to the cafe's details also revalidate `hours` |
 | `/concept` | Everyone | Static: About this concept (PRD INFO-10) |
 | `/privacy`, `/sign-in` | Everyone | Privacy notice; email link and Google sign-in |
-| `/cafe/inquire` (V1) | Everyone | Dynamic form; rate limited (PRD INFO-11) |
+| `/cafe/inquire` (V1) | Everyone | Dynamic form; rate limited, with a hidden trap field and a 2-second minimum fill time (PRD INFO-11, audit SEC1-06; the Event Sign-up form has the same) |
 | `/events`, `/events/[slug]`, `/news`, `/news/[slug]` | Everyone | Prerendered; tagged `content` |
 | `/events/[slug]/calendar` (V1) | Everyone | Route handler: the Event as an iCalendar file (PRD EVT-04) |
 | `/events/[slug]/signup/[id]` | The guest (Sign-up token in the email link) | Dynamic; confirms a waiting Sign-up within 30 minutes, or cancels one (8.7) |
@@ -169,7 +169,7 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 ## 14. Content and images
 
 - Events and Posts live in the database with a Markdown body, written in `/manage` with a plain editor and preview; rendered with `react-markdown` (no raw HTML).
-- Menu photos upload through a Server Action that checks the role, the size (2 MB) and the real image type, then `put`s them to Vercel Blob under `menu/` (`BLOB_STORE_ID` with Vercel's OIDC token; `public/menu/` when there is no store, as in local runs); `next/image` serves them in AVIF or WebP. Stand-in photos are listed with their source and licence in `docs/ASSETS.md` (created in Phase 1).
+- Menu photos upload through a Server Action that checks the role, the size (2 MB) and the real image type, re-encodes the photo without its metadata (sharp; EXIF can hold a location), saves the Menu Item, and only then `put`s the photo to Vercel Blob under `menu/` (`BLOB_STORE_ID` with Vercel's OIDC token; `data/menu-photos/`, served by `/menu-photos/<name>`, when there is no store, as in local runs). The photo it replaces is deleted. `next/image` serves them in AVIF or WebP and allows only this store's host, worked out from `BLOB_STORE_ID` at build time (audit ops:7, ops:15, PERF-04). Stand-in photos are listed with their source and licence in `docs/ASSETS.md` (created in Phase 1).
 - Room photos are static files in the repo, not uploads: the room rarely changes. Each is labelled "Concept image" (PRD section 2). The space paragraph, directions and story are Markdown on `cafe_settings`, rendered like Posts.
 - Share cards (PRD INFO-09): Menu Item, Event and Post pages share their own photo and alt text; every other page shares one static branded image. Read the metadata guide in `node_modules/next/dist/docs/` before building them.
 

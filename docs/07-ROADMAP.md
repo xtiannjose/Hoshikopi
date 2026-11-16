@@ -204,7 +204,7 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.10 Bar Screen.** Done 2026-11-16: the Order Code never breaks on a tablet, cards show when they're due and turn Late, after a reload the board says to tap for sound, the tablet stays awake, and the arrival glow stays in New.
 - [x] **10.11 Database rules.** Done 2026-11-16: Star entries happen once and take the cafe's clock, CHECK rules refuse NULL, every database rule has a test, and the seed runs in one transaction.
 - [x] **10.12 Account data and retention.** Done 2026-11-16: Download my data holds everything kept about a Member, deleting an account is one transaction that de-identifies Sign-ups and Inquiries and keeps past Star totals, the Sign-up limits live in the content module, and abandoned guest Carts are deleted after 30 days.
-- [ ] **10.13 Operations.** 7 items, effort S each.
+- [x] **10.13 Operations.** Done 2026-11-16: one siteUrl and authSecret that refuse to run unset, the email send gives up after 5 seconds, next/image takes only this Blob store, the database pool stops waiting after 5 seconds, photos lose their metadata and upload only after the save, local photos show at once, and the public forms catch scripted posts.
 - [ ] **10.14 Lighter pages.** 3 items, effort M.
 - [ ] **10.15 Caching and share cards.** 5 items, effort S to M.
 - [ ] **10.16 Motion.** 6 items, effort S each.

@@ -56,7 +56,7 @@ Copy `.env.example` to `.env.local` and fill in what you have. Never commit `.en
 | `DIRECT_URL` | Same as above locally; Neon's direct URL later | Phase 0 |
 | `BETTER_AUTH_SECRET` | 32+ random characters (`npx @better-auth/cli secret`) | Phase 0 |
 | `BETTER_AUTH_URL` | `http://localhost:3000` | Phase 0 |
-| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Phase 0 |
+| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000`; required on Vercel, where a missing one stops the build instead of sending localhost links (`src/lib/env.ts`) | Phase 0 |
 | `PAYMENT_PROVIDER` | `fake` (local and demos) or `paymongo` | Phase 3 |
 | `PAYMONGO_SECRET_KEY` | `sk_test_...` only; the app refuses `sk_live_` | Phase 3 |
 | `PAYMONGO_WEBHOOK_SECRET` | from the PayMongo dashboard webhook | Phase 3 |
@@ -64,7 +64,7 @@ Copy `.env.example` to `.env.local` and fill in what you have. Never commit `.en
 | `MAIL_DIR` | Leave unset. The tests set it so their emails go to `data/mail-test/` (Vitest) and `data/mail-e2e/` (Playwright), each emptied at the start of a run, and `data/mail/` stays yours | Batch 7.5b |
 | `MAIL_FROM` | `Hoshikopi <onboarding@resend.dev>` until a domain exists | Phase 2 |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty turns Google sign-in off | Phase 4 |
-| `BLOB_STORE_ID` | Vercel Blob store, set by Vercel when the store is connected (it signs in with Vercel's OIDC token; an older store gives `BLOB_READ_WRITE_TOKEN` instead); empty uses `public/menu/` | Batch 5.4 |
+| `BLOB_STORE_ID` | Vercel Blob store, set by Vercel when the store is connected (it signs in with Vercel's OIDC token; an older store gives `BLOB_READ_WRITE_TOKEN` instead); empty uses `data/menu-photos/` | Batch 5.4 |
 | `CRON_SECRET` | random string; `/api/cron/daily` checks it | Phase 2 |
 
 ## 6. Database
@@ -148,7 +148,7 @@ The code is ready for Vercel: `vercel.json` runs `prisma migrate deploy` before 
 
 4. **Deploy** (the build runs the migrations; it reads Neon's `DATABASE_URL_UNPOOLED` when `DIRECT_URL` is not set), then seed the menu once from your computer with the Neon direct URL: `$env:DATABASE_URL="<direct>"; $env:DIRECT_URL="<direct>"; $env:ALLOW_REMOTE_SEED="1"; npm run db:seed`.
 5. **Sign in as a demo account**: on the live site, ask for a link for one of the seeded accounts (section 6), then open the Vercel project's **Logs**, find `[email] demo account <email>` and open the link under it. Or sign in with Google (step 7) and make that account a Manager in the Neon SQL editor: `UPDATE users SET role = 'manager' WHERE email = '<your email>';`; after that, give other people roles at `/manage/staff`. The first `/manage` visit asks you to set up the Second Factor.
-6. **Blob** (for photo uploads): in the Vercel project, **Storage**, **Create Storage**, **Blob**, Public access, connected to Production, Preview and Development. Vercel adds `BLOB_STORE_ID` (and `BLOB_WEBHOOK_PUBLIC_KEY`, unused) and the store signs in with the deployment's OIDC token, so there is no secret to copy. Created 2026-11-07 as `hoshikopi-photos`. Uploads in `/manage` then go to `menu/` in the store, and `next/image` fetches them (`images.remotePatterns` in `next.config.ts`). Locally there is no OIDC token without `vercel env pull`, so uploads keep going to `public/menu/`.
+6. **Blob** (for photo uploads): in the Vercel project, **Storage**, **Create Storage**, **Blob**, Public access, connected to Production, Preview and Development. Vercel adds `BLOB_STORE_ID` (and `BLOB_WEBHOOK_PUBLIC_KEY`, unused) and the store signs in with the deployment's OIDC token, so there is no secret to copy. Created 2026-11-07 as `hoshikopi-photos`. Uploads in `/manage` then go to `menu/` in the store, and `next/image` fetches them (`images.remotePatterns` in `next.config.ts`, which allows only this store's host, worked out from `BLOB_STORE_ID` at build time). Locally there is no OIDC token without `vercel env pull`, so uploads go to `data/menu-photos/` and `/menu-photos/<name>` serves them.
 7. **Google sign-in** (done 2026-11-07): in Google Cloud, a project "Hoshikopi"; **OAuth consent screen** (Google Auth Platform): External, then **Branding** (app name, support email, home page `https://hoshikopi.vercel.app`, privacy policy `https://hoshikopi.vercel.app/privacy`, authorized domain `hoshikopi.vercel.app`, no logo, which would need Google's review), then **Audience**, **Publish app**. **Clients**, **Create client**, Web application: JavaScript origins `https://hoshikopi.vercel.app` and `http://localhost:3000`, redirect URIs `https://hoshikopi.vercel.app/api/auth/callback/google` and `http://localhost:3000/api/auth/callback/google`. In Vercel set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (Sensitive) for Production only (preview addresses change, so Google would refuse them), then redeploy. The sign-in page then shows Continue with Google.
 8. **Check**: Lighthouse on Home, `/menu` and a Menu Item with PageSpeed Insights against the budgets (`docs/05-DESIGN-SYSTEM.md` section 11), and the two-minute demo script (PRD section 8).
 
