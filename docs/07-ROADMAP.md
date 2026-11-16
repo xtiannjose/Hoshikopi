@@ -205,8 +205,8 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.11 Database rules.** Done 2026-11-16: Star entries happen once and take the cafe's clock, CHECK rules refuse NULL, every database rule has a test, and the seed runs in one transaction.
 - [x] **10.12 Account data and retention.** Done 2026-11-16: Download my data holds everything kept about a Member, deleting an account is one transaction that de-identifies Sign-ups and Inquiries and keeps past Star totals, the Sign-up limits live in the content module, and abandoned guest Carts are deleted after 30 days.
 - [x] **10.13 Operations.** Done 2026-11-16: one siteUrl and authSecret that refuse to run unset, the email send gives up after 5 seconds, next/image takes only this Blob store, the database pool stops waiting after 5 seconds, photos lose their metadata and upload only after the save, local photos show at once, and the public forms catch scripted posts.
-- [ ] **10.14 Lighter pages.** 3 items, effort M.
-- [ ] **10.15 Caching and share cards.** 5 items, effort S to M.
+- [x] **10.14 Lighter pages.** Done 2026-11-16: the Cart is priced once per request, a Member's pages skip the merge transaction with nothing to merge, and Home's hidden Photos view is recorded as a kept trade-off.
+- [x] **10.15 Caching and share cards.** Done 2026-11-16: Staff changes reach the menu within about 10 seconds, pause, Busy Mode and Capacity saves no longer expire every page, a Sign-up expires only Event pages, and share cards prerender with a 404 for a made-up slug.
 - [ ] **10.16 Motion.** 6 items, effort S each.
 - [ ] **10.17 Page polish.** 9 items, effort S each.
 - [ ] **10.18 Home for Members and the demo.** 4 items, effort S to M.

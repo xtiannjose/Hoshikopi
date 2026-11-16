@@ -21,6 +21,12 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // The menu readers revalidate every 10 seconds, so a Staff save that
+  // races a cache refill heals fast; an hour's expiry keeps the pages
+  // prerendered (5 minutes is the floor) (audit staff:2).
+  cacheLife: {
+    menu: { stale: 300, revalidate: 10, expire: 3600 },
+  },
   cacheComponents: true,
   // Off (7.6): with it on, every page carried its React payload twice (Home
   // 405 kB raw, 50 kB compressed); off, once (258 kB, 34 kB). Links still

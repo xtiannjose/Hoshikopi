@@ -106,7 +106,7 @@ export async function signUpAction(
     console.error("[signup] email not sent:", error);
   }
   // Seats left on the Event page.
-  updateTag("content");
+  updateTag("events");
   return { status: "done", email: result.signup.email, confirmed, emailed };
 }
 
@@ -128,7 +128,7 @@ export async function answerSignupAction(
       return { status: "error", message: "This Sign-up is already gone." };
     }
     // The Seats show as free again on the Event page.
-    updateTag("content");
+    updateTag("events");
     return { status: "cancelled" };
   }
   const result = await confirmSignup(id, token);

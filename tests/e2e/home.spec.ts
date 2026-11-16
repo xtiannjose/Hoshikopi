@@ -49,3 +49,27 @@ test("the share image is a PNG", async ({ request }) => {
   const response = await request.get("/opengraph-image");
   expect(response.headers()["content-type"]).toBe("image/png");
 });
+
+// A made-up slug got a 200 card, rendered on every request (SEC1-12).
+test("a page has its share card, and a made-up slug has none", async ({
+  page,
+  request,
+}) => {
+  for (const [path, slug] of [
+    ["/menu/item/hoshi-latte", "hoshi-latte"],
+    ["/events/latte-art-night", "latte-art-night"],
+    ["/news/our-beans-from-benguet", "our-beans-from-benguet"],
+  ]) {
+    await page.goto(path);
+    const image = await page
+      .locator('meta[property="og:image"]')
+      .first()
+      .getAttribute("content");
+    const card = new URL(image!).pathname;
+    const found = await request.get(card);
+    expect(found.status()).toBe(200);
+    expect(found.headers()["content-type"]).toBe("image/png");
+    const madeUp = card.replace(`/${slug}/`, "/no-such-slug/");
+    expect((await request.get(madeUp)).status()).toBe(404);
+  }
+});

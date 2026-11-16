@@ -2,7 +2,7 @@ import { BagIcon, XIcon } from "@phosphor-icons/react/ssr";
 
 import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
 import { formatPrice } from "@/lib/money";
-import { currentCartOwner, getCart } from "@/modules/cart";
+import { currentCart } from "@/modules/cart";
 import { MAX_DRINKS_PER_ORDER } from "@/modules/ordering";
 
 import { CartCount } from "./cart-count";
@@ -15,8 +15,7 @@ import { PopoverLink } from "./popover-link";
  * popover like the phone menu. Not on the Cart or checkout themselves.
  */
 export async function CartFloat() {
-  const owner = await currentCartOwner();
-  const cart = owner ? await getCart(owner) : null;
+  const cart = await currentCart();
   const count = cart?.lines.reduce((sum, line) => sum + line.quantity, 0) ?? 0;
   if (!cart || count === 0) return null;
   const items = `${count} ${count === 1 ? "item" : "items"}`;

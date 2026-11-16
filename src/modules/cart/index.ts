@@ -22,4 +22,8 @@ export {
   saveFavourite,
   type FavouriteView,
 } from "./internal/favourites";
-export { cartOwnerForWrite, currentCartOwner } from "./internal/session";
+export {
+  cartOwnerForWrite,
+  currentCart,
+  currentCartOwner,
+} from "./internal/session";

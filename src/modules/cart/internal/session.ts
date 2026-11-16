@@ -5,7 +5,7 @@ import { cache } from "react";
 
 import { currentMember } from "@/modules/identity";
 
-import { mergeGuestCart, type CartOwner } from "./cart";
+import { getCart, mergeGuestCart, type CartOwner } from "./cart";
 
 // The Guest Cart lives behind a random token in an HTTP-only cookie; the
 // database keeps only its SHA-256 hash (docs/03 section 5). A signed-in
@@ -31,6 +31,16 @@ export const currentCartOwner = cache(async (): Promise<CartOwner | null> => {
     return { memberId: member.id };
   }
   return token ? { guestTokenHash: hash(token) } : null;
+});
+
+/**
+ * The current Cart, priced, once per request: the header's Cart button,
+ * the floating Cart and the Cart page each read it, and it was priced
+ * twice or three times per view (audit architecture:13).
+ */
+export const currentCart = cache(async () => {
+  const owner = await currentCartOwner();
+  return owner ? getCart(owner) : null;
 });
 
 /** The owner for a write; sets the cookie first if needed (Server Actions). */
