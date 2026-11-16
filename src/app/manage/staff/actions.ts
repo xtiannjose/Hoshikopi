@@ -29,7 +29,16 @@ export async function setRoleAction(
   const email = String(form.get("email") ?? "");
   const role = String(form.get("role")) as Role;
   if (!ROLES.includes(role)) return { message: "Choose a role.", email };
-  const result = await setRole(staff, email, role);
+  const from = ROLES.find((r) => r === form.get("from"));
+  const result = await setRole(staff, email, role, from);
+  if (!result.ok && result.reason === "lower") {
+    // The row may be out of date: show the role as it is now.
+    refresh();
+    return {
+      message: `${result.name || email} is already ${BECOMES[result.role]}. To lower their role, use Save on their row in the team list.`,
+      email,
+    };
+  }
   if (!result.ok) return { message: REFUSED[result.reason], email };
   refresh();
   return {

@@ -165,7 +165,7 @@ The staff page on a tablet behind the counter that lists live Orders by Pickup T
 _Avoid_: Kitchen display, KDS, POS, dashboard
 
 **Second Factor**:
-The 6-digit code from an authenticator app (TOTP) that Staff enter after signing in, before using `/manage`, once per session. The Bar Screen does not ask for it (ADR 0005, ADR 0014).
+The 6-digit code from an authenticator app (TOTP) that Staff enter after signing in, before using `/manage` or a Manager's controls on the Bar Screen, and again after 12 hours. A Barista's taps on the Bar Screen (moving Orders, Sold Out) do not ask for it (ADR 0005, ADR 0014).
 _Avoid_: 2FA, MFA, OTP (in code; `twoFactor` only where the table is named)
 
 ### Loyalty

@@ -17,8 +17,7 @@ import { formatDelta, formatPrice } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
 import { getMenuForStaff } from "@/modules/menu";
 
-import { toggleSoldOut } from "./actions";
-import { SoldOutButton } from "./sold-out-button";
+import { SoldOutForm } from "../../bar/sold-out";
 
 export const metadata: Metadata = { title: "Menu" };
 
@@ -54,27 +53,6 @@ function count(rows: { soldOut: boolean }[], noun: string) {
   const out = rows.filter((row) => row.soldOut).length;
   const all = `${rows.length} ${noun}${rows.length === 1 ? "" : "s"}`;
   return out ? `${all}, ${out} sold out today` : all;
-}
-
-function SoldOutForm({
-  kind,
-  id,
-  name,
-  soldOut,
-}: {
-  kind: "item" | "option";
-  id: string;
-  name: string;
-  soldOut: boolean;
-}) {
-  return (
-    <form action={toggleSoldOut}>
-      <input type="hidden" name="kind" value={kind} />
-      <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="soldOut" value={soldOut ? "0" : "1"} />
-      <SoldOutButton name={name} soldOut={soldOut} />
-    </form>
-  );
 }
 
 /** A compact row: name, price and pills on the left, the button on the right. */

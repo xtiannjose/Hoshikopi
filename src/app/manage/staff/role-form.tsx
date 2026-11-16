@@ -8,7 +8,8 @@ import { busy } from "@/components/fields";
 const SELECT =
   "rounded-card border-input bg-background min-h-11 border px-3 font-medium";
 const BUTTON =
-  "bg-primary text-primary-foreground min-h-11 rounded-full px-5 font-semibold disabled:opacity-60";
+  "bg-primary text-primary-foreground min-h-11 rounded-full px-5 font-semibold aria-disabled:opacity-60";
+const RANK = { customer: 0, barista: 1, manager: 2 } as const;
 
 /**
  * Sets one person's role. With `email` it is a Staff row's control, and its
@@ -45,7 +46,11 @@ export function RoleForm({
     >
       <div className="flex flex-wrap items-end gap-3">
         {row ? (
-          <input type="hidden" name="email" value={email} />
+          <>
+            <input type="hidden" name="email" value={email} />
+            {/* The role this row shows, so a lowering applies to it only. */}
+            <input type="hidden" name="from" value={role} />
+          </>
         ) : (
           <div className="grid w-full gap-1.5">
             <label htmlFor="staff-email" className="font-semibold">
@@ -90,9 +95,12 @@ export function RoleForm({
           {row && <span className="sr-only"> role for {name}</span>}
         </button>
       </div>
-      {chosen === "customer" && (
+      {/* Any lower role signs them out, not only Member (audit staff:16). */}
+      {role && RANK[chosen as keyof typeof RANK] < RANK[role] && (
         <p className="text-warning text-sm">
-          They lose staff access and are signed out now.
+          {chosen === "customer"
+            ? "They lose staff access and are signed out now."
+            : "They lose Manager access and are signed out now."}
         </p>
       )}
       {!onResult && (

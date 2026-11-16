@@ -98,11 +98,18 @@ export async function enterSecondFactor(
   return "ok";
 }
 
-/** True once Staff entered their Second Factor in this session. */
+// A pass lasts 12 hours, about one long day at the cafe, while the session
+// slides for 7 days with use (ADR 0014, audit SEC1-14).
+const PASS_MS = 12 * 60 * 60 * 1000;
+
+/** True while this session's Second Factor is under 12 hours old. */
 export async function secondFactorPassed(sessionId: string): Promise<boolean> {
   const session = await db.session.findUnique({
     where: { id: sessionId },
     select: { secondFactorAt: true },
   });
-  return !!session?.secondFactorAt;
+  return (
+    !!session?.secondFactorAt &&
+    now().getTime() - session.secondFactorAt.getTime() < PASS_MS
+  );
 }

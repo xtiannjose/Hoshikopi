@@ -170,3 +170,67 @@ test(
     await expect(banner).toHaveCount(0);
   }
 );
+
+// Better Auth trusted its 5-minute cookie cache, so a session ended from
+// Sign out everywhere kept the board going (audit staff:17).
+test("the Bar Screen stops at once when its session is ended elsewhere", async ({
+  page,
+  context,
+}) => {
+  await signIn(page, "annika@hoshikopi.example", "/bar");
+  await expect(page.getByRole("heading", { name: "Bar Screen" })).toBeVisible();
+  const cookie = (await context.cookies()).find((c) =>
+    c.name.endsWith("session_token")
+  )!;
+  // Only this page's session, so other specs signed in as Annika keep theirs.
+  await e2eQuery("DELETE FROM sessions WHERE token = $1", [
+    decodeURIComponent(cookie.value).split(".")[0],
+  ]);
+  await expect(
+    page.getByRole("alert").filter({ hasText: "signed out" })
+  ).toBeVisible({ timeout: 10_000 });
+});
+
+// Sold Out was only on /manage/menu, behind the Second Factor, so a Barista
+// who never set up an authenticator could not mark it (STAFF-03, audit
+// staff:8).
+test("a Barista with no authenticator marks Sold Out and back on the Bar Screen @cafe-wide", async ({
+  page,
+}) => {
+  const id = `e2e-${Date.now()}`;
+  const email = `${id}@hoshikopi.example`;
+  await e2eQuery(
+    `INSERT INTO users (id, name, email, email_verified, role, updated_at)
+     VALUES ($1, 'Lia', $2, true, 'barista', now())`,
+    [id, email]
+  );
+  try {
+    await signIn(page, email, "/bar");
+    await expect(page.getByRole("link", { name: "Sold out?" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Manage" })).toHaveCount(0);
+    await page.locator("summary", { hasText: "Sold out today" }).click();
+    await page
+      .getByRole("button", { name: "Sold out for Butter Croissant" })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Back on for Butter Croissant" })
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/bar/);
+    await expectNoAxeViolations(page);
+    await page
+      .getByRole("button", { name: "Back on for Butter Croissant" })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Sold out for Butter Croissant" })
+    ).toBeVisible();
+    const { rows } = await e2eQuery(
+      "SELECT 1 FROM two_factors WHERE user_id = $1",
+      [id]
+    );
+    expect(rows).toHaveLength(0);
+  } finally {
+    await e2eQuery(
+      "UPDATE menu_items SET sold_out_on = NULL WHERE slug = 'butter-croissant'"
+    );
+  }
+});

@@ -34,3 +34,7 @@ There is no Staff invite: a Manager gives a role at `/manage/staff`, by email, t
 ## Update 2026-11-15
 
 Sign-in links are limited per IP first, then per address from that IP (3 in 15 minutes), then per address from anywhere (5 in 15 minutes), so a stranger on another connection uses up only their own share (audit ID2-05). One on the same IP, or with several connections, still can, since any per-address cap can be used up by others; Google sign-in and a session already open are the way around it. A link's token is stored only as a SHA-256 hash (`storeToken: "hashed"`), and starting Google sign-in is limited per IP like the link (batch 10.6).
+
+## Update 2026-11-15 (batch 10.7)
+
+Sold Out today and back on is on the Bar Screen, so a Barista marks it without the Second Factor (STAFF-03, audit staff:8); `/manage/menu` posts the same action. The Bar Screen shows the Manage link to Managers only. Lowering someone's role needs the role the Manager saw on their row, so Add Staff can only give or raise a role (audit staff:16).

@@ -93,7 +93,7 @@ npm run db:studio
 | Barista | Annika | `annika@hoshikopi.example` | `seed-barista` |
 | Member | Hoshi | `hoshi@hoshikopi.example` | `seed-member` |
 
-Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `/manage` visit; `/bar` does not ask. Tests, the PRD personas and the seed use these same names.
+Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `/manage` visit; a Barista's taps on `/bar` (moving Orders, Sold Out) do not ask, a Manager's Pause, Busy Mode and Cancel there do. Tests, the PRD personas and the seed use these same names.
 
 - Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`.
 - Playwright uses `hoshikopi_e2e`, reset and seeded before each run.
