@@ -116,6 +116,14 @@ _Avoid_: Sandbox, test mode (that is the payments' Test Mode)
 During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen; it ends by itself. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
 _Avoid_: Rush mode, delay mode, snooze
 
+**Sales**:
+The total of Picked Up Orders over a range of days, on the Manager's Reports.
+_Avoid_: Revenue, takings
+
+**Booked**:
+The total of a day's Orders not cancelled, expired or refunded, on the Orders page and the Manage Today strip. It includes Pay at Pickup still to collect and online Orders not yet paid, so it is not Sales.
+_Avoid_: Sales (for this figure)
+
 ### Payments
 
 **Payment Method**:

@@ -214,9 +214,9 @@ async function Day({
       <ul className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
         <Tile label="Orders" value={String(count)} />
         <Tile
-          label="Sales"
+          label="Booked"
           value={formatPrice(totalCents)}
-          note="Cancelled, expired and refunded Orders are left out."
+          note="Includes Pay at Pickup still to collect and Orders not yet paid online. Cancelled, expired and refunded Orders are left out. Sales (Picked Up only) are on Reports."
         />
         <Tile
           label="Pay at Pickup still to collect"

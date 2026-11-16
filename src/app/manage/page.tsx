@@ -243,7 +243,7 @@ async function Who() {
             <Stat
               label="Today so far"
               value={sold.count === 1 ? "1 order" : `${sold.count} orders`}
-              note={formatPrice(sold.totalCents)}
+              note={`${formatPrice(sold.totalCents)} booked`}
               href="/manage/orders"
             />
           )}
