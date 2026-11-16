@@ -100,12 +100,13 @@ function toView(row: {
 
 /** Inquiries for the Manager: open ones first, newest first. */
 export async function inquiriesForStaff(): Promise<InquiryView[]> {
+  // New first (the enum's order is new, answered, closed), in the query,
+  // so a New Inquiry is never cut off by 200 newer ones (audit DATA-02).
   const rows = await db.inquiry.findMany({
-    orderBy: [{ createdAt: "desc" }],
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     take: 200,
   });
-  const order = { new: 0, answered: 1, closed: 2 };
-  return rows.map(toView).sort((a, b) => order[a.status] - order[b.status]);
+  return rows.map(toView);
 }
 
 /** A Manager marks an Inquiry answered, closed, or new again. */

@@ -141,6 +141,32 @@ describe("Inquiries (INFO-11)", () => {
     ]);
   });
 
+  // The 200 newest were taken first and sorted after, so a New Inquiry
+  // older than them never reached the Manager (audit DATA-02).
+  it("lists an old New Inquiry ahead of 200 newer answered ones", async () => {
+    await db.inquiry.create({
+      data: {
+        kind: "private_event",
+        name: "Old but new",
+        email: "old@example.com",
+        message: "Still waiting.",
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+      },
+    });
+    await db.inquiry.createMany({
+      data: Array.from({ length: 200 }, (_, i) => ({
+        kind: "large_order" as const,
+        name: `Answered ${i}`,
+        email: `a${i}@example.com`,
+        message: "Done.",
+        status: "answered" as const,
+        createdAt: new Date(Date.UTC(2026, 5, 1, 0, i)),
+      })),
+    });
+    const list = await inquiriesForStaff();
+    expect(list[0]).toMatchObject({ name: "Old but new", status: "new" });
+  });
+
   it("lists new ones first after the Manager answers one", async () => {
     const first = await submitInquiry(inquiry);
     await submitInquiry({ ...inquiry, name: "Annika", kind: "large_order" });
