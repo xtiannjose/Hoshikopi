@@ -482,8 +482,12 @@ function Card({
       aria-label={`Order ${order.code}`}
       className={`bg-background rounded-card grid gap-3 border p-4 ${fresh ? "border-star animate-arrive" : "border-border"}`}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="font-display text-4xl italic">{order.code}</p>
+      {/* The code never breaks at its hyphen; the time wraps under it on a
+          narrow card (audit staff:13). */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="font-display shrink-0 text-4xl whitespace-nowrap italic">
+          {order.code}
+        </p>
         <p className="text-right">
           <span className="block font-mono text-lg">
             {order.pickupKind === "asap" ? (
