@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { hmacHex, sameSignature } from "./sign";
 import type { PaymentProvider, ProviderEvent } from "./types";
+import { siteUrl } from "@/lib/env";
 
 const HEADER = "fake-signature";
 
@@ -16,8 +17,7 @@ export type FakeProvider = PaymentProvider & {
  * account. providerFor() keeps it off production domains.
  */
 export function fakeProvider(secret: string): FakeProvider {
-  const site = () =>
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const site = siteUrl;
   return {
     name: "fake",
     async createCheckout() {

@@ -21,7 +21,11 @@ test("the Order page stops asking 3 hours after its Pickup Time and says so", as
       [id]
     );
     await page.clock.install();
+    // Pause only once the poller is running: paused before it mounts, its
+    // timer would never fire.
+    const first = page.waitForRequest(/\/api\/orders\/.+\/status/);
     await page.reload();
+    await first;
     await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1_000));
     const notice = page.getByText(
       "No news for 3 hours, so this page stopped checking. Reload it to see where your order is."

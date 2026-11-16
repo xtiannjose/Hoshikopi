@@ -1,4 +1,5 @@
 import { eventCalendar, getEvent } from "@/modules/content";
+import { siteUrl } from "@/lib/env";
 
 /** An Event as a calendar file (EVT-04). */
 export async function GET(
@@ -8,7 +9,7 @@ export async function GET(
   const { slug } = await params;
   const event = await getEvent(slug);
   if (!event) return new Response("Not found", { status: 404 });
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const site = siteUrl();
   return new Response(eventCalendar(event, site), {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",

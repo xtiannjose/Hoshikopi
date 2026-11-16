@@ -7,10 +7,9 @@ import { requireStaff } from "@/modules/identity";
 import {
   deleteOptionGroup,
   saveCategory,
-  saveMenuItem,
+  saveMenuItemWithPhoto,
   saveOption,
   saveOptionGroup,
-  storeMenuPhoto,
   type MenuItemInput,
   type OptionFormInput,
 } from "@/modules/menu";
@@ -52,17 +51,20 @@ export async function saveMenuItemAction(
     photoAlt: text(form, "photoAlt"),
     sort: text(form, "sort") || "0",
   };
-  let photoUrl: string | undefined;
+  // The photo is checked first and stored only once the save passes.
   const photo = form.get("photo");
-  if (photo instanceof File && photo.size > 0) {
-    const stored = await storeMenuPhoto(photo, input.slug || "menu-item");
-    if (!stored.ok) return { status: "error", errors: { photo: stored.error } };
-    photoUrl = stored.url;
-  }
-  const result = await saveMenuItem(id, input, staff, photoUrl);
+  const result = await saveMenuItemWithPhoto(
+    id,
+    input,
+    staff,
+    photo instanceof File ? photo : null
+  );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("menu");
   if (!id) redirect(`/manage/menu/item/${result.id}?added=1`);
+  if (result.photoError) {
+    return { status: "error", errors: { photo: result.photoError } };
+  }
   return { status: "saved" };
 }
 

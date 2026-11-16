@@ -1,7 +1,8 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
+import sharp from "sharp";
 
 import { now } from "@/lib/clock";
 
@@ -12,6 +13,14 @@ const CONTENT_TYPE = {
   png: "image/png",
   webp: "image/webp",
 } as const;
+
+/**
+ * Without a Blob store, photos go here and /menu-photos/<name> serves them:
+ * `next start` lists public/ only when it starts, so a photo saved there was
+ * a 404 until a restart (audit PERF-04).
+ */
+export const LOCAL_PHOTO_DIR = path.join(process.cwd(), "data", "menu-photos");
+export const LOCAL_PHOTO_PATH = "/menu-photos/";
 
 /** The real type from the first bytes; the file name and MIME are not trusted. */
 function imageType(bytes: Uint8Array): keyof typeof CONTENT_TYPE | null {
@@ -30,39 +39,57 @@ function imageType(bytes: Uint8Array): keyof typeof CONTENT_TYPE | null {
   return null;
 }
 
-export type PhotoResult =
-  { ok: true; url: string } | { ok: false; error: string };
+export type CheckedPhoto = { bytes: Buffer; type: keyof typeof CONTENT_TYPE };
 
 /**
- * Saves a Menu Item photo (batch 1.5). On Vercel it goes to the Blob store
- * (batch 5.4): BLOB_STORE_ID with Vercel's OIDC token, or an older store's
- * BLOB_READ_WRITE_TOKEN. Without either, to public/menu/ (local runs).
+ * Checks a Menu Item photo's size and type, then re-encodes it upright and
+ * without its metadata: a phone photo's EXIF can say where it was taken
+ * (audit ops:15). Nothing is stored yet.
  */
-export async function storeMenuPhoto(
-  file: File,
-  slug: string
-): Promise<PhotoResult> {
+export async function readMenuPhoto(
+  file: File
+): Promise<({ ok: true } & CheckedPhoto) | { ok: false; error: string }> {
   if (file.size > MAX_BYTES) {
     return { ok: false, error: "Choose a photo under 2 MB." };
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
   const type = imageType(bytes);
   if (!type) return { ok: false, error: "Choose a JPEG, PNG or WebP photo." };
-  // The slug is not validated yet when the photo is saved, so only these
-  // characters reach the name: nothing can land outside menu/.
+  try {
+    // sharp writes no metadata unless asked; rotate() applies EXIF's
+    // orientation first, so the photo stays upright without it.
+    return { ok: true, type, bytes: await sharp(bytes).rotate().toBuffer() };
+  } catch {
+    return { ok: false, error: "We couldn't read that photo. Try another." };
+  }
+}
+
+export type PhotoResult =
+  { ok: true; url: string } | { ok: false; error: string };
+
+/**
+ * Saves a checked photo (batch 1.5). On Vercel it goes to the Blob store
+ * (batch 5.4): BLOB_STORE_ID with Vercel's OIDC token, or an older store's
+ * BLOB_READ_WRITE_TOKEN. Without either, to data/menu-photos/ (local runs).
+ */
+export async function storeMenuPhoto(
+  photo: CheckedPhoto,
+  slug: string
+): Promise<PhotoResult> {
+  // Only these characters reach the name: nothing can land outside menu/.
   const safe =
     slug
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")
       .slice(0, 60) || "menu-item";
-  const name = `${safe}-${now().getTime()}.${type}`;
+  const name = `${safe}-${now().getTime()}.${photo.type}`;
 
   if (process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN) {
     try {
-      const blob = await put(`menu/${name}`, Buffer.from(bytes), {
+      const blob = await put(`menu/${name}`, photo.bytes, {
         access: "public",
-        contentType: CONTENT_TYPE[type],
+        contentType: CONTENT_TYPE[photo.type],
       });
       return { ok: true, url: blob.url };
     } catch (error) {
@@ -74,8 +101,34 @@ export async function storeMenuPhoto(
     }
   }
 
-  const dir = path.join(process.cwd(), "public", "menu");
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), bytes);
-  return { ok: true, url: `/menu/${name}` };
+  await mkdir(LOCAL_PHOTO_DIR, { recursive: true });
+  await writeFile(path.join(LOCAL_PHOTO_DIR, name), photo.bytes);
+  return { ok: true, url: `${LOCAL_PHOTO_PATH}${name}` };
+}
+
+/**
+ * Deletes a photo a save replaced, so it no longer sits in the public store
+ * (audit ops:15). Anything else, such as a seeded image, is left alone.
+ */
+export async function removeMenuPhoto(url: string): Promise<void> {
+  try {
+    if (/^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\//.test(url)) {
+      await del(url);
+    } else if (url.startsWith(LOCAL_PHOTO_PATH)) {
+      await rm(path.join(LOCAL_PHOTO_DIR, path.basename(url)), { force: true });
+    }
+  } catch (error) {
+    // The new photo is saved; an old file left behind is only clutter.
+    console.error("[menu] old photo not deleted:", error);
+  }
+}
+
+/** A stored local photo's bytes and type, for /menu-photos/<name>. */
+export function localPhotoFile(name: string) {
+  const match = /^[a-z0-9-]+\.(jpg|png|webp)$/.exec(name);
+  if (!match) return null;
+  return {
+    file: path.join(LOCAL_PHOTO_DIR, name),
+    contentType: CONTENT_TYPE[match[1] as keyof typeof CONTENT_TYPE],
+  };
 }

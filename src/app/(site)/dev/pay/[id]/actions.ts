@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { orderLink } from "@/modules/ordering";
 import { paymentByCheckout, signFakeEvent } from "@/modules/payments";
+import { siteUrl } from "@/lib/env";
 
 /**
  * The fake checkout's Pay and Fail buttons send a signed webhook to our own
@@ -25,7 +26,7 @@ export async function fakePayAction(form: FormData) {
     checkoutId,
     paymentId: `fake_pay_${randomUUID()}`,
   });
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const site = siteUrl();
   // redirect() throws, so it stays outside the promise's handlers.
   const problem = await fetch(`${site}/api/webhooks/fake`, {
     method: "POST",

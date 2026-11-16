@@ -9,6 +9,7 @@ import { Empty, OUTLINE_PILL } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { inquireAction, type InquiryState } from "./actions";
+import { BotFields } from "@/components/bot-fields";
 
 export function InquiryForm({
   kind,
@@ -49,7 +50,8 @@ export function InquiryForm({
   const value = (name: string) => state.values?.[name];
   const error = (name: string) => state.errors?.[name];
   return (
-    <form ref={form} action={action} className="grid max-w-xl gap-5">
+    <form ref={form} action={action} className="relative grid max-w-xl gap-5">
+      <BotFields />
       <Field name="kind" label="What is it about?" error={error("kind")}>
         {(control) => (
           <select

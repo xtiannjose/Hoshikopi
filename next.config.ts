@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+import { blobHost } from "./src/lib/blob-host";
+
+const blobHostname = blobHost(process.env);
+
 // ADR 0013: prerendered pages carry Next's inline RSC scripts, which take no
 // nonce or hash, so scripts need 'unsafe-inline'; everything else is locked
 // to this site. Forms may land on PayMongo's checkout or Google's sign-in.
@@ -28,13 +32,10 @@ const nextConfig: NextConfig = {
   // Menu photos uploaded on Vercel live in the Blob store (batch 5.4); the
   // image optimizer fetches them, so the pages' CSP stays 'self'.
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*.public.blob.vercel-storage.com",
-        pathname: "/menu/**",
-      },
-    ],
+    // This store's photos only, never every Blob store (audit ops:7).
+    remotePatterns: blobHostname
+      ? [{ protocol: "https", hostname: blobHostname, pathname: "/menu/**" }]
+      : [],
   },
   // No page may be framed, sniffed as another type, leak its full address
   // to other sites, or ask for the camera, microphone or location.

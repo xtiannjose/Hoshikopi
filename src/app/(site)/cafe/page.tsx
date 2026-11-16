@@ -27,6 +27,7 @@ import type { Hours } from "@/lib/hours";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS } from "@/modules/ordering";
 import { getRecurringEvents } from "@/modules/content";
 import { STARS_PER_REWARD } from "@/modules/loyalty";
+import { siteUrl } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Visit",
@@ -105,7 +106,7 @@ function structuredData(cafe: CafeDetails, hours: Hours) {
     "@type": "CafeOrCoffeeShop",
     name: "Hoshikopi",
     description: cafe.spaceMd,
-    url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/cafe`,
+    url: `${siteUrl()}/cafe`,
     email: cafe.contactEmail,
     servesCuisine: "Coffee",
     address: {

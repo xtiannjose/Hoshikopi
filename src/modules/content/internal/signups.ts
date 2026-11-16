@@ -7,6 +7,7 @@ import { isPlainText, plainText } from "@/lib/text";
 import { Prisma } from "@/generated/prisma/client";
 import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
+import { authSecret } from "@/lib/env";
 import { takeToken } from "@/lib/rate-limit";
 import { audit, type Staff } from "@/modules/identity";
 
@@ -22,15 +23,9 @@ export function heldSignups(at: Date) {
   } satisfies Prisma.EventSignupWhereInput;
 }
 
-function secret(): string {
-  const value = process.env.BETTER_AUTH_SECRET;
-  if (!value) throw new Error("BETTER_AUTH_SECRET is not set");
-  return value;
-}
-
 /** The link token for a Sign-up, derived from its id and never stored. */
 export function signupToken(id: string): string {
-  return createHmac("sha256", secret())
+  return createHmac("sha256", authSecret())
     .update(`event-signup:${id}`)
     .digest("base64url");
 }
