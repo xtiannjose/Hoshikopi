@@ -5,6 +5,7 @@ import {
   changeLine,
   getCart,
   mergeGuestCart,
+  pruneGuestCarts,
   removeLine,
   updateQuantity,
 } from "@/modules/cart";
@@ -260,5 +261,29 @@ describe("mergeGuestCart (sign-in, docs/03 section 5)", () => {
       1, 2,
     ]);
     expect((await getCart(hoshi)).lines).toHaveLength(0);
+  });
+});
+
+// Abandoned guest Carts were kept for ever (audit ops:9).
+describe("pruneGuestCarts", () => {
+  it("deletes guest Carts untouched for 30 days, never a Member's", async () => {
+    await addLine(hoshi, latte("Oat milk"));
+    await addLine(migs, latte("Oat milk"));
+    await db.user.create({
+      data: { id: "tala", email: "tala@example.com", name: "Tala" },
+    });
+    await addLine({ memberId: "tala" }, latte("Oat milk"));
+    const old = new Date(Date.now() - 31 * 86_400_000);
+    await db.cart.updateMany({ data: { updatedAt: old } });
+    await db.cartLine.updateMany({ data: { updatedAt: old } });
+    // Migs touched a Line yesterday.
+    await db.cartLine.updateMany({
+      where: { cart: { guestTokenHash: "migs-browser" } },
+      data: { updatedAt: new Date(Date.now() - 86_400_000) },
+    });
+    expect(await pruneGuestCarts(new Date())).toBe(1);
+    expect((await getCart(hoshi)).lines).toHaveLength(0);
+    expect((await getCart(migs)).lines).toHaveLength(1);
+    expect((await getCart({ memberId: "tala" })).lines).toHaveLength(1);
   });
 });

@@ -3,6 +3,7 @@ import { connection } from "next/server";
 
 import { now } from "@/lib/clock";
 import { pruneRateLimits } from "@/lib/rate-limit";
+import { pruneGuestCarts } from "@/modules/cart";
 import { cancelUncollected, expireUnpaid } from "@/modules/ordering";
 
 /**
@@ -22,6 +23,8 @@ export async function GET(request: Request) {
   const cancelled = await cancelUncollected(at);
   // Rate-limit rows hold emails and IPs; keep only the last day's.
   await pruneRateLimits(at);
+  // Guest Carts past their cookie's 30 days (audit ops:9).
+  await pruneGuestCarts(at);
   revalidateTag("menu", "max");
   return Response.json({ expired, cancelled });
 }
