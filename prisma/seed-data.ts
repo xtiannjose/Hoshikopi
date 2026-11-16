@@ -1,6 +1,6 @@
 // Seed data (docs/04-DATA-MODEL.md section 5). Every name, price, person and
 // place here is invented for the concept and shown with the Concept Notice.
-import type { PrismaClient } from "../src/generated/prisma/client";
+import type { Prisma } from "../src/generated/prisma/client";
 
 const php = (pesos: number) => pesos * 100;
 // Opening times are Manila wall-clock times in `time` columns.
@@ -389,7 +389,8 @@ const PAIRINGS: [string, string][] = [
 ];
 
 export async function seedDatabase(
-  db: PrismaClient,
+  // A client or a transaction: `npm run db:seed` runs it in one (DATA-12).
+  db: Prisma.TransactionClient,
   { people = true } = {}
 ): Promise<void> {
   const groupIds = {} as Record<Group, string>;
