@@ -119,6 +119,18 @@ describe("salesReport (STAFF-08)", () => {
 });
 
 describe("starTotals (STAFF-08)", () => {
+  // Only the net sum showed, so +51 and -51 read as 0 (audit staff:12).
+  it("shows Stars given and taken by Managers apart", async () => {
+    await db.starEntry.createMany({
+      data: [
+        { memberId: HOSHI, kind: "adjust", stars: 30, reason: "gift" },
+        { memberId: HOSHI, kind: "adjust", stars: 20, reason: "gift" },
+        { memberId: HOSHI, kind: "adjust", stars: -50, reason: "mistake" },
+      ],
+    });
+    expect(await starTotals(7)).toMatchObject({ given: 50, taken: 50 });
+  });
+
   it("counts Stars earned and redeemed in the window", async () => {
     await db.starEntry.create({
       data: { memberId: HOSHI, kind: "adjust", stars: 9, reason: "test" },

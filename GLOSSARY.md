@@ -113,8 +113,16 @@ On while the fake payment provider runs (locally and on the `*.vercel.app` demo)
 _Avoid_: Sandbox, test mode (that is the payments' Test Mode)
 
 **Busy Mode**:
-During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen; it ends by itself. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
+During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen; it ends by itself, or from the Bar Screen or Manage Hours. Manage shows it while it runs. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
 _Avoid_: Rush mode, delay mode, snooze
+
+**Sales**:
+The total of Picked Up Orders over a range of days, on the Manager's Reports.
+_Avoid_: Revenue, takings
+
+**Booked**:
+The total of a day's Orders not cancelled, expired or refunded, on the Orders page and the Manage Today strip. It includes Pay at Pickup still to collect and online Orders not yet paid, so it is not Sales.
+_Avoid_: Sales (for this figure)
 
 ### Payments
 
@@ -221,7 +229,7 @@ Something happening at the cafe on a date: a cupping, latte art night, open mic,
 _Avoid_: Activity, happening
 
 **Sign-up**:
-A person's place at an Event: a name, an email and 1 to 4 Seats, confirmed by email. It waits for its email link and holds its Seats for 30 minutes (a signed-in Member's own email is confirmed at once); the same link cancels it. An Event with Seats takes Sign-ups until they run out; one Sign-up per email per Event. Paid at the door.
+A person's place at an Event: a name, an email and 1 to 4 Seats, confirmed by email. It waits for its email link and holds its Seats for 30 minutes (a signed-in Member's own email is confirmed at once); the same link cancels it, and a Manager can remove it (the guest is not told). An Event with Seats takes Sign-ups until they run out; one Sign-up per email per Event. Paid at the door.
 _Avoid_: Booking, reservation, ticket, RSVP
 
 **Recurring Event**:

@@ -4,6 +4,7 @@ import { freezeClock, unfreezeClock } from "@/lib/clock";
 import {
   cancelSignup,
   confirmSignup,
+  removeSignup,
   signupForGuest,
   signUpForEvent,
 } from "@/modules/content";
@@ -187,6 +188,30 @@ describe("Event Sign-ups (EVT-02)", () => {
     expect(
       await signUpForEvent(EVENT, person(4, "hoshi@example.com"))
     ).toMatchObject({ ok: true, seatsLeft: 8 });
+  });
+
+  // A Manager had no way to remove a Sign-up, so confirmed fake ones kept
+  // their Seats (audit staff:10, SEC2-02).
+  it("lets a Manager remove a Sign-up, giving the Seats back, audited", async () => {
+    const christian = {
+      id: "seed-manager",
+      name: "Christian",
+      role: "manager" as const,
+    };
+    const fake = await signUpForEvent(EVENT, person(4));
+    if (!fake.ok) throw new Error(fake.reason);
+    await confirmSignup(fake.signup.id, fake.token);
+    expect(await removeSignup(fake.signup.id, christian)).toBe(true);
+    expect(await removeSignup(fake.signup.id, christian)).toBe(false);
+    expect(
+      await db.auditLog.count({
+        where: { action: "content.signup.remove", targetId: fake.signup.id },
+      })
+    ).toBe(1);
+    expect(await signUpForEvent(EVENT, person(4))).toMatchObject({
+      ok: true,
+      seatsLeft: 8,
+    });
   });
 
   it("refuses unclear details", async () => {

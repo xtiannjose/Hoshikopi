@@ -32,6 +32,7 @@ export {
   cancelSignup,
   confirmSignup,
   HOLD_MINUTES,
+  removeSignup,
   signupForGuest,
   signUpForEvent,
   signupsForEvent,

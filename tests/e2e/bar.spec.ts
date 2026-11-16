@@ -164,9 +164,19 @@ test(
       page.getByText("The bar is extra busy right now")
     ).toBeVisible();
 
-    // End it from the Bar Screen too; afterEach covers a failure.
-    await page.goto("/bar");
+    // Manage shows it too, and ends it (audit staff:4); afterEach covers a
+    // failure.
+    await page.goto("/manage");
+    await expect(page.getByRole("link", { name: /Ordering/ })).toContainText(
+      "Busy Mode +15 min until"
+    );
+    await page.goto("/manage/hours");
+    const busy = page.getByRole("status").filter({ hasText: "Busy Mode" });
+    await expect(busy).toContainText("Busy Mode: Prep Time +15 min until");
+    await expect(page.getByText("with Busy Mode's +15")).toBeVisible();
     await page.getByRole("button", { name: "End Busy Mode" }).click();
+    await expect(busy).toHaveCount(0);
+    await page.goto("/bar");
     await expect(banner).toHaveCount(0);
   }
 );

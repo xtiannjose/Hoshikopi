@@ -259,11 +259,11 @@ async function Report({
             <dt>Taken back on Refunds</dt>
             <dd className="text-right tabular-nums">{stars.takenBack}</dd>
             <dt>
-              <Link href="/manage/stars">Adjusted by a Manager</Link>
+              <Link href="/manage/stars">Given by a Manager</Link>
             </dt>
-            <dd className="text-right tabular-nums">
-              {stars.adjusted > 0 ? `+${stars.adjusted}` : stars.adjusted}
-            </dd>
+            <dd className="text-right tabular-nums">+{stars.given}</dd>
+            <dt>Taken back by a Manager</dt>
+            <dd className="text-right tabular-nums">-{stars.taken}</dd>
           </dl>
         </Panel>
         <Panel
@@ -272,9 +272,7 @@ async function Report({
           icon={<XCircleIcon size={20} />}
         >
           <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2">
-            <dt>
-              <Link href="/manage/orders">Cancelled</Link>
-            </dt>
+            <dt>Cancelled</dt>
             <dd className="text-right tabular-nums">
               {sales.outcomes.cancelled}
             </dd>
@@ -282,9 +280,7 @@ async function Report({
             <dd className="text-right tabular-nums">
               {sales.outcomes.expired}
             </dd>
-            <dt>
-              <Link href="/manage/orders">Refunded</Link>
-            </dt>
+            <dt>Refunded</dt>
             <dd className="text-right tabular-nums">
               {sales.outcomes.refunded}
             </dd>

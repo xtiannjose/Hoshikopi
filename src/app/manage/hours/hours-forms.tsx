@@ -178,11 +178,14 @@ export function CapacityForm({
   capacity,
   prep,
   example,
+  busyMinutes,
 }: {
   capacity: { weekday: number; drinks: number; food: number }[];
   prep: { baseMinutes: number; perDrinkMinutes: number };
   /** Prep Time with 4 drinks ahead, from the cafe module's prepMinutes. */
   example: number;
+  /** Busy Mode's minutes while it runs; they are in `example` too. */
+  busyMinutes?: number;
 }) {
   const [state, action, pending] = useActionState(saveCapacityAction, idle);
   const form = useKeptForm(action, state);
@@ -258,7 +261,8 @@ export function CapacityForm({
           Prep Time: base + minutes per drink queued ahead
         </legend>
         <p className="text-muted-foreground text-sm sm:col-span-2">
-          Right now: with 4 drinks ahead, about {example} minutes.
+          Example: with 4 drinks ahead, about {example} minutes
+          {busyMinutes ? `, with Busy Mode's +${busyMinutes}` : ""}.
         </p>
         <Field
           name="baseMinutes"

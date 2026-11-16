@@ -200,7 +200,7 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.6 Sign-in.** Done 2026-11-15: sign-in tokens are stored only as hashes, deleting an account ends its pending links, a stranger can't use up someone's links, Google sign-in starts are limited per IP, a used link says so and keeps where it was going, and a hidden character or a broken address no longer gives a 500.
 - [x] **10.7 Staff roles and the Second Factor.** Done 2026-11-15: a Manager-level check always asks for the Second Factor and a pass lasts 12 hours, Sign out everywhere stops the Bar Screen at once, Add Staff never demotes anyone, every Staff action is tested for its role, and Baristas mark Sold Out on the Bar Screen without an authenticator.
 - [x] **10.8 Manager inputs.** Done 2026-11-15: a price over PHP 100,000 gets plain words, Stars adjustments stop at 50 and never touch a Manager's own, a Closed day needs no times, the Barista Pick refusal names the picks, Special Hours for today say how many Orders are booked after closing, and Options can be Hidden while an unused Option Group or a draft Post can be deleted.
-- [ ] **10.9 Manager numbers and Sign-ups.** 6 items, effort S each.
+- [x] **10.9 Manager numbers and Sign-ups.** Done 2026-11-16: a New Inquiry is never cut off, Reports show Stars given and taken apart, the day's total reads Booked while Sales means Picked Up only, Busy Mode shows on Manage and ends from Hours, and a Manager removes a Sign-up (audited, Seats back) and is warned before stranding guests.
 - [ ] **10.10 Bar Screen.** 5 items, effort S each.
 - [ ] **10.11 Database rules.** 5 items, effort S each.
 - [ ] **10.12 Account data and retention.** 5 items, effort S to M.

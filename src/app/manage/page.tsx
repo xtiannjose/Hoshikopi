@@ -167,7 +167,10 @@ async function Who() {
   const ordering = state.canOrder
     ? {
         value: "Taking orders",
-        note: `Last order ${formatTime(state.lastOrderAt)}`,
+        // Customers see longer times while Busy Mode runs (audit staff:4).
+        note: day.busy
+          ? `Busy Mode +${day.busy.minutes} min until ${formatTime(day.busy.until)}`
+          : `Last order ${formatTime(state.lastOrderAt)}`,
       }
     : state.reason === "paused"
       ? { value: "Paused", note: `Until ${formatTime(state.until)}` }
@@ -218,7 +221,7 @@ async function Who() {
             value={ordering.value}
             note={ordering.note}
             href={manager ? "/manage/hours" : undefined}
-            tone={state.canOrder ? "good" : "plain"}
+            tone={day.busy ? "attention" : state.canOrder ? "good" : "plain"}
           />
           <Stat
             label="Live orders"
@@ -243,7 +246,7 @@ async function Who() {
             <Stat
               label="Today so far"
               value={sold.count === 1 ? "1 order" : `${sold.count} orders`}
-              note={formatPrice(sold.totalCents)}
+              note={`${formatPrice(sold.totalCents)} booked`}
               href="/manage/orders"
             />
           )}
