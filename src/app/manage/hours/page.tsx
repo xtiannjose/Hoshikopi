@@ -23,7 +23,12 @@ import {
 } from "@/modules/cafe";
 import { requireStaff } from "@/modules/identity";
 
-import { deleteSpecialHoursAction, pauseAction, resumeAction } from "./actions";
+import {
+  deleteSpecialHoursAction,
+  endBusyAction,
+  pauseAction,
+  resumeAction,
+} from "./actions";
 import { CapacityForm, SpecialHoursForm, WeeklyHoursForm } from "./hours-forms";
 
 export const metadata: Metadata = { title: "Hours and Capacity" };
@@ -81,6 +86,25 @@ async function Editor() {
             title="Ordering Paused"
             icon={<PauseCircleIcon size={20} />}
           >
+            {/* Busy Mode starts on the Bar Screen; here it shows and ends
+                (audit staff:4). */}
+            {day.busy && (
+              <form
+                action={endBusyAction}
+                className="mb-6 grid justify-items-start gap-3"
+              >
+                <p role="status" className="text-warning font-semibold">
+                  Busy Mode: Prep Time +{day.busy.minutes} min until{" "}
+                  {formatTime(day.busy.until)}. Customers see the longer times.
+                </p>
+                <button
+                  type="submit"
+                  className="border-input min-h-12 rounded-full border px-6 font-semibold"
+                >
+                  End Busy Mode
+                </button>
+              </form>
+            )}
             {hours.pausedUntil ? (
               <form
                 action={resumeAction}
@@ -204,7 +228,8 @@ async function Editor() {
               <CapacityForm
                 capacity={hours.capacity}
                 prep={hours.prep}
-                example={prepMinutes(4, hours.prep)}
+                example={prepMinutes(4, day.prep)}
+                busyMinutes={day.busy?.minutes}
               />
             </div>
           </Panel>

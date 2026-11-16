@@ -113,7 +113,7 @@ On while the fake payment provider runs (locally and on the `*.vercel.app` demo)
 _Avoid_: Sandbox, test mode (that is the payments' Test Mode)
 
 **Busy Mode**:
-During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen; it ends by itself. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
+During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen; it ends by itself, or from the Bar Screen or Manage Hours. Manage shows it while it runs. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
 _Avoid_: Rush mode, delay mode, snooze
 
 **Sales**:
