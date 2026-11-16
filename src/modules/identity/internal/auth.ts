@@ -13,6 +13,13 @@ export function googleEnabled(): boolean {
 
 export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
+  // Better Auth counts until a full window passes with no request, so the
+  // end-to-end run, 60+ sign-ins from one IP with no minute's pause, ran
+  // into it near the end. Only that run sets AUTH_RATE_LIMIT=off; otherwise
+  // Better Auth's default holds (on in production).
+  rateLimit: {
+    enabled: process.env.AUTH_RATE_LIMIT === "off" ? false : undefined,
+  },
   session: {
     // A signed copy of the session in a cookie saves a database read per
     // page; a sign-out elsewhere takes effect within 5 minutes.
