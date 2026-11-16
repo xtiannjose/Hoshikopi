@@ -1,6 +1,10 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { refresh, updateTag } from "next/cache";
+
+// Only changes to cached data expire the "hours" tag: Opening Hours, Special
+// Hours and the cafe's details. Pause, Busy Mode, Capacity and Prep Time are
+// read fresh, so those saves just refresh the page (audit PERF-13).
 
 import {
   BUSY_FOR_MINUTES,
@@ -112,7 +116,7 @@ export async function saveCapacityAction(
     staff
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("hours");
+  refresh();
   return { status: "saved" };
 }
 
@@ -124,13 +128,13 @@ export async function pauseAction(form: FormData) {
     720
   );
   await pauseOrdering(minutes, text(form, "message"), staff);
-  updateTag("hours");
+  refresh();
 }
 
 export async function resumeAction() {
   const staff = await manager();
   await resumeOrdering(staff);
-  updateTag("hours");
+  refresh();
 }
 
 /** Busy Mode from the Bar Screen (8.4): only the offered amounts go in. */
@@ -145,11 +149,11 @@ export async function busyAction(form: FormData) {
     return;
   }
   await startBusyMode(minutes, forMinutes, staff);
-  updateTag("hours");
+  refresh();
 }
 
 export async function endBusyAction() {
   const staff = await manager();
   await endBusyMode(staff);
-  updateTag("hours");
+  refresh();
 }
