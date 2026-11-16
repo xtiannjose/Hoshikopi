@@ -18,8 +18,8 @@ import { formatPrice } from "@/lib/money";
 import { afterLastOrder } from "@/lib/hours";
 import { getHours, orderingState } from "@/modules/cafe";
 import {
+  currentCart,
   currentCartOwner,
-  getCart,
   MAX_LINE_QUANTITY,
   type CartLineView,
 } from "@/modules/cart";
@@ -75,7 +75,8 @@ async function LeftOut({
 
 async function Cart() {
   const owner = await currentCartOwner();
-  const cart = owner ? await getCart(owner) : null;
+  // Shared with the header's Cart button: priced once (architecture:13).
+  const cart = await currentCart();
   if (!cart || cart.lines.length === 0) {
     return (
       <div className="mt-8">

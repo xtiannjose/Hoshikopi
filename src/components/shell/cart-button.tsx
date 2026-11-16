@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BagIcon } from "@phosphor-icons/react/ssr";
 
 import { formatPrice } from "@/lib/money";
-import { currentCartOwner, getCart } from "@/modules/cart";
+import { currentCart } from "@/modules/cart";
 
 import { CartCount } from "./cart-count";
 
@@ -23,8 +23,7 @@ export function CartLink() {
 /** Cart with its count and total, read per browser (inside Suspense). An
  * empty Cart keeps an empty CartCount, so the first Add to order bumps. */
 export async function CartButton() {
-  const owner = await currentCartOwner();
-  const cart = owner ? await getCart(owner) : null;
+  const cart = await currentCart();
   const count = cart?.lines.reduce((sum, line) => sum + line.quantity, 0) ?? 0;
   return (
     <Link href="/cart" className={linkClass}>
