@@ -5,12 +5,14 @@ import { Suspense } from "react";
 import { ArrowSquareOutIcon, CheckCircleIcon } from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
+import { DeleteForm } from "@/components/delete-form";
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, Pill } from "@/components/panel";
 import { formatDate } from "@/lib/clock";
 import { contentForStaff } from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
+import { deletePostAction } from "../../content-actions";
 import { PostForm, type PostFormData } from "../../content-forms";
 
 export const metadata: Metadata = { title: "Post" };
@@ -102,6 +104,14 @@ async function Editor({
         </p>
       )}
       <PostForm post={post} />
+      {post.id && !post.isPublished && (
+        <DeleteForm
+          action={deletePostAction}
+          id={post.id}
+          label="Delete this draft"
+          note="It was never on the site, so no link breaks. This can't be undone."
+        />
+      )}
     </div>
   );
 }

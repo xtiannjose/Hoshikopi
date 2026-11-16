@@ -200,6 +200,7 @@ const detailSelect = {
           minSelect: true,
           maxSelect: true,
           options: {
+            where: { isHidden: false },
             orderBy: { sort: "asc" },
             select: {
               id: true,
@@ -332,7 +333,7 @@ export async function getPricedOptions(): Promise<
   cacheTag("menu");
   cacheLife("minutes");
   return db.option.findMany({
-    where: { deltaCents: { gt: 0 } },
+    where: { deltaCents: { gt: 0 }, isHidden: false },
     orderBy: [{ optionGroup: { sort: "asc" } }, { sort: "asc" }],
     select: { name: true, deltaCents: true },
   });

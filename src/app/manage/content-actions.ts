@@ -3,7 +3,12 @@
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { saveEvent, savePost, saveRecurringEvent } from "@/modules/content";
+import {
+  deletePost,
+  saveEvent,
+  savePost,
+  saveRecurringEvent,
+} from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
 export type ContentFormState = {
@@ -63,6 +68,12 @@ export async function savePostAction(
   updateTag("content");
   if (!id) redirect(`/manage/posts/${result.id}?added=1`);
   return { status: "saved" };
+}
+
+/** Deletes a draft Post (audit staff:9); drafts are not on the site. */
+export async function deletePostAction(form: FormData) {
+  const staff = await requireStaff("manager", "/manage/posts");
+  if (await deletePost(text(form, "id"), staff)) redirect("/manage/posts");
 }
 
 /** Managers write Recurring Events (EVT-03). */

@@ -6,6 +6,7 @@ import {
   readEvents,
   readPosts,
   saveEvent,
+  deletePost,
   savePost,
 } from "@/modules/content";
 
@@ -57,6 +58,29 @@ describe("Events (EVT-01)", () => {
       "open-mic-under-the-stars",
     ]);
     expect(past.map((e) => e.slug)).toEqual(["old-cupping"]);
+  });
+
+  // A price past the column's range gave a 500 (audit staff:6).
+  it("refuses an Event price over PHP 100,000", async () => {
+    const result = await saveEvent(
+      null,
+      {
+        title: "Big night",
+        slug: "big-night",
+        startsAt: "2026-11-12T19:00",
+        endsAt: "2026-11-12T21:00",
+        summary: "One line.",
+        bodyMd: "Body.",
+        price: "250000",
+        signupUrl: "",
+        isPublished: "on",
+      },
+      christian
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      errors: { price: "Use PHP 100,000 or less, or leave it empty for free." },
+    });
   });
 
   it("saves an Event in Manila time and refuses an end before the start", async () => {
@@ -111,5 +135,35 @@ describe("Posts (NEWS-01)", () => {
     expect(
       staff.posts.find((p) => p.slug === "ube-season")?.publishedAt
     ).toBeNull();
+  });
+
+  // Test and abandoned drafts stayed in the Staff list for good (audit
+  // staff:9).
+  it("deletes a draft Post, never a published one", async () => {
+    const published = await db.post.findUniqueOrThrow({
+      where: { slug: "our-beans-from-benguet" },
+    });
+    expect(await deletePost(published.id, christian)).toBe(false);
+    expect(await db.post.count({ where: { id: published.id } })).toBe(1);
+
+    const draft = await savePost(
+      null,
+      {
+        title: "Test draft",
+        slug: "test-draft",
+        excerpt: "Nothing yet.",
+        bodyMd: "Draft.",
+        isPublished: undefined,
+      },
+      christian
+    );
+    if (!draft.ok) throw new Error("not saved");
+    expect(await deletePost(draft.id, christian)).toBe(true);
+    expect(await db.post.count({ where: { id: draft.id } })).toBe(0);
+    expect(
+      await db.auditLog.count({
+        where: { action: "content.post.delete", targetId: draft.id },
+      })
+    ).toBe(1);
   });
 });

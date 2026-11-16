@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { requireStaff } from "@/modules/identity";
 import {
+  deleteOptionGroup,
   saveCategory,
   saveMenuItem,
   saveOption,
@@ -119,6 +120,7 @@ export async function saveOptionAction(
       name: text(form, "name"),
       priceDelta: text(form, "priceDelta"),
       isDefault: form.get("isDefault") ?? undefined,
+      isHidden: form.get("isHidden") ?? undefined,
       addsAllergens: all(
         form,
         "addsAllergens"
@@ -130,4 +132,13 @@ export async function saveOptionAction(
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("menu");
   return { status: "saved" };
+}
+
+/** Deletes an Option Group no Menu Item offers (audit staff:9). */
+export async function deleteOptionGroupAction(form: FormData) {
+  const staff = await requireStaff("manager", "/manage/menu");
+  if (await deleteOptionGroup(text(form, "id"), staff)) {
+    updateTag("menu");
+    redirect("/manage/menu");
+  }
 }

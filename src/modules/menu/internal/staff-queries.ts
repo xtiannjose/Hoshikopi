@@ -43,6 +43,7 @@ export async function getMenuForStaff() {
         name: option.name,
         deltaCents: option.deltaCents,
         isDefault: option.isDefault,
+        isHidden: option.isHidden,
         addsAllergens: option.addsAllergens,
         sort: option.sort,
         soldOut: soldOutToday(option.soldOutOn),

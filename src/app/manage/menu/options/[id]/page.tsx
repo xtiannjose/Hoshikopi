@@ -5,12 +5,14 @@ import { Fragment, Suspense } from "react";
 import { CheckCircleIcon, PlusIcon } from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
+import { DeleteForm } from "@/components/delete-form";
 import { PageHeader } from "@/components/page-header";
 import { Panel } from "@/components/panel";
 import { formatDelta, formatReceipt } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
 import { getMenuForStaff, itemsOfferingGroup } from "@/modules/menu";
 
+import { deleteOptionGroupAction } from "../../actions";
 import { GroupForm, OptionForm } from "./option-forms";
 
 export const metadata: Metadata = { title: "Option Group" };
@@ -94,34 +96,44 @@ async function Editor({
         <div className="grid gap-2 sm:grid-cols-[9rem_minmax(0,1fr)]">
           <dt className="font-semibold">Customers see</dt>
           <dd>
-            {group.options.length === 0 ? (
-              "Nothing yet. Add an Option below."
+            {group.options.every((option) => option.isHidden) ? (
+              "Nothing yet. Add an Option below, or untick Hidden on one."
             ) : (
               <ul className="flex flex-wrap gap-2">
-                {group.options.map((option) => (
-                  <li
-                    key={option.id}
-                    className={`rounded-full border px-4 py-1.5 text-sm font-semibold ${
-                      option.isDefault
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : option.soldOut
-                          ? "border-border text-muted-foreground"
-                          : "border-input"
-                    }`}
-                  >
-                    {option.name} {formatDelta(option.deltaCents)}
-                    {option.soldOut && (
-                      <span className="sr-only"> (sold out today)</span>
-                    )}
-                  </li>
-                ))}
+                {group.options
+                  .filter((option) => !option.isHidden)
+                  .map((option) => (
+                    <li
+                      key={option.id}
+                      className={`rounded-full border px-4 py-1.5 text-sm font-semibold ${
+                        option.isDefault
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : option.soldOut
+                            ? "border-border text-muted-foreground"
+                            : "border-input"
+                      }`}
+                    >
+                      {option.name} {formatDelta(option.deltaCents)}
+                      {option.soldOut && (
+                        <span className="sr-only"> (sold out today)</span>
+                      )}
+                    </li>
+                  ))}
               </ul>
             )}
           </dd>
         </div>
       </dl>
-      <div className="mt-10">
+      <div className="mt-10 grid gap-6">
         <GroupForm group={group} />
+        {offeredBy.length === 0 && (
+          <DeleteForm
+            action={deleteOptionGroupAction}
+            id={group.id}
+            label="Delete this Option Group"
+            note="No Menu Item offers it, so nothing on the menu changes. Its Options go too. Past Orders keep their own copy."
+          />
+        )}
       </div>
       <h2 className="font-display mt-14 pb-1 text-3xl italic">Options</h2>
       <div className="mt-6 grid gap-6 xl:grid-cols-2 xl:items-start">
@@ -145,6 +157,7 @@ async function Editor({
               name: "",
               priceDelta: "0",
               isDefault: false,
+              isHidden: false,
               addsAllergens: [],
               sort: group.options.length,
             }}

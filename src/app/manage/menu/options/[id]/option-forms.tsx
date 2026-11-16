@@ -77,6 +77,7 @@ export function OptionForm({
     name: string;
     priceDelta: string;
     isDefault: boolean;
+    isHidden: boolean;
     addsAllergens: string[];
     sort: number;
   };
@@ -132,6 +133,15 @@ export function OptionForm({
           className="size-5"
         />
         Picked by default
+      </label>
+      <label className="inline-flex min-h-11 items-center gap-2">
+        <input
+          type="checkbox"
+          name="isHidden"
+          defaultChecked={option.isHidden}
+          className="size-5"
+        />
+        Hidden: not on the menu (past Orders keep it)
       </label>
       <Checkboxes
         legend="Allergens it adds"

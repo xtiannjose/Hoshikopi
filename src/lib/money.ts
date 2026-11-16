@@ -45,6 +45,12 @@ export function formatReceipt(cents: number): string {
 const PESOS = /^(?:php)?\s*(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?$/i;
 
 /** "185", "35.5" or "PHP 1,250.00" -> centavos; null if unclear or negative. */
+/**
+ * The most a Manager may type for a price: PHP 100,000. The column holds
+ * about PHP 21 million, and a price past that gave a 500 (audit staff:6).
+ */
+export const MAX_PRICE_CENTS = 100_000_00;
+
 export function parsePesos(input: string): number | null {
   const match = PESOS.exec(input.trim());
   if (!match) return null;

@@ -2,8 +2,11 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import {
+  deleteOptionGroup,
+  priceChoices,
   saveMenuItem,
   saveOption,
+  saveOptionGroup,
   setMenuItemSoldOut,
   type MenuItemInput,
 } from "@/modules/menu";
@@ -83,6 +86,16 @@ describe("saveMenuItem", () => {
     expect(item.optionGroups).toHaveLength(6);
   });
 
+  // The column holds up to PHP 21 million, so a bigger price gave a 500
+  // and lost the form (audit staff:6).
+  it("refuses a price over PHP 100,000 in plain words", async () => {
+    const { id, input } = await latteInput({ basePrice: "100001" });
+    const result = await saveMenuItem(id, input, christian);
+    expect(!result.ok && result.errors.basePrice).toBe(
+      "Use PHP 100,000 or less."
+    );
+  });
+
   it("refuses a negative or unclear price", async () => {
     const { id, input } = await latteInput({ basePrice: "-5" });
     const result = await saveMenuItem(id, input, christian);
@@ -100,15 +113,44 @@ describe("saveMenuItem", () => {
 });
 
 describe("Barista Picks and Pairings (INFO-13, MENU-08)", () => {
+  // A Seasonal item past its date still held its pick, so Home showed two
+  // and the Manager was told the slots were full (audit staff:20).
+  it("does not count a pick whose Seasonal date has passed", async () => {
+    const [first] = await db.menuItem.findMany({
+      where: { badges: { has: "barista_pick" } },
+      orderBy: { name: "asc" },
+    });
+    await db.menuItem.update({
+      where: { id: first.id },
+      data: { availableUntil: new Date("2026-11-01") },
+    });
+    const coldBrew = await itemInput("cold-brew", {
+      badges: ["barista_pick"],
+    });
+    expect(
+      (await saveMenuItem(coldBrew.id, coldBrew.input, christian)).ok
+    ).toBe(true);
+  });
+
   it("allows three Barista Picks per palette", async () => {
     // The seed picks three for Day and three for Night.
     const coldBrew = await itemInput("cold-brew", {
       badges: ["barista_pick"],
     });
+    // It names the three, so the Manager knows which to untick (audit
+    // staff:20).
+    const picks = (
+      await db.menuItem.findMany({
+        where: { badges: { has: "barista_pick" } },
+        orderBy: { name: "asc" },
+        select: { name: true },
+      })
+    ).map((item) => item.name);
+    const [a, b, c] = picks;
     expect(await saveMenuItem(coldBrew.id, coldBrew.input, christian)).toEqual({
       ok: false,
       errors: {
-        badges: "Three Day Barista Picks already. Untick one of them first.",
+        badges: `Three Day Barista Picks already: ${a}, ${b} and ${c}. Untick one of them first.`,
       },
     });
     const night = await itemInput("cold-brew", { badges: ["night_pick"] });
@@ -184,6 +226,7 @@ describe("saveOption", () => {
         name: "Oat milk",
         priceDelta: "35",
         isDefault: "on",
+        isHidden: undefined,
         addsAllergens: [],
         sort: String(oat.sort),
       },
@@ -193,5 +236,72 @@ describe("saveOption", () => {
       where: { optionGroupId: milk.id, isDefault: true },
     });
     expect(defaults.map((o) => o.name)).toEqual(["Oat milk"]);
+  });
+
+  // A mistyped or discontinued Option stayed on every Menu Item that used
+  // its group (audit staff:9).
+  it("hides an Option, and a Hidden Option is never priced", async () => {
+    const latte = await db.menuItem.findUniqueOrThrow({
+      where: { slug: "hoshi-latte" },
+      include: {
+        optionGroups: {
+          include: { optionGroup: { include: { options: true } } },
+        },
+      },
+    });
+    const milk = latte.optionGroups.find(
+      (g) => g.optionGroup.name === "Milk"
+    )!.optionGroup;
+    const oat = milk.options.find((o) => o.name === "Oat milk")!;
+    const optionIds = latte.optionGroups.flatMap(({ optionGroup }) =>
+      optionGroup.id === milk.id
+        ? [oat.id]
+        : optionGroup.options
+            .filter((o) => o.isDefault)
+            .slice(0, Math.max(optionGroup.minSelect, 1))
+            .map((o) => o.id)
+    );
+    const choice = { menuItemId: latte.id, optionIds };
+    expect((await priceChoices([choice]))[0].ok).toBe(true);
+    await saveOption(
+      oat.id,
+      {
+        optionGroupId: milk.id,
+        name: oat.name,
+        priceDelta: String(oat.deltaCents / 100),
+        isDefault: undefined,
+        isHidden: "on",
+        addsAllergens: oat.addsAllergens as never,
+        sort: String(oat.sort),
+      },
+      christian
+    );
+    expect(await priceChoices([choice])).toEqual([
+      { ok: false, reason: "invalid_options" },
+    ]);
+  });
+});
+
+describe("deleteOptionGroup (audit staff:9)", () => {
+  it("deletes an Option Group no Menu Item offers, never one in use", async () => {
+    const milk = await db.optionGroup.findFirstOrThrow({
+      where: { name: "Milk" },
+    });
+    expect(await deleteOptionGroup(milk.id, christian)).toBe(false);
+    expect(await db.optionGroup.count({ where: { id: milk.id } })).toBe(1);
+
+    const added = await saveOptionGroup(
+      null,
+      { name: "Test group", minSelect: "0", maxSelect: "1" },
+      christian
+    );
+    if (!added.ok) throw new Error("not saved");
+    expect(await deleteOptionGroup(added.id, christian)).toBe(true);
+    expect(await db.optionGroup.count({ where: { id: added.id } })).toBe(0);
+    expect(
+      await db.auditLog.count({
+        where: { action: "menu.option_group.delete", targetId: added.id },
+      })
+    ).toBe(1);
   });
 });

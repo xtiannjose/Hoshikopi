@@ -35,7 +35,7 @@ A Menu Item or Option that cannot be ordered today but stays visible on the menu
 _Avoid_: Out of stock, unavailable (for Hidden items)
 
 **Hidden**:
-A Menu Item that does not appear on the menu at all (retired, or seasonal and off-season).
+A Menu Item or Option that does not appear on the menu at all (retired, or seasonal and off-season). Past Orders keep their copy.
 _Avoid_: Disabled, archived, deleted
 
 **Promo**:

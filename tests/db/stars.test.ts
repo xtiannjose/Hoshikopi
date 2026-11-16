@@ -111,6 +111,27 @@ describe("earning Stars (LOY-01)", () => {
 });
 
 describe("Manager adjustments (LOY-05)", () => {
+  // The form said "Up to 50 at a time" but any amount saved, and a
+  // Manager could give Stars to themselves (audit staff:11).
+  it("refuses more than 50 Stars at a time, and a Manager's own account", async () => {
+    expect(await adjustStars(HOSHI, 51, "Big gift", christian)).toEqual({
+      ok: false,
+      reason: "too_many",
+    });
+    expect(await adjustStars(HOSHI, -51, "Big mistake", christian)).toEqual({
+      ok: false,
+      reason: "too_many",
+    });
+    expect(await adjustStars("seed-manager", 5, "For me", christian)).toEqual({
+      ok: false,
+      reason: "self",
+    });
+    expect(await balance(HOSHI)).toBe(0);
+    expect(await adjustStars(HOSHI, 50, "Welcome gift", christian)).toEqual({
+      ok: true,
+    });
+  });
+
   it("adds or removes Stars with a reason, never below zero", async () => {
     expect(await adjustStars(HOSHI, 3, "Welcome gift", christian)).toEqual({
       ok: true,

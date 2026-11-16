@@ -14,11 +14,16 @@ import {
   saveWeeklyHours,
   startBusyMode,
 } from "@/modules/cafe";
+import { manila, manilaInstant, now } from "@/lib/clock";
+import { toMinutes } from "@/lib/hours";
 import { requireStaff } from "@/modules/identity";
+import { ordersBookedAfter } from "@/modules/ordering";
 
 export type FormState = {
   status: "idle" | "saved" | "error";
   errors?: Partial<Record<string, string>>;
+  /** What the save bar says when saved, if not just "Saved.". */
+  saved?: string;
 };
 
 const text = (form: FormData, name: string) => String(form.get(name) ?? "");
@@ -65,6 +70,21 @@ export async function saveSpecialHoursAction(
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("hours");
+  // Closing or shortening today can leave Orders after the new closing:
+  // say how many, so the Manager can cancel them (audit ORD-20).
+  const day = text(form, "day");
+  if (day === manila(now()).day) {
+    const closesAt = text(form, "closesAt");
+    const booked = await ordersBookedAfter(
+      isClosed || !closesAt ? now() : manilaInstant(day, toMinutes(closesAt))
+    );
+    if (booked > 0) {
+      return {
+        status: "saved",
+        saved: `Saved. ${booked === 1 ? "1 Order today is" : `${booked} Orders today are`} booked after the new closing. Cancel ${booked === 1 ? "it" : "them"} with a reason on the Orders page.`,
+      };
+    }
+  }
   return { status: "saved" };
 }
 

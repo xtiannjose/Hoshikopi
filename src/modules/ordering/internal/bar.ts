@@ -93,6 +93,19 @@ export async function cancelUncollected(at: Date): Promise<number> {
   return cancelled;
 }
 
+/**
+ * Open Orders in Pickup Windows from `at` on: those a Special Hours change
+ * for today leaves after the new closing (audit ORD-20).
+ */
+export async function ordersBookedAfter(at: Date): Promise<number> {
+  return db.order.count({
+    where: {
+      windowStart: { gte: at },
+      status: { in: ["placed", "paid", "accepted", "preparing", "ready"] },
+    },
+  });
+}
+
 export type BarOrder = {
   id: string;
   code: string;

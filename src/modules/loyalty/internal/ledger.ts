@@ -80,7 +80,14 @@ export async function reverseForOrder(
 
 export type AdjustResult =
   | { ok: true }
-  | { ok: false; reason: "not_allowed" | "reason_required" | "below_zero" };
+  | {
+      ok: false;
+      reason:
+        "not_allowed" | "reason_required" | "below_zero" | "too_many" | "self";
+    };
+
+/** The most Stars a Manager adds or removes at a time (the form says so). */
+export const MAX_ADJUST = 50;
 
 /** A Manager adds or removes Stars, with a reason (LOY-05). */
 export async function adjustStars(
@@ -97,6 +104,10 @@ export async function adjustStars(
   if (!Number.isInteger(stars) || stars === 0) {
     return { ok: false, reason: "reason_required" };
   }
+  // The form's limit, held on the server too, and never a Manager's own
+  // balance (audit staff:11).
+  if (Math.abs(stars) > MAX_ADJUST) return { ok: false, reason: "too_many" };
+  if (memberId === actor.id) return { ok: false, reason: "self" };
   const managerId = actor.id;
   return db.$transaction(async (tx): Promise<AdjustResult> => {
     await lockMember(tx, memberId);

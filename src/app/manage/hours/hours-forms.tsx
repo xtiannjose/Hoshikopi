@@ -168,6 +168,7 @@ export function SpecialHoursForm({ today }: { today: string }) {
         pending={pending}
         status={state.status}
         label="Add Special Hours"
+        savedText={state.saved}
       />
     </form>
   );

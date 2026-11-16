@@ -106,6 +106,8 @@ model Option {
   isDefault     Boolean     @default(false) @map("is_default")
   addsAllergens String[]    @default([]) @map("adds_allergens")
   soldOutOn     DateTime?   @map("sold_out_on") @db.Date
+  /// Left out of the menu and never priced (audit staff:9).
+  isHidden      Boolean     @default(false) @map("is_hidden")
   sort          Int         @default(0)
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
