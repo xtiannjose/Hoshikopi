@@ -16,8 +16,8 @@ test.beforeEach(({}, testInfo) => {
 /**
  * A Staff change shows on the public menu within seconds (MENU-04). The
  * first visit after a change may get the old page while Next renders the
- * new one, and a save under another tag at the same moment can delay it
- * until the one-minute lifetime runs out, so look again until it shows.
+ * new one, so look again, but only for 20 seconds: the menu readers
+ * revalidate every 10 (audit staff:2, tests:12; it once took 2 minutes).
  */
 async function expectOnMenu(
   page: Page,
@@ -30,7 +30,7 @@ async function expectOnMenu(
     await expect(
       page.getByRole("article").filter({ hasText: item })
     ).toContainText(text, { timeout: 1_000 });
-  }).toPass({ timeout: 150_000 });
+  }).toPass({ timeout: 20_000 });
 }
 
 test(

@@ -162,7 +162,7 @@ function toCard(row: CardRow, today: string): MenuItemCard {
 export async function getMenu(): Promise<MenuCategory[]> {
   "use cache";
   cacheTag("menu");
-  cacheLife("minutes");
+  cacheLife("menu");
   const today = manila(now()).day;
   const categories = await db.category.findMany({
     where: { isHidden: false },
@@ -281,7 +281,7 @@ export async function getMenuItem(
 ): Promise<MenuItemDetail | null> {
   "use cache";
   cacheTag("menu");
-  cacheLife("minutes");
+  cacheLife("menu");
   const today = manila(now()).day;
   const row = await db.menuItem.findFirst({
     where: { slug, ...visibleItem, ...inSeasonWhere(today) },
@@ -317,11 +317,24 @@ export async function menuSlugs(): Promise<{
 }> {
   "use cache";
   cacheTag("menu");
-  cacheLife("minutes");
-  const menu = await getMenu();
+  cacheLife("menu");
+  // Its own read, not getMenu nested in another cache (audit staff:2).
+  const today = manila(now()).day;
+  const categories = await db.category.findMany({
+    where: { isHidden: false },
+    orderBy: { sort: "asc" },
+    select: {
+      slug: true,
+      items: {
+        where: { isHidden: false, ...inSeasonWhere(today) },
+        orderBy: { sort: "asc" },
+        select: { slug: true },
+      },
+    },
+  });
   return {
-    categories: menu.map((category) => category.slug),
-    items: menu.flatMap((category) => category.items.map((item) => item.slug)),
+    categories: categories.map((category) => category.slug),
+    items: categories.flatMap((category) => category.items.map((i) => i.slug)),
   };
 }
 
@@ -331,7 +344,7 @@ export async function getPricedOptions(): Promise<
 > {
   "use cache";
   cacheTag("menu");
-  cacheLife("minutes");
+  cacheLife("menu");
   return db.option.findMany({
     where: { deltaCents: { gt: 0 }, isHidden: false },
     orderBy: [{ optionGroup: { sort: "asc" } }, { sort: "asc" }],
