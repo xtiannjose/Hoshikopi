@@ -189,9 +189,16 @@ export async function releaseRedemption(
   });
 }
 
-/** Deleting an account forgets its Star history (ACC-03). */
-export async function forgetStars(memberId: string) {
-  await db.starEntry.deleteMany({ where: { memberId } });
+/**
+ * Deleting an account (ACC-03) keeps its Star entries, so the Manager's past
+ * totals don't change, but drops the Manager's notes on them: the entries
+ * point at a scrubbed user row and hold nothing personal (audit DATA-08).
+ */
+export async function forgetStars(memberId: string, client: Client = db) {
+  await client.starEntry.updateMany({
+    where: { memberId, kind: "adjust" },
+    data: { reason: null },
+  });
 }
 
 /**

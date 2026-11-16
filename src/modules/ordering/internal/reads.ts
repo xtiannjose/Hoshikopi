@@ -1,6 +1,6 @@
 import type { OrderStatus } from "@/generated/prisma/enums";
 import { now } from "@/lib/clock";
-import { db } from "@/lib/db";
+import { db, type Client } from "@/lib/db";
 import {
   orderingState,
   type OrderingState,
@@ -274,10 +274,15 @@ export async function ordersForExport(memberId: string) {
     orderBy: { placedAt: "asc" },
     include: { lines: { orderBy: { createdAt: "asc" } } },
   });
+  // Everything the Order holds about the person (audit ID2-09).
   return orders.map((order) => ({
     code: order.code,
     placedAt: order.placedAt,
+    windowStart: order.windowStart,
     status: order.status,
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    customerPhone: order.customerPhone,
     paymentMethod: order.paymentMethod,
     totalCents: order.totalCents,
     lines: order.lines.map((line) => ({
@@ -285,6 +290,7 @@ export async function ordersForExport(memberId: string) {
       quantity: line.quantity,
       lineCents: line.lineCents,
       options: (line.options as { name: string }[]).map((o) => o.name),
+      note: line.note,
     })),
   }));
 }
@@ -294,8 +300,8 @@ export async function ordersForExport(memberId: string) {
  * the person: no Member link, name, phone or real email (ACC-03, docs/03
  * section 13). The email column needs a value, so it gets a placeholder.
  */
-export async function deidentifyOrders(memberId: string) {
-  await db.order.updateMany({
+export async function deidentifyOrders(memberId: string, client: Client = db) {
+  await client.order.updateMany({
     where: { memberId },
     data: {
       memberId: null,

@@ -214,6 +214,32 @@ describe("Event Sign-ups (EVT-02)", () => {
     });
   });
 
+  // The per-visitor limit and the Member auto-confirm lived in the Server
+  // Action, out of reach of these tests (audit architecture:9, tests:14).
+  it("takes two Sign-ups per visitor per Event a day, undoing a third", async () => {
+    const visitor = { key: "203.0.113.9" };
+    expect((await signUpForEvent(EVENT, person(1), visitor)).ok).toBe(true);
+    expect((await signUpForEvent(EVENT, person(1), visitor)).ok).toBe(true);
+    expect(await signUpForEvent(EVENT, person(1), visitor)).toEqual({
+      ok: false,
+      reason: "visitor_limit",
+    });
+    expect(await db.eventSignup.count()).toBe(2);
+  });
+
+  it("confirms a signed-in Member's own email at once, and waits for anyone else's", async () => {
+    const mine = await signUpForEvent(EVENT, person(1, "hoshi@example.com"), {
+      key: "v1",
+      memberEmail: "Hoshi@example.com",
+    });
+    const theirs = await signUpForEvent(EVENT, person(1), {
+      key: "v2",
+      memberEmail: "Hoshi@example.com",
+    });
+    expect(mine).toMatchObject({ ok: true, confirmed: true });
+    expect(theirs).toMatchObject({ ok: true, confirmed: false });
+  });
+
   it("refuses unclear details", async () => {
     const result = await signUpForEvent(EVENT, {
       name: " ",

@@ -15,6 +15,7 @@ export {
   type PostCard,
 } from "./internal/content";
 export { eventCalendar } from "./internal/calendar";
+export { forgetGuest, guestRecordsFor } from "./internal/guests";
 export {
   getRecurringEvents,
   readRecurringEvents,
@@ -34,6 +35,7 @@ export {
   HOLD_MINUTES,
   removeSignup,
   signupForGuest,
+  SIGNUPS_PER_VISITOR,
   signUpForEvent,
   signupsForEvent,
   type SignupView,

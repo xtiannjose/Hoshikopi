@@ -7,6 +7,7 @@ import { isPlainText, plainText } from "@/lib/text";
 import { Prisma } from "@/generated/prisma/client";
 import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
+import { takeToken } from "@/lib/rate-limit";
 import { audit, type Staff } from "@/modules/identity";
 
 /** How long a Sign-up holds its Seats before its email link confirms it. */
@@ -74,9 +75,11 @@ export type SignupResult =
       signup: { id: string; name: string; email: string; seats: number };
       /** For the email link that confirms or cancels it. */
       token: string;
+      /** Confirmed at once: a Member's own email, or the live demo. */
+      confirmed: boolean;
     }
   | { ok: false; reason: "invalid"; errors: Partial<Record<string, string>> }
-  | { ok: false; reason: "closed" | "already" }
+  | { ok: false; reason: "closed" | "already" | "visitor_limit" }
   | { ok: false; reason: "full" | "too_many_seats"; seatsLeft: number };
 
 type LockedEvent = {
@@ -89,12 +92,42 @@ type LockedEvent = {
   isPublished: boolean;
 };
 
+/** Sign-ups that went through, per visitor per Event per day (8.7). */
+export const SIGNUPS_PER_VISITOR = 2;
+
 /**
- * A Sign-up for an Event with Seats (EVT-02), until it starts. The Event's
- * row is locked while Seats are counted, so two at once never oversell. It
- * waits for its email link and holds the Seats for 30 minutes (8.7).
+ * A Sign-up for an Event with Seats (EVT-02), until it starts. With a
+ * `visitor` (the Sign-up form), only Sign-ups that go through count toward
+ * its daily limit, so a typo costs nothing, and one past it is undone
+ * (SEC2-02: one visitor can't book out an Event). A signed-in Member's own
+ * email is proven already, so it needs no link, and `confirmNow` (the live
+ * demo, which sends no email) confirms any (audit architecture:9, tests:14).
  */
 export async function signUpForEvent(
+  slug: string,
+  input: SignupInput,
+  visitor?: { key: string; memberEmail?: string | null; confirmNow?: boolean }
+): Promise<SignupResult> {
+  const held = await holdSeats(slug, input);
+  if (!held.ok || !visitor) return held;
+  const key = `signup-event:${held.event.slug}:${visitor.key}`;
+  if (!(await takeToken(key, SIGNUPS_PER_VISITOR, 86_400))) {
+    await db.eventSignup.deleteMany({ where: { id: held.signup.id } });
+    return { ok: false, reason: "visitor_limit" };
+  }
+  const own = visitor.memberEmail?.toLowerCase() === held.signup.email;
+  const confirmed =
+    (visitor.confirmNow || own) &&
+    (await confirmSignup(held.signup.id, held.token)).ok;
+  return { ...held, confirmed };
+}
+
+/**
+ * The Event's row is locked while Seats are counted, so two at once never
+ * oversell. The Sign-up waits for its email link and holds the Seats for 30
+ * minutes (8.7).
+ */
+async function holdSeats(
   slug: string,
   input: SignupInput
 ): Promise<SignupResult> {
@@ -152,6 +185,7 @@ export async function signUpForEvent(
         },
         signup: { id: signup.id, name, email, seats },
         token: signupToken(signup.id),
+        confirmed: false,
       };
     });
   } catch (error) {

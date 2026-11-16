@@ -328,9 +328,10 @@ export async function mergeGuestCart(
 }
 
 /** Deleting an account removes the Member's Cart and Favourites (ACC-03). */
-export async function deleteMemberCart(memberId: string) {
-  await db.$transaction([
-    db.cart.deleteMany({ where: { memberId } }),
-    db.favourite.deleteMany({ where: { memberId } }),
-  ]);
+export async function deleteMemberCart(memberId: string, client: Client = db) {
+  await inTransaction(client, async (tx) => {
+    await tx.cart.deleteMany({ where: { memberId } });
+    await tx.favourite.deleteMany({ where: { memberId } });
+  });
 }
+
