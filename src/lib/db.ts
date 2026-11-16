@@ -5,7 +5,15 @@ import { PrismaClient, type Prisma } from "@/generated/prisma/client";
 function createClient() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is not set");
-  return new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+  // A busy pool or a stale socket after a suspended instance fails within
+  // 5 s instead of queueing with no limit (audit ops:13).
+  return new PrismaClient({
+    adapter: new PrismaPg({
+      connectionString,
+      connectionTimeoutMillis: 5_000,
+      idleTimeoutMillis: 5_000,
+    }),
+  });
 }
 
 // Reuse one client across hot reloads in development.
