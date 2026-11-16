@@ -187,6 +187,31 @@ export function BarScreen({
     return () => clearInterval(timer);
   }, []);
 
+  // Keep the tablet awake: asleep, it stops polling and chiming (FEAT-11).
+  // The browser drops the lock when the page is hidden, so ask again.
+  useEffect(() => {
+    if (!("wakeLock" in navigator)) return undefined;
+    let lock: WakeLockSentinel | null = null;
+    let stopped = false;
+    const request = () => {
+      if (document.visibilityState !== "visible") return;
+      navigator.wakeLock.request("screen").then(
+        (sentinel) => {
+          if (stopped) void sentinel.release();
+          else lock = sentinel;
+        },
+        () => {}
+      );
+    };
+    request();
+    document.addEventListener("visibilitychange", request);
+    return () => {
+      stopped = true;
+      document.removeEventListener("visibilitychange", request);
+      void lock?.release().catch(() => {});
+    };
+  }, []);
+
   useEffect(() => {
     if (!notice) return undefined;
     const timer = setTimeout(() => setNotice(""), 5_000);
