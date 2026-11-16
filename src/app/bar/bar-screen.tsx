@@ -79,14 +79,28 @@ const MUTE_KEY = "hoshikopi-bar-muted";
 
 // One AudioContext for the whole shift: a new one per chime was never
 // closed, so a tablet left on the board piled them up (audit motion:6).
-// Browsers start it suspended until a tap; the sound toggle is one.
+// It is made on a tap, since browsers start one made without a tap
+// suspended, so a reloaded board chimed silently (audit staff:22).
 let audio: AudioContext | null = null;
+
+/** Makes or wakes the AudioContext from a tap; true once it can play. */
+function unlockAudio(): Promise<boolean> {
+  try {
+    audio ??= new AudioContext();
+    return audio.resume().then(
+      () => audio?.state === "running",
+      () => false
+    );
+  } catch {
+    return Promise.resolve(false);
+  }
+}
 
 /** A short two-note chime from the Web Audio API (no audio file). */
 function chime() {
+  // Before the first tap there is none: "Tap to turn on sound" shows.
+  if (!audio) return;
   try {
-    audio ??= new AudioContext();
-    // Before any tap the browser may refuse; the highlight still shows.
     if (audio.state === "suspended") audio.resume().catch(() => {});
     const ctx = audio;
     [880, 1320].forEach((frequency, i) => {
@@ -103,6 +117,13 @@ function chime() {
   } catch {
     // No audio on this device; the highlight still shows.
   }
+}
+
+/** A copy of `set` without `ids`. */
+function without(set: Set<string>, ids: string[]) {
+  const next = new Set(set);
+  ids.forEach((id) => next.delete(id));
+  return next;
 }
 
 /**
@@ -124,10 +145,12 @@ export function BarScreen({
   const [board, setBoard] = useState(initial);
   const [tapped, setTapped] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-  const [clock, setClock] = useState(() => formatTime(now()));
+  // The time on a 30 s tick: the clock, and which Orders are late.
+  const [at, setAt] = useState(() => now());
   const lanes = useRef<Partial<Record<Lane, HTMLHeadingElement | null>>>({});
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [muted, setMuted] = useState(false);
+  const [soundReady, setSoundReady] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [pending, startTransition] = useTransition();
   const known = useRef(new Set(initial.orders.map((o) => o.id)));
@@ -168,8 +191,11 @@ export function BarScreen({
     setBoard(data);
     if (arrived.length > 0) {
       if (!mutedRef.current) chime();
-      setFresh(new Set(arrived.map((o) => o.id)));
-      setTimeout(() => setFresh(new Set()), 4_000);
+      // Each arrival keeps its own 4 seconds; a later one no longer clears
+      // it early (audit motion:5).
+      const ids = arrived.map((o) => o.id);
+      setFresh((prev) => new Set([...prev, ...ids]));
+      setTimeout(() => setFresh((prev) => without(prev, ids)), 4_000);
     }
   }, []);
 
@@ -183,8 +209,33 @@ export function BarScreen({
 
   // A Manila clock for the counter; it shows no seconds, so 30 s will do.
   useEffect(() => {
-    const timer = setInterval(() => setClock(formatTime(now())), 30_000);
+    const timer = setInterval(() => setAt(now()), 30_000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Keep the tablet awake: asleep, it stops polling and chiming (FEAT-11).
+  // The browser drops the lock when the page is hidden, so ask again.
+  useEffect(() => {
+    if (!("wakeLock" in navigator)) return undefined;
+    let lock: WakeLockSentinel | null = null;
+    let stopped = false;
+    const request = () => {
+      if (document.visibilityState !== "visible") return;
+      navigator.wakeLock.request("screen").then(
+        (sentinel) => {
+          if (stopped) void sentinel.release();
+          else lock = sentinel;
+        },
+        () => {}
+      );
+    };
+    request();
+    document.addEventListener("visibilitychange", request);
+    return () => {
+      stopped = true;
+      document.removeEventListener("visibilitychange", request);
+      void lock?.release().catch(() => {});
+    };
   }, []);
 
   useEffect(() => {
@@ -195,6 +246,7 @@ export function BarScreen({
 
   const advance = (order: Order) => {
     setTapped(order.id);
+    setFresh((prev) => without(prev, [order.id]));
     startTransition(async () => {
       const moved = await advanceOrder(order.id, order.status);
       await poll();
@@ -208,6 +260,7 @@ export function BarScreen({
 
   const cancel = (order: Order, reason: string) => {
     setTapped(order.id);
+    setFresh((prev) => without(prev, [order.id]));
     startTransition(async () => {
       const cancelled = await cancelAtBar(order.id, reason);
       await poll();
@@ -223,7 +276,13 @@ export function BarScreen({
     <Card
       key={order.id}
       order={order}
-      fresh={fresh.has(order.id)}
+      // The arrival glow belongs to the New lane only (audit motion:5).
+      fresh={
+        fresh.has(order.id) &&
+        (order.status === "placed" || order.status === "paid")
+      }
+      // Past the time the Customer was told, and not Ready yet (staff:14).
+      late={order.status !== "ready" && new Date(order.windowStart) < at}
       manager={manager}
       busy={pending && tapped === order.id}
       onAdvance={() => advance(order)}
@@ -238,7 +297,17 @@ export function BarScreen({
     try {
       localStorage.setItem(MUTE_KEY, next ? "1" : "0");
     } catch {}
-    if (!next) chime();
+    if (!next) {
+      void unlockAudio().then((ready) => {
+        setSoundReady(ready);
+        if (ready) chime();
+      });
+    }
+  };
+
+  // Any tap on the board turns the sound on after a reload (staff:22).
+  const wakeSound = () => {
+    if (!soundReady) void unlockAudio().then(setSoundReady);
   };
 
   const columns: { title: Lane; orders: Order[]; later?: Order[] }[] = [
@@ -264,7 +333,7 @@ export function BarScreen({
   ];
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4" onClickCapture={wakeSound}>
       {signedOut && (
         <p
           role="alert"
@@ -286,8 +355,17 @@ export function BarScreen({
             <span className="text-muted-foreground text-sm">{staffName}</span>
             {/* Server and browser may be a minute apart on first paint. */}
             <span className="font-mono" suppressHydrationWarning>
-              {clock}
+              {formatTime(at)}
             </span>
+            {!muted && !soundReady && (
+              <button
+                type="button"
+                onClick={wakeSound}
+                className="border-warning text-warning min-h-12 rounded-full border-2 px-4 font-semibold"
+              >
+                Tap to turn on sound
+              </button>
+            )}
             <button
               type="button"
               onClick={toggleSound}
@@ -464,6 +542,7 @@ export function BarScreen({
 function Card({
   order,
   fresh,
+  late,
   manager,
   busy,
   onAdvance,
@@ -471,6 +550,7 @@ function Card({
 }: {
   order: Order;
   fresh: boolean;
+  late: boolean;
   manager: boolean;
   busy: boolean;
   onAdvance: () => void;
@@ -480,21 +560,30 @@ function Card({
   return (
     <article
       aria-label={`Order ${order.code}`}
-      className={`bg-background rounded-card grid gap-3 border p-4 ${fresh ? "border-star animate-arrive" : "border-border"}`}
+      className={`bg-background rounded-card grid gap-3 border p-4 ${fresh ? "border-star animate-arrive" : late ? "border-warning border-2" : "border-border"}`}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="font-display text-4xl italic">{order.code}</p>
+      {/* The code never breaks at its hyphen; the time wraps under it on a
+          narrow card (audit staff:13). */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="font-display shrink-0 text-4xl whitespace-nowrap italic">
+          {order.code}
+        </p>
         <p className="text-right">
           <span className="block font-mono text-lg">
             {order.pickupKind === "asap" ? (
               <>
                 ASAP
                 <span className="text-muted-foreground text-sm">
-                  , placed {formatTime(new Date(order.placedAt))}
+                  , due {formatTime(new Date(order.windowStart))}
                 </span>
               </>
             ) : (
               formatTime(new Date(order.windowStart))
+            )}
+            {late && (
+              <span className="bg-warning text-night ml-2 rounded px-2 align-middle font-sans text-sm font-semibold">
+                Late
+              </span>
             )}
           </span>
           <span className="text-muted-foreground">{order.firstName}</span>

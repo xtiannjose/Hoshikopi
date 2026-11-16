@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations } from "./axe";
 import { e2eQuery, endPauseAndBusy, openAllDayToday } from "./db";
+import { addToCart, placeGuestOrder } from "./order";
 import { enterSecondFactor, signIn } from "./sign-in";
 
 test.beforeEach(openAllDayToday);
@@ -243,4 +244,63 @@ test("a Barista with no authenticator marks Sold Out and back on the Bar Screen 
       "UPDATE menu_items SET sold_out_on = NULL WHERE slug = 'butter-croissant'"
     );
   }
+});
+
+// The tablet slept and stopped polling (FEAT-11); a reload chimed silently
+// with nothing on screen (staff:22); ASAP cards hid the promised time and
+// nothing marked a late one (staff:14); an accepted card glowed again in
+// Making (motion:5).
+test("the Bar Screen stays awake, asks for a tap for sound, and shows when an Order is due", async ({
+  browser,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  test.setTimeout(120_000);
+  const bar = await (await browser.newContext()).newPage();
+  await bar.addInitScript(() => {
+    const calls: string[] = [];
+    Object.assign(window, { wakeCalls: calls });
+    Object.defineProperty(navigator, "wakeLock", {
+      value: {
+        request: async (type: string) => {
+          calls.push(type);
+          return { release: async () => {} };
+        },
+      },
+    });
+  });
+  await signIn(bar, "annika@hoshikopi.example", "/bar");
+  await expect
+    .poll(() =>
+      bar.evaluate(
+        () => (window as unknown as { wakeCalls: string[] }).wakeCalls
+      )
+    )
+    .toContain("screen");
+  const tap = bar.getByRole("button", { name: "Tap to turn on sound" });
+  await tap.click();
+  await expect(tap).toHaveCount(0);
+
+  const guest = await (await browser.newContext()).newPage();
+  await addToCart(guest, "kopi-hitam");
+  await placeGuestOrder(guest, "Lia");
+  const code = await guest.getByRole("heading", { level: 1 }).innerText();
+  const card = bar.getByRole("article", { name: `Order ${code}` });
+  await expect(card).toHaveClass(/animate-arrive/);
+  await expect(card).toContainText(/ASAP, due \d{1,2}:\d{2} [AP]M/);
+  await card.getByRole("button", { name: `Accept ${code}` }).click();
+  await expect(
+    bar.getByRole("region", { name: /Making/ }).getByRole("article", {
+      name: `Order ${code}`,
+    })
+  ).not.toHaveClass(/animate-arrive/);
+
+  // Past its promised time: Late. A reload asks for the tap again.
+  await e2eQuery(
+    "UPDATE orders SET window_start = now() - interval '5 minutes' WHERE code = $1",
+    [code]
+  );
+  await bar.reload();
+  await expect(card).toContainText("Late");
+  await expect(tap).toBeVisible();
+  await expectNoAxeViolations(bar);
 });
