@@ -79,14 +79,28 @@ const MUTE_KEY = "hoshikopi-bar-muted";
 
 // One AudioContext for the whole shift: a new one per chime was never
 // closed, so a tablet left on the board piled them up (audit motion:6).
-// Browsers start it suspended until a tap; the sound toggle is one.
+// It is made on a tap, since browsers start one made without a tap
+// suspended, so a reloaded board chimed silently (audit staff:22).
 let audio: AudioContext | null = null;
+
+/** Makes or wakes the AudioContext from a tap; true once it can play. */
+function unlockAudio(): Promise<boolean> {
+  try {
+    audio ??= new AudioContext();
+    return audio.resume().then(
+      () => audio?.state === "running",
+      () => false
+    );
+  } catch {
+    return Promise.resolve(false);
+  }
+}
 
 /** A short two-note chime from the Web Audio API (no audio file). */
 function chime() {
+  // Before the first tap there is none: "Tap to turn on sound" shows.
+  if (!audio) return;
   try {
-    audio ??= new AudioContext();
-    // Before any tap the browser may refuse; the highlight still shows.
     if (audio.state === "suspended") audio.resume().catch(() => {});
     const ctx = audio;
     [880, 1320].forEach((frequency, i) => {
@@ -128,6 +142,7 @@ export function BarScreen({
   const lanes = useRef<Partial<Record<Lane, HTMLHeadingElement | null>>>({});
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [muted, setMuted] = useState(false);
+  const [soundReady, setSoundReady] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [pending, startTransition] = useTransition();
   const known = useRef(new Set(initial.orders.map((o) => o.id)));
@@ -263,7 +278,17 @@ export function BarScreen({
     try {
       localStorage.setItem(MUTE_KEY, next ? "1" : "0");
     } catch {}
-    if (!next) chime();
+    if (!next) {
+      void unlockAudio().then((ready) => {
+        setSoundReady(ready);
+        if (ready) chime();
+      });
+    }
+  };
+
+  // Any tap on the board turns the sound on after a reload (staff:22).
+  const wakeSound = () => {
+    if (!soundReady) void unlockAudio().then(setSoundReady);
   };
 
   const columns: { title: Lane; orders: Order[]; later?: Order[] }[] = [
@@ -289,7 +314,7 @@ export function BarScreen({
   ];
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4" onClickCapture={wakeSound}>
       {signedOut && (
         <p
           role="alert"
@@ -313,6 +338,15 @@ export function BarScreen({
             <span className="font-mono" suppressHydrationWarning>
               {clock}
             </span>
+            {!muted && !soundReady && (
+              <button
+                type="button"
+                onClick={wakeSound}
+                className="border-warning text-warning min-h-12 rounded-full border-2 px-4 font-semibold"
+              >
+                Tap to turn on sound
+              </button>
+            )}
             <button
               type="button"
               onClick={toggleSound}
