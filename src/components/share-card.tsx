@@ -8,11 +8,14 @@ export const SHARE_SIZE = { width: 1200, height: 630 };
 const STAR =
   "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z";
 
+// Read once when the module loads, not on every card: uncached I/O while
+// rendering kept even the root card from prerendering (audit PERF-15).
+const fraunces = await readFile(
+  path.join(process.cwd(), "assets/fonts/Fraunces-Italic.ttf")
+);
+
 /** A 1200 by 630 share card on the night sky with the gold star (INFO-09). */
 export async function shareCard(title: string, line: string) {
-  const fraunces = await readFile(
-    path.join(process.cwd(), "assets/fonts/Fraunces-Italic.ttf")
-  );
   return new ImageResponse(
     <div
       style={{

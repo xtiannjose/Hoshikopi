@@ -1,6 +1,8 @@
+import { notFound } from "next/navigation";
+
 import { SHARE_SIZE, shareCard } from "@/components/share-card";
 import { formatPrice } from "@/lib/money";
-import { getMenuItem } from "@/modules/menu";
+import { getMenuItem, menuSlugs } from "@/modules/menu";
 
 // shortcut: the card shows the name and Base Price; add the Menu Item's
 // concept image once pictures exist (ADR 0012).
@@ -9,14 +11,22 @@ export const alt =
 export const size = SHARE_SIZE;
 export const contentType = "image/png";
 
+// Rendered at build like the pages; a made-up slug has no card (audit
+// PERF-15, SEC1-12).
+export async function generateStaticParams() {
+  const { items } = await menuSlugs();
+  return items.map((slug) => ({ slug }));
+}
+
 export default async function Image({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const item = await getMenuItem((await params).slug);
+  if (!item) notFound();
   return shareCard(
-    item?.name ?? "Hoshikopi",
-    item ? `${formatPrice(item.baseCents)}. Order ahead for pickup.` : ""
+    item.name,
+    `${formatPrice(item.baseCents)}. Order ahead for pickup.`
   );
 }
