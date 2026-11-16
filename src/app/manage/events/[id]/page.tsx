@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
+import { DeleteForm } from "@/components/delete-form";
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, Panel, Pill } from "@/components/panel";
 import { manilaInputValue, now } from "@/lib/clock";
@@ -16,6 +17,7 @@ import { formatReceipt } from "@/lib/money";
 import { contentForStaff, signupsForEvent } from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
+import { removeSignupAction } from "../../content-actions";
 import { EventForm, type EventFormData } from "../../content-forms";
 
 export const metadata: Metadata = { title: "Event" };
@@ -125,15 +127,20 @@ async function Editor({
         </p>
       )}
       <EventForm event={event} aside={saved && <Signups event={saved} />} />
+      {/* The Sign-ups sit inside the Event form, so their Remove buttons
+          post this one (forms can't nest). */}
+      {saved && <form id="remove-signup" action={removeSignupAction} hidden />}
     </div>
   );
 }
 
 /** Who holds Seats (EVT-02): confirmed, or waiting up to 30 minutes for
- * the email link (8.7). Read only: guests confirm and cancel by their link. */
+ * the email link (8.7). Guests confirm and cancel by their link; a Manager
+ * can remove one and email the confirmed guests (audit staff:10). */
 async function Signups({ event }: { event: Saved }) {
   const signups = await signupsForEvent(event.id);
   const taken = signups.reduce((sum, signup) => sum + signup.seats, 0);
+  const confirmed = signups.filter((signup) => signup.confirmedAt);
   return (
     <Panel id="signups" title="Sign-ups" icon={<UsersThreeIcon size={20} />}>
       <div className="grid gap-3">
@@ -178,9 +185,26 @@ async function Signups({ event }: { event: Saved }) {
                     </span>
                   )}
                 </span>
+                <div className="basis-full">
+                  <DeleteForm
+                    form="remove-signup"
+                    id={signup.id}
+                    label={`Remove ${signup.name}`}
+                    note="Their Seats go back on the Event page. They aren't told, so email them first if they should know."
+                    confirm="Yes, remove them"
+                  />
+                </div>
               </li>
             ))}
           </ul>
+        )}
+        {confirmed.length > 0 && (
+          <a
+            href={`mailto:?bcc=${confirmed.map((s) => encodeURIComponent(s.email)).join(",")}`}
+            className={OUTLINE_PILL}
+          >
+            Email the confirmed guests ({confirmed.length})
+          </a>
         )}
       </div>
     </Panel>

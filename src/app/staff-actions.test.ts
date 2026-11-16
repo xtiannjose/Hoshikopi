@@ -33,6 +33,7 @@ const NEEDS: Record<string, ["barista" | "manager", string]> = {
   saveEventAction: ["manager", "/manage"],
   savePostAction: ["manager", "/manage"],
   deletePostAction: ["manager", "/manage"],
+  removeSignupAction: ["manager", "/manage"],
   saveRecurringAction: ["manager", "/manage"],
   saveWeeklyHoursAction: ["manager", "/manage"],
   saveSpecialHoursAction: ["manager", "/manage"],

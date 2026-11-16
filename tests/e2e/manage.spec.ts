@@ -205,3 +205,51 @@ test("a Manager deletes an unused Option Group and a draft Post, asked once", as
   await expect(page).toHaveURL(/\/manage\/posts$/);
   await expect(page.getByText(`Test draft ${key}`)).toBeHidden();
 });
+
+// A Manager could not remove a Sign-up, so fake ones kept their Seats, and
+// lowering the Seats or unpublishing told nobody (audit staff:10, SEC2-02).
+test("a Manager removes a Sign-up and is warned before stranding guests", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  const key = `${testInfo.workerIndex}-${Date.now()}`;
+  const event = `ev-${key}`;
+  const email = `fake-${key}@example.com`;
+  await e2eQuery(
+    `INSERT INTO events (id, slug, title, starts_at, ends_at, summary, body_md,
+                         seats, is_published, updated_at)
+     VALUES ($1, $2, $3, now() + interval '7 days',
+             now() + interval '7 days 2 hours', 'One line.', 'Body.', 6, true, now())`,
+    [event, `cupping-${key}`, `Cupping ${key}`]
+  );
+  await e2eQuery(
+    `INSERT INTO event_signups (id, event_id, name, email, seats, confirmed_at)
+     VALUES ($1, $2, 'Fake guest', $3, 4, now())`,
+    [`su-${key}`, event, email]
+  );
+
+  await signIn(page, "christian@hoshikopi.example", `/manage/events/${event}`);
+  const list = page.getByRole("region", { name: "Sign-ups" });
+  await expect(list).toContainText("4 of 6 seats taken");
+  await expect(
+    list.getByRole("link", { name: "Email the confirmed guests (1)" })
+  ).toHaveAttribute("href", `mailto:?bcc=${encodeURIComponent(email)}`);
+
+  const status = page.getByRole("status").filter({ hasText: "Saved." });
+  await page.getByLabel("Published on the site").uncheck();
+  await page.getByRole("button", { name: "Save Event" }).click();
+  await expect(status).toContainText(
+    "It's off the site, and 1 Sign-up still holds Seats."
+  );
+  await page.getByLabel("Seats for Sign-ups here (optional)").fill("2");
+  await page.getByRole("button", { name: "Save Event" }).click();
+  await expect(status).toContainText(
+    "4 Seats are already taken, more than the 2 you set."
+  );
+
+  await list.getByText("Remove Fake guest").click();
+  await expectNoAxeViolations(page);
+  await list.getByRole("button", { name: "Yes, remove them" }).click();
+  await expect(list).toContainText("0 of 2 seats taken");
+  await expect(list).not.toContainText(email);
+});

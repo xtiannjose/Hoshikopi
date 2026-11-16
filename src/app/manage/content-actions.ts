@@ -5,15 +5,19 @@ import { redirect } from "next/navigation";
 
 import {
   deletePost,
+  removeSignup,
   saveEvent,
   savePost,
   saveRecurringEvent,
+  signupsForEvent,
 } from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
 export type ContentFormState = {
   status: "idle" | "saved" | "error";
   errors?: Partial<Record<string, string>>;
+  /** What the save bar says when saved, if not just "Saved.". */
+  saved?: string;
 };
 
 const text = (form: FormData, name: string) => String(form.get(name) ?? "");
@@ -44,7 +48,30 @@ export async function saveEventAction(
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("content");
   if (!id) redirect(`/manage/events/${result.id}?added=1`);
+  // Fewer Seats than taken, or off the site with Sign-ups: nobody is told,
+  // so say so (audit staff:10).
+  const signups = await signupsForEvent(id);
+  const taken = signups.reduce((sum, signup) => sum + signup.seats, 0);
+  const seats = Number(text(form, "seats") || NaN);
+  if (taken > seats) {
+    return {
+      status: "saved",
+      saved: `Saved. ${taken} Seats are already taken, more than the ${seats} you set. Guests aren't told: remove Sign-ups or email them from the list.`,
+    };
+  }
+  if (signups.length > 0 && !form.get("isPublished")) {
+    return {
+      status: "saved",
+      saved: `Saved. It's off the site, and ${signups.length === 1 ? "1 Sign-up still holds" : `${signups.length} Sign-ups still hold`} Seats. Guests aren't told: email them from the list.`,
+    };
+  }
   return { status: "saved" };
+}
+
+/** A Manager removes a Sign-up (audit staff:10, SEC2-02). */
+export async function removeSignupAction(form: FormData) {
+  const staff = await requireStaff("manager", "/manage/events");
+  if (await removeSignup(text(form, "id"), staff)) updateTag("content");
 }
 
 export async function savePostAction(

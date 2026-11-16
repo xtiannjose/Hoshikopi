@@ -131,6 +131,7 @@ export function EventForm({
         pending={pending}
         status={state.status}
         label={event.id ? "Save Event" : "Add Event"}
+        savedText={state.saved}
       />
     </form>
   );

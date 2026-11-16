@@ -7,6 +7,7 @@ import { isPlainText, plainText } from "@/lib/text";
 import { Prisma } from "@/generated/prisma/client";
 import { now } from "@/lib/clock";
 import { db } from "@/lib/db";
+import { audit, type Staff } from "@/modules/identity";
 
 /** How long a Sign-up holds its Seats before its email link confirms it. */
 export const HOLD_MINUTES = 30;
@@ -248,6 +249,32 @@ export async function cancelSignup(
   if (!row) return { ok: false, reason: "not_found" };
   await db.eventSignup.deleteMany({ where: { id } });
   return { ok: true, slug: row.event.slug };
+}
+
+/**
+ * A Manager removes a Sign-up, giving its Seats back, under the Event's row
+ * lock like a new Sign-up; false when it is already gone (audit staff:10,
+ * SEC2-02). The guest is not told.
+ */
+export async function removeSignup(id: string, actor: Staff): Promise<boolean> {
+  return db.$transaction(async (tx) => {
+    const row = await tx.eventSignup.findUnique({
+      where: { id },
+      select: { eventId: true, seats: true },
+    });
+    if (!row) return false;
+    await tx.$queryRaw`SELECT id FROM events WHERE id = ${row.eventId} FOR UPDATE`;
+    const { count } = await tx.eventSignup.deleteMany({ where: { id } });
+    if (count === 0) return false;
+    await audit(
+      actor,
+      "content.signup.remove",
+      { type: "event_signup", id },
+      { eventId: row.eventId, seats: row.seats },
+      tx
+    );
+    return true;
+  });
 }
 
 /** Sign-ups holding Seats for an Event, oldest first, for the Manager. */
