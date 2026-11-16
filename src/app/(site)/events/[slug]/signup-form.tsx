@@ -8,6 +8,7 @@ import { useFocusInvalid } from "@/components/use-focus-invalid";
 import { now } from "@/lib/clock";
 
 import { signUpAction, type SignupState } from "./actions";
+import { BotFields } from "@/components/bot-fields";
 
 /** Sign up for an Event with Seats (EVT-02). Closes itself once the Event
  * starts: the page stays prerendered, so the browser reads the clock. */
@@ -80,7 +81,12 @@ export function SignupForm({
   }
   const error = (name: string) => state.errors?.[name];
   return (
-    <form ref={form} action={action} className="mt-4 grid max-w-md gap-4">
+    <form
+      ref={form}
+      action={action}
+      className="relative mt-4 grid max-w-md gap-4"
+    >
+      <BotFields />
       <input type="hidden" name="slug" value={slug} />
       <Field
         name="name"

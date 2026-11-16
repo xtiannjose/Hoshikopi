@@ -69,6 +69,8 @@ export default defineConfig({
       DIRECT_URL: E2E_DATABASE_URL,
       BETTER_AUTH_URL: BASE_URL,
       NEXT_PUBLIC_SITE_URL: BASE_URL,
+      // Playwright types in an instant; botCheck's own tests cover it.
+      FORM_MIN_FILL_MS: "0",
       BETTER_AUTH_SECRET: "e2e-secret-at-least-32-characters-long",
       PAYMENT_PROVIDER: "fake",
       CRON_SECRET: "e2e-cron-secret",

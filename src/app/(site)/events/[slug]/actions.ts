@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 
+import { botCheck } from "@/lib/bot-check";
 import { siteUrl } from "@/lib/env";
 import { clientIp, takeToken } from "@/lib/rate-limit";
 import {
@@ -37,6 +38,23 @@ export async function signUpAction(
     email: String(form.get("email") ?? ""),
     seats: String(form.get("seats") ?? ""),
   };
+  // A script that fills the trap field is told it worked (SEC1-06).
+  const bot = botCheck(form);
+  if (bot === "honeypot") {
+    return {
+      status: "done",
+      email: values.email,
+      confirmed: false,
+      emailed: true,
+    };
+  }
+  if (bot === "too_fast") {
+    return {
+      status: "error",
+      message: "That was quick! Check your details, then sign up again.",
+      values,
+    };
+  }
   const ip = clientIp(await headers());
   if (!(await takeToken(`signup-ip:${ip}`, 10, 3600))) {
     return {

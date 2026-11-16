@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 
+import { botCheck } from "@/lib/bot-check";
 import { clientIp, takeToken } from "@/lib/rate-limit";
 import { getCafeContact } from "@/modules/cafe";
 import { submitInquiry } from "@/modules/content";
@@ -27,6 +28,16 @@ export async function inquireAction(
   const values = Object.fromEntries(
     FIELDS.map((field) => [field, String(form.get(field) ?? "")])
   );
+  // A script that fills the trap field is told it worked (SEC1-06).
+  const bot = botCheck(form);
+  if (bot === "honeypot") return { status: "sent", email: values.email };
+  if (bot === "too_fast") {
+    return {
+      status: "error",
+      message: "That was quick! Check your details, then send again.",
+      values,
+    };
+  }
   if (!(await takeToken(`inquiry-ip:${clientIp(await headers())}`, 5, 3600))) {
     return {
       status: "error",
