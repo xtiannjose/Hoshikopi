@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 
+import { siteUrl } from "@/lib/env";
 import { clientIp, takeToken } from "@/lib/rate-limit";
 import {
   cancelSignup,
@@ -73,7 +74,7 @@ export async function signUpAction(
     };
   }
   const { confirmed } = result;
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const site = siteUrl();
   try {
     await sendEventSignup({
       to: result.signup.email,

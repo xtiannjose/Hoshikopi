@@ -11,7 +11,7 @@ import { balance, STARS_PER_REWARD } from "@/modules/loyalty";
 
 import { expireUnpaid } from "./bar";
 import { orderingDay } from "./day";
-import { orderLink, tokenMatches } from "./links";
+import { orderPath, tokenMatches } from "./links";
 import { baseOf, rewardLineOf } from "./place";
 import { customerVersion, drinksAhead } from "./queue";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS, orderLimit } from "./rules";
@@ -166,7 +166,7 @@ function summaryAndLink(order: {
 }) {
   return {
     summary: order.lines.map((l) => `${l.quantity} x ${l.name}`).join(", "),
-    link: orderLink(order.id).replace(/^https?:\/\/[^/]+/, ""),
+    link: orderPath(order.id),
   };
 }
 

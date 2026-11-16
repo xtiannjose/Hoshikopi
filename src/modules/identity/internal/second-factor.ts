@@ -11,13 +11,15 @@ import { db } from "@/lib/db";
 import { takeToken } from "@/lib/rate-limit";
 
 import { audit } from "./audit";
+import { authSecret } from "@/lib/env";
 
 // Staff Second Factor (ADR 0014): TOTP, 6 digits every 30 seconds, the
 // secret encrypted with the auth secret as Better Auth's own plugin does.
 const ISSUER = "Hoshikopi";
 const PERIOD_MS = 30_000;
 
-const key = () => process.env.BETTER_AUTH_SECRET ?? "";
+// Never an empty key: that would encrypt with nothing (architecture:21).
+const key = authSecret;
 
 async function otpFor(encrypted: string) {
   return createOTP(await symmetricDecrypt({ key: key(), data: encrypted }));

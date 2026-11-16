@@ -4,6 +4,7 @@ import { Courier_Prime, Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import { THEME_SCRIPT } from "@/components/theme";
 
 import "./globals.css";
+import { siteUrl } from "@/lib/env";
 
 // The one display style used: 400 italic, static (about 23 kB, not the
 // 81 kB variable font with every weight and optical size; PERF-06).
@@ -28,9 +29,7 @@ const courier = Courier_Prime({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-  ),
+  metadataBase: new URL(siteUrl()),
   title: { default: "Hoshikopi", template: "%s | Hoshikopi" },
   description:
     "A concept cafe in Kapitolyo, Pasig. Order ahead for pickup and earn Stars.",
