@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { MAX_PRICE_CENTS, parsePesos } from "@/lib/money";
 import { audit, type Staff } from "@/modules/identity";
 
+import { readMenuPhoto, removeMenuPhoto, storeMenuPhoto } from "./photo";
+
 // Staff writes to the menu (STAFF-03, STAFF-04). Callers check the role and
 // call updateTag("menu") after a successful write.
 
@@ -211,8 +213,7 @@ function promoFields(
 export async function saveMenuItem(
   id: string | null,
   input: MenuItemInput,
-  actor: Staff,
-  photoUrl?: string
+  actor: Staff
 ): Promise<FormResult<{ id: string }>> {
   const parsed = MenuItemInput.safeParse(input);
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
@@ -277,7 +278,6 @@ export async function saveMenuItem(
         : availableUntil
           ? dayValue(availableUntil)
           : null,
-    ...(photoUrl ? { photoUrl } : {}),
   };
   try {
     const saved = await db.$transaction(async (tx) => {
@@ -310,6 +310,38 @@ export async function saveMenuItem(
     }
     throw error;
   }
+}
+
+/**
+ * Saves a Menu Item with an optional new photo (audit ops:15): the photo is
+ * checked and stripped of its metadata first, uploaded only once the save
+ * passes, and the photo it replaces is deleted. A store that fails after
+ * the save leaves the item saved and says so in `photoError`.
+ */
+export async function saveMenuItemWithPhoto(
+  id: string | null,
+  input: MenuItemInput,
+  actor: Staff,
+  photo?: File | null
+): Promise<FormResult<{ id: string; photoError?: string }>> {
+  const checked = photo && photo.size > 0 ? await readMenuPhoto(photo) : null;
+  if (checked && !checked.ok) {
+    return { ok: false, errors: { photo: checked.error } };
+  }
+  const result = await saveMenuItem(id, input, actor);
+  if (!result.ok || !checked) return result;
+  const stored = await storeMenuPhoto(checked, input.slug);
+  if (!stored.ok) return { ...result, photoError: stored.error };
+  const before = await db.menuItem.findUniqueOrThrow({
+    where: { id: result.id },
+    select: { photoUrl: true },
+  });
+  await db.menuItem.update({
+    where: { id: result.id },
+    data: { photoUrl: stored.url },
+  });
+  if (before.photoUrl) await removeMenuPhoto(before.photoUrl);
+  return result;
 }
 
 const CategoryInput = z.object({

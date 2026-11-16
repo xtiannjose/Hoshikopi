@@ -14,6 +14,7 @@ export {
   deleteOptionGroup,
   saveCategory,
   saveMenuItem,
+  saveMenuItemWithPhoto,
   saveOption,
   saveOptionGroup,
   setMenuItemSoldOut,
@@ -26,7 +27,7 @@ export {
   getMenuItemForEdit,
   itemsOfferingGroup,
 } from "./internal/staff-queries";
-export { storeMenuPhoto } from "./internal/photo";
+export { localPhotoFile } from "./internal/photo";
 export {
   priceChoices,
   type ChoiceRefusal,

@@ -1,10 +1,21 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import { del, put } from "@vercel/blob";
+import sharp from "sharp";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import {
   deleteOptionGroup,
   priceChoices,
   saveMenuItem,
+  saveMenuItemWithPhoto,
   saveOption,
   saveOptionGroup,
   setMenuItemSoldOut,
@@ -25,7 +36,12 @@ beforeEach(async () => {
   await resetDb(db);
   await seedDatabase(db);
 });
-afterEach(unfreezeClock);
+afterEach(() => {
+  unfreezeClock();
+  vi.unstubAllEnvs();
+});
+
+vi.mock("@vercel/blob", () => ({ put: vi.fn(), del: vi.fn() }));
 afterAll(() => db.$disconnect());
 
 const latteInput = (change: Partial<MenuItemInput> = {}) =>
@@ -303,5 +319,50 @@ describe("deleteOptionGroup (audit staff:9)", () => {
         where: { action: "menu.option_group.delete", targetId: added.id },
       })
     ).toBe(1);
+  });
+});
+
+// A photo was uploaded before the form was checked, kept its EXIF, and the
+// one it replaced stayed in the public store (audit ops:15).
+describe("menu photos", () => {
+  it("uploads only after the save passes, and deletes the photo it replaces", async () => {
+    vi.stubEnv("BLOB_STORE_ID", "store_test");
+    vi.mocked(put).mockImplementation(
+      async (pathname) =>
+        ({
+          url: `https://store.public.blob.vercel-storage.com/${pathname}`,
+        }) as Awaited<ReturnType<typeof put>>
+    );
+    const photo = new File(
+      [
+        await sharp({
+          create: { width: 2, height: 2, channels: 3, background: "#e7a83f" },
+        })
+          .png()
+          .toBuffer(),
+      ],
+      "latte.png"
+    );
+    const refused = await latteInput({ basePrice: "-1" });
+    expect(
+      (await saveMenuItemWithPhoto(refused.id, refused.input, christian, photo))
+        .ok
+    ).toBe(false);
+    expect(put).not.toHaveBeenCalled();
+
+    const old = "https://store.public.blob.vercel-storage.com/menu/old.png";
+    await db.menuItem.update({
+      where: { id: refused.id },
+      data: { photoUrl: old },
+    });
+    const { id, input } = await latteInput();
+    expect((await saveMenuItemWithPhoto(id, input, christian, photo)).ok).toBe(
+      true
+    );
+    expect(put).toHaveBeenCalledTimes(1);
+    expect(del).toHaveBeenCalledWith(old);
+    expect(
+      (await db.menuItem.findUniqueOrThrow({ where: { id } })).photoUrl
+    ).toMatch(/\/menu\/hoshi-latte-\d+\.png$/);
   });
 });
