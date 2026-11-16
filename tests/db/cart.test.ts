@@ -1,4 +1,6 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { db as appDb } from "@/lib/db";
 
 import {
   addLine,
@@ -285,5 +287,16 @@ describe("pruneGuestCarts", () => {
     expect((await getCart(hoshi)).lines).toHaveLength(0);
     expect((await getCart(migs)).lines).toHaveLength(1);
     expect((await getCart({ memberId: "tala" })).lines).toHaveLength(1);
+  });
+});
+
+// The hk_cart cookie stays after a merge, so every page a signed-in Member
+// opened ran a merge transaction for up to 30 days (audit ORD-02).
+describe("mergeGuestCart with no Guest Cart left", () => {
+  it("costs one read and opens no transaction", async () => {
+    const transaction = vi.spyOn(appDb, "$transaction");
+    await mergeGuestCart({ guestTokenHash: "already-merged" }, "tala");
+    expect(transaction).not.toHaveBeenCalled();
+    transaction.mockRestore();
   });
 });

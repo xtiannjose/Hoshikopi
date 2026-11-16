@@ -286,6 +286,14 @@ export async function mergeGuestCart(
   guest: CartOwner,
   memberId: string
 ): Promise<void> {
+  // The cookie outlives the merge, so this runs on every page a Member
+  // opens for up to 30 days: one plain read when there is nothing to merge
+  // (audit ORD-02).
+  const left = await db.cart.findUnique({
+    where: ownerWhere(guest),
+    select: { id: true },
+  });
+  if (!left) return;
   await db.$transaction(async (tx) => {
     // A merge already running for this Guest Cart finishes first; this one
     // then finds the Guest Cart gone.
