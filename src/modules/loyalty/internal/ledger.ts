@@ -226,11 +226,18 @@ export async function birthdayTreat(
  */
 export async function starTotals(days: number) {
   const since = manilaInstant(addDays(manila(now()).day, 1 - days), 0);
-  const rows = await db.starEntry.groupBy({
-    by: ["kind"],
-    where: { createdAt: { gte: since } },
-    _sum: { stars: true },
-  });
+  const [rows, given] = await Promise.all([
+    db.starEntry.groupBy({
+      by: ["kind"],
+      where: { createdAt: { gte: since } },
+      _sum: { stars: true },
+    }),
+    // Given apart from taken, so +51 and -51 don't read as 0 (staff:12).
+    db.starEntry.aggregate({
+      where: { createdAt: { gte: since }, kind: "adjust", stars: { gt: 0 } },
+      _sum: { stars: true },
+    }),
+  ]);
   const sum = (kind: string) =>
     rows.find((row) => row.kind === kind)?._sum.stars ?? 0;
   return {
@@ -238,6 +245,7 @@ export async function starTotals(days: number) {
     birthday: sum("birthday"),
     redeemed: -(sum("reserve") + sum("release")),
     takenBack: -sum("reverse"),
-    adjusted: sum("adjust"),
+    given: given._sum.stars ?? 0,
+    taken: (given._sum.stars ?? 0) - sum("adjust"),
   };
 }
