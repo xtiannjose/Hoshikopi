@@ -12,12 +12,23 @@ describe("siteUrl", () => {
     expect(siteUrl()).toBe("https://hoshikopi.vercel.app");
   });
 
-  it("falls back to localhost only off Vercel", () => {
+  it("falls back to localhost only off Vercel, and refuses on Production", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
-    vi.stubEnv("VERCEL", "");
+    vi.stubEnv("VERCEL_ENV", "");
+    vi.stubEnv("VERCEL_URL", "");
     expect(siteUrl()).toBe("http://localhost:3000");
-    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("VERCEL_URL", "hoshikopi-abc123.vercel.app");
     expect(() => siteUrl()).toThrow(/NEXT_PUBLIC_SITE_URL/);
+  });
+
+  // Preview builds have no NEXT_PUBLIC_SITE_URL on the live project, and
+  // the throw stopped them (PR #106's Vercel check).
+  it("links a Preview to its own deployment address", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("VERCEL_URL", "hoshikopi-git-x.vercel.app");
+    expect(siteUrl()).toBe("https://hoshikopi-git-x.vercel.app");
   });
 });
 

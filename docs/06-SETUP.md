@@ -56,7 +56,7 @@ Copy `.env.example` to `.env.local` and fill in what you have. Never commit `.en
 | `DIRECT_URL` | Same as above locally; Neon's direct URL later | Phase 0 |
 | `BETTER_AUTH_SECRET` | 32+ random characters (`npx @better-auth/cli secret`) | Phase 0 |
 | `BETTER_AUTH_URL` | `http://localhost:3000` | Phase 0 |
-| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000`; required on Vercel, where a missing one stops the build instead of sending localhost links (`src/lib/env.ts`) | Phase 0 |
+| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000`; required on Vercel's Production, where a missing one stops the build instead of sending localhost links; a Preview without it links to its own deployment address (`src/lib/env.ts`) | Phase 0 |
 | `PAYMENT_PROVIDER` | `fake` (local and demos) or `paymongo` | Phase 3 |
 | `PAYMONGO_SECRET_KEY` | `sk_test_...` only; the app refuses `sk_live_` | Phase 3 |
 | `PAYMONGO_WEBHOOK_SECRET` | from the PayMongo dashboard webhook | Phase 3 |
