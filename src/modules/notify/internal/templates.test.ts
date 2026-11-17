@@ -65,6 +65,17 @@ describe("orderPlacedEmail (ORD-10)", () => {
     );
   });
 
+  // A Reward that covers the whole Order is stored as Pay at Pickup, and
+  // the email asked for payment at the counter (audit DC-30).
+  it("asks for nothing when a Reward covers the whole Order", () => {
+    const free = orderPlacedEmail(
+      { ...ORDER, totalCents: 0, rewardStars: 9 },
+      "x"
+    );
+    expect(free.text).toContain("Nothing to pay: a free drink.");
+    expect(free.text).not.toContain("Pay at the counter");
+  });
+
   it("lists the Lines, the total with its VAT part, and the status link", () => {
     expect(email.text).toContain("Salamat, Hoshi! We got your order.");
     expect(email.text).toContain(
