@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { ConceptNotice } from "@/components/concept-notice";
+import { FocusOnNavigate } from "@/components/shell/focus-on-navigate";
+import { KeepFocus } from "@/components/shell/keep-focus";
 
 export const metadata: Metadata = {
   title: "Bar Screen",
@@ -16,6 +19,12 @@ export default function BarLayout({ children }: LayoutProps<"/bar">) {
     >
       {children}
       <ConceptNotice className="px-4 py-3 lg:px-6" />
+      {/* As on the customer pages (a11y:3, a11y:5): a removed button hands
+          focus on, and a new page takes it (audit DC-20). */}
+      <KeepFocus />
+      <Suspense>
+        <FocusOnNavigate />
+      </Suspense>
     </div>
   );
 }

@@ -199,6 +199,11 @@ export function BarScreen({
     setBoard(data);
     if (arrived.length > 0) {
       if (!mutedRef.current) chime();
+      // The chime and the glow are not enough for a screen reader with the
+      // sound off (audit a11y:15).
+      setNotice(
+        `New order${arrived.length > 1 ? "s" : ""}: ${arrived.map((o) => o.code).join(", ")}`
+      );
       // Each arrival keeps its own 4 seconds; a later one no longer clears
       // it early (audit motion:5).
       const ids = arrived.map((o) => o.id);

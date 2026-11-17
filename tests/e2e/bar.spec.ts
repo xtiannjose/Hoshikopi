@@ -305,6 +305,11 @@ test("the Bar Screen stays awake, asks for a tap for sound, and shows when an Or
   const code = await guest.getByRole("heading", { level: 1 }).innerText();
   const card = bar.getByRole("article", { name: `Order ${code}` });
   await expect(card).toHaveClass(/animate-arrive/);
+  // Said, not only chimed, for a screen reader with the sound off (audit
+  // a11y:15).
+  await expect(
+    bar.getByText(new RegExp(`New orders?: .*${code}`))
+  ).toBeVisible();
   await expect(card).toContainText(/ASAP, due \d{1,2}:\d{2} [AP]M/);
   await card.getByRole("button", { name: `Accept ${code}` }).click();
   await expect(
