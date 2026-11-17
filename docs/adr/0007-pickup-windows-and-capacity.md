@@ -26,7 +26,7 @@ The promise "ready in 8 minutes" is the product (PRD section 6). Without Capacit
 
 ## Consequences
 
-- Capacity and Prep Time defaults are Manager settings, seeded with 12 drinks and 8 food Lines per window, 4 minutes base and 1.5 minutes per drink; batch 2.1 confirms them.
+- Capacity and Prep Time defaults are Manager settings, seeded with 12 drinks and 8 food Lines per window, 4 minutes base and 1.5 minutes per drink; confirmed in batch 2.1 (roadmap section 4, audit DOC-21).
 
 ## Update 2026-11-14: what Prep Time counts
 
