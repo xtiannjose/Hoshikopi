@@ -49,7 +49,7 @@ test("Home shows the next Event, the latest Post and the Star Card (NEWS-02)", a
   await expect(
     page.getByRole("heading", { name: "Latest post" })
   ).toBeVisible();
-  await expect(page.getByText("Example card: 5 of 9")).toBeVisible();
+  await expect(page.getByText("Example card.", { exact: true })).toBeVisible();
 });
 
 test("a Manager publishes an Event and it shows (STAFF-06)", async ({

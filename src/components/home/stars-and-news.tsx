@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   ArrowRightIcon,
   CoffeeIcon,
@@ -9,6 +10,7 @@ import {
 import { EventCard } from "@/components/content/event-card";
 import { PostCard } from "@/components/content/post-card";
 import { IconCircle } from "@/components/panel";
+import { GetStarsLink, StarsLink } from "@/components/home/stars-link";
 import { StarCard } from "@/components/star-card";
 import type { EventCard as Event, PostCard as Post } from "@/modules/content";
 
@@ -44,7 +46,7 @@ export function StarsAndNews({
         <div className="light-on-scroll grid gap-4">
           <StarCard balance={5} />
           <p className="text-muted-foreground font-mono text-sm">
-            Example card: 5 of 9, four drinks to go.
+            Example card.
           </p>
         </div>
         <div className="grid content-start gap-6">
@@ -59,12 +61,10 @@ export function StarsAndNews({
               </li>
             ))}
           </ol>
-          <Link
-            href="/sign-in?next=/account"
-            className="border-input inline-flex min-h-12 w-fit items-center rounded-full border px-6 font-semibold no-underline"
-          >
-            Get your Star Card
-          </Link>
+          {/* A Member's own Stars, not the sign-in form (audit UI2-25). */}
+          <Suspense fallback={<GetStarsLink />}>
+            <StarsLink />
+          </Suspense>
         </div>
       </section>
 
