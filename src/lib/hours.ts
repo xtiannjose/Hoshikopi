@@ -140,3 +140,29 @@ export function afterLastOrder(at: Date, hours: Hours): string | null {
   }
   return `${walkIn}.`;
 }
+
+const WEEKDAYS = [
+  "Sundays",
+  "Mondays",
+  "Tuesdays",
+  "Wednesdays",
+  "Thursdays",
+  "Fridays",
+  "Saturdays",
+];
+
+/**
+ * What the "open now" badge says before it reads the clock, and all a
+ * crawler or a browser without JavaScript sees: true every week, from the
+ * weekly hours alone. It said "Open every day." even with a day closed
+ * (audit DC-26).
+ */
+export function weeklySummary(hours: Hours): string {
+  const closed = hours.weekly
+    .filter((day) => day.isClosed)
+    .map((day) => WEEKDAYS[day.weekday]);
+  if (closed.length === 0) return "Open every day.";
+  if (closed.length === 7) return "Closed for now.";
+  const last = closed.pop();
+  return `Closed on ${closed.length ? `${closed.join(", ")} and ${last}` : last}.`;
+}

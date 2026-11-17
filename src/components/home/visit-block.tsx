@@ -31,7 +31,7 @@ export function VisitBlock({
           Visit us
         </h2>
         <p className="text-lg">
-          <OpenStatus hours={hours} fallback="Open every day." />
+          <OpenStatus hours={hours} />
         </p>
         <HoursList hours={hours} />
         <p className="flex flex-wrap gap-x-6 gap-y-2">

@@ -80,7 +80,7 @@ export function Hero({
           </p>
           <p className="flex flex-wrap items-baseline gap-x-3">
             <ManilaClock />
-            <OpenStatus hours={hours} fallback="Open every day." />
+            <OpenStatus hours={hours} />
           </p>
           {pickup}
         </div>

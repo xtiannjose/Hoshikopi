@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 
 import { manila, now } from "@/lib/clock";
-import { dayWord, formatClock, openState, type Hours } from "@/lib/hours";
+import {
+  dayWord,
+  formatClock,
+  type Hours,
+  openState,
+  weeklySummary,
+} from "@/lib/hours";
 
 /**
  * "Open now, closes 9:00 PM": reads the clock in the browser, so the page
@@ -15,7 +21,8 @@ export function OpenStatus({
   fallback,
 }: {
   hours: Hours;
-  fallback: string;
+  /** Before the clock is read; by default what is true every week. */
+  fallback?: string;
 }) {
   const [at, setAt] = useState<Date | null>(null);
   useEffect(() => {
@@ -28,7 +35,7 @@ export function OpenStatus({
       clearInterval(timer);
     };
   }, []);
-  if (!at) return <span>{fallback}</span>;
+  if (!at) return <span>{fallback ?? weeklySummary(hours)}</span>;
   const state = openState(at, hours);
   if (state.open) {
     return (

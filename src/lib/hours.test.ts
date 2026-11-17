@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { afterLastOrder, hoursOn, openState, type Hours } from "./hours";
+import {
+  afterLastOrder,
+  hoursOn,
+  openState,
+  weeklySummary,
+  type Hours,
+} from "./hours";
 
 const everyDay = (weekday: number) => ({
   weekday,
@@ -90,5 +96,31 @@ describe("afterLastOrder", () => {
   it("is nothing before Last Order or after closing", () => {
     expect(afterLastOrder(at("2026-11-02T20:00"), HOURS)).toBeNull();
     expect(afterLastOrder(at("2026-11-02T21:10"), HOURS)).toBeNull();
+  });
+});
+
+// Home and /cafe said "Open every day." before the clock was read (and to
+// crawlers), even with a closed day (audit DC-26).
+describe("weeklySummary", () => {
+  const closedOn = (...days: number[]): Hours => ({
+    weekly: HOURS.weekly.map((d) => ({
+      ...d,
+      isClosed: days.includes(d.weekday),
+    })),
+    special: [],
+  });
+
+  it("says what is true every week", () => {
+    expect(weeklySummary(HOURS)).toBe("Open every day.");
+    expect(weeklySummary(closedOn(1))).toBe("Closed on Mondays.");
+    expect(weeklySummary(closedOn(0, 1))).toBe(
+      "Closed on Sundays and Mondays."
+    );
+    expect(weeklySummary(closedOn(0, 1, 2))).toBe(
+      "Closed on Sundays, Mondays and Tuesdays."
+    );
+    expect(weeklySummary(closedOn(0, 1, 2, 3, 4, 5, 6))).toBe(
+      "Closed for now."
+    );
   });
 });
