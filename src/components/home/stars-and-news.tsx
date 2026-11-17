@@ -40,7 +40,8 @@ export function StarsAndNews({
         <h2 id="stars" className="sr-only">
           Stars
         </h2>
-        <div className="grid gap-4">
+        {/* Lights as it scrolls into view (audit motion:4). */}
+        <div className="light-on-scroll grid gap-4">
           <StarCard balance={5} />
           <p className="text-muted-foreground font-mono text-sm">
             Example card: 5 of 9, four drinks to go.

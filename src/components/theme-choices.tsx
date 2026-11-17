@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore, type ReactNode } from "react";
 
-import { THEME_KEY, type ThemeChoice } from "./theme";
+import { THEME_KEY, type ThemeChoice } from "./theme-key";
 
 const listeners = new Set<() => void>();
 

@@ -305,8 +305,31 @@
   }
 }
 
-/* Page to page: the old page fades out fast, the new one rises in
-   (template.tsx). Clicks pass through to the live page meanwhile. */
+/* The Star Card's Stars light one by one, 50 ms apart (docs/05 section 7).
+   Unlayered, so it beats the animate-* shorthand. */
+.star-light {
+  animation-delay: calc(var(--light) * 50ms);
+}
+/* On Home the Star Card sits far down the page, so it lights as it
+   scrolls into view instead of on load (audit motion:4). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .light-on-scroll {
+      view-timeline: --star-card;
+    }
+    .light-on-scroll .star-light {
+      animation-delay: 0s;
+      animation-timeline: --star-card;
+      animation-range: entry calc(10% + var(--light) * 7%) entry
+        calc(40% + var(--light) * 7%);
+    }
+  }
+}
+
+/* Page to page: the old page fades out fast while the new one rises in
+   (template.tsx). The header and footer stay clickable meanwhile; the page
+   itself takes taps only once its fade ends, so the rise is short and
+   starts at once (audit motion:3). */
 ::view-transition {
   pointer-events: none;
 }
@@ -314,8 +337,7 @@
   animation: fade-out 120ms ease-in both;
 }
 ::view-transition-new(.page) {
-  animation: var(--animate-rise);
-  animation-delay: 80ms;
+  animation: rise 160ms var(--ease-calm) both;
 }
 
 /* Reduced motion: every state arrives at once. */

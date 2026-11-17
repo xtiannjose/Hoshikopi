@@ -1,7 +1,7 @@
 "use client";
 
 import { ConceptNotice } from "@/components/concept-notice";
-import { THEME_SCRIPT } from "@/components/theme";
+import { THEME_PICK_SCRIPT } from "@/components/theme-pick";
 
 import "./globals.css";
 
@@ -20,7 +20,7 @@ export default function GlobalError({
     <html lang="en" suppressHydrationWarning>
       <head>
         <title>Something went wrong | Hoshikopi</title>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_PICK_SCRIPT }} />
       </head>
       <body className="bg-background text-foreground flex min-h-dvh flex-col font-sans">
         <main

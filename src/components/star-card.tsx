@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { STARS_PER_REWARD } from "@/modules/loyalty";
 
@@ -31,8 +32,10 @@ const EDGES: [number, number][] = [
 ];
 const STAR =
   "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z";
-// Nine Stars light within about 750 ms (docs/05 section 7).
-const lightAt = (index: number) => `${index * 50}ms`;
+// Nine Stars light within about 750 ms (docs/05 section 7): .star-light in
+// globals.css turns --light into a 50 ms stagger, or into a place on the
+// scroll on Home (audit motion:4).
+const lightAt = (index: number) => ({ "--light": index }) as CSSProperties;
 
 /** The Star Card: "Nine Stars make a cup" (LOY-02). */
 export function StarCard({ balance }: { balance: number }) {
@@ -62,9 +65,11 @@ export function StarCard({ balance }: { balance: number }) {
                 y2={POINTS[b][1]}
                 strokeWidth={on ? 1.6 : 1}
                 strokeDasharray={on ? undefined : "2 2"}
-                className={on ? "stroke-lit animate-fade-in" : "stroke-input"}
+                className={
+                  on ? "stroke-lit animate-fade-in star-light" : "stroke-input"
+                }
                 // A lit line draws in once both of its Stars are lit.
-                style={on ? { animationDelay: lightAt(Math.max(a, b)) } : {}}
+                style={on ? lightAt(Math.max(a, b)) : {}}
               />
             );
           })}
@@ -77,9 +82,9 @@ export function StarCard({ balance }: { balance: number }) {
                 {/* The Stars light one by one, in the order they draw the cup. */}
                 <path
                   d={STAR}
-                  className="fill-star stroke-star-edge animate-pop origin-center [transform-box:fill-box]"
+                  className="fill-star stroke-star-edge animate-pop star-light origin-center [transform-box:fill-box]"
                   strokeWidth={1.2}
-                  style={{ animationDelay: lightAt(index) }}
+                  style={lightAt(index)}
                 />
               </g>
             ) : (
