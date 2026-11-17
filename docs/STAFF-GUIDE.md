@@ -333,7 +333,7 @@ If you see "The refund for K-042 didn't go through. Try again in a minute.", wai
 - **Everyone** (with the code): each row shows the name, the price and a **Sold out** or **Back on** button, the same as on the Bar Screen (section 5.8). Pills say **Sold out today** and **Hidden**.
 - **Managers** also see **Add a Menu Item**, **Categories** and **Add an Option Group** at the top, and each name opens its editor.
 
-The **Jump to** row of buttons scrolls to a Category or to Option Groups.
+The row of buttons under the title shows one part of the menu at a time: **Everything**, one Category (for example **Coffee**), or **Option Groups**. The button you are on is filled. Each Menu Item shows its photo, or a plain stand-in until it has one.
 
 ### 8.1 Prices
 
