@@ -402,7 +402,7 @@ async function Account() {
                     type="checkbox"
                     name="marketingOptIn"
                     defaultChecked={profile?.marketingOptIn}
-                    className="mt-1 size-5"
+                    className="mt-1 size-5 shrink-0"
                   />
                   <span>
                     Email me about new drinks and Events. Separate from order

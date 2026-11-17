@@ -82,7 +82,7 @@ export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
                       name={`closed-${day.weekday}`}
                       defaultChecked={day.isClosed}
                       aria-label={`${name} closed`}
-                      className="size-5"
+                      className="size-5 shrink-0"
                     />
                   </td>
                   {(
@@ -145,7 +145,7 @@ export function SpecialHoursForm({ today }: { today: string }) {
         />
       </div>
       <label className="inline-flex min-h-11 items-center gap-2">
-        <input type="checkbox" name="isClosed" className="size-5" />
+        <input type="checkbox" name="isClosed" className="size-5 shrink-0" />
         Closed all day
       </label>
       <div className="grid gap-4 sm:grid-cols-3">

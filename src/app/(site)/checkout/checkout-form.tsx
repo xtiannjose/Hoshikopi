@@ -156,7 +156,7 @@ export function CheckoutForm({
             name="useReward"
             checked={useReward}
             onChange={(event) => setUseReward(event.target.checked)}
-            className="size-5"
+            className="size-5 shrink-0"
           />
           <span>
             <span className="font-semibold">
@@ -181,7 +181,7 @@ export function CheckoutForm({
                 name="pickup"
                 value="asap"
                 defaultChecked={!pickupKept}
-                className="size-5"
+                className="size-5 shrink-0"
               />
               <span>
                 <span className="font-semibold">As soon as possible</span>
@@ -228,7 +228,7 @@ export function CheckoutForm({
                   name="pickup"
                   value="later"
                   defaultChecked={keptLater}
-                  className="size-5"
+                  className="size-5 shrink-0"
                 />
                 <span className="font-semibold">Later today</span>
               </label>
@@ -333,7 +333,7 @@ export function CheckoutForm({
                   name="paymentMethod"
                   value={p.value}
                   defaultChecked={p.value === keptPayment}
-                  className="size-5"
+                  className="size-5 shrink-0"
                 />
                 <span className="flex-1">
                   <span className="font-semibold">{p.label}</span>

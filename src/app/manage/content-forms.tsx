@@ -123,7 +123,7 @@ export function EventForm({
           type="checkbox"
           name="isPublished"
           defaultChecked={event.isPublished}
-          className="size-5"
+          className="size-5 shrink-0"
         />
         Published on the site
       </label>
@@ -207,7 +207,7 @@ export function PostForm({
             name="isPublished"
             defaultChecked={post.isPublished}
             aria-describedby="isPublished-hint"
-            className="size-5"
+            className="size-5 shrink-0"
           />
           Published on the site
         </label>

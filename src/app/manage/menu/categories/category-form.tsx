@@ -84,7 +84,7 @@ export function CategoryForm({
               name="isHidden"
               defaultChecked={category.isHidden}
               aria-describedby={`hidden-${key}-hint`}
-              className="size-5"
+              className="size-5 shrink-0"
             />
             Hidden
           </label>

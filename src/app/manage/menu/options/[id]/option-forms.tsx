@@ -126,7 +126,7 @@ export function OptionForm({
           type="checkbox"
           name="isDefault"
           defaultChecked={option.isDefault}
-          className="size-5"
+          className="size-5 shrink-0"
         />
         Picked by default
       </label>
@@ -135,7 +135,7 @@ export function OptionForm({
           type="checkbox"
           name="isHidden"
           defaultChecked={option.isHidden}
-          className="size-5"
+          className="size-5 shrink-0"
         />
         Hidden: not on the menu (past Orders keep it)
       </label>

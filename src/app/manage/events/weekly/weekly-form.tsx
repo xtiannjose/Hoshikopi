@@ -97,7 +97,7 @@ export function WeeklyForm({ event }: { event: WeeklyFormData }) {
           type="checkbox"
           name="isPublished"
           defaultChecked={event.isPublished}
-          className="size-5"
+          className="size-5 shrink-0"
         />
         Shown on the site
       </label>

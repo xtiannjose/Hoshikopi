@@ -153,7 +153,7 @@ export function ItemForm({
               type="checkbox"
               name="isDrink"
               defaultChecked={item.isDrink}
-              className="size-5"
+              className="size-5 shrink-0"
             />
             A drink (earns a Star, counts toward drink Capacity)
           </label>
@@ -162,7 +162,7 @@ export function ItemForm({
               type="checkbox"
               name="isHidden"
               defaultChecked={item.isHidden}
-              className="size-5"
+              className="size-5 shrink-0"
             />
             Hidden from the menu
           </label>

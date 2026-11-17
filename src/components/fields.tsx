@@ -100,7 +100,7 @@ export function Checkboxes({
               name={name}
               value={value}
               defaultChecked={checked.includes(value)}
-              className="size-5"
+              className="size-5 shrink-0"
             />
             {label}
           </label>
