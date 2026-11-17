@@ -56,4 +56,11 @@ test("Opening Hours refuse Last Order after closing", async ({ page }) => {
   await expect(
     page.getByText("Last order must be after opening and by closing.")
   ).toBeVisible();
+  // The row's error is read with its times, not only "Some fields need a
+  // fix." (audit DC-22).
+  await expect(
+    page.getByLabel("Monday last order")
+  ).toHaveAccessibleDescription(
+    "Last order must be after opening and by closing."
+  );
 });

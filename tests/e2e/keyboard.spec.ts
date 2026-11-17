@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { e2eQuery, openAllDayToday } from "./db";
+import { signIn } from "./sign-in";
 
 // Keyboard focus (7.8a): never hidden, never lost (audit a11y:1 to a11y:4).
 
@@ -89,6 +90,23 @@ test("the phone menu takes focus and closes when Tab leaves it (a11y:2)", async 
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Shift+Tab");
   await expect(page.locator("#site-menu")).toBeHidden();
+});
+
+// The fix lived only in the customer frame: in /manage, focus stayed on the
+// hidden old page (audit DC-20). The Day and Night switch shows at every
+// width there too (audit DC-23).
+test("in Manage too, focus starts in the new page, and Day or Night can be pinned", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a keyboard user on desktop");
+  await signIn(page, "christian@hoshikopi.example", "/manage");
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expect(page.getByRole("group", { name: "Colours" })).toBeVisible();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.locator('main a[href="/manage/hours"]').first().focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/manage\/hours/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 });
 
 test("after a link, focus starts in the new page (a11y:3)", async ({

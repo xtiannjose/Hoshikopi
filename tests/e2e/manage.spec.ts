@@ -69,6 +69,9 @@ test("Staff set up a Second Factor before /manage; the Bar Screen skips it (ADR 
   await code.fill("000000");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText("That code didn't match.")).toBeVisible();
+  // Focus goes to the field, so a screen reader reads why (audit DC-21).
+  await expect(code).toBeFocused();
+  await expect(code).toHaveAccessibleDescription(/That code didn't match\./);
 
   // What an authenticator app makes of the setup key.
   const key = (await page.locator("code").textContent())!.replace(/\s/g, "");

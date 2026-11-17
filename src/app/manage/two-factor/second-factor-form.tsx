@@ -5,6 +5,7 @@ import { useActionState } from "react";
 
 import { busy, Field } from "@/components/fields";
 import { PRIMARY_PILL_LG } from "@/components/panel";
+import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { secondFactorAction, type SecondFactorState } from "./actions";
 
@@ -13,9 +14,12 @@ export function SecondFactorForm({ next }: { next: string }) {
     secondFactorAction,
     {}
   );
+  // A wrong code moves focus to the field, so a screen reader reads its
+  // error; nothing said it before (audit DC-21).
+  const { form } = useFocusInvalid(Boolean(state.message), state);
   return (
     <>
-      <form action={action} className="mt-6 grid max-w-xs gap-4">
+      <form ref={form} action={action} className="mt-6 grid max-w-xs gap-4">
         <input type="hidden" name="next" value={next} />
         <Field
           name="code"
