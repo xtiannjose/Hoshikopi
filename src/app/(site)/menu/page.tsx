@@ -20,13 +20,14 @@ export default async function MenuPage() {
       <PageHeader
         title="Menu"
         intro={
-          // Both lines are in the page; the palette shows one (ADR 0010).
+          // Both lines are in the page; the palette shows one (ADR 0010),
+          // so neither names a time of day (audit UI1-15).
           <>
             <span className="night:hidden">
               Kopi, tea and merienda, made to order.
             </span>
             <span className="night:inline hidden">
-              A calm cup and a late merienda for the study night.
+              A calm cup and a merienda for your study session.
             </span>
           </>
         }

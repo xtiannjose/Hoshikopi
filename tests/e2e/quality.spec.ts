@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations, openIn } from "./axe";
 import { openAllDayToday } from "./db";
+import { addToCart } from "./order";
 
 const PAGES = [
   "/",
@@ -125,6 +126,33 @@ test("the header fits 320 px with items in the Cart", async ({
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
+test("the Main nav stays centred in the header, with or without a Cart (audit UI2-13)", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "desktop",
+    "the Main nav is desktop only"
+  );
+  const offCentre = async () => {
+    const header = await page.getByRole("banner").boundingBox();
+    const nav = await page
+      .getByRole("navigation", { name: "Main" })
+      .boundingBox();
+    return Math.abs(header!.x + header!.width / 2 - (nav!.x + nav!.width / 2));
+  };
+  await page.goto("/menu");
+  expect(await offCentre()).toBeLessThanOrEqual(1);
+  await addToCart(page, "hoshi-latte");
+  await page.goto("/menu");
+  await expect(page.getByRole("link", { name: /Cart 1 item/ })).toBeVisible();
+  expect(await offCentre()).toBeLessThanOrEqual(1);
+  // Narrower than about 1200 px the nav gives way; the Cart pill must not
+  // wrap the right group onto a second row (68 px header, one row).
+  await page.setViewportSize({ width: 1024, height: 800 });
+  const header = await page.getByRole("banner").boundingBox();
+  expect(header!.height).toBeLessThan(80);
+});
+
 test("the skip link and a keyboard-only order", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "a keyboard user on desktop");
   await page.goto("/menu/item/hoshi-latte");
@@ -175,6 +203,24 @@ test("under reduced motion, Add to order still shows Added on a phone (audit mot
   await expect(
     page.locator("button span.animate-confirm", { hasText: "Added" })
   ).toHaveCSS("opacity", "1");
+});
+
+test("the main buttons dim under the pointer on desktop (audit UI2-09)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a pointer that hovers");
+  // Only the hero has this name on Home.
+  await page.goto("/");
+  const orderAhead = page.getByRole("link", {
+    name: "Order ahead",
+    exact: true,
+  });
+  await orderAhead.hover();
+  await expect(orderAhead).toHaveCSS("opacity", "0.9");
+  await page.goto("/menu/item/kopi-hitam");
+  const add = page.getByRole("button", { name: "Add to order" });
+  await add.hover();
+  await expect(add).toHaveCSS("opacity", "0.9");
 });
 
 test("the Content-Security-Policy holds and nothing breaks it (ADR 0013)", async ({
@@ -276,6 +322,35 @@ test("a doubled default text size fits a phone screen (audit a11y:8, a11y:12)", 
         document.documentElement.clientWidth
     );
     expect(pageOverflow, path).toBeLessThanOrEqual(0);
+  }
+});
+
+// Badges, Pills, the Test Mode tag and captions were 12 px (audit UI2-17).
+test("no visible text is under 14 px (docs/05 section 4, audit UI2-17)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "phone", "once is enough");
+  await openAllDayToday();
+  // A Cart, so /checkout shows the payment options and the Test Mode tag.
+  await addToCart(page, "hoshi-latte");
+  for (const path of PAGES) {
+    await page.goto(path);
+    const small = await page.evaluate(() => {
+      const found: string[] = [];
+      const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT
+      );
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const el = node.parentElement;
+        if (!node.textContent?.trim() || !el?.checkVisibility()) continue;
+        if (parseFloat(getComputedStyle(el).fontSize) < 14) {
+          found.push(node.textContent.trim());
+        }
+      }
+      return found;
+    });
+    expect(small, path).toEqual([]);
   }
 });
 

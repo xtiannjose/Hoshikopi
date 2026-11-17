@@ -47,7 +47,7 @@ A Menu Item with a last day on the menu; after that Manila day it is Hidden by i
 _Avoid_: Limited (in code), temporary
 
 **Barista Pick**:
-One of the Menu Items the baristas recommend, a good start for a first-time visitor. There is a set of three for each palette: Day picks under "Barista picks this week", Night picks under "Barista picks for tonight"; Home and the menu show the current palette's set. The Manager changes them.
+One of the Menu Items the baristas recommend, a good start for a first-time visitor. There is a set of three for each palette: Day picks under "Barista picks this week", Night picks under "Barista picks to take it slow"; Home and the menu show the current palette's set. The Manager changes them.
 _Avoid_: Featured, signature (as a type name), highlight
 
 **Allergens**:

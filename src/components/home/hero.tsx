@@ -10,16 +10,16 @@ import type { Hours } from "@/lib/hours";
 import type { CafeDetails, RoomPhoto } from "@/modules/cafe";
 
 // Both lines are in the page; the palette shows one (INFO-12, ADR 0010).
+// No time of day in either: a visitor who pins a palette sees it all day
+// (audit UI1-15).
 const COPY = {
-  // No time of day in the Day copy: it shows from 6 AM to 6 PM, and all
-  // day for a visitor who pins Day (audit UI1-15).
   day: {
     title: "Your kopi, ready before you get here.",
     line: "Order ahead on your way in, pick up at the counter and earn a Star with every drink.",
   },
   night: {
-    title: "Your evening kopi, ready before you get here.",
-    line: "Order ahead for a study night or a late merienda, pick up at the counter and earn a Star with every drink.",
+    title: "Your kopi, ready when you are.",
+    line: "Order ahead for a study session or a merienda with friends, pick up at the counter and earn a Star with every drink.",
   },
 };
 
@@ -82,9 +82,12 @@ export function Hero({
           priority
           className="rounded-card aspect-4/5 lg:aspect-auto lg:min-h-[28rem]"
         />
-        <figcaption className="text-muted-foreground font-mono text-xs">
-          {photo.caption}
-        </figcaption>
+        {/* Only a shown photo gets a caption (ADR 0012, audit UI2-02). */}
+        {photo.src && (
+          <figcaption className="text-muted-foreground font-mono text-sm">
+            {photo.caption}
+          </figcaption>
+        )}
       </figure>
     </section>
   );

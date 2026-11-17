@@ -38,9 +38,14 @@ export function PrintedMenu({
         </fieldset>
       </div>
 
-      <div className="mt-10 grid gap-x-12 gap-y-10 group-has-[#view-photos:checked]/view:hidden md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      {/* CSS columns pack the blocks like a printed menu, so no block sits
+          alone in a last row (audit UI2-21). */}
+      <div className="mt-10 gap-x-12 group-has-[#view-photos:checked]/view:hidden md:columns-2 xl:columns-3 2xl:columns-4">
         {menu.map((category) => (
-          <div key={category.slug}>
+          <div
+            key={category.slug}
+            className="mb-10 break-inside-avoid last:mb-0"
+          >
             <h3 className="font-display pb-1 text-2xl italic">
               {category.name}
             </h3>
@@ -68,7 +73,7 @@ export function PrintedMenu({
           </div>
         ))}
         {priced.length > 0 && (
-          <div>
+          <div className="mb-10 break-inside-avoid last:mb-0">
             <h3 className="font-display pb-1 text-2xl italic">Make it yours</h3>
             <ul className="mt-3 grid gap-2">
               {priced.map((option) => (

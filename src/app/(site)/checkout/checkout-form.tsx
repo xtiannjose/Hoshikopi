@@ -7,7 +7,7 @@ import { ClockIcon, UserIcon, WalletIcon } from "@phosphor-icons/react";
 import { formatPrice } from "@/lib/money";
 
 import { busy, Field, fieldClass } from "@/components/fields";
-import { IconCircle } from "@/components/panel";
+import { IconCircle, Pill } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { placeOrderAction, type CheckoutState } from "./actions";
@@ -342,9 +342,7 @@ export function CheckoutForm({
                   </span>
                 </span>
                 {p.value !== "pay_at_pickup" && (
-                  <span className="border-warning text-warning rounded-full border px-2 py-0.5 text-xs font-semibold">
-                    Test Mode
-                  </span>
+                  <Pill tone="warning">Test Mode</Pill>
                 )}
               </label>
             ))}

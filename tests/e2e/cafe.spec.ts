@@ -35,7 +35,7 @@ for (const palette of ["day", "night"] as const) {
     const title =
       palette === "day"
         ? "Your kopi, ready before you get here."
-        : "Your evening kopi, ready before you get here.";
+        : "Your kopi, ready when you are.";
     // Both lines are in the page; only the palette's one is visible.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title, {
       useInnerText: true,
@@ -45,7 +45,7 @@ for (const palette of ["day", "night"] as const) {
       name:
         palette === "day"
           ? "Barista picks this week"
-          : "Barista picks for tonight",
+          : "Barista picks to take it slow",
     });
     await expect(picks).toBeVisible();
     await expect(picks.getByRole("heading", { level: 3 })).toHaveText(
@@ -71,6 +71,38 @@ test("the Home menu switches from the list to photos", async ({ page }) => {
   await expect(
     menu.getByRole("article").filter({ hasText: "Hoshi Latte" })
   ).toBeVisible();
+});
+
+// At xl a grid left Make it yours alone in a last row (audit UI2-21).
+test("the printed menu packs its blocks in columns, with no lone last row (audit UI2-21)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the columns start at xl");
+  await page.goto("/");
+  const menu = page.locator("#menu");
+  const coffee = await menu
+    .getByRole("heading", { name: "Coffee", exact: true, level: 3 })
+    .boundingBox();
+  const yours = await menu
+    .getByRole("heading", { name: "Make it yours" })
+    .boundingBox();
+  expect(yours!.x).toBeGreaterThan(coffee!.x);
+});
+
+// A caption under a plain stand-in labelled a picture nobody sees
+// (ADR 0012, audit UI2-02).
+test("a stand-in photo has no caption (ADR 0012, audit UI2-02)", async ({
+  page,
+}) => {
+  for (const path of ["/", "/cafe"]) {
+    await page.goto(path);
+    await expect(
+      page.locator("figure:not(:has(img)) figcaption"),
+      path
+    ).toHaveCount(0);
+  }
+  await page.goto("/concept");
+  await expect(page.getByText("marked as such")).toHaveCount(0);
 });
 
 test("it says closed after closing time", async ({ page }) => {

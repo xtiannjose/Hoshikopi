@@ -563,9 +563,10 @@ function Card({
       className={`bg-background rounded-card grid gap-3 border p-4 ${fresh ? "border-star animate-arrive" : late ? "border-warning border-2" : "border-border"}`}
     >
       {/* The code never breaks at its hyphen; the time wraps under it on a
-          narrow card (audit staff:13). */}
+          narrow card (audit staff:13). It is set in the UI sans with tabular
+          figures, as docs/05 section 4 says (audit UI2-12). */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <p className="font-display shrink-0 text-4xl whitespace-nowrap italic">
+        <p className="shrink-0 font-sans text-4xl font-bold whitespace-nowrap tabular-nums">
           {order.code}
         </p>
         <p className="text-right">

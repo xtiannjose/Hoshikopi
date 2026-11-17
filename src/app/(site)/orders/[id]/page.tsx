@@ -190,7 +190,10 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
             </p>
             <OrderStatusPill status={order.status} />
           </div>
-          <h1 className="font-display pb-1 text-6xl italic">{order.code}</h1>
+          {/* The code in the UI sans with tabular figures, as docs/05 section 4 says (audit UI2-12). */}
+          <h1 className="font-sans text-6xl font-bold tabular-nums">
+            {order.code}
+          </h1>
           <p className="border-input mt-4 flex flex-wrap justify-between gap-x-4 border-t border-dashed pt-4 font-mono text-sm">
             <span className="text-muted-foreground">Pickup</span>
             <span>

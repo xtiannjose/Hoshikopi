@@ -36,6 +36,15 @@ test("a Guest orders ahead and pays at pickup (ORD-03 to ORD-08)", async ({
     "Salamat! We got your order. The bar will accept it soon."
   );
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^K-\d{3}$/);
+  // The code in upright sans with tabular figures (audit UI2-12).
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCSS(
+    "font-style",
+    "normal"
+  );
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCSS(
+    "font-variant-numeric",
+    "tabular-nums"
+  );
   // The "Order placed" email went out with the same Order Code (ORD-10).
   const code = await page.getByRole("heading", { level: 1 }).innerText();
   await expect

@@ -47,7 +47,10 @@ const MADE_UP = [
     "The menu",
     "Drinks, prices and allergens are invented to make ordering real to try.",
   ],
-  ["The photos", "Room and drink pictures are concept images, marked as such."],
+  [
+    "The photos",
+    "Room and drink pictures will be AI-generated concept images, labelled as such. Until one is made, a plain panel stands in.",
+  ],
   ["Events and news", "Every Event and Post is an example."],
 ] as const;
 

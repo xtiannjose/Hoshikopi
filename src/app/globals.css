@@ -145,6 +145,14 @@
     scale: 0.97;
   }
 
+  /* Primary buttons and pill links dim a little under the pointer, at
+     once: colours never ease (docs/05 section 7, audit UI2-09). */
+  @media (hover: hover) {
+    :is(a, button).bg-primary:not(:disabled, [aria-disabled="true"]):hover {
+      opacity: 0.9;
+    }
+  }
+
   /* Disclosures (FAQ, Later today) fade their answer in. */
   details[open] > :not(summary) {
     animation: var(--animate-rise);

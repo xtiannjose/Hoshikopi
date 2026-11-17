@@ -56,6 +56,11 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
   await expect(card).toContainText("less ice please");
   // What to collect, so a Barista needs no Manager screen (audit journeys:7).
   await expect(card).toContainText(/Pay at Pickup: collect PHP \d/);
+  // The code in upright sans with tabular figures; first() skips the
+  // button's sr-only copy (audit UI2-12).
+  const codeText = card.getByText(code, { exact: true }).first();
+  await expect(codeText).toHaveCSS("font-style", "normal");
+  await expect(codeText).toHaveCSS("font-variant-numeric", "tabular-nums");
   await expectNoAxeViolations(bar);
 
   const steps: [string, string][] = [

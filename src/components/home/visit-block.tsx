@@ -72,9 +72,12 @@ export function VisitBlock({
           sizes="(min-width: 1024px) 50vw, 100vw"
           className="rounded-card aspect-4/3"
         />
-        <figcaption className="text-muted-foreground font-mono text-xs">
-          {photo.caption}
-        </figcaption>
+        {/* Only a shown photo gets a caption (ADR 0012, audit UI2-02). */}
+        {photo.src && (
+          <figcaption className="text-muted-foreground font-mono text-sm">
+            {photo.caption}
+          </figcaption>
+        )}
       </figure>
     </section>
   );
