@@ -417,18 +417,32 @@ async function Account() {
                   <TrashIcon aria-hidden size={18} />
                   Delete my account
                 </summary>
-                <form action={deleteAccountAction} className="grid gap-3 py-2">
-                  <p className="max-w-measure">
-                    Your Stars and sign-in go for good. Your orders stay as the
-                    cafe&apos;s records, without your name, email or phone.
+                {staff ? (
+                  // The only Manager could delete their account and leave
+                  // nobody to run the cafe (audit DC-01).
+                  <p className="max-w-measure py-2">
+                    This is a Staff account, so it can&apos;t be deleted here.
+                    Ask another Manager to remove your Staff role first. The
+                    cafe always keeps one Manager.
                   </p>
-                  <button
-                    type="submit"
-                    className="border-destructive text-destructive min-h-11 justify-self-start rounded-full border px-5 font-semibold"
+                ) : (
+                  <form
+                    action={deleteAccountAction}
+                    className="grid gap-3 py-2"
                   >
-                    Yes, delete my account
-                  </button>
-                </form>
+                    <p className="max-w-measure">
+                      Your Stars and sign-in go for good. Your orders stay as
+                      the cafe&apos;s records, without your name, email or
+                      phone.
+                    </p>
+                    <button
+                      type="submit"
+                      className="border-destructive text-destructive min-h-11 justify-self-start rounded-full border px-5 font-semibold"
+                    >
+                      Yes, delete my account
+                    </button>
+                  </form>
+                )}
               </details>
             </Panel>
           </div>

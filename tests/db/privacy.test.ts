@@ -200,7 +200,9 @@ describe("deleting an account (ACC-03)", () => {
   // (SEC1-19).
   it("keeps Orders for the cafe's records without the Member, and forgets the rest", async () => {
     const placed = await hoshiOrders();
-    await deleteAccountData({ id: HOSHI, email: "hoshi@hoshikopi.example" });
+    expect(
+      await deleteAccountData({ id: HOSHI, email: "hoshi@hoshikopi.example" })
+    ).toBe("deleted");
 
     const order = await db.order.findUniqueOrThrow({
       where: { id: placed.orderId },
@@ -235,6 +237,22 @@ describe("deleting an account (ACC-03)", () => {
     expect(user.name).toBe("");
     expect(await db.session.count({ where: { userId: HOSHI } })).toBe(0);
     expect(await memberProfile(HOSHI)).toBeNull();
+  });
+
+  // The only Manager could delete their own account, and then nobody could
+  // open /manage or give the Manager role again (audit DC-01).
+  it("refuses a Staff account and changes nothing", async () => {
+    for (const [id, email, role] of [
+      ["seed-manager", "christian@hoshikopi.example", "manager"],
+      ["seed-barista", "annika@hoshikopi.example", "barista"],
+    ] as const) {
+      expect(await deleteAccountData({ id, email })).toBe("staff");
+      expect(await db.user.findUniqueOrThrow({ where: { id } })).toMatchObject({
+        email,
+        role,
+        deletedAt: null,
+      });
+    }
   });
 });
 

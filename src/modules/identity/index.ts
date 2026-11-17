@@ -25,7 +25,12 @@ export {
   enterSecondFactor,
   secondFactorEnrolment,
 } from "./internal/second-factor";
-export { forgetMember, memberProfile, updateProfile } from "./internal/privacy";
+export {
+  forgetMember,
+  memberProfile,
+  staffRoleFor,
+  updateProfile,
+} from "./internal/privacy";
 export {
   endSessions,
   setRole,
