@@ -2,6 +2,9 @@
   "name": "hoshikopi",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -28,7 +31,7 @@
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@vercel/blob": "^2.9.0",
-    "better-auth": "^1.7.20",
+    "better-auth": "^1.7.25",
     "next": "16.4.6",
     "pg": "^8.23.1",
     "react": "19.3.1",
