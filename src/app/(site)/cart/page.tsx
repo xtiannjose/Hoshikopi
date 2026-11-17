@@ -60,7 +60,16 @@ const PROBLEMS: Record<NonNullable<CartLineView["problem"]>, string> = {
 async function LeftOut({
   searchParams,
 }: Pick<PageProps<"/cart">, "searchParams">) {
-  const { left } = await searchParams;
+  const { left, favourite } = await searchParams;
+  if (favourite === "full" || favourite === "unavailable") {
+    return (
+      <p role="status" className="bg-muted rounded-card mt-6 p-4">
+        {favourite === "full"
+          ? "Your Cart already has 20 of that Favourite, the most one Line holds."
+          : "That Favourite can't be added today: it's sold out or off the menu."}
+      </p>
+    );
+  }
   // A count, never text from the address, capped at an Order's size.
   const count = Math.min(Math.floor(Number(left)) || 0, 20);
   if (count < 1) return null;

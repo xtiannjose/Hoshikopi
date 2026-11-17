@@ -62,9 +62,14 @@ export async function addFavouriteAction(form: FormData) {
           note: "",
         }
       )
-    : { ok: false };
+    : { ok: false as const, reason: "unavailable" as const };
   refresh();
-  redirect(result.ok ? "/cart" : "/cart?left=1");
+  if (result.ok) redirect("/cart");
+  // Its own words: a full Line is not "sold out or off the menu", and it
+  // is not "from that order" (audit DC-34).
+  redirect(
+    `/cart?favourite=${result.reason === "too_many" ? "full" : "unavailable"}`
+  );
 }
 
 export async function removeFavouriteAction(form: FormData) {
