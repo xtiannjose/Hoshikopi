@@ -29,13 +29,16 @@ import {
   pauseAction,
   resumeAction,
 } from "./actions";
+import { bookedNote } from "./booked-note";
 import { CapacityForm, SpecialHoursForm, WeeklyHoursForm } from "./hours-forms";
 
 export const metadata: Metadata = { title: "Hours and Capacity" };
 
 const back = <BackLink href="/manage">Manage</BackLink>;
 
-export default function ManageHoursPage() {
+export default function ManageHoursPage({
+  searchParams,
+}: PageProps<"/manage/hours">) {
   return (
     <main id="main" className="page-width flex-1 py-10">
       <Suspense
@@ -46,14 +49,20 @@ export default function ManageHoursPage() {
           </>
         }
       >
-        <Editor />
+        <Editor searchParams={searchParams} />
       </Suspense>
     </main>
   );
 }
 
-async function Editor() {
+async function Editor({
+  searchParams,
+}: {
+  searchParams: PageProps<"/manage/hours">["searchParams"];
+}) {
   await requireStaff("manager", "/manage/hours");
+  // Set after removing today's Special Hours stranded Orders (audit DC-14).
+  const booked = Number((await searchParams).booked) || 0;
   const at = now();
   const [hours, day] = await Promise.all([
     getHoursForStaff(at),
@@ -156,6 +165,11 @@ async function Editor() {
             title="Special Hours"
             icon={<CalendarStarIcon size={20} />}
           >
+            {booked > 0 && (
+              <p role="status" className="text-warning mb-3 font-semibold">
+                {bookedNote("Removed.", booked)}
+              </p>
+            )}
             {hours.special.length > 0 ? (
               <ul className="border-border border-t">
                 {hours.special.map((s) => (

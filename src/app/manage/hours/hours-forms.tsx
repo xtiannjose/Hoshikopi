@@ -111,6 +111,7 @@ export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
         pending={pending}
         status={state.status}
         label="Save Opening Hours"
+        savedText={state.saved}
       />
     </form>
   );
