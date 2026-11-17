@@ -54,6 +54,10 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm test
+      # Renders every prerendered page, so a page that fails to build or a
+      # server/client boundary mistake fails here, not on Vercel (audit
+      # DC-02). Vitest's global setup has migrated and seeded the database.
+      - run: npm run build
       # High and critical only, so a new low advisory never blocks an
       # unrelated pull request.
       - run: npm audit --omit=dev --audit-level=high

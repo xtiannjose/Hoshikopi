@@ -249,7 +249,7 @@ When asked to publish a batch:
 
 To set up on another computer, clone it (section 3).
 
-**CI** (continuous integration: checks GitHub runs on every change; `.github/workflows/ci.yml`, batch 7.11a) runs on every pull request and on `main`: lint, formatting, the type check, Vitest against a Postgres 17 service, and `npm audit --omit=dev --audit-level=high`. Playwright stays local (`npm run test:e2e`): it builds and serves the app and depends on the Manila clock.
+**CI** (continuous integration: checks GitHub runs on every change; `.github/workflows/ci.yml`, batch 7.11a) runs on every pull request and on `main`: lint, formatting, the type check, Vitest against a Postgres 17 service, a production build (`npm run build`, which renders every prerendered page, audit DC-02), and `npm audit --omit=dev --audit-level=high`. Playwright stays local (`npm run test:e2e`): it builds and serves the app and depends on the Manila clock.
 
 **Dependabot** (`.github/dependabot.yml`), a GitHub robot that keeps libraries up to date, opens grouped weekly pull requests for npm packages and the GitHub Actions. Review and merge them like any other.
 
