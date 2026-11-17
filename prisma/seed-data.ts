@@ -291,7 +291,7 @@ const CATEGORIES: {
         name: "House Blend 250 g",
         pesos: 520,
         description:
-          "Whole beans: Benguet arabica with a little Batangas barako.",
+          "Whole beans: Benguet arabica with a little Batangas barako. Notes of muscovado, toasted nuts and a little dark chocolate.",
       },
       {
         slug: "hoshikopi-tumbler",
@@ -586,7 +586,7 @@ export async function seedDatabase(
         excerpt:
           "Muscovado, a double shot and sea-salt cream: the three steps behind our signature drink.",
         bodyMd:
-          "We melt muscovado into the espresso so it tastes of caramel, not sugar. Then cold milk, then a cap of cream whipped with a pinch of sea salt. Sip it without stirring: salt first, then sweet, then coffee.",
+          "We melt muscovado into the espresso so it tastes of caramel, not sugar. Then cold milk, then a cap of cream whipped with a pinch of sea salt. Sip it without stirring: salt first, then sweet, then coffee.\n\n[Order a Hoshi Latte](/menu/item/hoshi-latte)",
         publishedAt: daysAgo(3),
       },
       {
@@ -594,7 +594,7 @@ export async function seedDatabase(
         title: "Our beans from Benguet",
         excerpt: "Why our house blend starts in the Cordillera highlands.",
         bodyMd:
-          "Arabica from Benguet grows slowly in cool air, which gives it a sweet, clean cup. We add a little Batangas barako for body. The farms and the blend are invented for this concept.",
+          "Arabica from Benguet grows slowly in cool air, which gives it a sweet, clean cup. We add a little Batangas barako for body. The farms and the blend are invented for this concept.\n\nTake some home: [House Blend 250 g](/menu/item/house-blend-250g)",
         publishedAt: daysAgo(10),
       },
       {
