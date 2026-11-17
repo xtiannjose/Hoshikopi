@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import type { PaymentStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
+import { isPlainText } from "@/lib/text";
 
 import { paymentProvider } from "./provider";
 import type { OnlineMethod, ProviderEvent } from "./types";
@@ -120,6 +121,8 @@ export async function recordPaymentEvent(
 
 /** What the fake checkout page shows (PAY-06). */
 export async function paymentByCheckout(checkoutId: string) {
+  // Postgres refuses a NUL, so a script's id gave a 500 (audit DC-10).
+  if (!isPlainText(checkoutId)) return null;
   return db.payment.findFirst({ where: { providerCheckoutId: checkoutId } });
 }
 

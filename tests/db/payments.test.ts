@@ -19,6 +19,7 @@ import {
 } from "@/modules/ordering";
 import {
   fakeProvider,
+  paymentByCheckout,
   paymentProvider,
   type ProviderEvent,
 } from "@/modules/payments";
@@ -353,5 +354,13 @@ describe("expiry (PAY-04)", () => {
     expect((await db.payment.findFirstOrThrow()).providerPaymentId).toBe(
       winner
     );
+  });
+});
+
+// The fake checkout's id went straight to Postgres, which refuses a NUL, so
+// a script got a 500 (audit DC-10).
+describe("paymentByCheckout", () => {
+  it("finds nothing for an id with a hidden character, without a database error", async () => {
+    expect(await paymentByCheckout("chk_\u0000")).toBeNull();
   });
 });
