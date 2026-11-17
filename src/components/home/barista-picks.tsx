@@ -68,7 +68,9 @@ export function BaristaPicks({
                 href={`/menu/item/${item.slug}`}
                 className="border-input mt-1 inline-flex min-h-11 w-fit items-center rounded-full border px-5 font-semibold no-underline"
               >
-                Add to order
+                {/* It opens the Menu Item to choose its Options (audit
+                    UI2-24). */}
+                Make it yours
                 <span className="sr-only"> ({item.name})</span>
               </Link>
             </div>

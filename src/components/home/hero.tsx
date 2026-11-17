@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRightIcon, MapPinIcon } from "@phosphor-icons/react/ssr";
 
@@ -27,10 +28,16 @@ export function Hero({
   cafe,
   hours,
   photo,
+  demo,
+  pickup,
 }: {
   cafe: CafeDetails;
   hours: Hours;
   photo: RoomPhoto;
+  /** Demo Mode is on: point to the two-minute guide (audit journeys:20). */
+  demo: boolean;
+  /** The next Pickup Times, read at request time (audit UI2-05). */
+  pickup: ReactNode;
 }) {
   return (
     <section className="grid gap-10 pt-6 lg:grid-cols-[7fr_5fr] lg:gap-16 lg:pt-10">
@@ -58,6 +65,12 @@ export function Hero({
             Plan your visit
           </Link>
         </div>
+        {demo && (
+          <p className="mt-4 text-sm">
+            A demo you can try on your own, playing the barista too.{" "}
+            <Link href="/concept#try">See how in two minutes</Link>
+          </p>
+        )}
         <div className="border-input bg-muted rounded-card mt-8 grid gap-2 border border-dashed p-5">
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="inline-flex items-center gap-1.5">
@@ -71,6 +84,7 @@ export function Hero({
             <OpenStatus hours={hours} fallback="Open every day." />
           </p>
           <LastOrderNote hours={hours} />
+          {pickup}
         </div>
       </div>
       <figure className="grid content-start gap-2">
