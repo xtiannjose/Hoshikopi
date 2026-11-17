@@ -179,7 +179,7 @@ Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `
 ### Test databases and constraints
 
 - Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`. It migrates and seeds it at the start of each run. Outside services (email, Google, Blob, PayMongo, Vercel) are switched off in tests whatever `.env.local` holds (`tests/no-outside-services.mts`, audit DC-04).
-- Playwright uses `hoshikopi_e2e`, migrated, reset and seeded before each run.
+- Playwright uses `hoshikopi_e2e`, migrated, reset and seeded before each run. It refuses to start after 10 PM Manila time, since a run would reach the demo's 11:15 PM Last Order or midnight (`tests/e2e/time-guard.ts`, audit DC-42). A test that fails once is tried again and, if it passes, reported as "flaky" (a timing problem, often a busy computer), so one slow moment no longer stops the `@cafe-wide` tests that wait for the rest (audit DC-44). A committed `test.only` fails the run (audit DC-43). Avoid running other heavy work (Vitest, builds) during a browser run.
 - The migrations add the CHECK constraints and unique indexes in [`docs/04-DATA-MODEL.md`](04-DATA-MODEL.md) section 4 by hand where Prisma cannot express them: the first migration, and later ones such as `20261116000000_database_rules`.
 
 ### A Staff member lost their authenticator phone

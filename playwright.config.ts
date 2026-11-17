@@ -17,8 +17,14 @@ export default defineConfig({
   // Parallel workers place Orders into the same Pickup Window, and
   // placement waits its turn on that window's lock, so allow 10 s.
   expect: { timeout: 10_000 },
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // A forgotten test.only would shrink a local run to one test and still
+  // pass; Playwright never runs in CI to catch it (audit DC-43).
+  forbidOnly: true,
+  // One retry on this computer: a test that passes the second time is
+  // reported as flaky, not hidden, and a single flake no longer stops every
+  // @cafe-wide test, which waits for phone and desktop (audit DC-44).
+  retries: process.env.CI ? 2 : 1,
+  globalSetup: "./tests/e2e/time-guard.ts",
   use: {
     baseURL: BASE_URL,
     // Keep the evidence of a failure even without retries.
