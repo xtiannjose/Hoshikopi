@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
+import { cache } from "react";
 
 import { db } from "@/lib/db";
 
@@ -8,7 +9,12 @@ import { auth } from "./auth";
 import { secondFactorPassed } from "./second-factor";
 import { safeNext } from "./sign-in";
 
-async function currentUser() {
+/**
+ * Read once per request, as currentCart is (audit architecture:13): the
+ * header links, Stars, "Your usual" and the page each asked again, 2 to 4
+ * database reads per signed-in view (audit DC-28).
+ */
+const currentUser = cache(async () => {
   // Read headers first: touching auth.api reads the clock, which must not
   // happen while Next prerenders the shell.
   const requestHeaders = await headers();
@@ -27,7 +33,7 @@ async function currentUser() {
     select: { id: true, name: true, email: true, role: true },
   });
   return user && { ...user, sessionId: session.session.id };
-}
+});
 
 export type Staff = { id: string; name: string; role: "barista" | "manager" };
 
