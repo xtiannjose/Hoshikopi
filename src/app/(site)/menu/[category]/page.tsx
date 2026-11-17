@@ -14,7 +14,11 @@ import { getMenu, menuSlugs } from "@/modules/menu";
 
 export async function generateStaticParams() {
   const { categories } = await menuSlugs();
-  return categories.map((category) => ({ category }));
+  // Cache Components needs at least one, or the build fails when every
+  // Category is Hidden (audit DC-27); an unknown one is not found.
+  return categories.length
+    ? categories.map((category) => ({ category }))
+    : [{ category: "none" }];
 }
 
 export async function generateMetadata({

@@ -15,7 +15,9 @@ export const contentType = "image/png";
 // PERF-15, SEC1-12).
 export async function generateStaticParams() {
   const { items } = await menuSlugs();
-  return items.map((slug) => ({ slug }));
+  // Cache Components needs at least one, or the build fails when every
+  // Category is Hidden (audit DC-27); an unknown one is not found.
+  return items.length ? items.map((slug) => ({ slug })) : [{ slug: "none" }];
 }
 
 export default async function Image({

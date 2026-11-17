@@ -22,7 +22,9 @@ import { PairingAdd } from "./pairing-add";
 
 export async function generateStaticParams() {
   const { items } = await menuSlugs();
-  return items.map((slug) => ({ slug }));
+  // Cache Components needs at least one, or the build fails when every
+  // Category is Hidden (audit DC-27); an unknown one is not found.
+  return items.length ? items.map((slug) => ({ slug })) : [{ slug: "none" }];
 }
 
 export async function generateMetadata({
