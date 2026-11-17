@@ -92,7 +92,7 @@ Vercel Hobby and Neon Free are free plans. Nothing in the code or configuration 
 
 **The daily job.** Vercel calls `/api/cron/daily` at 22:00 UTC ([vercel.json](../vercel.json)). On the Hobby plan it fires some time between 6:00 and 6:59 AM Manila time, before opening. It:
 
-1. expires unpaid online Orders and cancels earlier days' Pay at Pickup Orders nobody collected;
+1. expires unpaid online Orders, cancels earlier days' Pay at Pickup Orders nobody collected, and cancels and refunds earlier days' paid Orders the bar never accepted;
 2. deletes sign-in and checkout limit records older than a day, and Guest Carts untouched for 30 days;
 3. on the demo, moves the seeded demo Events, Promo and Seasonal drink forward once they lapse, so nobody has to re-date them;
 4. refreshes the menu, so yesterday's Sold Out marks clear.
