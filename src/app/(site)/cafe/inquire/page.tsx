@@ -31,7 +31,7 @@ const GOOD_TO_KNOW = [
   },
   {
     icon: <EnvelopeSimpleIcon size={20} />,
-    text: "We reply within two days, by email",
+    text: "We reply by email",
   },
 ];
 
