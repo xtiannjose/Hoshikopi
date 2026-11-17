@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/money";
 import { clientIp, takeToken } from "@/lib/rate-limit";
 import { currentCartOwner } from "@/modules/cart";
 import { currentMember } from "@/modules/identity";
+import { STARS_PER_REWARD } from "@/modules/loyalty";
 import {
   GUEST_PAY_AT_PICKUP_MAX_DRINKS,
   placeOrder,
@@ -54,7 +55,7 @@ function messageFor(result: Exclude<PlaceOrderResult, { ok: true }>): string {
     case "pay_at_pickup_limit":
       return `Guests can pay at pickup for up to ${GUEST_PAY_AT_PICKUP_MAX_DRINKS} drinks. Pay online, or sign in to order more.`;
     case "not_enough_stars":
-      return "You need 9 Stars for a free drink.";
+      return `You need ${STARS_PER_REWARD} Stars for a free drink.`;
     case "reward_unavailable":
       return "A Reward needs a drink in your Cart and a signed-in Member.";
     case "payment_start_failed":

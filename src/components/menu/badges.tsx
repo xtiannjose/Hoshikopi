@@ -1,7 +1,7 @@
 import { StarIcon } from "@phosphor-icons/react/ssr";
 
 const badgeClass =
-  "border-border items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium";
+  "border-border items-center gap-1 rounded-full border px-2.5 py-0.5 text-sm font-medium";
 
 /**
  * Menu Item badges (MENU-01). Barista Pick carries the gold star and shows
@@ -18,7 +18,7 @@ export function Badges({
   if (labels.length === 0 && !picks.day && !picks.night) return null;
   const pick = (
     <>
-      <StarIcon aria-hidden size={12} weight="fill" className="text-star" />
+      <StarIcon aria-hidden size={14} weight="fill" className="text-star" />
       Barista Pick
     </>
   );

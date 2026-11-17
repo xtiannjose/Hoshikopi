@@ -1,4 +1,4 @@
-import { dayValue, manila } from "@/lib/clock";
+import { dayOf, dayValue, manila } from "@/lib/clock";
 import { db, type Client } from "@/lib/db";
 
 import type { OrderingDay } from "./ordering-day";
@@ -88,7 +88,7 @@ export async function getHoursForStaff(at: Date) {
       closesAt: hhmm(w.closesAt),
     })),
     special: special.map((s) => ({
-      day: s.day.toISOString().slice(0, 10),
+      day: dayOf(s.day),
       isClosed: s.isClosed,
       opensAt: s.opensAt && hhmm(s.opensAt),
       lastOrderAt: s.lastOrderAt && hhmm(s.lastOrderAt),

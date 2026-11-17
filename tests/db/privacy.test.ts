@@ -21,8 +21,7 @@ import {
 import { starHistory } from "@/modules/loyalty";
 import { ordersForExport, placeOrder } from "@/modules/ordering";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const HOSHI = "seed-member";
@@ -34,8 +33,7 @@ vi.mock("next/headers", async (importOriginal) => ({
 }));
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock("2026-11-02T01:00:00Z");
 });
 afterEach(unfreezeClock);
@@ -116,6 +114,15 @@ describe("Your details (ACC-03)", () => {
       birthMonth: 13,
     });
     expect(await memberProfile(HOSHI)).toMatchObject({ birthMonth: null });
+  });
+
+  it("keeps at most 60 characters of the name (audit SEC1-20)", async () => {
+    await updateProfile(HOSHI, {
+      name: "a".repeat(61),
+      marketingOptIn: false,
+      birthMonth: null,
+    });
+    expect((await memberProfile(HOSHI))?.name).toBe("a".repeat(60));
   });
 });
 

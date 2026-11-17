@@ -6,9 +6,20 @@ import { OUTLINE_PILL } from "@/components/panel";
 
 const TAGS = [
   ["vegan", "Vegan"],
-  ["no-caffeine", "No caffeine"],
+  ["no-caffeine", "Caffeine-free drinks"],
   ["nut-free", "Nut-free"],
 ] as const;
+
+/**
+ * "Café" and "cafe" match each other, typed or written (audit journeys:22).
+ * NFD splits an accent into a combining mark, which the range drops; a
+ * \p{Diacritic} class compiles into a large table for older browsers.
+ */
+const fold = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 
 /**
  * Search and dietary filters for /menu (MENU-05). The menu stays a
@@ -16,14 +27,15 @@ const TAGS = [
  * Returns how many cards match.
  */
 function apply(query: string, tags: string[]): number {
-  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const words = fold(query.trim()).split(/\s+/).filter(Boolean);
   let shown = 0;
   for (const card of document.querySelectorAll<HTMLElement>(
     "[data-menu-item]"
   )) {
     const cardTags = (card.dataset.tags ?? "").split(" ");
+    const text = fold(card.dataset.search ?? "");
     const match =
-      words.every((word) => card.dataset.search?.includes(word)) &&
+      words.every((word) => text.includes(word)) &&
       tags.every((tag) => cardTags.includes(tag));
     card.hidden = !match;
     if (match) shown++;

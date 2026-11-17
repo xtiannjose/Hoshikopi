@@ -153,7 +153,7 @@ function PairingCard({ pairing }: { pairing: Pairing }) {
   return (
     <section
       aria-labelledby="pairing"
-      className="border-border mt-10 grid grid-cols-[6rem_1fr] gap-x-4 gap-y-3 border-t pt-6"
+      className="border-border mt-10 grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-3 border-t pt-6"
     >
       <h2
         id="pairing"

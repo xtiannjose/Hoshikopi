@@ -1,6 +1,6 @@
 // Opening Hours and Special Hours as plain data (Manila wall-clock "HH:MM"),
 // so both the server and the "open now" island can use them. No database.
-import { formatDate, manila } from "./clock";
+import { dayOf, dayValue, formatDay, manila } from "./clock";
 
 export type DayHours = {
   opensAt: string;
@@ -53,12 +53,12 @@ export function formatClock(hhmm: string): string {
 
 /** "2026-11-01" plus `days`. */
 export function addDays(day: string, days: number): string {
-  const date = new Date(`${day}T00:00:00Z`);
+  const date = dayValue(day);
   date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
+  return dayOf(date);
 }
 
-const weekdayOf = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay();
+const weekdayOf = (day: string) => dayValue(day).getUTCDay();
 
 /** The hours on a Manila day, Special Hours first; null when closed. */
 export function hoursOn(day: string, hours: Hours): DayHours | null {
@@ -118,7 +118,7 @@ export function openState(at: Date, hours: Hours): OpenState {
 export function dayWord(day: string, today: string): string {
   if (day === today) return "today";
   if (day === addDays(today, 1)) return "tomorrow";
-  return `on ${formatDate(new Date(`${day}T04:00:00Z`))}`;
+  return `on ${formatDay(day)}`;
 }
 
 /**

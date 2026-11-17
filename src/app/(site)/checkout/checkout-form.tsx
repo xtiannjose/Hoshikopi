@@ -7,11 +7,11 @@ import { ClockIcon, UserIcon, WalletIcon } from "@phosphor-icons/react";
 import { formatPrice } from "@/lib/money";
 
 import { busy, Field, fieldClass } from "@/components/fields";
-import { IconCircle } from "@/components/panel";
+import { IconCircle, Pill } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { placeOrderAction, type CheckoutState } from "./actions";
-import { useRewardChoice, useTotal } from "./reward-choice";
+import { useRewardChoice, useTotal, type Reward } from "./reward-choice";
 
 export type WindowChoice = {
   value: string;
@@ -95,8 +95,8 @@ export function CheckoutForm({
   member,
   reward,
 }: {
-  /** A free drink for 9 Stars, when the Member has them (LOY-03). */
-  reward: { name: string; discountCents: number } | null;
+  /** A free drink for its Stars, when the Member has them (LOY-03). */
+  reward: Reward;
   payAtPickupAllowed: boolean;
   /** A signed-in Member is prefilled and collects Stars (ORD-05). */
   member: { name: string; email: string } | null;
@@ -160,7 +160,7 @@ export function CheckoutForm({
           />
           <span>
             <span className="font-semibold">
-              Use 9 Stars for a free {reward.name}
+              Use {reward.stars} Stars for a free {reward.name}
             </span>
             <span className="text-muted-foreground block text-sm">
               Saves {formatPrice(reward.discountCents)}; options still add their
@@ -319,7 +319,7 @@ export function CheckoutForm({
         {total === 0 ? (
           <p className="clear-both font-semibold">
             <input type="hidden" name="paymentMethod" value="pay_at_pickup" />
-            Nothing to pay. Your 9 Stars cover it.
+            Nothing to pay.{reward && ` Your ${reward.stars} Stars cover it.`}
           </p>
         ) : (
           <div className="clear-both grid gap-3">
@@ -342,9 +342,7 @@ export function CheckoutForm({
                   </span>
                 </span>
                 {p.value !== "pay_at_pickup" && (
-                  <span className="border-warning text-warning rounded-full border px-2 py-0.5 text-xs font-semibold">
-                    Test Mode
-                  </span>
+                  <Pill tone="warning">Test Mode</Pill>
                 )}
               </label>
             ))}

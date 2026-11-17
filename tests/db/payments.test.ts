@@ -23,16 +23,14 @@ import {
   type ProviderEvent,
 } from "@/modules/payments";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 // Signs like the server's fake provider (same secret from .env.test).
 const fake = fakeProvider(`fake-webhook:${process.env.BETTER_AUTH_SECRET}`);
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock("2026-11-02T01:00:00Z");
 });
 afterEach(() => {

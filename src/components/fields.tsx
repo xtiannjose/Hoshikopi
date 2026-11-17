@@ -5,6 +5,8 @@ import type {
   ReactNode,
 } from "react";
 
+import { PRIMARY_PILL_LG } from "./panel";
+
 export const fieldClass =
   "rounded-card border-input bg-background min-h-11 w-full border px-3 py-2";
 
@@ -126,11 +128,7 @@ export function SaveBar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-4">
-      <button
-        type="submit"
-        {...busy(pending)}
-        className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold aria-disabled:opacity-60"
-      >
+      <button type="submit" {...busy(pending)} className={PRIMARY_PILL_LG}>
         {pending ? "Saving..." : label}
       </button>
       <p role="status" className="font-semibold">
@@ -158,18 +156,6 @@ export function busy(pending: boolean, onPress?: () => void) {
     },
   };
 }
-
-export const ALLERGEN_LABELS = [
-  ["milk", "Milk"],
-  ["egg", "Egg"],
-  ["wheat", "Wheat"],
-  ["soy", "Soy"],
-  ["peanuts", "Peanuts"],
-  ["tree_nuts", "Tree nuts"],
-  ["fish", "Fish"],
-  ["shellfish", "Shellfish"],
-  ["sesame", "Sesame"],
-] as const;
 
 /** A Web address from a Name or Title: "Café Ube Latte!" is
  * "cafe-ube-latte". */

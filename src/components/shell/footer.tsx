@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpIcon } from "@phosphor-icons/react/ssr";
 
+import { ConceptNotice } from "@/components/concept-notice";
 import { Divider } from "@/components/home/divider";
 import { getCafeContact } from "@/modules/cafe";
 
@@ -89,10 +90,7 @@ export async function Footer() {
         </Link>
       </p>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-x-6">
-        <p className="text-muted-foreground font-mono text-sm">
-          Hoshikopi is a concept cafe. Orders and payments here are for
-          demonstration. <Link href="/concept">About this concept</Link>
-        </p>
+        <ConceptNotice />
         <a
           href="#main"
           className={`${TAP} gap-2 text-sm no-underline hover:underline`}

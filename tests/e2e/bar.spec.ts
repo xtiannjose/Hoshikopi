@@ -56,6 +56,11 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
   await expect(card).toContainText("less ice please");
   // What to collect, so a Barista needs no Manager screen (audit journeys:7).
   await expect(card).toContainText(/Pay at Pickup: collect PHP \d/);
+  // The code in upright sans with tabular figures; first() skips the
+  // button's sr-only copy (audit UI2-12).
+  const codeText = card.getByText(code, { exact: true }).first();
+  await expect(codeText).toHaveCSS("font-style", "normal");
+  await expect(codeText).toHaveCSS("font-variant-numeric", "tabular-nums");
   await expectNoAxeViolations(bar);
 
   const steps: [string, string][] = [
@@ -117,6 +122,11 @@ test("the Bar Screen says it stopped when its session ends (audit, 7.4)", async 
 }) => {
   await signIn(page, "annika@hoshikopi.example", "/bar");
   await expect(page.getByRole("heading", { name: "Bar Screen" })).toBeVisible();
+  // The Bar Screen frame carries the Concept Notice too (audit tests:15).
+  await expect(page.getByText("Hoshikopi is a concept cafe.")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "About this concept" })
+  ).toHaveAttribute("href", "/concept");
   await context.clearCookies();
   const alert = page.getByRole("alert").filter({ hasText: "signed out" });
   await expect(alert).toBeVisible({ timeout: 10_000 });

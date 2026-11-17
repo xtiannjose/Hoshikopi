@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { Prisma } from "@/generated/prisma/client";
+import type { PaymentStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
 import { paymentProvider } from "./provider";
@@ -147,9 +148,12 @@ export async function closeCheckout(orderId: string): Promise<void> {
 /**
  * A checkout that still takes payment: unused, or after a failed try. A
  * paid event after a failed one still pays the Order (a retry in the same
- * checkout, docs/03 section 8).
+ * checkout, docs/03 section 8). A type guard, so the closed branch knows
+ * its statuses (audit architecture:20).
  */
-export const checkoutOpen = (status: string) =>
+export const checkoutOpen = (
+  status: PaymentStatus
+): status is "pending" | "failed" =>
   status === "pending" || status === "failed";
 
 export type RefundOutcome =

@@ -100,7 +100,7 @@ test("the menu filters by a word and by diet (MENU-05)", async ({ page }) => {
   await page.getByLabel("Search the menu").fill("");
   const diet = page.getByRole("group", { name: "Dietary filters" });
   await diet.getByText("Vegan", { exact: true }).click();
-  await diet.getByText("No caffeine", { exact: true }).click();
+  await diet.getByText("Caffeine-free drinks", { exact: true }).click();
   await expect(page.getByText("1 item matches.")).toBeVisible();
   expect(await visibleNames()).toEqual(["Tanglad Ginger Tea"]);
 
@@ -110,6 +110,38 @@ test("the menu filters by a word and by diet (MENU-05)", async ({ page }) => {
   ).toBeVisible();
   // Categories with nothing left are hidden too.
   await expect(page.getByRole("heading", { name: "Pastries" })).toBeHidden();
+});
+
+test("the menu search folds accents and Nut-free skips beans and merch (audit journeys:22)", async ({
+  page,
+}) => {
+  await page.goto("/menu");
+  const visibleNames = () =>
+    page
+      .locator("[data-menu-item]:visible h2, [data-menu-item]:visible h3")
+      .allInnerTexts();
+  await page.getByLabel("Search the menu").fill("café");
+  await expect(page.getByText("1 item matches.")).toBeVisible();
+  expect(await visibleNames()).toEqual(["Cafe Mocha"]);
+
+  await page.getByLabel("Search the menu").fill("");
+  await page
+    .getByRole("group", { name: "Dietary filters" })
+    .getByText("Nut-free", { exact: true })
+    .click();
+  await expect(page.getByText(/items? match/)).toBeVisible();
+  const names = await visibleNames();
+  expect(names).toContain("Ube Pandesal");
+  for (const name of [
+    "Hoshikopi Tumbler",
+    "House Blend 250 g",
+    "Banana Bread slice",
+  ]) {
+    expect(names).not.toContain(name);
+  }
+  await expect(
+    page.getByRole("heading", { name: "Beans and merch" })
+  ).toBeHidden();
 });
 
 test("a Menu Item shows its calorie estimate (MENU-10)", async ({ page }) => {

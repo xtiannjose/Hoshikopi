@@ -1,6 +1,7 @@
 "use client";
 
-import { THEME_SCRIPT } from "@/components/theme";
+import { ConceptNotice } from "@/components/concept-notice";
+import { THEME_PICK_SCRIPT } from "@/components/theme-pick";
 
 import "./globals.css";
 
@@ -19,7 +20,7 @@ export default function GlobalError({
     <html lang="en" suppressHydrationWarning>
       <head>
         <title>Something went wrong | Hoshikopi</title>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_PICK_SCRIPT }} />
       </head>
       <body className="bg-background text-foreground flex min-h-dvh flex-col font-sans">
         <main
@@ -51,10 +52,7 @@ export default function GlobalError({
               Back home
             </a>
           </div>
-          <p className="text-muted-foreground mt-6 font-mono text-sm">
-            Hoshikopi is a concept cafe. Orders and payments here are for
-            demonstration. <a href="/concept">About this concept</a>
-          </p>
+          <ConceptNotice plain className="mt-6" />
         </main>
       </body>
     </html>

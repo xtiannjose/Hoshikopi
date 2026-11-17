@@ -1,13 +1,13 @@
-import { MANILA_OFFSET_MS } from "@/lib/clock";
+import { CHOICE } from "./theme-pick";
 
-export type ThemeChoice = "auto" | "day" | "night";
-
-export const THEME_KEY = "hoshikopi-theme";
+export { THEME_KEY, type ThemeChoice } from "./theme-key";
 
 /**
  * Runs in <head> before first paint (ADR 0010): Day from 6 AM to 6 PM Manila
  * time, Night otherwise, unless the visitor pinned one. It checks again every
- * minute so an open page turns at 6:00 and 18:00, and exposes itself as
- * window.hoshikopiTheme for the header switch.
+ * minute so an open page turns at 6:00 and 18:00, crossfading where the
+ * browser can (a hidden tab switches at once) (audit motion:9), and exposes
+ * itself as window.hoshikopiTheme for the header switch, which crossfades
+ * on its own.
  */
-export const THEME_SCRIPT = `(function(){var d=document.documentElement;function pick(){var c;try{c=localStorage.getItem("${THEME_KEY}")}catch(e){}if(c!=="day"&&c!=="night"){var h=new Date(Date.now()+${MANILA_OFFSET_MS}).getUTCHours();c=h>=6&&h<18?"day":"night"}d.dataset.theme=c}pick();window.hoshikopiTheme=pick;setInterval(pick,60000)})();`;
+export const THEME_SCRIPT = `(function(){var d=document.documentElement;${CHOICE}function pick(){d.dataset.theme=choice()}pick();window.hoshikopiTheme=pick;setInterval(function(){var c=choice();if(c===d.dataset.theme)return;if(document.startViewTransition&&document.visibilityState==="visible")document.startViewTransition(function(){d.dataset.theme=c});else d.dataset.theme=c},60000)})();`;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ConceptNotice } from "@/components/concept-notice";
 import { Logo } from "@/components/shell/logo";
 import { ThemeSwitch } from "@/components/theme-switch";
 
@@ -31,10 +32,7 @@ export default function ManageLayout({ children }: LayoutProps<"/manage">) {
         </div>
       </header>
       {children}
-      <p className="page-width text-muted-foreground py-6 font-mono text-sm">
-        Hoshikopi is a concept cafe. Orders and payments here are for
-        demonstration. <Link href="/concept">About this concept</Link>
-      </p>
+      <ConceptNotice className="page-width py-6" />
     </>
   );
 }

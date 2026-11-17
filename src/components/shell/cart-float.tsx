@@ -23,10 +23,11 @@ export async function CartFloat() {
     <HiddenOn paths={["/cart", "/checkout"]}>
       {/* Room at the end of the page, so the pill never covers the footer. */}
       <div aria-hidden className="h-20 print:hidden" />
+      {/* The pill rises in when it first appears (audit motion:7). */}
       <button
         type="button"
         popoverTarget="cart-drawer"
-        className="cart-pill bg-primary text-primary-foreground fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 inline-flex min-h-12 items-center gap-2 rounded-full px-5 font-semibold shadow-lg print:hidden"
+        className="cart-pill animate-rise bg-primary text-primary-foreground fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 inline-flex min-h-12 items-center gap-2 rounded-full px-5 font-semibold shadow-lg print:hidden"
       >
         <BagIcon aria-hidden size={20} />
         <span>Your Cart</span>

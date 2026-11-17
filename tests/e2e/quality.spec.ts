@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-import { openIn } from "./axe";
+import { expectNoAxeViolations, openIn } from "./axe";
 import { openAllDayToday } from "./db";
+import { addToCart } from "./order";
 
 const PAGES = [
   "/",
@@ -36,6 +37,16 @@ test.describe("budgets (docs/05 section 11)", () => {
           )
       );
       expect(bytes).toBeLessThan(170_000);
+    });
+  }
+
+  // Raw HTML, streamed parts included (audit PERF-11).
+  for (const path of PAGES.slice(0, 7)) {
+    test(`${path} serves under 300 kB of HTML (audit PERF-11)`, async ({
+      request,
+    }) => {
+      const html = await (await request.get(path)).body();
+      expect(html.length).toBeLessThan(300_000);
     });
   }
 });
@@ -115,6 +126,33 @@ test("the header fits 320 px with items in the Cart", async ({
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
+test("the Main nav stays centred in the header, with or without a Cart (audit UI2-13)", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "desktop",
+    "the Main nav is desktop only"
+  );
+  const offCentre = async () => {
+    const header = await page.getByRole("banner").boundingBox();
+    const nav = await page
+      .getByRole("navigation", { name: "Main" })
+      .boundingBox();
+    return Math.abs(header!.x + header!.width / 2 - (nav!.x + nav!.width / 2));
+  };
+  await page.goto("/menu");
+  expect(await offCentre()).toBeLessThanOrEqual(1);
+  await addToCart(page, "hoshi-latte");
+  await page.goto("/menu");
+  await expect(page.getByRole("link", { name: /Cart 1 item/ })).toBeVisible();
+  expect(await offCentre()).toBeLessThanOrEqual(1);
+  // Narrower than about 1200 px the nav gives way; the Cart pill must not
+  // wrap the right group onto a second row (68 px header, one row).
+  await page.setViewportSize({ width: 1024, height: 800 });
+  const header = await page.getByRole("banner").boundingBox();
+  expect(header!.height).toBeLessThan(80);
+});
+
 test("the skip link and a keyboard-only order", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "a keyboard user on desktop");
   await page.goto("/menu/item/hoshi-latte");
@@ -165,6 +203,24 @@ test("under reduced motion, Add to order still shows Added on a phone (audit mot
   await expect(
     page.locator("button span.animate-confirm", { hasText: "Added" })
   ).toHaveCSS("opacity", "1");
+});
+
+test("the main buttons dim under the pointer on desktop (audit UI2-09)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a pointer that hovers");
+  // Only the hero has this name on Home.
+  await page.goto("/");
+  const orderAhead = page.getByRole("link", {
+    name: "Order ahead",
+    exact: true,
+  });
+  await orderAhead.hover();
+  await expect(orderAhead).toHaveCSS("opacity", "0.9");
+  await page.goto("/menu/item/kopi-hitam");
+  const add = page.getByRole("button", { name: "Add to order" });
+  await add.hover();
+  await expect(add).toHaveCSS("opacity", "0.9");
 });
 
 test("the Content-Security-Policy holds and nothing breaks it (ADR 0013)", async ({
@@ -234,14 +290,22 @@ test("a page that is not there is titled so", async ({ page }, testInfo) => {
 });
 
 // Font settings, not zoom: the header row wraps instead of pushing the
-// Cart and menu buttons off screen (audit a11y:8).
-test("a doubled default text size keeps the header on a phone screen", async ({
+// Cart and menu buttons off screen (audit a11y:8), and long words and
+// headings wrap instead of running past the screen edge (audit a11y:12).
+test("a doubled default text size fits a phone screen (audit a11y:8, a11y:12)", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "phone", "the header row is for phones");
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32 } });
-  for (const path of PAGES) {
+  for (const path of [
+    ...PAGES,
+    "/menu/coffee",
+    "/cafe/inquire",
+    "/accessibility",
+    "/privacy",
+    "/no-such-page",
+  ]) {
     await page.goto(path);
     await expect(
       page.getByRole("button", { name: "Open the menu" }),
@@ -252,8 +316,61 @@ test("a doubled default text size keeps the header on a phone screen", async ({
       (el) => el.scrollWidth - el.clientWidth
     );
     expect(overflow, path).toBeLessThanOrEqual(0);
+    const pageOverflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth
+    );
+    expect(pageOverflow, path).toBeLessThanOrEqual(0);
   }
 });
+
+// Badges, Pills, the Test Mode tag and captions were 12 px (audit UI2-17).
+test("no visible text is under 14 px (docs/05 section 4, audit UI2-17)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "phone", "once is enough");
+  await openAllDayToday();
+  // A Cart, so /checkout shows the payment options and the Test Mode tag.
+  await addToCart(page, "hoshi-latte");
+  for (const path of PAGES) {
+    await page.goto(path);
+    const small = await page.evaluate(() => {
+      const found: string[] = [];
+      const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT
+      );
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const el = node.parentElement;
+        if (!node.textContent?.trim() || !el?.checkVisibility()) continue;
+        if (parseFloat(getComputedStyle(el).fontSize) < 14) {
+          found.push(node.textContent.trim());
+        }
+      }
+      return found;
+    });
+    expect(small, path).toEqual([]);
+  }
+});
+
+// Pages axe missed before: sign-in, the customer inquiry form, a Category
+// page and the in-site 404 (audit a11y:12).
+for (const palette of ["day", "night"] as const) {
+  test(`sign-in, the inquiry form, a Category page and a missing page pass axe in the ${palette} palette (audit a11y:12)`, async ({
+    page,
+  }) => {
+    for (const path of [
+      "/sign-in",
+      "/cafe/inquire",
+      "/menu/coffee",
+      "/no-such-page",
+    ]) {
+      await openIn(page, palette, path);
+      await expectNoAxeViolations(page);
+    }
+  });
+}
 
 // WCAG 1.4.3 covers placeholder text too (audit a11y:7).
 test("placeholder text has 4.5:1 contrast in both palettes", async ({

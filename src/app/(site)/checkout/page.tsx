@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CoffeeIcon, StarIcon } from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
+import { ConceptNotice } from "@/components/concept-notice";
 import { OrderLimitNote } from "@/components/order-limit-note";
 import { OpenStatus } from "@/components/cafe/open-status";
 import { PageHeader } from "@/components/page-header";
@@ -14,7 +15,7 @@ import { formatPrice } from "@/lib/money";
 import { getHours } from "@/modules/cafe";
 import { currentCartOwner } from "@/modules/cart";
 import { currentMember, memberProfile } from "@/modules/identity";
-import { birthdayTreat } from "@/modules/loyalty";
+import { birthdayTreat, STARS_PER_REWARD } from "@/modules/loyalty";
 import {
   cartFingerprint,
   checkoutView,
@@ -44,10 +45,7 @@ export default function CheckoutPage() {
         >
           <Checkout />
         </Suspense>
-        <p className="text-muted-foreground max-w-measure mt-10 font-mono text-sm">
-          Hoshikopi is a concept cafe. Orders and payments here are for
-          demonstration. <Link href="/concept">About this concept</Link>
-        </p>
+        <ConceptNotice className="max-w-measure mt-10" />
       </div>
     </main>
   );
@@ -139,6 +137,8 @@ async function Checkout() {
     );
   }
 
+  // The client forms say what the Reward costs (audit architecture:17).
+  const reward = view.reward && { ...view.reward, stars: STARS_PER_REWARD };
   const [first, ...later] = view.windows;
   const starCount = (n: number) => (n === 1 ? "1 Star" : `${n} Stars`);
   const stars = starCount(cart.drinks);
@@ -188,7 +188,7 @@ async function Checkout() {
               </li>
             ))}
           </ul>
-          <SummaryTotal totalCents={cart.totalCents} reward={view.reward} />
+          <SummaryTotal totalCents={cart.totalCents} reward={reward} />
           <p className="text-muted-foreground text-sm">
             Prices include VAT. No fees on top.{" "}
             <Link href="/cart">Edit your Cart</Link>
@@ -242,7 +242,7 @@ async function Checkout() {
               member={
                 member ? { name: member.name, email: member.email } : null
               }
-              reward={view.reward}
+              reward={reward}
             />
           )}
         </div>

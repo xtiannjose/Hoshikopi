@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { busy, Field } from "@/components/fields";
+import { PRIMARY_PILL_LG } from "@/components/panel";
 
 import { secondFactorAction, type SecondFactorState } from "./actions";
 
@@ -30,7 +31,7 @@ export function SecondFactorForm({ next }: { next: string }) {
         <button
           type="submit"
           {...busy(pending)}
-          className="bg-primary text-primary-foreground min-h-12 justify-self-start rounded-full px-6 font-semibold aria-disabled:opacity-60"
+          className={`${PRIMARY_PILL_LG} justify-self-start`}
         >
           {pending ? "Checking..." : "Continue"}
         </button>

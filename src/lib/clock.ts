@@ -1,7 +1,9 @@
 // The only place that reads "now" (CLAUDE.md). Store UTC, define and show
 // hours in Asia/Manila, which is UTC+8 all year (no daylight saving).
 
-export const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
+import { MANILA_OFFSET_MS } from "./manila-offset";
+
+export { MANILA_OFFSET_MS };
 
 let frozen: Date | null = null;
 
@@ -44,6 +46,11 @@ export function dayValue(day: string): Date {
   return new Date(`${day}T00:00:00Z`);
 }
 
+/** The Manila day a `date` column holds; the reverse of dayValue (audit architecture:14). */
+export function dayOf(at: Date): string {
+  return at.toISOString().slice(0, 10);
+}
+
 const timeFormat = new Intl.DateTimeFormat("en-US", {
   timeZone: "Asia/Manila",
   hour: "numeric",
@@ -64,6 +71,11 @@ export function formatTime(at: Date): string {
 /** "Sat, Nov 7" in Manila time. */
 export function formatDate(at: Date): string {
   return dateFormat.format(at);
+}
+
+/** "Sat, Nov 7" for a Manila day ("2026-11-07"), read at its noon. */
+export function formatDay(day: string): string {
+  return formatDate(manilaInstant(day, 12 * 60));
 }
 
 const monthYearFormat = new Intl.DateTimeFormat("en-US", {

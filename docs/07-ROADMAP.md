@@ -207,11 +207,11 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.13 Operations.** Done 2026-11-16: one siteUrl and authSecret that refuse to run unset, the email send gives up after 5 seconds, next/image takes only this Blob store, the database pool stops waiting after 5 seconds, photos lose their metadata and upload only after the save, local photos show at once, and the public forms catch scripted posts.
 - [x] **10.14 Lighter pages.** Done 2026-11-16: the Cart is priced once per request, a Member's pages skip the merge transaction with nothing to merge, and Home's hidden Photos view is recorded as a kept trade-off.
 - [x] **10.15 Caching and share cards.** Done 2026-11-16: Staff changes reach the menu within about 10 seconds, pause, Busy Mode and Capacity saves no longer expire every page, a Sign-up expires only Event pages, and share cards prerender with a 404 for a made-up slug.
-- [ ] **10.16 Motion.** 6 items, effort S each.
-- [ ] **10.17 Page polish.** 9 items, effort S each.
+- [x] **10.16 Motion.** Done 2026-11-17: taps land right after a page change, the Star Card lights as Home scrolls it into view, the Cart pill bumps on every rise, /account, Events and the Cart fade, the 6:00 and 18:00 palette turn crossfades, and a test runs with motion on.
+- [x] **10.17 Page polish.** Done 2026-11-17: the main buttons dim on hover, the Order Code is upright sans, the header nav stays centred, no text is under 14 px, the printed menu packs into columns, blank stand-ins have no caption, Night copy names no time of day, the dietary filters mean what they say, and Markdown lists and headings render.
 - [ ] **10.18 Home for Members and the demo.** 4 items, effort S to M.
-- [ ] **10.19 Tests.** 7 items, effort S to M.
-- [ ] **10.20 Code health.** 5 items, effort S to M.
+- [x] **10.19 Tests.** Done 2026-11-17: tests for a Refund after spent Stars, the whole Order Status table, larger text, photo limits and an HTML budget; the e2e server ignores .env.local, and the test database is seeded once.
+- [x] **10.20 Code health.** Done 2026-11-17: one Concept Notice, clock.ts day helpers and one Sold Out rule, labels and numbers read from their source, a typed Options snapshot, and one primary pill in two sizes.
 - [ ] **10.21 Docs.** 10 items, effort S each.
 
 ## 13. After V1 (not scheduled)

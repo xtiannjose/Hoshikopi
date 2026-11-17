@@ -1,6 +1,9 @@
+import type { OrderStatus } from "@/generated/prisma/enums";
+
 import { Pill } from "./panel";
 
-export const ORDER_STATUS_LABEL: Record<string, string> = {
+// Keyed by the enum, so a new Order Status needs a label (audit architecture:20).
+export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   placed: "Placed",
   paid: "Paid",
   accepted: "Accepted",
@@ -12,10 +15,10 @@ export const ORDER_STATUS_LABEL: Record<string, string> = {
   refunded: "Refunded",
 };
 
-const WAITING = ["placed", "paid", "accepted", "preparing"];
+const WAITING: OrderStatus[] = ["placed", "paid", "accepted", "preparing"];
 
 /** Ready in success, waiting Orders plain, closed ones muted. */
-export function OrderStatusPill({ status }: { status: string }) {
+export function OrderStatusPill({ status }: { status: OrderStatus }) {
   return (
     <Pill
       tone={

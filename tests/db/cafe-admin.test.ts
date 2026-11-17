@@ -13,8 +13,7 @@ import {
   startBusyMode,
 } from "@/modules/cafe";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const christian = {
@@ -35,8 +34,7 @@ const everyDay = (change: Record<string, string> = {}) =>
   }));
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db, { people: false });
+  await resetToSeed(db, { people: false });
   freezeClock(MONDAY_9AM);
 });
 afterEach(unfreezeClock);

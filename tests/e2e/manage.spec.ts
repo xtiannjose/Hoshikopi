@@ -11,6 +11,11 @@ test("a seeded Manager signs in to /manage", async ({ page }) => {
   await expect(
     page.getByText("Signed in as Christian (Manager).")
   ).toBeVisible();
+  // The Staff frame carries the Concept Notice too (audit tests:15).
+  await expect(page.getByText("Hoshikopi is a concept cafe.")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "About this concept" })
+  ).toHaveAttribute("href", "/concept");
   await expectNoAxeViolations(page);
 });
 

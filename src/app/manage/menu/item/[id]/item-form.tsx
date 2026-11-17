@@ -3,7 +3,6 @@
 import { useActionState, type ReactNode } from "react";
 
 import {
-  ALLERGEN_LABELS,
   Checkboxes,
   Field,
   fieldClass,
@@ -11,6 +10,7 @@ import {
   SaveBar,
 } from "@/components/fields";
 import { useKeptForm } from "@/components/use-kept-form";
+import { ALLERGENS, BADGES } from "@/lib/menu-labels";
 
 import { saveMenuItemAction, type FormState } from "../../actions";
 
@@ -36,15 +36,6 @@ export type ItemFormData = {
   photoAlt: string;
   sort: number;
 };
-
-const BADGES = [
-  ["barista_pick", "Day Barista Pick"],
-  ["night_pick", "Night Barista Pick"],
-  ["new", "New"],
-  ["best_seller", "Best seller"],
-  ["vegan", "Vegan"],
-  ["no_caffeine", "No caffeine"],
-] as const;
 
 const LEGEND = "font-display mb-2 pb-1 text-2xl italic";
 
@@ -205,7 +196,7 @@ export function ItemForm({
         <Checkboxes
           legend="Allergens it contains"
           name="allergens"
-          options={ALLERGEN_LABELS}
+          options={ALLERGENS}
           checked={item.allergens}
         />
         <div className="sm:max-w-xs">

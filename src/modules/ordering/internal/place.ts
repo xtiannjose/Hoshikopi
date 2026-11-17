@@ -31,6 +31,7 @@ import {
 import { emailOrderPlaced } from "./emails";
 import { putLinesBack } from "./again";
 import { hashToken, orderLink, orderToken } from "./links";
+import type { OrderLineOption } from "./snapshot";
 import { nextOrderCode, transition } from "./status";
 import { offeredWindows } from "./windows";
 
@@ -109,11 +110,12 @@ function snapshotLines(lines: Line[], rewardLine: Line | undefined) {
     const snapshot = {
       menuItemId: line.menuItemId,
       name: line.name,
+      // The shape snapshotOptions reads back (audit architecture:20).
       options: line.options.map(({ group, name, deltaCents }) => ({
         group,
         name,
         deltaCents,
-      })),
+      })) satisfies OrderLineOption[],
       optionIds: line.options.map((option) => option.id),
       isDrink: line.isDrink,
       note: line.note || null,

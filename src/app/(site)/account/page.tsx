@@ -43,7 +43,7 @@ import {
 import { formatPrice } from "@/lib/money";
 import { favouritesFor, type FavouriteView } from "@/modules/cart";
 import { currentStaff, memberProfile, requireMember } from "@/modules/identity";
-import { balance, birthdayTreat } from "@/modules/loyalty";
+import { balance, birthdayTreat, STARS_PER_REWARD } from "@/modules/loyalty";
 import { ordersForMember } from "@/modules/ordering";
 
 import {
@@ -170,8 +170,8 @@ async function Account() {
           className="bg-muted rounded-card flex items-center gap-3 p-4 text-lg"
         >
           <CakeIcon aria-hidden size={28} className="shrink-0" />
-          Happy birthday month! We added 9 Stars to your card, so a drink is on
-          us.
+          Happy birthday month! We added {STARS_PER_REWARD} Stars to your card,
+          so a drink is on us.
         </p>
       )}
 

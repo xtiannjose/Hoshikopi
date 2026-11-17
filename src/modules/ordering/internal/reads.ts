@@ -1,5 +1,9 @@
-import type { OrderStatus } from "@/generated/prisma/enums";
-import { now } from "@/lib/clock";
+import type {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from "@/generated/prisma/enums";
+import { dayValue, now } from "@/lib/clock";
 import { db, type Client } from "@/lib/db";
 import {
   orderingState,
@@ -15,6 +19,7 @@ import { orderPath, tokenMatches } from "./links";
 import { baseOf, rewardLineOf } from "./place";
 import { customerVersion, drinksAhead } from "./queue";
 import { GUEST_PAY_AT_PICKUP_MAX_DRINKS, orderLimit } from "./rules";
+import { snapshotOptions, type OrderLineOption } from "./snapshot";
 import { offeredWindows } from "./windows";
 
 export type CheckoutView = {
@@ -76,8 +81,11 @@ export type OrderView = {
   customerName: string;
   pickupKind: "asap" | "scheduled";
   windowStart: Date;
-  paymentMethod: string;
+  // Enums, not strings, so a label map misses no value (audit architecture:20).
+  paymentMethod: PaymentMethod;
   totalCents: number;
+  /** Stars the Reward Line took: 0 without one. */
+  rewardStars: number;
   placedAt: Date;
   paidAt: Date | null;
   acceptedAt: Date | null;
@@ -92,10 +100,10 @@ export type OrderView = {
   /** Guests are offered an account to keep Stars (ORD-05). */
   isMember: boolean;
   /** The online Payment, if any: pending shows "Finish paying". */
-  payment: { status: string; checkoutUrl: string } | null;
+  payment: { status: PaymentStatus; checkoutUrl: string } | null;
   lines: {
     name: string;
-    options: { group: string; name: string; deltaCents: number }[];
+    options: OrderLineOption[];
     quantity: number;
     lineCents: number;
     note: string | null;
@@ -126,6 +134,8 @@ export async function getOrderForCustomer(
     windowStart: order.windowStart,
     paymentMethod: order.paymentMethod,
     totalCents: order.totalCents,
+    // The Reward Line says how many Stars it took (architecture:17).
+    rewardStars: order.rewardStars,
     placedAt: order.placedAt,
     paidAt: order.paidAt,
     acceptedAt: order.acceptedAt,
@@ -141,7 +151,7 @@ export async function getOrderForCustomer(
       : null,
     lines: order.lines.map((line) => ({
       name: line.name,
-      options: line.options as OrderView["lines"][number]["options"],
+      options: snapshotOptions(line.options),
       quantity: line.quantity,
       lineCents: line.lineCents,
       note: line.note,
@@ -206,7 +216,7 @@ export async function ordersToRefund() {
 /** A day's Orders and totals for the Manager (STAFF-07). */
 export async function dayOrders(day: string) {
   const orders = await db.order.findMany({
-    where: { serviceDay: new Date(`${day}T00:00:00Z`) },
+    where: { serviceDay: dayValue(day) },
     orderBy: { placedAt: "asc" },
     include: {
       payment: { select: { status: true } },
@@ -289,7 +299,7 @@ export async function ordersForExport(memberId: string) {
       name: line.name,
       quantity: line.quantity,
       lineCents: line.lineCents,
-      options: (line.options as { name: string }[]).map((o) => o.name),
+      options: snapshotOptions(line.options).map((o) => o.name),
       note: line.note,
     })),
   }));

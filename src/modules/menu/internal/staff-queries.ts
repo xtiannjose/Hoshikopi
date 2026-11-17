@@ -1,12 +1,12 @@
 import { manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
 
+import { isSoldOutToday } from "./pricing";
+
 // Fresh reads for Staff pages: Hidden things included, never cached.
 
-const soldOutToday = (soldOutOn: Date | null) =>
-  soldOutOn?.toISOString().slice(0, 10) === manila(now()).day;
-
 export async function getMenuForStaff() {
+  const today = manila(now()).day;
   const [categories, groups] = await Promise.all([
     db.category.findMany({
       orderBy: { sort: "asc" },
@@ -30,7 +30,7 @@ export async function getMenuForStaff() {
         slug: item.slug,
         baseCents: item.baseCents,
         isHidden: item.isHidden,
-        soldOut: soldOutToday(item.soldOutOn),
+        soldOut: isSoldOutToday(item.soldOutOn, today),
       })),
     })),
     optionGroups: groups.map((group) => ({
@@ -46,7 +46,7 @@ export async function getMenuForStaff() {
         isHidden: option.isHidden,
         addsAllergens: option.addsAllergens,
         sort: option.sort,
-        soldOut: soldOutToday(option.soldOutOn),
+        soldOut: isSoldOutToday(option.soldOutOn, today),
       })),
     })),
   };

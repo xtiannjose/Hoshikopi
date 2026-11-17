@@ -1,17 +1,13 @@
-const NAMES: Record<string, string> = {
-  milk: "milk",
-  egg: "egg",
-  wheat: "wheat",
-  soy: "soy",
-  peanuts: "peanuts",
-  tree_nuts: "tree nuts",
-  fish: "fish",
-  shellfish: "shellfish",
-  sesame: "sesame",
-};
+import { ALLERGENS } from "@/lib/menu-labels";
+
+// The same labels as the Staff form, lowercased for a sentence (audit
+// architecture:17).
+const NAMES = new Map<string, string>(
+  ALLERGENS.map(([key, label]) => [key, label.toLowerCase()])
+);
 
 const list = (values: string[]) => {
-  const names = values.map((value) => NAMES[value] ?? value);
+  const names = values.map((value) => NAMES.get(value) ?? value);
   return names.length < 2
     ? names.join("")
     : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;

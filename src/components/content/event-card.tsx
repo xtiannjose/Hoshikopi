@@ -38,7 +38,7 @@ export function EventCard({
           aria-hidden
           className="bg-background rounded-card absolute top-3 left-3 px-3 py-2 text-center"
         >
-          <span className="block font-mono text-xs uppercase">{month}</span>
+          <span className="block font-mono text-sm uppercase">{month}</span>
           <span className="font-display block text-3xl leading-none italic">
             {day}
           </span>

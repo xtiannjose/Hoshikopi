@@ -25,7 +25,9 @@ test("a Guest adds customized drinks and the Cart merges and prices them", async
   await page.getByRole("button", { name: "Add to order" }).click();
   await expect(page.getByRole("link", { name: /Cart 3 items/ })).toBeVisible();
 
-  await page.goto("/cart");
+  // The header link keeps the header, so the count remembers its last value.
+  await page.getByRole("link", { name: /Cart 3 items/ }).click();
+  await expect(page).toHaveURL(/\/cart$/);
   await expect(page.getByRole("heading", { name: "Hoshi Latte" })).toHaveCount(
     1
   );
@@ -33,6 +35,14 @@ test("a Guest adds customized drinks and the Cart merges and prices them", async
   await expect(page.getByText("PHP 750").first()).toBeVisible();
   await page.getByRole("button", { name: "One less" }).click();
   await expect(page.getByText("PHP 500").first()).toBeVisible();
+  // Up bumps, down does not, from the last count (audit motion:7).
+  await expect(bump).toHaveCount(0);
+  await page.getByRole("button", { name: "One more" }).click();
+  await expect(page.getByRole("link", { name: /Cart 3 items/ })).toBeVisible();
+  await expect(bump).toHaveCount(1);
+  await page.getByRole("button", { name: "One less" }).click();
+  await expect(page.getByRole("link", { name: /Cart 2 items/ })).toBeVisible();
+  await expect(bump).toHaveCount(0);
   await page.getByRole("button", { name: "Remove Hoshi Latte" }).click();
   await expect(page.getByText("Your Cart is empty.")).toBeVisible();
 });

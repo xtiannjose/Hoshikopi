@@ -10,8 +10,7 @@ import {
 } from "@/modules/loyalty";
 import { placeOrder, refundOrder, transition } from "@/modules/ordering";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
@@ -23,8 +22,7 @@ const christian = {
 const HOSHI = "seed-member";
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock("2026-11-02T01:00:00Z");
 });
 afterEach(unfreezeClock);
@@ -112,6 +110,21 @@ describe("earning Stars (LOY-01)", () => {
       ["reverse", -2],
       ["earn", 2],
     ]);
+  });
+
+  it("keeps spent Stars spent: a Refund never takes the balance below zero", async () => {
+    // Without the floor, a Refund after spending left a negative balance (audit tests:2).
+    const id = await order(HOSHI);
+    await pickUp(id);
+    expect(await balance(HOSHI)).toBe(2);
+    expect(await adjustStars(HOSHI, -2, "Used on a treat", christian)).toEqual({
+      ok: true,
+    });
+    expect(await refundOrder(id, christian)).toEqual({ ok: true });
+    expect(await balance(HOSHI)).toBe(0);
+    expect(
+      await db.starEntry.count({ where: { orderId: id, kind: "reverse" } })
+    ).toBe(0);
   });
 });
 

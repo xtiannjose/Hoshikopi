@@ -1,10 +1,11 @@
 import { cacheLife, cacheTag } from "next/cache";
 
-import { dayValue, formatDate, manila, manilaInstant, now } from "@/lib/clock";
+import { dayOf, dayValue, formatDay, manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
+import { BADGES } from "@/lib/menu-labels";
 
 import { allergenLine, containsNuts } from "./allergens";
-import { todaysBase } from "./pricing";
+import { isSoldOutToday, todaysBase } from "./pricing";
 
 export type MenuItemCard = {
   id: string;
@@ -20,6 +21,8 @@ export type MenuItemCard = {
   badges: string[];
   /** Barista Pick for the Day palette, the Night palette, or both (INFO-13). */
   picks: { day: boolean; night: boolean };
+  /** What the /menu dietary filter reads: vegan, no-caffeine, nut-free (MENU-05). */
+  tags: string[];
   photoUrl: string | null;
   photoAlt: string;
   soldOut: boolean;
@@ -60,24 +63,33 @@ export type MenuItemDetail = MenuItemCard & {
   calorieKcal: number | null;
 };
 
-const BADGES: [string, string][] = [
-  ["new", "New"],
-  ["best_seller", "Best seller"],
-  ["vegan", "Vegan"],
-  ["no_caffeine", "No caffeine"],
-];
-
 function badgeLabels(badges: string[], allergens: string[]): string[] {
-  const labels = BADGES.filter(([key]) => badges.includes(key)).map(
-    ([, label]) => label
-  );
+  // Barista Picks show as the star in `picks`, not as a label.
+  const labels: string[] = BADGES.filter(
+    ([key]) =>
+      key !== "barista_pick" && key !== "night_pick" && badges.includes(key)
+  ).map(([, label]) => label);
   if (containsNuts(allergens)) labels.push("Contains nuts");
   return labels;
 }
 
-/** Sold Out while sold_out_on is today's Manila service day. */
-function soldOutToday(soldOutOn: Date | null, today: string): boolean {
-  return soldOutOn?.toISOString().slice(0, 10) === today;
+/**
+ * The /menu dietary filter tags, read from keys, not labels (MENU-05,
+ * audit architecture:17). Beans and merch get none: a Tumbler isn't a
+ * nut-free snack. Only a drink is caffeine-free (audit journeys:22).
+ */
+export function filterTags(item: {
+  badges: string[];
+  allergens: string[];
+  isDrink: boolean;
+  categorySlug: string;
+}): string[] {
+  if (item.categorySlug === "beans-and-merch") return [];
+  return [
+    item.badges.includes("vegan") && "vegan",
+    item.isDrink && item.badges.includes("no_caffeine") && "no-caffeine",
+    !containsNuts(item.allergens) && "nut-free",
+  ].filter((tag) => tag !== false);
 }
 
 const visibleItem = { isHidden: false, category: { isHidden: false } };
@@ -87,8 +99,7 @@ const inSeasonWhere = (today: string) => ({
   OR: [{ availableUntil: null }, { availableUntil: { gte: dayValue(today) } }],
 });
 
-const shortDay = (value: Date) =>
-  formatDate(manilaInstant(value.toISOString().slice(0, 10), 12 * 60));
+const shortDay = (value: Date) => formatDay(dayOf(value));
 
 const cardSelect = {
   id: true,
@@ -147,9 +158,10 @@ function toCard(row: CardRow, today: string): MenuItemCard {
       day: row.badges.includes("barista_pick"),
       night: row.badges.includes("night_pick"),
     },
+    tags: filterTags({ ...row, categorySlug: row.category.slug }),
     photoUrl: row.photoUrl,
     photoAlt: row.photoAlt ?? row.name,
-    soldOut: soldOutToday(row.soldOutOn, today),
+    soldOut: isSoldOutToday(row.soldOutOn, today),
     categorySlug: row.category.slug,
   };
 }
@@ -249,7 +261,7 @@ function groupViews(row: DetailRow, today: string): OptionGroupView[] {
       name: option.name,
       deltaCents: option.deltaCents,
       isDefault: option.isDefault,
-      soldOut: soldOutToday(option.soldOutOn, today),
+      soldOut: isSoldOutToday(option.soldOutOn, today),
     })),
   }));
 }

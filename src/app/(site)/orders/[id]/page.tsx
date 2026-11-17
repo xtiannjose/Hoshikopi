@@ -13,6 +13,7 @@ import {
   TicketIcon,
 } from "@phosphor-icons/react/ssr";
 
+import type { OrderStatus } from "@/generated/prisma/enums";
 import { BackLink } from "@/components/back-link";
 import { mapsUrl } from "@/components/cafe/maps";
 import { OpenStatus } from "@/components/cafe/open-status";
@@ -62,7 +63,8 @@ function steps(order: OrderView): Step[] {
   ];
 }
 
-const CURRENT: Record<string, string> = {
+// Partial: closed statuses have no step (audit architecture:20).
+const CURRENT: Partial<Record<OrderStatus, string>> = {
   placed: "Placed",
   paid: "Paid",
   accepted: "Accepted",
@@ -188,7 +190,10 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
             </p>
             <OrderStatusPill status={order.status} />
           </div>
-          <h1 className="font-display pb-1 text-6xl italic">{order.code}</h1>
+          {/* The code in the UI sans with tabular figures, as docs/05 section 4 says (audit UI2-12). */}
+          <h1 className="font-sans text-6xl font-bold tabular-nums">
+            {order.code}
+          </h1>
           <p className="border-input mt-4 flex flex-wrap justify-between gap-x-4 border-t border-dashed pt-4 font-mono text-sm">
             <span className="text-muted-foreground">Pickup</span>
             <span>
@@ -410,7 +415,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
             {order.lines.map((line, index) => (
               <li key={index} className="flex justify-between gap-4">
                 <span>
-                  {line.quantity} x {lineName(line)}
+                  {line.quantity} x {lineName(line, order.rewardStars)}
                   {line.options.length > 0 && (
                     <span className="text-muted-foreground block text-sm">
                       {line.options.map((o) => o.name).join(", ")}

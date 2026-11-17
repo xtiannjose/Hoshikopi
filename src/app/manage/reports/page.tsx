@@ -12,7 +12,7 @@ import {
 import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { Empty, OUTLINE_PILL, Panel } from "@/components/panel";
-import { formatDate, manila, manilaInstant, now } from "@/lib/clock";
+import { formatDay, manila, now } from "@/lib/clock";
 import { addDays } from "@/lib/hours";
 import { formatPrice } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
@@ -43,7 +43,6 @@ export default function ReportsPage({
 
 const cell = "border-border border-b py-2 pr-4 last:pr-0";
 const num = `${cell} text-right tabular-nums`;
-const showDay = (day: string) => formatDate(manilaInstant(day, 12 * 60));
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /** A bar under a row's label, as long as its share of the best row. */
@@ -99,7 +98,8 @@ async function Report({
           ))}
         </nav>
         <p className="text-muted-foreground text-sm">
-          {showDay(addDays(today, 1 - range))} to {showDay(today)}, Manila time
+          {formatDay(addDays(today, 1 - range))} to {formatDay(today)}, Manila
+          time
         </p>
       </div>
 
@@ -148,7 +148,7 @@ async function Report({
           ) : (
             <>
               <p className="text-muted-foreground">
-                Busiest day: {showDay(busiest.day)},{" "}
+                Busiest day: {formatDay(busiest.day)},{" "}
                 {plural(busiest.orders, "order")}
               </p>
               <table className="mt-3 w-full text-left">
@@ -172,7 +172,7 @@ async function Report({
                       className={row.orders ? "" : "text-muted-foreground"}
                     >
                       <th scope="row" className={`${cell} font-normal`}>
-                        {showDay(row.day)}
+                        {formatDay(row.day)}
                         <Bar value={row.totalCents} max={bestDay} />
                       </th>
                       <td className={num}>{row.orders}</td>

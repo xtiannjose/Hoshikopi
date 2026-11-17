@@ -17,7 +17,11 @@ const event = {
 describe("eventCalendar (EVT-04)", () => {
   it("writes one VEVENT in UTC with CRLF line ends", () => {
     freezeClock("2026-11-02T01:00:00Z");
-    const ics = eventCalendar(event, "https://hoshikopi.vercel.app");
+    const ics = eventCalendar(
+      event,
+      "https://hoshikopi.vercel.app",
+      "Maginhawa, Quezon City"
+    );
     expect(ics.endsWith("END:VCALENDAR\r\n")).toBe(true);
     expect(ics.split("\r\n")).toEqual(
       expect.arrayContaining([
@@ -28,6 +32,8 @@ describe("eventCalendar (EVT-04)", () => {
         "DTEND:20261112T130000Z",
         "SUMMARY:Latte Art Night\\; hearts\\, tulips\\, rosettas",
         "URL:https://hoshikopi.vercel.app/events/latte-art-night",
+        // The cafe's area from Cafe Settings (audit architecture:17).
+        "LOCATION:Hoshikopi\\, Maginhawa\\, Quezon City",
       ])
     );
   });
@@ -35,7 +41,8 @@ describe("eventCalendar (EVT-04)", () => {
   it("folds lines longer than 75 characters", () => {
     const long = eventCalendar(
       { ...event, summary: "x".repeat(200) },
-      "https://hoshikopi.vercel.app"
+      "https://hoshikopi.vercel.app",
+      "Kapitolyo, Pasig"
     );
     for (const line of long.split("\r\n")) {
       expect(line.length).toBeLessThanOrEqual(75);

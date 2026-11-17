@@ -9,6 +9,7 @@ import { clientIp, takeToken } from "@/lib/rate-limit";
 import {
   cancelSignup,
   confirmSignup,
+  HOLD_MINUTES,
   SIGNUPS_PER_VISITOR,
   signUpForEvent,
 } from "@/modules/content";
@@ -100,9 +101,10 @@ export async function signUpAction(
       event: result.event,
       link: `${site}/events/${result.event.slug}/signup/${result.signup.id}?t=${result.token}`,
       confirmed,
+      holdMinutes: HOLD_MINUTES,
     });
   } catch (error) {
-    // The Seats are held for 30 minutes either way, then go back.
+    // The Seats are held for HOLD_MINUTES either way, then go back.
     console.error("[signup] email not sent:", error);
   }
   // Seats left on the Event page.
@@ -137,8 +139,7 @@ export async function answerSignupAction(
     status: "error",
     message: {
       not_found: "This Sign-up is gone. Sign up again on the Event page.",
-      expired:
-        "This link waited more than 30 minutes, so the seats went back. Sign up again on the Event page.",
+      expired: `This link waited more than ${HOLD_MINUTES} minutes, so the seats went back. Sign up again on the Event page.`,
       closed: "Sign-up for this Event has closed.",
     }[result.reason],
   };

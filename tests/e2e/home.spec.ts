@@ -45,6 +45,22 @@ test("the switch pins Day at night, and it lasts a reload", async ({
   await expect(page.locator("html")).toHaveAttribute("data-theme", "day");
 });
 
+// The Star Card sits far below the fold on Home, so its Stars light as it
+// scrolls into view, not on load (audit motion:4).
+test("on Home the Star Card lights as it scrolls into view", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "once is enough");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const card = page.getByRole("img", { name: /Star Card/ });
+  const star = card.locator("path").last();
+  await expect(star).toHaveCSS("animation-timeline", "--star-card");
+  await expect(star).toHaveCSS("opacity", "0");
+  await card.scrollIntoViewIfNeeded();
+  await expect(star).toHaveCSS("opacity", "1");
+});
+
 test("the share image is a PNG", async ({ request }) => {
   const response = await request.get("/opengraph-image");
   expect(response.headers()["content-type"]).toBe("image/png");

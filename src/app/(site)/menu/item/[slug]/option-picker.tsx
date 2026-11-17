@@ -14,6 +14,7 @@ import {
   type FavouriteState,
 } from "./actions";
 import { busy } from "@/components/fields";
+import { PRIMARY_PILL_LG } from "@/components/panel";
 
 const MAX_QUANTITY = 20;
 
@@ -212,7 +213,7 @@ export function OptionPicker({
             {formatPrice(unit * quantity)}
           </span>
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div
             role="group"
             aria-label="Quantity"
@@ -247,7 +248,7 @@ export function OptionPicker({
           <button
             type="submit"
             {...busy(pending, () => setLast("add"))}
-            className="bg-primary text-primary-foreground relative min-h-12 flex-1 rounded-full px-6 font-semibold aria-disabled:opacity-60 sm:flex-none"
+            className={`${PRIMARY_PILL_LG} relative flex-1 sm:flex-none`}
           >
             {editing
               ? pending

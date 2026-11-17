@@ -3,16 +3,14 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { balance, birthdayTreat, starHistory } from "@/modules/loyalty";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const HOSHI = "seed-member";
 const NOVEMBER = 11;
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock("2026-11-02T01:00:00Z"); // 9:00 AM, Nov 2 in Manila
 });
 afterEach(unfreezeClock);

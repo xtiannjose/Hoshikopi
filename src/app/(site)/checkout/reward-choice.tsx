@@ -11,7 +11,11 @@ import {
 
 import { formatPrice } from "@/lib/money";
 
-type Reward = { name: string; discountCents: number } | null;
+export type Reward = {
+  name: string;
+  discountCents: number;
+  stars: number;
+} | null;
 
 const RewardContext = createContext<
   [boolean, Dispatch<SetStateAction<boolean>>]
@@ -50,7 +54,7 @@ export function SummaryTotal({
     <dl className="border-border mt-4 grid gap-1 border-t pt-3">
       {useReward && reward && (
         <div className="flex justify-between gap-4">
-          <dt>Free drink (9 Stars)</dt>
+          <dt>Free drink ({reward.stars} Stars)</dt>
           <dd className="font-mono whitespace-nowrap">
             &minus;{formatPrice(reward.discountCents)}
           </dd>

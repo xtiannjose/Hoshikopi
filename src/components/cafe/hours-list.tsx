@@ -1,4 +1,4 @@
-import { formatDate } from "@/lib/clock";
+import { formatDay } from "@/lib/clock";
 import { formatClock, type Hours } from "@/lib/hours";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -45,9 +45,7 @@ export function HoursList({ hours }: { hours: Hours }) {
           <ul className="mt-1 grid gap-1">
             {hours.special.map((s) => (
               <li key={s.day}>
-                <span className="font-mono text-sm">
-                  {formatDate(new Date(`${s.day}T04:00:00Z`))}
-                </span>{" "}
+                <span className="font-mono text-sm">{formatDay(s.day)}</span>{" "}
                 {s.isClosed || !s.opensAt || !s.closesAt
                   ? "Closed"
                   : range(s.opensAt, s.closesAt)}

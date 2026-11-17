@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useRef } from "react";
 
 import { busy, Field, fieldClass } from "@/components/fields";
-import { OUTLINE_PILL, PRIMARY_PILL } from "@/components/panel";
+import { OUTLINE_PILL, PRIMARY_PILL_LG } from "@/components/panel";
 
 import { adjustStarsAction, type StarsState } from "./actions";
 
@@ -64,7 +64,7 @@ export function StarsForm() {
       <button
         type="submit"
         {...busy(pending)}
-        className={`${PRIMARY_PILL} min-h-12 justify-self-start px-6`}
+        className={`${PRIMARY_PILL_LG} justify-self-start`}
       >
         {pending ? "Saving..." : "Save adjustment"}
       </button>

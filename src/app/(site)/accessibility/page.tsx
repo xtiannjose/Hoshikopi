@@ -17,8 +17,9 @@ export const metadata: Metadata = {
 };
 
 // Known gaps come from the audit backlog (docs/audit/2026-11-13.md); the
-// four listed at launch (a11y:5, 7, 8 and 11) were fixed in batch 10.1. Add
-// a line here whenever a new one is found, and take it out when it ships.
+// four listed at launch (a11y:5, 7, 8 and 11) were fixed in batch 10.1, and
+// larger text (a11y:12) in 10.19. Still open: a11y:10, 13, 14 and 15. Add a
+// line here whenever a new one is found, and take it out when it ships.
 const SECTIONS: {
   id: string;
   title: string;
@@ -33,6 +34,7 @@ const SECTIONS: {
       "WCAG 2.2 at level AA, in both the Day and the Night palette.",
       "Everything works with a keyboard alone, and focus stays visible: never under a sticky bar, never lost when a drawer opens or a page changes.",
       "Pages fit a phone 320 px wide and zoom to 400% without scrolling sideways.",
+      "On a phone, a doubled default text size wraps long words and headings instead of running past the screen edge.",
       "If your device asks for less motion, pages stop fading and sliding, and Add to order still shows Added.",
     ],
   },
@@ -52,7 +54,11 @@ const SECTIONS: {
     title: "What still falls short",
     icon: <WarningCircleIcon size={20} />,
     points: [
-      "With a doubled default text size on a phone (font settings, not zoom), the header wraps, but some long words, headings and the email address still run past the screen edge.",
+      "Some Filipino phrases, such as Salamat sa pagdaan, are read aloud with an English voice.",
+      "On a phone, the news email checkbox on your account page shows smaller than the others.",
+      "On an Order page, a screen reader runs each step and its time together, as in Placed7:16 AM.",
+      "When a new Order reaches the Bar Screen, it chimes but gives a screen reader nothing to read.",
+      "Found something else in your way? Tell us below.",
     ],
   },
 ];

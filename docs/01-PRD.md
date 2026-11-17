@@ -88,7 +88,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | INFO-09 | Share cards on every public page: Menu Item, Event and Post pages share their own photo with alt text; every other page shares one branded image (research C-49) | M |
 | INFO-10 | An About this concept page: what is invented (address, people, prices, photos), what is real (the code, Test Mode payments), and later the case study (research C-55) | M |
 | INFO-11 | Inquiry form for private events and large Orders (name, email, date, guests, message), saved for the Manager, who gets an email; Concept Notice on the form (research C-53) | S |
-| INFO-12 | Day and Night copy: the Home headline and line change with the palette (a morning line by day, an evening line by night); both are in the page and the palette shows one (ADR 0010) | M |
+| INFO-12 | Day and Night copy: the Home headline and line change with the palette (one line per palette, neither naming a time of day, since a pinned palette shows all day); both are in the page and the palette shows one (ADR 0010) | M |
 | INFO-13 | Day and Night Barista Picks: the Manager picks three for each palette, and Home shows the set for the current one | S |
 
 ### 5.2 Cart and checkout

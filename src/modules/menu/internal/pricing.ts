@@ -1,4 +1,4 @@
-import { manila, now } from "@/lib/clock";
+import { dayOf, manila, now } from "@/lib/clock";
 import { db, type Client } from "@/lib/db";
 import { addMoney } from "@/lib/money";
 import { isPlainText } from "@/lib/text";
@@ -29,7 +29,10 @@ export type ChoiceRefusal = {
   reason: "unavailable" | "sold_out" | "option_sold_out" | "invalid_options";
 };
 
-const day = (value: Date | null) => value?.toISOString().slice(0, 10);
+/** Sold Out while sold_out_on is today's Manila service day. */
+export function isSoldOutToday(soldOutOn: Date | null, today: string): boolean {
+  return soldOutOn !== null && dayOf(soldOutOn) === today;
+}
 
 /** Today's Base Price: a running Promo replaces it (MENU-06). */
 export function todaysBase(
@@ -41,13 +44,11 @@ export function todaysBase(
   },
   today: string
 ): number {
-  const from = day(item.promoFrom);
-  const until = day(item.promoUntil);
   return item.promoCents !== null &&
-    from &&
-    until &&
-    from <= today &&
-    today <= until
+    item.promoFrom &&
+    item.promoUntil &&
+    dayOf(item.promoFrom) <= today &&
+    today <= dayOf(item.promoUntil)
     ? item.promoCents
     : item.baseCents;
 }
@@ -57,7 +58,7 @@ function inSeason(
   item: { availableUntil: Date | null },
   today: string
 ): boolean {
-  return !item.availableUntil || day(item.availableUntil)! >= today;
+  return !item.availableUntil || dayOf(item.availableUntil) >= today;
 }
 
 /**
@@ -71,7 +72,6 @@ export async function priceChoices(
   client: Client = db
 ): Promise<(PricedChoice | ChoiceRefusal)[]> {
   const today = manila(now()).day;
-  const soldOut = (on: Date | null) => on?.toISOString().slice(0, 10) === today;
   const items = await client.menuItem.findMany({
     // An id with a NUL is no Menu Item, and Postgres would refuse it with a
     // 500 (audit SEC2-10): it prices as unavailable.
@@ -104,7 +104,8 @@ export async function priceChoices(
     ) {
       return { ok: false, reason: "unavailable" };
     }
-    if (soldOut(item.soldOutOn)) return { ok: false, reason: "sold_out" };
+    if (isSoldOutToday(item.soldOutOn, today))
+      return { ok: false, reason: "sold_out" };
 
     const picked = new Set(choice.optionIds);
     if (picked.size !== choice.optionIds.length) {
@@ -130,7 +131,7 @@ export async function priceChoices(
           name: option.name,
           deltaCents: option.deltaCents,
         });
-        optionSoldOut ||= soldOut(option.soldOutOn);
+        optionSoldOut ||= isSoldOutToday(option.soldOutOn, today);
       }
     }
     // An Option from a group this Menu Item does not offer.

@@ -1,11 +1,18 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
-import type { PaymentMethod } from "@/generated/prisma/enums";
+import type { OrderStatus, PaymentMethod } from "@/generated/prisma/enums";
 import { freezeClock, now, unfreezeClock } from "@/lib/clock";
 import { nextOrderCode, transition, type Actor } from "@/modules/ordering";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const WINDOW = new Date("2026-11-02T02:00:00Z");
@@ -15,16 +22,22 @@ const webhook: Actor = { kind: "webhook" };
 const system: Actor = { kind: "system" };
 const annika: Actor = { kind: "staff", id: "seed-barista", role: "barista" };
 const christian: Actor = { kind: "staff", id: "seed-manager", role: "manager" };
+const demo: Actor = { kind: "demo" };
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
 });
-afterEach(unfreezeClock);
+afterEach(() => {
+  unfreezeClock();
+  vi.unstubAllEnvs();
+});
 afterAll(() => db.$disconnect());
 
 /** An Order of 2 drinks and 1 food Line holding room in WINDOW. */
-async function placedOrder(paymentMethod: PaymentMethod = "pay_at_pickup") {
+async function placedOrder(
+  paymentMethod: PaymentMethod = "pay_at_pickup",
+  data: { status?: OrderStatus; paidAt?: Date | null } = {}
+) {
   await db.pickupWindowUsage.upsert({
     where: { windowStart: WINDOW },
     update: { drinks: { increment: 2 }, food: { increment: 1 } },
@@ -40,6 +53,7 @@ async function placedOrder(paymentMethod: PaymentMethod = "pay_at_pickup") {
       serviceDay: new Date("2026-11-02"),
       code: `K-${Math.random().toString().slice(2, 8)}`,
       status: "placed",
+      ...data,
       customerName: "Hoshi",
       customerEmail: "hoshi@hoshikopi.example",
       pickupKind: "scheduled",
@@ -265,6 +279,114 @@ describe("transition: Refunds", () => {
     }
     expect((await transition(order.id, "refunded", christian)).ok).toBe(true);
   });
+});
+
+// Every Order Status against every target and actor, so widening any rule
+// in allowed() fails here, and Demo Mode off refuses the visitor (audit tests:3).
+describe("transition: the docs/03 section 7 table (audit tests:3)", () => {
+  const paidAt = new Date("2026-11-02T01:30:00Z");
+  type State = {
+    name: string;
+    method: PaymentMethod;
+    status: OrderStatus;
+    paidAt?: Date;
+  };
+  const STATES: State[] = [
+    { name: "placed-pap", method: "pay_at_pickup", status: "placed" },
+    { name: "placed-online", method: "gcash", status: "placed" },
+    { name: "paid", method: "gcash", status: "paid", paidAt },
+    { name: "accepted", method: "pay_at_pickup", status: "accepted" },
+    { name: "preparing", method: "pay_at_pickup", status: "preparing" },
+    { name: "ready", method: "pay_at_pickup", status: "ready" },
+    { name: "picked_up", method: "pay_at_pickup", status: "picked_up" },
+    { name: "cancelled-paid", method: "card", status: "cancelled", paidAt },
+    { name: "cancelled-unpaid", method: "pay_at_pickup", status: "cancelled" },
+    { name: "expired", method: "gcash", status: "expired" },
+    { name: "refunded", method: "card", status: "refunded", paidAt },
+  ];
+  const TARGETS: OrderStatus[] = [
+    "placed",
+    "paid",
+    "accepted",
+    "preparing",
+    "ready",
+    "picked_up",
+    "cancelled",
+    "expired",
+    "refunded",
+  ];
+  const ACTORS = {
+    customer,
+    webhook,
+    system,
+    barista: annika,
+    manager: christian,
+    demo,
+  };
+  type ActorName = keyof typeof ACTORS;
+  const bar = (step: string) =>
+    ["barista", "manager", "demo"].map((who) => `${step}:${who}`);
+  // Copied from the docs/03 section 7 table, "state>to:actor".
+  const ALLOWED = new Set([
+    "placed-online>paid:webhook",
+    "placed-online>expired:system",
+    ...bar("placed-pap>accepted"),
+    ...bar("paid>accepted"),
+    ...bar("accepted>preparing"),
+    ...bar("preparing>ready"),
+    ...bar("ready>picked_up"),
+    "placed-pap>cancelled:customer",
+    "placed-online>cancelled:customer",
+    "paid>cancelled:customer",
+    "placed-pap>cancelled:system",
+    "placed-pap>cancelled:manager",
+    "placed-online>cancelled:manager",
+    "paid>cancelled:manager",
+    "accepted>cancelled:manager",
+    "preparing>cancelled:manager",
+    "ready>cancelled:manager",
+    "cancelled-paid>refunded:manager",
+    "cancelled-paid>refunded:system",
+    "picked_up>refunded:manager",
+  ]);
+
+  /** Try every target with each actor from one Order Status. */
+  async function check(
+    state: State,
+    actors: ActorName[],
+    allowed: Set<string>
+  ) {
+    const fresh = () =>
+      placedOrder(state.method, {
+        status: state.status,
+        paidAt: state.paidAt ?? null,
+      });
+    let order = await fresh();
+    for (const to of TARGETS) {
+      for (const who of actors) {
+        const key = `${state.name}>${to}:${who}`;
+        // A reason, so a Manager cancel is never refused for want of one.
+        const result = await transition(order.id, to, ACTORS[who], "x");
+        expect(result.ok, key).toBe(allowed.has(key));
+        if (result.ok) order = await fresh();
+      }
+    }
+  }
+
+  it.each(STATES)("follows the table from $name", async (state) => {
+    // The Order's 2026-11-02 service day has passed, for the system cancel.
+    freezeClock("2026-11-03T06:00:00+08:00");
+    await check(state, Object.keys(ACTORS) as ActorName[], ALLOWED);
+  });
+
+  it.each(STATES)(
+    "refuses the demo actor from $name with Demo Mode off",
+    async (state) => {
+      // As on a PayMongo deploy.
+      vi.stubEnv("PAYMENT_PROVIDER", "paymongo");
+      await check(state, ["demo"], new Set());
+    }
+  );
 });
 
 describe("nextOrderCode", () => {

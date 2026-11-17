@@ -2,7 +2,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import { busy, Field } from "./fields";
+import { busy, Field, SaveBar } from "./fields";
+import { PRIMARY_PILL, PRIMARY_PILL_LG } from "./panel";
 
 describe("Field", () => {
   // A select gets the same ties as an input (audit architecture:8).
@@ -55,5 +56,17 @@ describe("busy", () => {
     busy(false, press).onClick(event as never);
     expect(event.preventDefault).not.toHaveBeenCalled();
     expect(press).toHaveBeenCalled();
+  });
+});
+
+describe("SaveBar", () => {
+  it("uses the large primary pill and dims while pending (audit architecture:11)", () => {
+    const html = renderToStaticMarkup(
+      <SaveBar pending label="Save" status="idle" />
+    );
+    expect(html).toContain(`class="${PRIMARY_PILL_LG}"`);
+    expect(html).toContain('aria-disabled="true"');
+    expect(PRIMARY_PILL).toContain("aria-disabled:opacity-60");
+    expect(PRIMARY_PILL_LG).toContain("aria-disabled:opacity-60");
   });
 });

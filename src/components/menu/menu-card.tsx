@@ -16,17 +16,13 @@ export function MenuCard({
   headingLevel?: 2 | 3 | 4;
 }) {
   const Heading = `h${headingLevel}` as const;
-  // What the menu's search and dietary filters read (MENU-05).
-  const tags = [
-    item.badges.includes("Vegan") && "vegan",
-    item.badges.includes("No caffeine") && "no-caffeine",
-    !item.badges.includes("Contains nuts") && "nut-free",
-  ].filter(Boolean);
+  // data-search and data-tags are what the menu's search and dietary
+  // filters read (MENU-05).
   return (
     <article
       data-menu-item=""
       data-search={`${item.name} ${item.description}`.toLowerCase()}
-      data-tags={tags.join(" ")}
+      data-tags={item.tags.join(" ")}
       className="group lift reveal relative grid grid-cols-[6rem_minmax(0,1fr)] content-start gap-x-4 gap-y-1.5 sm:grid-cols-1 sm:gap-3"
     >
       <Photo
@@ -45,7 +41,7 @@ export function MenuCard({
             {item.name}
           </Link>
         </Heading>
-        <p className="shrink-0 font-mono">
+        <p className="font-mono">
           {item.soldOut ? (
             <span className="text-muted-foreground">Sold out today</span>
           ) : (

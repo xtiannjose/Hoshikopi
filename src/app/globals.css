@@ -108,6 +108,24 @@
     color: var(--color-muted-foreground);
   }
 
+  /* Long words, headings and the email address wrap instead of running
+     past a phone's edge at a doubled text size (audit a11y:12). Staff
+     tables keep whole words and scroll in their overflow-x-auto wrappers. */
+  body {
+    overflow-wrap: anywhere;
+  }
+  table {
+    overflow-wrap: normal;
+  }
+  /* A field's built-in width grows with the text size; this stops it
+     pushing its column off screen (audit a11y:12). Checkboxes and radios
+     keep their minimum width so long text beside them cannot squeeze them
+     (audit a11y:13). */
+  :where(input:not([type="checkbox"], [type="radio"]), select, textarea) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   /* Links in text are underlined; navigation opts out with no-underline. */
   a {
     text-decoration-line: underline;
@@ -125,6 +143,14 @@
     label.rounded-full:not(:has(:disabled))
   ):active {
     scale: 0.97;
+  }
+
+  /* Primary buttons and pill links dim a little under the pointer, at
+     once: colours never ease (docs/05 section 7, audit UI2-09). */
+  @media (hover: hover) {
+    :is(a, button).bg-primary:not(:disabled, [aria-disabled="true"]):hover {
+      opacity: 0.9;
+    }
   }
 
   /* Disclosures (FAQ, Later today) fade their answer in. */
@@ -287,8 +313,31 @@
   }
 }
 
-/* Page to page: the old page fades out fast, the new one rises in
-   (template.tsx). Clicks pass through to the live page meanwhile. */
+/* The Star Card's Stars light one by one, 50 ms apart (docs/05 section 7).
+   Unlayered, so it beats the animate-* shorthand. */
+.star-light {
+  animation-delay: calc(var(--light) * 50ms);
+}
+/* On Home the Star Card sits far down the page, so it lights as it
+   scrolls into view instead of on load (audit motion:4). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .light-on-scroll {
+      view-timeline: --star-card;
+    }
+    .light-on-scroll .star-light {
+      animation-delay: 0s;
+      animation-timeline: --star-card;
+      animation-range: entry calc(10% + var(--light) * 7%) entry
+        calc(40% + var(--light) * 7%);
+    }
+  }
+}
+
+/* Page to page: the old page fades out fast while the new one rises in
+   (template.tsx). The header and footer stay clickable meanwhile; the page
+   itself takes taps only once its fade ends, so the rise is short and
+   starts at once (audit motion:3). */
 ::view-transition {
   pointer-events: none;
 }
@@ -296,8 +345,7 @@
   animation: fade-out 120ms ease-in both;
 }
 ::view-transition-new(.page) {
-  animation: var(--animate-rise);
-  animation-delay: 80ms;
+  animation: rise 160ms var(--ease-calm) both;
 }
 
 /* Reduced motion: every state arrives at once. */

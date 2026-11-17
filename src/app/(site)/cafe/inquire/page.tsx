@@ -27,7 +27,7 @@ const GOOD_TO_KNOW = [
   },
   {
     icon: <CoffeeIcon size={20} />,
-    text: "More than 15 drinks: ask a day ahead",
+    text: "More than a dozen drinks: ask a day ahead",
   },
   {
     icon: <EnvelopeSimpleIcon size={20} />,

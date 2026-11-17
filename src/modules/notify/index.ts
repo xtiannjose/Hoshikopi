@@ -78,6 +78,8 @@ export async function sendEventSignup(signup: {
   event: { title: string; startsAt: Date; priceCents: number | null };
   link: string;
   confirmed: boolean;
+  /** How long an unconfirmed Sign-up holds its Seats (audit architecture:17). */
+  holdMinutes: number;
 }) {
   const date = formatDate(signup.event.startsAt);
   const when = `${date} at ${formatTime(signup.event.startsAt)}`;
@@ -101,12 +103,12 @@ export async function sendEventSignup(signup: {
           footer,
         ]
       : [
-          `Salamat! Open this link within 30 minutes to keep your ${seats} for ${signup.event.title} on ${when}:`,
+          `Salamat! Open this link within ${signup.holdMinutes} minutes to keep your ${seats} for ${signup.event.title} on ${when}:`,
           signup.link,
           "",
           price,
           "Can't make it later? The same link cancels, so someone else can have your seats.",
-          "Didn't sign up? Do nothing, and the seats go back in 30 minutes.",
+          `Didn't sign up? Do nothing, and the seats go back in ${signup.holdMinutes} minutes.`,
           "",
           footer,
         ]

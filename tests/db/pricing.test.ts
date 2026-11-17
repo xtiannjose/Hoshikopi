@@ -3,16 +3,14 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { priceChoices } from "@/modules/menu";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const ids: Record<string, string> = {};
 const items: Record<string, string> = {};
 
 beforeAll(async () => {
-  await resetDb(db);
-  await seedDatabase(db, { people: false });
+  await resetToSeed(db, { people: false });
   for (const option of await db.option.findMany()) ids[option.name] = option.id;
   for (const item of await db.menuItem.findMany()) items[item.slug] = item.id;
 });

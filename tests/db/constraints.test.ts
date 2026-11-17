@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 // Every hand-written CHECK and unique rule in the migrations, so one that is
 // loosened or dropped fails a test (audit tests:18), with the NULL cases
@@ -15,8 +14,7 @@ const EVENT = `WHERE id = (SELECT id FROM events ORDER BY id LIMIT 1)`;
 const WEEKLY = `WHERE id = (SELECT id FROM recurring_events ORDER BY id LIMIT 1)`;
 
 beforeAll(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   await db.$executeRawUnsafe(`
     INSERT INTO orders (id, service_day, code, status, member_id, customer_name,
       customer_email, pickup_kind, window_start, payment_method, total_cents,

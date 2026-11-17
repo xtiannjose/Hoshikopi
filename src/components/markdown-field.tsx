@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
 
 import { fieldClass } from "@/components/fields";
+import { Markdown } from "@/components/markdown";
 
 /** A Markdown textarea with a live preview, no raw HTML (docs/03 section 14). */
 export function MarkdownField({
@@ -45,10 +45,11 @@ export function MarkdownField({
       </div>
       <section
         aria-label="Preview"
-        className="bg-muted rounded-card max-w-measure grid content-start gap-3 p-4 [&_a]:underline"
+        className="bg-muted rounded-card grid content-start gap-3 p-4"
       >
-        <p className="text-muted-foreground font-mono text-xs">Preview</p>
-        <ReactMarkdown skipHtml>{text}</ReactMarkdown>
+        <p className="text-muted-foreground font-mono text-sm">Preview</p>
+        {/* The same Markdown as the public page (audit staff:15). */}
+        <Markdown>{text}</Markdown>
       </section>
     </div>
   );

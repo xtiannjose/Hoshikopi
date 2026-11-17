@@ -2,8 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getOrderingDay } from "@/modules/cafe";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const time = (hhmm: string) => new Date(`1970-01-01T${hhmm}:00Z`);
@@ -12,8 +11,7 @@ const SUNDAY = new Date("2026-11-01T01:00:00Z");
 const MONDAY = new Date("2026-11-02T01:00:00Z");
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db, { people: false });
+  await resetToSeed(db, { people: false });
 });
 afterAll(() => db.$disconnect());
 

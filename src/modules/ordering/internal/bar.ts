@@ -5,6 +5,7 @@ import { prepMinutes } from "@/modules/cafe";
 import { closeCheckout } from "@/modules/payments";
 
 import { orderingDay } from "./day";
+import { snapshotOptions } from "./snapshot";
 import { transition } from "./status";
 import { drinksQueuedAhead } from "./windows";
 
@@ -177,7 +178,7 @@ export async function barBoard(at: Date): Promise<BarBoard> {
     lines: order.lines.map((line) => ({
       quantity: line.quantity,
       name: line.name,
-      options: (line.options as { name: string }[]).map((o) => o.name),
+      options: snapshotOptions(line.options).map((o) => o.name),
       note: line.note,
       reward: line.isReward,
     })),
