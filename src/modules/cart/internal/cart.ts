@@ -247,6 +247,34 @@ export async function updateQuantity(
   });
 }
 
+/**
+ * One more or one less, as a step the database applies, so two quick taps
+ * count twice: posting the new total made the second tap repeat the first
+ * (audit DC-32). One less on the last one removes the Line.
+ */
+export async function stepQuantity(
+  owner: CartOwner,
+  lineId: string,
+  step: 1 | -1
+): Promise<void> {
+  if (!isPlainText(lineId)) return;
+  const line = { id: lineId, cart: ownerWhere(owner) };
+  if (step === 1) {
+    await db.cartLine.updateMany({
+      where: { ...line, quantity: { lt: MAX_LINE_QUANTITY } },
+      data: { quantity: { increment: 1 } },
+    });
+    return;
+  }
+  const { count } = await db.cartLine.updateMany({
+    where: { ...line, quantity: { gt: 1 } },
+    data: { quantity: { decrement: 1 } },
+  });
+  if (count === 0) {
+    await db.cartLine.deleteMany({ where: { ...line, quantity: { lte: 1 } } });
+  }
+}
+
 export async function removeLine(
   owner: CartOwner,
   lineId: string,

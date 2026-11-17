@@ -25,7 +25,7 @@ import {
 } from "@/modules/cart";
 import { fitsOneOrder, orderingDay, orderLimit } from "@/modules/ordering";
 
-import { removeLineAction, setQuantityAction } from "./actions";
+import { removeLineAction, stepQuantityAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Your Cart",
@@ -141,13 +141,9 @@ async function Cart() {
                 aria-label={`Quantity of ${line.name}`}
                 className="flex items-center gap-1"
               >
-                <form action={setQuantityAction}>
+                <form action={stepQuantityAction}>
                   <input type="hidden" name="lineId" value={line.id} />
-                  <input
-                    type="hidden"
-                    name="quantity"
-                    value={line.quantity - 1}
-                  />
+                  <input type="hidden" name="step" value="-1" />
                   <button
                     type="submit"
                     aria-label={
@@ -161,13 +157,9 @@ async function Cart() {
                 <span className="w-8 text-center font-mono text-lg">
                   {line.quantity}
                 </span>
-                <form action={setQuantityAction}>
+                <form action={stepQuantityAction}>
                   <input type="hidden" name="lineId" value={line.id} />
-                  <input
-                    type="hidden"
-                    name="quantity"
-                    value={line.quantity + 1}
-                  />
+                  <input type="hidden" name="step" value="1" />
                   <button
                     type="submit"
                     aria-label="One more"

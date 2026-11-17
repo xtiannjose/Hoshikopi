@@ -2,16 +2,16 @@
 
 import { refresh } from "next/cache";
 
-import { currentCartOwner, removeLine, updateQuantity } from "@/modules/cart";
+import { currentCartOwner, removeLine, stepQuantity } from "@/modules/cart";
 
-/** Change a Line's quantity (0 removes it) in this browser's Cart (ORD-02). */
-export async function setQuantityAction(form: FormData) {
+/** One more or one less of a Line in this browser's Cart (ORD-02, DC-32). */
+export async function stepQuantityAction(form: FormData) {
   const owner = await currentCartOwner();
   if (!owner) return;
-  await updateQuantity(
+  await stepQuantity(
     owner,
     String(form.get("lineId") ?? ""),
-    Number(form.get("quantity"))
+    form.get("step") === "-1" ? -1 : 1
   );
   refresh();
 }

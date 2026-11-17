@@ -11,6 +11,7 @@ export {
   mergeGuestCart,
   MAX_LINE_QUANTITY,
   removeLine,
+  stepQuantity,
   updateQuantity,
   type CartLineView,
   type CartOwner,
