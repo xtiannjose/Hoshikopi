@@ -28,3 +28,7 @@ The November audit found the two-minute demo closed from 8:30 PM to 7:00 AM Mani
 - The Bar Screen itself stays Staff-only; the case study shows it with screenshots.
 - A visitor can move only an Order whose link they hold, one step at a time, in the order the table allows; an unpaid online Order still waits for its checkout.
 - A new `ActorKind` value (`demo`, migration `demo_actor`).
+
+## Update 2026-11-17: the demo's dates roll forward
+
+The seeded demo Events and the demo Promo were dated from the day of the seed, so on the live demo they went stale and the owner had to re-date them in `/manage`. While Demo Mode is on, the daily cron now moves a seeded demo Event that has ended forward by whole weeks (same weekday, time and length; its old Sign-ups are cleared) and renews the demo Promo and Seasonal drink once they lapse (`rollDemoEvents` in `content`, `rollDemoMenu` in `menu`). Only the seeded rows, by slug, and only once expired: an Event a Manager makes, or a Promo a Manager takes off, is left alone.

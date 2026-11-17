@@ -10,29 +10,17 @@ import {
 
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, Panel, PRIMARY_PILL } from "@/components/panel";
+import { googleEnabled } from "@/modules/identity";
 import { canEmail } from "@/modules/notify";
 import { demoMode } from "@/modules/payments";
+
+import { trySteps } from "./try-steps";
 
 export const metadata: Metadata = {
   title: "About this concept",
   description:
     "Hoshikopi is a portfolio project: a full cafe website built as if the cafe were real. What is made up and what is real.",
 };
-
-const TRY = [
-  {
-    title: "Order a drink.",
-    body: "Pick one from the menu and check out as a Guest, or sign in with Google first to collect Stars. Pay at Pickup, or pay on the Test Mode checkout.",
-  },
-  {
-    title: "Be the barista.",
-    body: "Nobody is behind this bar, so your Order page lets you tap the bar's steps yourself: Accept, Start making, Ready, Hand it over. The page follows live and chimes at Ready.",
-  },
-  {
-    title: "Collect a Star.",
-    body: "Signed in, each drink you hand over lights a Star on your Star Card. Nine make a free drink.",
-  },
-];
 
 const MADE_UP = [
   [
@@ -107,7 +95,9 @@ export default function ConceptPage() {
               Try it in two minutes
             </h2>
             <ol className="max-w-measure mt-4 grid list-decimal gap-3 pl-6">
-              {TRY.map((step) => (
+              {trySteps(
+                googleEnabled() ? "google" : canEmail() ? "email" : null
+              ).map((step) => (
                 <li key={step.title}>
                   <span className="font-semibold">{step.title}</span>{" "}
                   {step.body}

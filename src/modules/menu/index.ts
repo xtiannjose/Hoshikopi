@@ -33,3 +33,4 @@ export {
   type ChoiceRefusal,
   type PricedOption,
 } from "./internal/pricing";
+export { rollDemoMenu } from "./internal/demo";

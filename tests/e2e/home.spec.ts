@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { expectNoAxeViolations, NIGHT_TIME, openIn } from "./axe";
+import { openAllDayToday } from "./db";
 
 for (const palette of ["day", "night"] as const) {
   test(`home in the ${palette} palette has the shell and no axe violations`, async ({
@@ -88,4 +89,23 @@ test("a page has its share card, and a made-up slug has none", async ({
     const madeUp = card.replace(`/${slug}/`, "/no-such-slug/");
     expect((await request.get(madeUp)).status()).toBe(404);
   }
+});
+
+// The hero card had no Pickup Time (UI2-05), and Home never pointed to the
+// two-minute demo (journeys:20). A Guest gets the sign-in link (UI2-25).
+test("the hero shows the next Pickup Times and the demo guide", async ({
+  page,
+}) => {
+  await openAllDayToday();
+  await page.goto("/");
+  const times = page.getByRole("list", { name: "Next Pickup Times" });
+  await expect(times.getByRole("listitem")).toHaveCount(5);
+  await expect(page.getByText("Order now, pick up at")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "See how in two minutes" })
+  ).toHaveAttribute("href", "/concept#try");
+  await expect(
+    page.getByRole("link", { name: "Get your Star Card" })
+  ).toBeVisible();
+  await expect(page.getByRole("region", { name: "Your usual" })).toHaveCount(0);
 });

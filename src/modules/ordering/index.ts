@@ -25,6 +25,7 @@ export {
   type OrderView,
 } from "./internal/reads";
 export { orderAgain } from "./internal/again";
+export { nextPickupTimes, type PickupPreview } from "./internal/preview";
 export {
   getPopularDrinks,
   popularDrinks,

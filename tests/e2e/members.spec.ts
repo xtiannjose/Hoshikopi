@@ -184,3 +184,28 @@ test("a stranger's link requests don't lock someone out, and an address still ge
   await ask("203.0.113.45");
   await refused();
 });
+
+// Home showed a Member the example Star Card's sign-in link, and a daily
+// drink took five steps (audit UI2-25, FEAT-09).
+test("Home gives a Member their own Stars link and their usual, one tap to the Cart", async ({
+  page,
+}) => {
+  await openAllDayToday();
+  await signIn(page, newMember(), "/menu/item/hoshi-latte");
+  await page.getByText("Oat milk", { exact: true }).click();
+  await page.getByRole("button", { name: "Save as Favourite" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Saved to your Favourites."
+  );
+
+  await page.goto("/");
+  await expect(
+    page.getByRole("link", { name: "See your Stars" })
+  ).toHaveAttribute("href", "/account/stars");
+  const usual = page.getByRole("region", { name: "Your usual" });
+  await expect(usual).toContainText("Hoshi Latte, Regular, Oat milk");
+  await expectNoAxeViolations(page);
+  await usual.getByRole("button", { name: /^Add for PHP/ }).click();
+  await expect(page).toHaveURL(/\/cart$/);
+  await expect(page.getByRole("main").getByText("Oat milk")).toBeVisible();
+});

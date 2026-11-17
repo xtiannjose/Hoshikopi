@@ -15,6 +15,7 @@ export {
   type PostCard,
 } from "./internal/content";
 export { eventCalendar } from "./internal/calendar";
+export { rollDemoEvents } from "./internal/demo";
 export { forgetGuest, guestRecordsFor } from "./internal/guests";
 export {
   getRecurringEvents,
