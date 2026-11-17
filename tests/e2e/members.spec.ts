@@ -105,10 +105,14 @@ test("a Member saves a Favourite and orders a past Order again (ORD-11)", async 
 
 test("a Guest is asked to sign in to save a Favourite", async ({ page }) => {
   await page.goto("/menu/item/hoshi-latte");
+  const note = page.getByRole("textbox", { name: /Note for the barista/ });
+  await note.fill("Extra hot");
   await page.getByRole("button", { name: "Save as Favourite" }).click();
   await expect(page.getByRole("status")).toContainText(
     "Sign in to save Favourites."
   );
+  // The refusal kept the note; React's form reset wiped it (audit DC-31).
+  await expect(note).toHaveValue("Extra hot");
 });
 
 test("a Member gets a Birthday Treat in their birthday month (LOY-04)", async ({

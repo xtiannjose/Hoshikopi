@@ -82,6 +82,9 @@ export function OptionPicker({
     initialPicks(groups, editing?.optionIds)
   );
   const [quantity, setQuantity] = useState(editing?.quantity ?? 1);
+  // Held like the quantity: React resets a form after each action, which
+  // wiped the note after Save as Favourite or a refused add (audit DC-31).
+  const [note, setNote] = useState(editing?.note ?? "");
   const [state, action, pending] = useActionState<AddState, FormData>(
     editing ? changeLineAction : addToCartAction,
     { status: "idle" }
@@ -195,7 +198,8 @@ export function OptionPicker({
           id="note"
           name="note"
           maxLength={140}
-          defaultValue={editing?.note}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
           placeholder="Extra hot, please"
           className="rounded-card border-input bg-background min-h-11 border px-3"
         />
