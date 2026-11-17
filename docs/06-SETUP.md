@@ -122,7 +122,7 @@ Two database addresses appear below. A **pooled** URL goes through a connection 
 | `BLOB_STORE_ID` | Vercel Blob store, set by Vercel when the store is connected (it signs in with Vercel's OIDC token; an older store gives `BLOB_READ_WRITE_TOKEN` instead); empty uses `data/menu-photos/` | Batch 5.4 |
 | `CRON_SECRET` | random string; `/api/cron/daily` checks it (Vercel Cron sends it as `Authorization: Bearer <CRON_SECRET>`) | Phase 2 |
 | `DATABASE_URL_UNPOOLED` | Set by Vercel's Neon integration: the direct URL migrations use when `DIRECT_URL` is not set (`prisma.config.ts`) | Batch 5.4 |
-| `ALLOW_REMOTE_SEED` | `1` only to seed a remote (Neon) database on purpose; `npm run db:seed` refuses any host but this computer without it | Batch 5.4 |
+| `ALLOW_REMOTE_SEED` | `1` only to use a remote (Neon) database from your computer on purpose. Without it, `npm run db:seed` and every Prisma command (`db:migrate`, `db:reset`, `db:studio`, `db:deploy`) refuse any database not on this computer, so a `vercel env pull` can never point them at the live data (`prisma/local-only.ts`, audit DC-03). Vercel's own builds are allowed | Batch 5.4 |
 | `E2E_DATABASE_URL` | Leave unset: Playwright uses `hoshikopi_e2e` in the local container (`playwright.config.ts`); set it to run the e2e tests against another database | Phase 2 |
 | `FORM_MIN_FILL_MS` | Leave unset. The Inquiry and Event Sign-up forms refuse a post sent faster than 2 seconds; the end-to-end run sets it to `0` (`src/lib/bot-check.ts`) | Batch 10.13 |
 | `AUTH_RATE_LIMIT` | Leave unset. `off` turns Better Auth's own rate limit off; only the end-to-end run sets it (`src/modules/identity/internal/auth.ts`) | Batch 10.13 |
@@ -178,7 +178,7 @@ Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `
 
 ### Test databases and constraints
 
-- Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`. It migrates and seeds it at the start of each run.
+- Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`. It migrates and seeds it at the start of each run. Outside services (email, Google, Blob, PayMongo, Vercel) are switched off in tests whatever `.env.local` holds (`tests/no-outside-services.ts`, audit DC-04).
 - Playwright uses `hoshikopi_e2e`, migrated, reset and seeded before each run.
 - The migrations add the CHECK constraints and unique indexes in [`docs/04-DATA-MODEL.md`](04-DATA-MODEL.md) section 4 by hand where Prisma cannot express them: the first migration, and later ones such as `20261116000000_database_rules`.
 
@@ -209,7 +209,7 @@ These are the commands you use day to day, defined in `package.json` (Phase 0). 
 | `npm run qa:full` | `qa` plus the browser tests (they build their own copy against `hoshikopi_e2e`) |
 | `npm run format` | Prettier writes every file it checks (Markdown is left alone) |
 | `npm run db:migrate` | Applies new migrations to the dev database (`prisma migrate dev`) |
-| `npm run db:seed` | Seeds the dev database once; refuses a remote one without `ALLOW_REMOTE_SEED=1` |
+| `npm run db:seed` | Seeds the dev database once; refuses a remote one without `ALLOW_REMOTE_SEED=1` (so do the other `db:` commands) |
 | `npm run db:studio` | Opens Prisma Studio, a browser view of the dev database |
 | `npm run db:reset` | Drops, migrates and seeds the dev database (asks first) |
 
@@ -249,7 +249,7 @@ When asked to publish a batch:
 
 To set up on another computer, clone it (section 3).
 
-**CI** (continuous integration: checks GitHub runs on every change; `.github/workflows/ci.yml`, batch 7.11a) runs on every pull request and on `main`: lint, formatting, the type check, Vitest against a Postgres 17 service, and `npm audit --omit=dev --audit-level=high`. Playwright stays local (`npm run test:e2e`): it builds and serves the app and depends on the Manila clock.
+**CI** (continuous integration: checks GitHub runs on every change; `.github/workflows/ci.yml`, batch 7.11a) runs on every pull request and on `main`: lint, formatting, the type check, Vitest against a Postgres 17 service, a production build (`npm run build`, which renders every prerendered page, audit DC-02), and `npm audit --omit=dev --audit-level=high`. Playwright stays local (`npm run test:e2e`): it builds and serves the app and depends on the Manila clock.
 
 **Dependabot** (`.github/dependabot.yml`), a GitHub robot that keeps libraries up to date, opens grouped weekly pull requests for npm packages and the GitHub Actions. Review and merge them like any other.
 
@@ -278,7 +278,7 @@ The live demo runs on Vercel with its database on Neon (batch 5.4, live since 20
    - You should see `DATABASE_URL` and `DATABASE_URL_UNPOOLED` in the Vercel project's environment variables.
    - Neon Free has a monthly compute allowance. Once it is used, Neon suspends the database until the next month and every dynamic page fails. The compute sleeps only after some idle minutes, so anything that queries all day keeps it awake: an open Bar Screen does (close it after service), and the Order page stops asking 3 hours past its Pickup Time. Check the usage in the Neon console now and then.
 2. **Resend** (skipped until a domain exists, `docs/07-ROADMAP.md` section 4): create an API key. Until a domain is verified, Resend's test sender delivers only to the Resend account's own address, so only that address would get sign-in emails. The seeded accounts use the Logs (step 5) and everyone else signs in with Google (step 7). Without a key, emails to real addresses on Vercel are dropped (their sign-in links never go to the logs).
-3. **Vercel**: import `xtiannjose/Hoshikopi` from GitHub. In **Project Settings**, set **Functions**, Function Region to Singapore (`sin1`), next to the database (the default, Washington `iad1`, adds a round trip to every query). Set **General**, Node.js Version to 24.x, as on the development PCs. Then set these variables for Production and Preview (the database ones come from step 1):
+3. **Vercel**: import `xtiannjose/Hoshikopi` from GitHub. In **Project Settings**, set **Functions**, Function Region to Singapore (`sin1`), next to the database (the default, Washington `iad1`, adds a round trip to every query). Node.js 24.x comes from `package.json` (`"engines": { "node": "24.x" }`, audit ops:16), which Vercel follows over the **General**, Node.js Version setting. Then set these variables for Production and Preview (the database ones come from step 1):
 
    | Variable | Value |
    | --- | --- |

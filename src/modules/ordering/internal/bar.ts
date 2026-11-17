@@ -5,6 +5,7 @@ import { prepMinutes } from "@/modules/cafe";
 import { closeCheckout } from "@/modules/payments";
 
 import { orderingDay } from "./day";
+import { cancelOrder } from "./refund";
 import { snapshotOptions } from "./snapshot";
 import { transition } from "./status";
 import { drinksQueuedAhead } from "./windows";
@@ -66,29 +67,32 @@ export async function expireIfUnpaid(
 }
 
 const NOT_COLLECTED = "The day ended before it was picked up";
+const NOT_MADE = "The day ended before we made it";
 
 /**
- * Cancel earlier days' Pay at Pickup Orders the bar never accepted, giving
- * their windows and any Reward's Stars back (audit ORD-13). The daily cron
- * runs it before opening; anything the bar started stays for the Manager.
+ * Cancel earlier days' Orders the bar never accepted, giving their windows
+ * and any Reward's Stars back: Pay at Pickup Orders nobody took (audit
+ * ORD-13), and paid online ones, which cancelOrder then refunds (audit
+ * DC-07). The daily cron runs it before opening; anything the bar started
+ * stays for the Manager.
  */
 export async function cancelUncollected(at: Date): Promise<number> {
   const left = await db.order.findMany({
     where: {
-      status: "placed",
-      paymentMethod: "pay_at_pickup",
       serviceDay: { lt: dayValue(manila(at).day) },
+      OR: [
+        { status: "placed", paymentMethod: "pay_at_pickup" },
+        { status: "paid" },
+      ],
     },
-    select: { id: true },
+    select: { id: true, status: true },
   });
   let cancelled = 0;
-  for (const { id } of left) {
-    const moved = await transition(
-      id,
-      "cancelled",
-      { kind: "system" },
-      NOT_COLLECTED
-    );
+  for (const { id, status } of left) {
+    const moved =
+      status === "paid"
+        ? await cancelOrder(id, { kind: "system" }, NOT_MADE)
+        : await transition(id, "cancelled", { kind: "system" }, NOT_COLLECTED);
     if (moved.ok) cancelled++;
   }
   return cancelled;

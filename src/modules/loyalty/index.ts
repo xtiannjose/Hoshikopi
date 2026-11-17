@@ -11,6 +11,7 @@ export {
   releaseRedemption,
   reserveRedemption,
   reverseForOrder,
+  settleSpentReward,
   starHistory,
   starTotals,
 } from "./internal/ledger";

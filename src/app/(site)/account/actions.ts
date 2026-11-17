@@ -4,7 +4,12 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { addLine, favouritesFor, removeFavourite } from "@/modules/cart";
-import { requireMember, signOut, updateProfile } from "@/modules/identity";
+import {
+  currentStaff,
+  requireMember,
+  signOut,
+  updateProfile,
+} from "@/modules/identity";
 import { orderAgain } from "@/modules/ordering";
 
 import { deleteAccountData } from "./delete-account";
@@ -33,6 +38,8 @@ export async function updateProfileAction(form: FormData) {
  */
 export async function deleteAccountAction() {
   const member = await requireMember("/account");
+  // The page shows Staff no delete button; this covers an old tab (DC-01).
+  if (await currentStaff("barista")) redirect("/account");
   await signOut();
   await deleteAccountData(member);
   refresh();

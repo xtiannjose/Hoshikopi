@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 import { E2E_MAIL_DIR } from "./tests/e2e/mail";
+import { NO_OUTSIDE_SERVICES } from "./tests/no-outside-services";
 
 // Browser tests build and serve the app on port 3100 against the
 // hoshikopi_e2e database, migrated, reset and seeded first, at phone and
@@ -79,18 +80,8 @@ export default defineConfig({
       // Its own outbox, emptied by reset-db.mts, so the developer's
       // data/mail is untouched and tests only find this run's emails.
       MAIL_DIR: E2E_MAIL_DIR,
-      // Empty, never the developer's .env.local: emails go to MAIL_DIR, no
-      // Google sign-in, photos stay local, and a `vercel env pull` cannot
-      // switch the outbox off (audit tests:16).
-      RESEND_API_KEY: "",
-      MAIL_FROM: "",
-      GOOGLE_CLIENT_ID: "",
-      GOOGLE_CLIENT_SECRET: "",
-      BLOB_STORE_ID: "",
-      BLOB_READ_WRITE_TOKEN: "",
-      PAYMONGO_SECRET_KEY: "",
-      PAYMONGO_WEBHOOK_SECRET: "",
-      VERCEL: "",
+      // Empty, never the developer's .env.local (audit tests:16).
+      ...NO_OUTSIDE_SERVICES,
     },
   },
 });

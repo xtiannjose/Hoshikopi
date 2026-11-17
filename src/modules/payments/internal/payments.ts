@@ -187,11 +187,24 @@ export async function refundPayment(
     // The Refund row is written once the provider has refunded.
     return current._count.refunds > 0 ? "already_refunded" : "being_refunded";
   }
+  let refundId: string;
   try {
-    const { refundId } = await paymentProvider().refund(
+    ({ refundId } = await paymentProvider().refund(
       payment.providerPaymentId ?? "",
       payment.amountCents
-    );
+    ));
+  } catch (error) {
+    // The provider refused, so no money moved: undo the claim.
+    await db.payment.update({
+      where: { id: payment.id },
+      data: { status: "paid" },
+    });
+    throw error;
+  }
+  // The money is back from here on. A failed save must not put the Payment
+  // back to paid, or the Order would wait for a second refund (audit
+  // DC-05); it stays refunded, and the log names what to add by hand.
+  try {
     await db.refund.create({
       data: {
         paymentId: payment.id,
@@ -202,11 +215,13 @@ export async function refundPayment(
       },
     });
   } catch (error) {
-    await db.payment.update({
-      where: { id: payment.id },
-      data: { status: "paid" },
+    console.error("[payments] refunded at the provider, but no Refund row:", {
+      orderId,
+      paymentId: payment.id,
+      providerRefundId: refundId,
+      amountCents: payment.amountCents,
+      error: String(error),
     });
-    throw error;
   }
   return "refunded";
 }

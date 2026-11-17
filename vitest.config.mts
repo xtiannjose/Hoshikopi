@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
+import { NO_OUTSIDE_SERVICES } from "./tests/no-outside-services";
+
 export default defineConfig({
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
@@ -14,6 +16,8 @@ export default defineConfig({
     // data/mail.
     env: {
       ...loadEnv("test", process.cwd(), ""),
+      // loadEnv reads .env and .env.local too (audit DC-04).
+      ...NO_OUTSIDE_SERVICES,
       MAIL_DIR: path.join(process.cwd(), "data", "mail-test"),
     },
     globalSetup: ["tests/db/global-setup.ts"],

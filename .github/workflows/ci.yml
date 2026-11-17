@@ -53,6 +53,14 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
+      # Renders every prerendered page, so a page that fails to build or a
+      # server/client boundary mistake fails here, not on Vercel (audit
+      # DC-02). It runs before the tests, against a freshly migrated and
+      # seeded database: the tests leave it in whatever state the last one
+      # needed, with no menu to prerender.
+      - run: npx prisma migrate deploy
+      - run: npm run db:seed
+      - run: npm run build
       - run: npm test
       # High and critical only, so a new low advisory never blocks an
       # unrelated pull request.

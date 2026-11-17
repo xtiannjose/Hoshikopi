@@ -45,6 +45,19 @@ export async function updateProfile(
 }
 
 /**
+ * A Staff account's role, or null for a Customer. Deleting an account
+ * calls it first: a Staff account is not deleted from /account, or the only
+ * Manager could leave nobody to run the cafe (PRD STAFF-10, audit DC-01).
+ * It locks the row, as setRole does, so a role given at the same moment
+ * waits.
+ */
+export async function staffRoleFor(memberId: string, client: Client = db) {
+  const [row] = await client.$queryRaw<{ role: string }[]>`
+    SELECT role FROM users WHERE id = ${memberId} FOR UPDATE`;
+  return row && row.role !== "customer" ? row.role : null;
+}
+
+/**
  * The last step of deleting an account (ACC-03): the user row stays so the
  * ledgers it once touched keep their keys, but it no longer holds a name or
  * email, and every way back in (sessions, Google links, pending sign-in

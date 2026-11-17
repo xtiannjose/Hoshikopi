@@ -182,10 +182,10 @@ Every Order moves through a fixed set of steps, from Placed to Picked Up. Only t
 | `ready` | `picked_up` | Barista, or Demo Mode (marks paid at the counter for Pay at Pickup) | Stars earned (`loyalty`); Redemption final |
 | `placed`, `paid` | `cancelled` | Customer, before `accepted` | Window and Stars released; a paid Order goes on to `refunded` |
 | any before `picked_up` | `cancelled` | Manager | Same as above; reason required |
-| `placed` (Pay at Pickup), after its service day | `cancelled` | The daily cron (system) | Window and Stars released; reason "The day ended before it was picked up" |
-| `cancelled` (was paid), `picked_up` | `refunded` | Manager; also the system, right after a Customer cancels a paid Order | Full refund through the provider (cash at the counter for Pay at Pickup); Stars earned are taken back |
+| `placed` (Pay at Pickup) or `paid`, after its service day | `cancelled` | The daily cron (system) | Window and Stars released; reason "The day ended before it was picked up", or for a paid Order the bar never accepted "The day ended before we made it", which then goes on to `refunded` (audit DC-07) |
+| `cancelled` (was paid), `picked_up` | `refunded` | Manager; also the system, right after a Customer or the daily cron cancels a paid Order | Full refund through the provider (cash at the counter for Pay at Pickup); Stars earned are taken back |
 
-`transition(orderId, to, actor)` (in `src/modules/ordering/internal/status.ts`) checks the table, locks the Order row, applies side effects and writes an `order_events` row. Anything else is a bug and throws. A Pay at Pickup Order still `placed` after its service day is cancelled by the daily cron, so a Reward's Stars come back (audit ORD-13). One left `accepted`, `preparing` or `ready` stays for the Manager to close.
+`transition(orderId, to, actor)` (in `src/modules/ordering/internal/status.ts`) checks the table, locks the Order row, applies side effects and writes an `order_events` row. Anything else is a bug and throws. A Pay at Pickup Order still `placed` after its service day is cancelled by the daily cron, so a Reward's Stars come back (audit ORD-13); so is a `paid` one the bar never accepted, which is then refunded (audit DC-07). One left `accepted`, `preparing` or `ready` stays for the Manager to close.
 
 ## 8. Payments
 
@@ -226,6 +226,7 @@ Stars are kept like a bank statement, called a ledger. Every change is a new lin
 
 - Every change is a `star_entries` row: `earn` (Order Picked Up, +1 per drink unit), `reserve` (Redemption at placement, -9), `release` (Order Cancelled or Expired, +9), `reverse` (Refund after Picked Up, minus what was earned), `adjust` (Manager, with a reason), `birthday` (the Birthday Treat, +9).
 - Balance is the sum of entries. Reserving checks the balance inside the same transaction that writes the entry, with the Member row locked, so two tabs cannot spend the same Stars.
+- A Refund takes back what the Order earned, but never Stars already spent. Stars held by the Member's open Reward Orders still count as theirs, because the Reward may be cancelled. If a held Reward is then picked up, it gives back (`release`) what the Refund took from it, so spent Stars stay spent and the balance does not stay below zero (audit DC-06). Example: 7 Stars plus 2 earned on an Order, all 9 held by a Reward; the Order is refunded. Cancel the Reward: 7 left. Pick it up: 0 left.
 - The Birthday Treat (V1) adds 9 Stars once a year in the Member's birthday month (Manila calendar), when they open their account or checkout.
 
 ## 11. Live updates
@@ -249,7 +250,7 @@ Vercel's free Hobby plan runs a scheduled job (a cron job) only once a day. So a
 - **Expiry on read.** Unpaid online Orders older than 15 minutes are expired whenever Pickup Windows, the Bar Screen or an Order are loaded, including each poll of the Order page. The payment webhook also expires one before it pays it. Both work in the same transaction style as section 6.
 - **The daily cron** (`/api/cron/daily`, before opening; schedule in `vercel.json`, 22:00 UTC) runs only with the `Authorization: Bearer <CRON_SECRET>` header that Vercel Cron sends. It:
   - expires anything the sweeps on read missed;
-  - cancels earlier days' Pay at Pickup Orders still Placed (section 7);
+  - cancels earlier days' Pay at Pickup Orders still Placed, and paid ones the bar never accepted, which are then refunded (section 7, audit DC-07);
   - deletes rate-limit rows older than a day and guest Carts untouched for 30 days;
   - in Demo Mode, moves the seeded demo Events forward and renews the demo Promo and Seasonal drink (ADR 0015);
   - refreshes the `menu` tag so yesterday's Sold Out marks clear.

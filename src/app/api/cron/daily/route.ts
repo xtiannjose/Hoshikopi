@@ -11,8 +11,9 @@ import { cancelUncollected, expireUnpaid } from "@/modules/ordering";
 
 /**
  * Once a day before opening (Vercel Cron, docs/03 section 12): expire what
- * the sweeps on read missed, cancel earlier days' Pay at Pickup Orders
- * nobody took (audit ORD-13), and refresh the menu so yesterday's Sold Out
+ * the sweeps on read missed, cancel earlier days' Orders the bar never
+ * accepted (Pay at Pickup ones nobody took, audit ORD-13; paid ones, which
+ * are refunded, audit DC-07), and refresh the menu so yesterday's Sold Out
  * marks clear. Order Codes restart by themselves each service day.
  */
 export async function GET(request: Request) {
