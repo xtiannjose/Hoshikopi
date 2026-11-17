@@ -5,6 +5,8 @@ date: 2026-10-30
 
 # Pickup in 15-minute windows with Capacity and an honest Prep Time
 
+> **In plain words:** Pickup is booked in 15-minute Pickup Windows that each hold a limited number of drinks and food items (Capacity). The "ready in 8 minutes" promise is worked out from what the bar is already making. This keeps the promise honest during a rush, instead of every estimate going wrong.
+
 Customers choose As Soon As Possible or a Scheduled Pickup. Both land in a 15-minute Pickup Window that holds a limited number of drinks and food Lines (Capacity, set per day of the week). Prep Time for ASAP is `base_minutes + per_drink_minutes × drinks queued ahead`, rounded up to 5 minutes, and ASAP takes the earliest window with room after that.
 
 ## Why

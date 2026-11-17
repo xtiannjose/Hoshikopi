@@ -5,6 +5,8 @@ date: 2026-10-30
 
 # Live updates by polling first
 
+> **In plain words:** The Bar Screen and the Order page find out about changes by asking the server every few seconds, not by holding a live connection open. This is simple, needs no extra service, and is fast enough for one cafe tablet and a few open Order pages.
+
 The Bar Screen asks for changes every 3 seconds, sending the last Order version it saw; the server answers "no change" in a few bytes. The Customer's Order status page asks every 5 seconds until Ready (every 15 while its tab is hidden, so it can still alert; ORD-14), then every 30 seconds.
 
 ## Why

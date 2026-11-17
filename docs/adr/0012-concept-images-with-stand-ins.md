@@ -5,6 +5,8 @@ date: 2026-10-31
 
 # Menu and room pictures are AI-generated concept images, with stand-ins until they exist
 
+> **In plain words:** Menu and room pictures are meant to be AI-generated concept images, each labelled "Concept image", because the cafe does not exist and real photos would be misleading. Until a picture is made, its slot shows a calm stand-in panel with an icon.
+
 Menu Item photos follow the room photos (PRD section 2): AI-generated, in one consistent style, each labelled "Concept image" where it is shown and listed in `docs/ASSETS.md` with the prompt that made it. Until a picture exists, its slot shows a stand-in: a calm panel in the palette's `--muted` colour with one Phosphor line icon for the Category. The stand-in is decorative and hidden from screen readers; the page never describes a photo it does not show.
 
 ## Why

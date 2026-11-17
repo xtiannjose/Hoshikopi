@@ -5,6 +5,8 @@ date: 2026-10-30
 
 # Money is stored and computed as integer centavos
 
+> **In plain words:** Every amount of money is stored and calculated as a whole number of centavos, so PHP 165.00 is 16500. Whole numbers never round wrong, so the Cart, the Order and the payment provider always agree to the centavo.
+
 All amounts are integers in centavos (PHP 165.00 is `16500`) in the database, server code and payment requests. Floating-point numbers cannot hold most decimal prices exactly, and the errors would show as one-centavo mismatches between the Cart, the Order and the payment provider.
 
 ## Rules

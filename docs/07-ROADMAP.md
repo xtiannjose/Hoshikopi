@@ -1,15 +1,84 @@
 # Roadmap and build plan
 
-Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has small batches (one branch each) and exit criteria that must be observably true before the next phase starts. Scope is `docs/01-PRD.md`; requirement IDs (MENU-01, ORD-03...) link the two. Weeks are estimates for one developer working part time; dates move, the order does not.
+> **In plain words:** this is the build plan for Hoshikopi: the order the site was built in, what each piece delivered, where the project stands today and what comes next. Work is cut into phases (big stages) and batches (small pieces of work). Section 0 is the one to read first. Sections 5 to 12 are the history of every batch, kept as it was written.
+>
+> **Who should read it:** the owner and any project manager (sections 0 to 4 and 13), and a developer about to pick up a batch (also sections 3 and 14).
+> **Last checked:** 2026-11-17.
+
+## Contents
+
+0. [Where we are](#0-where-we-are-updated-2026-11-17)
+1. [Timeline at a glance](#1-timeline-at-a-glance)
+2. [Tech stack and where it is used](#2-tech-stack-and-where-it-is-used)
+3. [How every batch is worked](#3-how-every-batch-is-worked)
+4. [Decisions along the way](#4-decisions-along-the-way)
+5. [Phase 0: Foundation](#5-phase-0-foundation-1-week)
+6. [Phase 1: Menu and cafe info](#6-phase-1-menu-and-cafe-info-15-weeks)
+7. [Phase 2: Cart, checkout, Pay at Pickup, Bar Screen](#7-phase-2-cart-checkout-pay-at-pickup-bar-screen-2-weeks)
+8. [Phase 3: Online payments in Test Mode](#8-phase-3-online-payments-in-test-mode-1-week)
+9. [Phase 4: Members and Stars](#9-phase-4-members-and-stars-1-week)
+10. [Phase 5: Events, news, polish and demo deploy](#10-phase-5-events-news-polish-and-demo-deploy-15-weeks)
+11. [Phase 6: V1 features](#11-phase-6-v1-features-2-weeks)
+12. [Phases 7 to 11: audit fixes, improvements, portfolio review, the rest of the backlog, handoff](#12-phases-7-to-11-audit-fixes-improvements-portfolio-review-the-rest-of-the-backlog-handoff)
+13. [After V1](#13-after-v1-not-scheduled)
+14. [Definition of done](#14-definition-of-done-every-batch)
+
+## How to read this plan
+
+- A **phase** is a big stage of the build, such as "Members and Stars". A phase is finished when its **exit criteria** (checks that must be visibly true) are met.
+- A **batch** is one small piece of a phase, numbered like 4.2 (phase 4, batch 2). Each batch is built on its own branch (a separate copy of the code) and merged by a pull request (a request to add that branch to the main code, `main`).
+- `[x]` in front of a batch means it is done. `[ ]` means it is not.
+- Scope, meaning what the site must do, is in `docs/01-PRD.md` (the product requirements document). Its requirement IDs (MENU-01, ORD-03...) link a feature to the batch that built it.
+- Weeks are estimates for one developer working part time. Dates move; the order does not.
 
 ## 0. Where we are (updated 2026-11-17)
 
-- **Planning: done.** `GLOSSARY.md`, PRD, research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written (ADRs 0011 to 0015 followed during the build). Added 2026-10-30: the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
-- **Wireframes:** Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
-- **Build:** Phases 0 to 6 done (3.4 skipped: there is no PayMongo account and PayMongo paused new sign-ups in November 2026, so the demo runs on `fake`; 6.5 dropped). The demo is live on Vercel and Neon; 5.4's last steps are listed in its batch. The November audit (`docs/audit/`) is finished: 16 areas reviewed, 371 findings, each double-checked by a second reviewer, merged into 205 open items and ranked in `docs/audit/2026-11-13.md` (2 P0, 18 P1, 142 P2, 43 P3; 48 already fixed, 16 out of scope, 1 refuted). Its P0 and P1 items became batches 7.7 to 7.11. 7.1 to 7.4 (the serious bugs), 7.6 Performance budget, 8.1 Demo mode for visitors, 8.2 What the docs promise, 8.3 Phone experience, 8.4 Busy Mode, 8.5 Staff management, 8.6 Order page handoff, 8.7 Event Sign-up protection, 8.8 Database driver warning, 8.9 Motion pass and 8.10 Page polish (the last two added at the owner's request) are done. 7.5 to 7.12 and Phase 9 are done (2026-11-14): both P0s and 17 of the 18 P1s are fixed, and ops:8 waits on the owner. Phase 10, the rest of the audit backlog, is done (2026-11-17): all 21 batches, so no P2 is open; 43 P3s stay open as polish. **Next: the owner's steps** (5.4's first live photo upload, ops:8, rehearsing the demo); new features are on hold. 5.4's last steps wait on the owner. Real photos are on hold (owner, 2026-11-07). Google sign-in is live (2026-11-07, ADR 0005 update), and the account page was redesigned (PR #53).
-- **Copy:** the project lives on GitHub (https://github.com/xtiannjose/Hoshikopi), its only copy.
+**In short:** Hoshikopi is built and live as a demo. Everything planned for the first version (the MVP) and the second (V1) works, and the audit backlog (the list of problems a deep review found) is cleared. Next is Phase 11: handoff docs, then a last round of smaller fixes. A few steps wait on the owner; they are listed at the end of this section.
+
+### Planned and designed
+
+- **Planning: done.** `GLOSSARY.md` (the shared word list), the PRD (`docs/01-PRD.md`, what the site must do), research, architecture, data model, design system, setup, tooling and ADRs 0001 to 0010 are written. ADRs 0011 to 0015 followed during the build. (An ADR is a short note that records one decision and why.)
+- **Added 2026-10-30:** the cafe as a place (research Part 2, PRD INFO-04 to INFO-11) and the design direction (ADR 0010: Night layout, Day and Night palettes by Manila time).
+- **Wireframes** (rough sketches of each page): Day and Night canvases with the same boards (`docs/05-DESIGN-SYSTEM.md` section 1.2). Twelve boards each: Home (laptop and phone), Hoshi Latte, Visit page, Cart and checkout, Order status, Star Card and account, Events, a Post, About this concept, Bar Screen, Manager pages (Today, Menu, Hours and capacity). Not wireframed: the other `/manage` forms and V1 features.
+
+### Built
+
+- **Phases 0 to 6 are done.** Phase 5 is the MVP and Phase 6 is V1. Two batches did not go as first planned:
+  - 3.4 (the PayMongo adapter) was skipped. There is no PayMongo account, and PayMongo paused new sign-ups in November 2026, so the demo runs on `fake`, the built-in pretend payment provider.
+  - 6.5 (Filipino language) was dropped.
+- **The November audit is finished** (`docs/audit/`). It reviewed 16 areas and found 371 findings. A second reviewer double-checked each one. They were merged into 205 open items and ranked in `docs/audit/2026-11-13.md`: 2 P0, 18 P1, 142 P2 and 43 P3. Another 48 were already fixed, 16 were out of scope and 1 was refuted.
+  - P0 to P3 are priorities. P0 means fix now: someone could exploit it, or money or data could be lost. P1 is fix next, P2 is fix soon, and P3 is small gaps and polish.
+  - The P0 and P1 items became batches 7.7 to 7.11.
+- **Fixes done so far:**
+  - 7.1 to 7.4, the serious bugs.
+  - 7.6 Performance budget.
+  - 8.1 Demo mode for visitors, 8.2 What the docs promise, 8.3 Phone experience, 8.4 Busy Mode, 8.5 Staff management, 8.6 Order page handoff, 8.7 Event Sign-up protection and 8.8 Database driver warning.
+  - 8.9 Motion pass and 8.10 Page polish, both added at the owner's request.
+  - 7.5 to 7.12 and Phase 9 (2026-11-14): both P0s and 17 of the 18 P1s are fixed, and ops:8 (the seeded demo dates) waits on the owner.
+- **Phase 10, the rest of the audit backlog, is done (2026-11-17):** all 21 batches, so no P2 is open. The 43 P3s stay open as polish.
+
+### Live
+
+- **The demo is live** on Vercel (the company that hosts the site) and Neon (the company that hosts the database), at https://hoshikopi.vercel.app. Payments run on `fake`, so no money moves.
+- **Google sign-in is live** (2026-11-07, ADR 0005 update), and the account page was redesigned (PR #53, a pull request).
+- **The code lives on GitHub** (https://github.com/xtiannjose/Hoshikopi), its only copy.
+
+### Next
+
+- **Phase 11** (section 12): 11.1 makes the docs ready to hand over. 11.2 to 11.6 are the fixes from the 2026-11-17 deep check ([`docs/audit/2026-11-17.md`](audit/2026-11-17.md)), in order of risk. Each batch is one branch and pull request, and the owner approves each before it starts.
+- **New features are on hold** (owner).
+
+### Waiting on the owner
+
+- **5.4's last steps.** 5.4 is the only unticked batch before Phase 11. Its last step is the first real photo upload on the live site: a Manager signs in and uploads one photo, which goes to the Blob store (online file storage) `hoshikopi-photos`. The other two open items from 2026-11-07 are settled: PageSpeed was fixed in batch 7.6, and Resend (the email service) is skipped until the owner has a domain.
+- **ops:8.** The seeded demo dates (Events, Promo, Seasonal drink) wait on the owner. Since batch 10.18 the daily job also moves them forward by itself.
+- **Rehearsing the demo** out loud on the live site with `docs/DEMO-SCRIPT.md`. This is the last check of batch 9.3.
+- **Two GitHub settings** (Dependabot alerts on, and the CI check required before merging), described in section 5 of the [deep check](audit/2026-11-17.md#5-settings-only-the-owner-can-change).
+- **On hold by the owner's choice:** real photos (2026-11-07), new features, and a PayMongo account (PayMongo paused sign-ups; revisit when they reopen, ADR 0003).
 
 ## 1. Timeline at a glance
+
+The phases in order, with the estimated time of each. **MVP** (minimum viable product) is the first complete, usable version of the site. **V1** is the next version, with extra features. Phases 10 and 11 have no estimate, so they are not in the table: Phase 10 (the rest of the audit backlog) is done, and Phase 11 (handoff and the deep check) is next. Phases 0 to 10 are done, apart from the owner's last step in batch 5.4.
 
 | Phase | What | Estimate | Releases |
 | --- | --- | --- | --- |
@@ -26,6 +95,8 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 ## 2. Tech stack and where it is used
 
+One row per job the site needs done: the tool chosen for it, the phase where it first appears and where the choice is recorded. The ADR links go to the decision notes in [adr/](adr/README.md). The list under the table says what each tool does.
+
 | Layer | Choice | Phase | Decision |
 | --- | --- | --- | --- |
 | App | Next.js 16 (App Router, Cache Components), React 19, TypeScript | 0 | [ADR 0001](adr/0001-modular-monolith-nextjs.md) |
@@ -37,15 +108,30 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 | Hosting | Vercel Hobby (deploys from GitHub), Vercel Blob for photos | 5 | Decided in batch 5.4 |
 | Tests | Vitest (real test database), Playwright with axe, Lighthouse | 0 | `docs/03-ARCHITECTURE.md` section 15 |
 
+What the names mean:
+
+- **Next.js, React, TypeScript:** the toolkit and language the web pages are written in. Cache Components lets public pages be built ahead of time and refreshed when the menu or hours change.
+- **Tailwind CSS:** the styling tool. Colours, fonts and spacing are defined once as tokens (named values) in `globals.css`.
+- **PostgreSQL, Prisma, Docker, Neon:** PostgreSQL is the database. Prisma is the layer the code uses to talk to it. Docker runs a local copy of the database on a developer's PC. Neon is the company that hosts the online copy (in Singapore).
+- **Better Auth, TOTP:** the sign-in library. TOTP is the 6-digit code that an authenticator app on a phone shows, used as the Staff Second Factor.
+- **`PaymentProvider`, `fake`, PayMongo:** the code's single doorway to payments. `fake` is a built-in pretend provider. PayMongo is a Philippine payment company, used in Test Mode only (no real money).
+- **Resend:** the service that sends emails.
+- **Vercel, Vercel Blob:** Vercel hosts the site and deploys it from GitHub. Blob is its file storage, used for photos.
+- **Vitest, Playwright, axe, Lighthouse:** Vitest runs the small automatic tests. Playwright clicks through the real site in a browser. axe checks accessibility. Lighthouse scores speed and quality.
+
 ## 3. How every batch is worked
 
-1. Read the phase below and `CLAUDE.md`; pick the first unchecked batch; create its branch (`feature/<phase>.<batch>-<name>`).
-2. Build. Money, Capacity, Prep Time, Stars, Order Status and webhook rules go test-first with the `tdd` skill.
-3. `npm run qa` must pass; add `npm run test:e2e` for anything visible. Look at the change in the browser at 375, 768 and 1280 px, in the Day and the Night palette.
-4. Tick the batch here, update any document the change affected, add an ADR if a decision was made.
-5. Commit, push and open a pull request into `main` only when the user asks (Conventional Commits); the user merges it on GitHub with a merge commit.
+The routine behind every batch. The aim is small changes that are tested, looked at and written down before they are merged.
+
+1. Read the phase below and `CLAUDE.md`; pick the first unchecked batch; create its branch (a separate copy of the code, named `feature/<phase>.<batch>-<name>`).
+2. Build. Money, Capacity, Prep Time, Stars, Order Status and webhook rules go test-first with the `tdd` skill (write the test, watch it fail, then write the code).
+3. `npm run qa` must pass (it runs lint, the format check, the type check, the unit tests, a production build and a security audit of the libraries). Add `npm run test:e2e` (the browser tests) for anything visible. Look at the change in the browser at 375, 768 and 1280 px, in the Day and the Night palette.
+4. Tick the batch here, update any document the change affected, add an ADR (a short decision note) if a decision was made.
+5. Commit, push and open a pull request into `main` only when the user asks (Conventional Commits, a message style such as `feat(seed): ...`); the user merges it on GitHub with a merge commit.
 
 ## 4. Decisions along the way
+
+Some choices were left open by the original plan. When one came up during a batch, the choice and its date were recorded here. Each row says when it came up, what the question was, what was chosen and where it is written down. `fake` is the built-in pretend payment provider, Xendit is another Philippine payment company, Resend sends email, Neon hosts the database and Vercel hosts the site.
 
 | When | Decision | Outcome | Recorded in |
 | --- | --- | --- | --- |
@@ -61,6 +147,8 @@ Status: draft v0.1, 2026-10-30. The order the site is built in. Each phase has s
 
 ## 5. Phase 0: Foundation (1 week)
 
+**In plain words:** this phase delivered the empty but real app: the project scaffold, the quality checks, the database with its seed data, the money and clock helpers, a sign-in skeleton for Staff, and the page layout with the Day and Night palettes.
+
 Goal: an empty but real app with the database, auth skeleton, design tokens and quality gates in place.
 
 - [x] **0.1 Scaffold.** Next.js into this folder; remove defaults; `AGENTS.md` block kept; `.env.example`; `npm run dev` works. Done 2026-10-31 with Next.js 16.4.3 and React 19.3; the scaffold already turns on `cacheComponents`.
@@ -74,6 +162,8 @@ Goal: an empty but real app with the database, auth skeleton, design tokens and 
 
 ## 6. Phase 1: Menu and cafe info (1.5 weeks)
 
+**In plain words:** this phase delivered the public menu pages, the cafe page and Home, and the Manager screens that edit the menu. Photos are stand-in panels until the concept images are made.
+
 Goal: a beautiful, fast menu and cafe page that a Manager can edit.
 
 - [x] **1.1 Design direction.** Done 2026-10-31 without the two samples: the owner asked for the site to be built straight through, so Sample A (native elements and CSS) was recorded as the approach ([ADR 0011](adr/0011-native-elements-and-css.md)); Sample B can still be asked for.
@@ -85,6 +175,8 @@ Goal: a beautiful, fast menu and cafe page that a Manager can edit.
 **Exit criteria:** a Manager changes a price and marks an item Sold Out, and the public menu shows both within seconds; mobile Lighthouse 90+ on `/menu`; zero axe violations.
 
 ## 7. Phase 2: Cart, checkout, Pay at Pickup, Bar Screen (2 weeks)
+
+**In plain words:** this phase delivered ordering for pickup: the Cart, checkout with Pay at Pickup, the Order Status rules, the two emails, and the Bar Screen where a Barista moves an Order from new to Picked Up.
 
 Goal: a Guest orders and pays at pickup; a Barista runs the Order to Picked Up.
 
@@ -100,6 +192,8 @@ Goal: a Guest orders and pays at pickup; a Barista runs the Order to Picked Up.
 
 ## 8. Phase 3: Online payments in Test Mode (1 week)
 
+**In plain words:** this phase delivered online payment with no real money: the `fake` provider, payments confirmed only by verified webhooks (messages the provider's server sends ours), unpaid Orders that Expire after 15 minutes, and Refunds. The PayMongo account batch (3.4) was skipped.
+
 Goal: GCash, Maya and Card work end to end without any real money.
 
 - [x] **3.1 Provider interface and `fake`.** `PaymentProvider`, the `fake` adapter with `/dev/pay/[id]` and signed webhooks; production refusal (PAY-06). Done 2026-10-31: `PaymentProvider` with `fake` (HMAC-signed events, checkout at `/dev/pay/[id]`) and `paymongo` adapters; `providerFor(env)` refuses a PayMongo key without `sk_test_` and keeps `fake` off production domains (it runs on localhost and `*.vercel.app`). Decision (section 4): no PayMongo account yet, so the MVP runs on `fake`; the PayMongo adapter exists and is unit-tested but has not met a sandbox. The checkout page and webhook route arrive in batch 3.2.
@@ -112,6 +206,8 @@ Goal: GCash, Maya and Card work end to end without any real money.
 
 ## 9. Phase 4: Members and Stars (1 week)
 
+**In plain words:** this phase delivered Member accounts, the Star ledger, the Star Card with a free drink at 9 Stars, and the privacy tools (notice, data export, account deletion).
+
 Goal: regulars sign in, collect Stars and redeem a free drink.
 
 - [x] **4.1 Member accounts.** Email link and Google sign-in; Guest Cart merges on sign-in; order history (ACC-01, ACC-02). Done 2026-10-31: a first email-link sign-in makes the Member; `currentCartOwner` is the Member once signed in and folds in any Guest Cart left in the browser (`mergeGuestCart`, tested); checkout is prefilled and Members Pay at Pickup without the 4-drink limit; `/account` lists past Orders; Guests are offered an account after ordering; Google sign-in shows only when `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set (untested until keys exist). One-tap reorder is V1 (ORD-11).
@@ -123,6 +219,8 @@ Goal: regulars sign in, collect Stars and redeem a free drink.
 
 ## 10. Phase 5: Events, news, polish and demo deploy (1.5 weeks)
 
+**In plain words:** this phase delivered Events and Posts, the accessibility, speed and security passes, and the live demo on Vercel and Neon (live since 2026-11-01). Batch 5.4 is still unticked: its last step, the first photo upload on the live site, waits on the owner.
+
 Goal: the MVP is complete, fast, accessible and online as a demo.
 
 - [x] **5.1 Events and Posts.** Public pages, Manager editors with Markdown preview, home sections, Event structured data, Event and Post share cards (EVT-01, NEWS-01, NEWS-02, STAFF-06, INFO-09). Done 2026-10-31: `content` module (plain reads for tests, `"use cache"` wrappers under the `content` tag, saves in Manila time with audit); `/events` with past Events in a `details`, `/events/[slug]` with Event structured data, `/news` and `/news/[slug]`; share cards with the title and date or excerpt; Home gains the example Star Card, the next Event and the latest Post; `/manage/events` and `/manage/posts` with a live Markdown preview (no raw HTML). Photo upload for Events and Posts waits for Blob storage (batch 5.4).
@@ -133,6 +231,8 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 **Exit criteria:** every MVP requirement in the PRD is met and ticked; the demo URL works for the two-minute demo script (PRD section 8); `qa:full` green.
 
 ## 11. Phase 6: V1 features (2 weeks)
+
+**In plain words:** this phase delivered the V1 extras: Favourites and Order again, Event Sign-up with a seat cap, Promos and Seasonal Menu Items, Order-ready alerts, reports and the Birthday Treat, menu search, weekly Events and Inquiries, Pairings and Day and Night Barista Picks, and calorie estimates. Filipino language (6.5) was dropped.
 
 - [x] **6.1 Favourites and reorder** (ORD-11). Done 2026-10-31: Members save a Menu Item with its Options from its page (Guests are asked to sign in) and see them in `/account` priced today, with Add and Remove; each past Order has Order again, which puts its Lines back in the Cart through `addLine` (checked and priced today) and says how many were left out. Order Lines now keep their Option ids (`option_ids`) next to the snapshot; Favourites go with the Cart when an account is deleted.
 - [x] **6.2 Event sign-up with a cap** (EVT-02). Done 2026-11-01 (tests first): Events get optional Seats; the Event page shows seats left and a Sign-up form (name, email, 1 to 4 seats, paid at the door), counted under a row lock on the Event so two at once never oversell, one per email per Event, 10 per IP an hour, confirmed by email; the Manager sets Seats in the Event editor and sees the Sign-ups below it. Cancelling a Sign-up is by replying to the email for now.
@@ -146,9 +246,13 @@ Goal: the MVP is complete, fast, accessible and online as a demo.
 
 **Exit criteria:** each V1 item works end to end with tests; budgets from Phase 5 still hold.
 
-## 12. Phases 7 to 10: audit fixes, improvements, portfolio review, the rest of the backlog
+## 12. Phases 7 to 11: audit fixes, improvements, portfolio review, the rest of the backlog, handoff
+
+These phases came after V1: the fixes and improvements from the November audit, the portfolio write-up, the rest of the backlog, and the handoff.
 
 ### Phase 7: Audit fixes (1 week)
+
+**In plain words:** this phase fixed the serious problems the November audit found, in checkout, payments, security, the Bar Screen, keyboard focus, Prep Time, Manager inputs and automatic checks (CI). It also made the tests independent of each other and brought the pages inside the speed budget.
 
 From the November audit (`docs/audit/`). Each fix starts with a test that reproduces the finding; a finding no test can reproduce is dropped and noted in the audit.
 
@@ -169,6 +273,8 @@ From the November audit (`docs/audit/`). Each fix starts with a test that reprod
 
 ### Phase 8: Improvements found by the audit (2 weeks)
 
+**In plain words:** this phase added what the audit suggested, such as Demo Mode (a visitor can play the barista), error pages, the phone experience, Busy Mode, Staff management and Event Sign-up protection. It also added the motion pass and page polish that the owner asked for.
+
 Starts after Phase 7. Requirement IDs are added to the PRD when each batch starts.
 
 - [x] **8.1 Demo mode for visitors.** A reviewer who opens the link alone can try the Bar Screen and watch an Order move, on demo data and without an email (PRD section 8, success metric 4). Done 2026-11-08 (audit FEAT-01, ADR 0015; tests first): Demo Mode is on exactly when the fake payment provider runs (locally and on `*.vercel.app`). The Order page shows "Be the barista" with the bar's next step for that Order (Accept the order, Start making it, Mark it Ready, Hand it over); `advanceInDemo` checks the link token and calls `transition()` as the new `demo` actor (migration `demo_actor`), allowed only the four bar steps, so the page follows live, chimes at Ready, and a Member's Star lands at Hand it over. The concept page has "Try it in two minutes". The real Bar Screen stays Staff-only (ADR 0005): the case study will show it.
@@ -184,11 +290,15 @@ Starts after Phase 7. Requirement IDs are added to the PRD when each batch start
 
 ### Phase 9: Portfolio review and case study (0.5 week)
 
+**In plain words:** this phase wrote up the project: measured results in [`docs/METRICS.md`](METRICS.md), the case study in [`docs/CASE-STUDY.md`](CASE-STUDY.md) with screenshots, and a final review with an accessibility statement and a demo script.
+
 - [x] **9.1 Measure.** The success metrics in PRD section 8, written up with numbers. Done 2026-11-14 in [`docs/METRICS.md`](METRICS.md): a throttled phone orders and pays in 8.7 to 9.1 s (target 60, now a test); Lighthouse mobile medians Home 89, `/menu` 91, a Menu Item 91, accessibility 100 (local build; Home 1 point short, live numbers to take at pagespeed.web.dev since the API quota refused); 0 axe violations; 7 of 7 rule mutations caught, after the one miss (Preparing straight to Picked Up) got a test.
 - [x] **9.2 Case study.** `docs/CASE-STUDY.md`: the problem, the decisions (ADRs), screenshots, what I would do next. Done 2026-11-14: [`docs/CASE-STUDY.md`](CASE-STUDY.md) with seven screenshots in `docs/screenshots/` (Home in both palettes at 1280 px; the menu, a Menu Item, checkout and an Order page at 375 px; the Bar Screen), taken from a local production build with reduced motion.
 - [x] **9.3 Final review.** Code review, accessibility statement, README screenshots, demo script rehearsed. Done 2026-11-14: `/accessibility` states the target (WCAG 2.2 AA in both palettes), how it is checked and the four known gaps from the backlog, linked from the footer and axe-checked; `docs/DEMO-SCRIPT.md` is the two-minute demo with what to do, what to say and what to do if it goes wrong, every step a passing e2e test (the spoken run on the live site is the owner's last check); the README shows the status, four screenshots and links to the case study, metrics and demo script; the concept page links the case study. A medium code review of the 7.8b to 9.3 branch found 10 items: 6 fixed (a cash refund shown as a Test Mode refund, a PHP 0 refund offered, an unhandled `audio.resume()` rejection, two serial reads, the auth test covering 3 of 25 routes, no stack in the error line), 4 left as low impact (the cash message chosen by a form field, one rule written three times, no OrderEvent for a late-paid refund since the Refund row records it, `%40` in mailto links, which RFC 6068 allows).
 
 ### Phase 10: The rest of the audit backlog (after V1)
+
+**In plain words:** this phase cleared the rest of the audit backlog in 21 small batches, from accessibility and checkout copy to database rules, caching, motion, tests and docs. All 21 are done (2026-11-17).
 
 The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches. Each batch's items, with the problem and the fix, are in the Next batches table of [`docs/audit/2026-11-13.md`](audit/2026-11-13.md). Work them in order, one branch and pull request each; the owner can reorder them.
 
@@ -214,14 +324,47 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 - [x] **10.20 Code health.** Done 2026-11-17: one Concept Notice, clock.ts day helpers and one Sold Out rule, labels and numbers read from their source, a typed Options snapshot, and one primary pill in two sizes.
 - [x] **10.21 Docs.** Done 2026-11-17: the setup guide matches the live Neon and Vercel project and says previews share production data, how to restore and how to migrate safely; docs/03, docs/04 and the Glossary describe the code; ordering for tomorrow is after V1; Home, the FAQ and the seed say only what the cafe keeps.
 
+### Phase 11: Handoff and the 2026-11-17 deep check
+
+On 2026-11-17 the whole app was checked again (security, QA and code review, six areas): no P0, 2 P1, 29 P2 and 15 P3. Each finding, in plain words with its fix, is in [`docs/audit/2026-11-17.md`](audit/2026-11-17.md) under the `DC-` numbers below. 11.1 makes the docs ready to hand over; 11.2 to 11.6 are the fixes, in order of risk. Each is one branch and pull request; the owner approves each before it starts.
+
+- [x] **11.1 Handoff docs.** Done 2026-11-17: every doc opens with "In plain words" and who should read it, explains its jargon and matches the code; new `docs/HANDOFF.md` (taking over the project), `docs/STAFF-GUIDE.md` (running the cafe on the site), `docs/adr/README.md` (every decision in one sentence) and the deep check, `docs/audit/2026-11-17.md`.
+- [ ] **11.2 Safety first.** DC-01 to DC-07: the last Manager can't delete their account, CI builds the site, local database commands can't reach production, tests can't send real email, Refund and Stars edge cases, paid Orders the bar never accepted. Also `better-auth` 1.7.25.
+- [ ] **11.3 Abuse limits and inputs.** DC-08 to DC-11: a daily Pay at Pickup limit for Members, sign-in links nobody else can use up, two inputs that crash, and tests for every limit.
+- [ ] **11.4 Staff tools.** DC-12 to DC-23: the Bar Screen's pause after 12 hours and its Sold Out panel, hours and Seats warnings, photo errors, Barista Picks, Category and Event addresses, keyboard focus and screen readers in `/manage` and `/bar`.
+- [ ] **11.5 Customer pages.** DC-24 to DC-37: old Event pages, Home's layout shift and hours line, the menu build fallback, fewer account reads, the demo's late-night gap, and eight small copy and form fixes.
+- [ ] **11.6 Tests.** DC-38 to DC-46: Staff-cancel refunds, the Sold Out reset, browser-test collisions and time limits, accessibility in both palettes, the daily job and the Staff role test.
+
 ## 13. After V1 (not scheduled)
 
-The installable app (PWA) with push notifications to a locked phone; ordering for tomorrow; more than one cafe; delivery partners; gift cards; loyalty tiers; table QR ordering; real launch requirements (business registration, BIR receipts, Internet Transactions Act duties, live payment keys, the senior citizen and PWD discount under RA 9994, RA 10754 and JMC 01-2022, a paid database plan with longer backups, real photos and staff).
+These are ideas for later. Nothing here is planned, dated or promised, and new features are on hold (owner). The list is here so nobody has to wonder whether an idea was considered.
+
+Possible features:
+
+- The installable app (a PWA, a website that can be added to a phone's home screen like an app) with push notifications to a locked phone.
+- Ordering for tomorrow.
+- More than one cafe.
+- Delivery partners.
+- Gift cards.
+- Loyalty tiers.
+- Table QR ordering.
+
+Real launch requirements (Hoshikopi is a concept, so none of these is built):
+
+- Business registration.
+- BIR receipts (official receipts from the Philippine tax office).
+- Internet Transactions Act duties (the rules for online merchants).
+- Live payment keys.
+- The senior citizen and PWD (person with disability) discount under RA 9994, RA 10754 and JMC 01-2022.
+- A paid database plan with longer backups.
+- Real photos and staff.
 
 ## 14. Definition of done (every batch)
 
+A batch counts as done only when every point below is true.
+
 1. The requirement IDs it covers work end to end in the browser.
 2. Rules for money, Capacity, Prep Time, Stars, Order Status and webhooks have tests that fail without the code.
-3. `npm run qa` green (and `qa:full` for anything visible); zero axe violations on touched pages, in both palettes.
+3. `npm run qa` green (and `qa:full` for anything visible); zero axe violations (axe is the automatic accessibility checker) on touched pages, in both palettes.
 4. Words match `GLOSSARY.md`; no em dashes in UI copy; invented details carry the Concept Notice.
-5. Docs updated: this roadmap ticked, any changed document edited, an ADR for any decision.
+5. Docs updated: this roadmap ticked, any changed document edited, an ADR (a short decision note) for any decision.

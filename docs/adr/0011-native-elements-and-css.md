@@ -5,6 +5,8 @@ date: 2026-10-31
 
 # Build the design with native elements and CSS (Sample A)
 
+> **In plain words:** The pages are built with the browser's own controls (radios, checkboxes, `details`, popovers) and plain CSS, with no component or animation library. This keeps the site fast and light, and avoids rework later.
+
 Hoshikopi's pages are built with native HTML elements (radios, checkboxes, `details`, `dialog`, popovers), Tailwind CSS on the design tokens, and CSS transitions. No component or animation library is added.
 
 ## Why

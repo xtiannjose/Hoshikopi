@@ -5,6 +5,8 @@ date: 2026-10-30
 
 # The look follows the cafe's clock: Day palette by day, Night palette by night
 
+> **In plain words:** The site's look follows the cafe's clock: the Day palette from 6:00 AM and the Night palette from 6:00 PM, Manila time. Visitors can pin Day or Night with a switch in the header. The change is made in the browser, so pages can still be prepared ahead of time and load fast.
+
 The owner compared the Day and Night wireframes (`docs/05-DESIGN-SYSTEM.md` section 1.2) and chose Night's layout and content with both palettes: Day (cream paper, kopi brown, paper grain) from 6:00 AM, and Night (night ink, moonlight) from 6:00 PM, Manila time. The site changes when the cafe does, which fits "open till the stars are out".
 
 Considered: one palette with a light and dark mode that follows the device setting. Rejected because most devices always report light or dark, so the clock would never decide, and the clock is the idea.

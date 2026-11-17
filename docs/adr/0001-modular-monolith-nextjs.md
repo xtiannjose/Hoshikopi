@@ -5,6 +5,8 @@ date: 2026-10-30
 
 # One Next.js app organised as a modular monolith
 
+> **In plain words:** The whole site (customer pages, Staff pages, payment messages and the daily job) is one program, split inside into named parts that each own their own data. This keeps the project small enough for one developer to build, test and deploy, while the parts stay separate enough to change one at a time.
+
 Customer pages, Staff pages (Bar Screen, `/manage`), webhooks and the daily cron live in a single Next.js 16 app deployed as one unit. Business logic sits in `src/modules/*` (`menu`, `cafe`, `cart`, `ordering`, `payments`, `loyalty`, `content`, `identity`, `notify`), each with one public `index.ts`. This is the same shape as Hoshimono, so patterns and lessons carry over.
 
 ## Considered options

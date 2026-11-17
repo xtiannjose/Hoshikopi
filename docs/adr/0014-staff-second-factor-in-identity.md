@@ -5,6 +5,8 @@ date: 2026-10-31
 
 # The Staff Second Factor is checked by our guard, not Better Auth's plugin
 
+> **In plain words:** Staff must enter a 6-digit authenticator code once per session before they can use the Manager pages. The site checks this itself, because the sign-in library's ready-made version does not cover sign-in by email link and puts no limit on wrong tries. A wrong-code limit and encrypted secrets are built in.
+
 ADR 0005 says Staff sign in with the email link and must turn on a second factor (TOTP) before using `/manage`. Better Auth's `twoFactor` plugin asks for the code only after password-style sign-ins (`/sign-in/email`, `/sign-in/username`, `/sign-in/phone-number`), not after an email link, and for a signed-in session it checks codes with no attempt limit and replaces the session on first enrolment. So the `identity` module does the step itself:
 
 - `two_factors` (identity) holds one row per Staff member: the TOTP secret, encrypted with `BETTER_AUTH_SECRET` through `better-auth/crypto`, and `confirmed_at`. The first visit creates a pending secret; the same one shows until a code matches.

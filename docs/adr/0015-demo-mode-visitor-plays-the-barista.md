@@ -5,6 +5,8 @@ date: 2026-11-08
 
 # Demo Mode: a visitor plays the barista on their own Order
 
+> **In plain words:** On the live demo, a visitor who places an Order can press a "Be the barista" button to move their own Order through the bar's four steps and watch it update. Demo Mode is on only when the pretend payment provider runs, so a site with real payments can never have it. The hosted demo also takes Orders all day, so a reviewer in any time zone can try it.
+
 A reviewer who opens the live demo alone can browse and place an Order, but every step after Placed needs a Staff session (ADR 0005), so their Order stays Placed and the project's best part, an Order moving live from the bar to the status page, stays invisible (audit FEAT-01, PRD section 8, success metric 4).
 
 While **Demo Mode** is on, the Order page shows a "Be the barista" panel. Its one button is the bar's next step for that Order (Accept the order, Start making it, Mark it Ready, Hand it over), the same steps as the Bar Screen. `advanceInDemo(id, token)` in the `ordering` module checks the Order's link token, picks the next Order Status and calls `transition()` with a new actor, `{ kind: "demo" }`. The Order Status table allows that actor the four bar steps (`accepted`, `preparing`, `ready`, `picked_up`) only while Demo Mode is on; `order_events` records it as `actor_kind = demo`, so no visitor's tap ever looks like a Staff member's. Side effects stay the same: the Ready email, Pay at Pickup marked paid at the counter, Stars earned.

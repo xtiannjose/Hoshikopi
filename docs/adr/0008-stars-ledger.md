@@ -5,6 +5,8 @@ date: 2026-10-30
 
 # Stars are a ledger; the balance is a sum
 
+> **In plain words:** Stars are kept as a list of entries (earned, held for a Reward, given back, taken back, adjusted by a Manager), and a Member's balance is the total of that list. There is no single balance number that can drift or lose a Star, and every change keeps its history.
+
 A Member earns 1 Star per drink in an Order when it is Picked Up, and redeems 9 Stars for a free drink (PRD LOY-01 to LOY-05). Every change is a row in `star_entries` with a kind (`earn`, `reserve`, `release`, `reverse`, `adjust`), a signed amount and its Order or reason. The balance is the sum of the rows; there is no balance column to drift.
 
 ## Rules
