@@ -10,6 +10,16 @@ export type StarsState = {
   field?: "email" | "stars";
   /** Typed values, kept after an error (React resets the form). */
   values?: { email: string; stars: string; reason: string };
+  /** The Member's balance after the save, or now after a refusal. */
+  balance?: number;
+};
+
+/** What the Star Card beside the form shows (12.4). */
+export type MemberStars = {
+  /** Empty when the Member gave none. */
+  name: string;
+  email: string;
+  balance: number;
 };
 
 const REASONS = {
@@ -21,6 +31,23 @@ const REASONS = {
 };
 
 const stars = (n: number) => `${n} ${n === 1 ? "Star" : "Stars"}`;
+
+/**
+ * The Member behind an email and their balance, so the Manager sees whose
+ * Star Card they are changing before they save (12.4).
+ */
+export async function findMemberStarsAction(
+  email: string
+): Promise<MemberStars | null> {
+  await requireStaff("manager", "/manage/stars");
+  const member = await memberByEmail(String(email));
+  if (!member) return null;
+  return {
+    name: member.name,
+    email: member.email,
+    balance: await balance(member.id),
+  };
+}
 
 /** A Manager adds or removes Stars with a reason (LOY-05). */
 export async function adjustStarsAction(
@@ -44,9 +71,13 @@ export async function adjustStarsAction(
     { kind: "staff", id: staff.id, role: staff.role }
   );
   if (result.ok) {
-    const now = stars(await balance(member.id));
+    const now = await balance(member.id);
     const who = member.name ? `${member.name} now has` : "They now have";
-    return { ok: true, message: `Saved for ${member.email}. ${who} ${now}.` };
+    return {
+      ok: true,
+      message: `Saved for ${member.email}. ${who} ${stars(now)}.`,
+      balance: now,
+    };
   }
   if (result.reason === "below_zero") {
     const left = await balance(member.id);
@@ -54,6 +85,7 @@ export async function adjustStarsAction(
       message: `${REASONS.below_zero} They have ${stars(left)} now.`,
       field: "stars",
       values,
+      balance: left,
     };
   }
   return { message: REASONS[result.reason], values };
