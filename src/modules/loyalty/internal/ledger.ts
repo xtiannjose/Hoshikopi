@@ -47,8 +47,13 @@ const once = (
     skipDuplicates: true,
   });
 
+// FOR NO KEY UPDATE: it still makes canRedeem, adjustStars, reverseForOrder
+// and birthdayTreat wait for each other, but no longer blocks the foreign
+// key check of a star_entries insert (FOR KEY SHARE). FOR UPDATE did, so a
+// Reward placement and a release in the same Pickup Window could deadlock
+// (Postgres 40P01, an error page; audit ORD-15).
 const lockMember = (tx: Prisma.TransactionClient, memberId: string) =>
-  tx.$queryRaw`SELECT id FROM users WHERE id = ${memberId} FOR UPDATE`;
+  tx.$queryRaw`SELECT id FROM users WHERE id = ${memberId} FOR NO KEY UPDATE`;
 
 /**
  * An Order was Picked Up: 1 Star per drink (LOY-01). The ordering module
