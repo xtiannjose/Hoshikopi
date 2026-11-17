@@ -19,7 +19,7 @@ A Member earns 1 Star per drink in an Order when it is Picked Up, and redeems 9 
 ## Considered options
 
 - **A balance column updated in place.** Rejected: no history, and concurrent updates can lose Stars.
-- **Points per peso spent.** Rejected for the concept: a stamp card ("one Star per drink, nine for a free one") is simpler to explain and fits the Star brand. The owner confirms in batch 4.1.
+- **Points per peso spent.** Rejected for the concept: a stamp card ("one Star per drink, nine for a free one") is simpler to explain and fits the Star brand. The owner confirmed it in batch 4.1 (roadmap section 4, audit DOC-21).
 
 ## Consequences
 

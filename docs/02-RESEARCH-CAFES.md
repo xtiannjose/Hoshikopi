@@ -42,24 +42,26 @@ The 10 best ideas, in priority order:
 
 ## Candidates
 
+Release tags below are the research's suggestion; the scope is the PRD's (`docs/01-PRD.md`), which put accounts, Stars, Events and Posts in the MVP (audit DOC-24).
+
 Release key: **MVP** is the first slice that proves order-ahead end to end (menu, cafe info, Cart, payment, Bar Screen). **V1** completes Version 1 (accounts, Stars, Events, Posts). **Later** is after Version 1. **Skip** is not for this concept. Top column: rank among the 10 best.
 
 | ID | Feature | Value | Effort | Release | Reason | Sources | Top |
 |---|---|---|---|---|---|---|---|
 | C-01 | HTML menu by Category: photo, name, Base Price and one-line description on every Menu Item; no PDF menus | High | M | MVP | Chains hide prices, small cafes use PDFs or photo-less text; users want to start an order from the menu | 2, 8, 15, 18, 53 | |
 | C-02 | Option Groups on the Menu Item: Size, Milk, Sugar Level, Ice Level, Extra Shots, Add-ons; required flag, max picks, Price Delta beside each Option, live total | High | M | MVP | Customization is the core of a cafe order and no benchmarked web page shows it | 2, 8, 15, 24, 50 | 2 |
-| C-03 | Sold Out shown in place for Menu Items and Options, reset at next opening, toggled from the Bar Screen | High | S | MVP | Stops Orders the bar cannot make; Blue Bottle needs a help article for "is this available at my cafe" | 14, 21, 50 | |
+| C-03 | Sold Out shown in place for Menu Items and Options, reset at next opening, toggled from the Bar Screen | High | S | MVP | Stops Orders the bar cannot make; Blue Bottle needs a help article for "is this available at my cafe". Built as: Sold Out is toggled on the Bar Screen and in `/manage/menu`, and clears at the start of the Manila day (audit DOC-24) | 14, 21, 50 | |
 | C-04 | Line note ("less ice please") with a short length limit | Medium | S | MVP | Bo's has a cart-level note; a per-Line note covers requests Options miss | 11 | |
 | C-05 | Badges (New, Bestseller, Limited time) and Hidden for off-season Menu Items | Medium | S | V1 | Commune and Pickup lead with these; cheap once the menu exists | 8, 15 | |
 | C-06 | Dietary and allergen labels per Menu Item plus a menu filter | Medium | S | V1 | Baymard finds no dietary path on any site; Starbucks PH offers only a disclaimer | 2, 15, 50 | |
 | C-07 | Origin and tasting notes on coffee Menu Items | Low | S | V1 | Starbucks PH and Yardstick show them; fits a specialty voice. As built (audit FEAT-12): tasting notes live in the Menu Item description, which the Manager writes; no new column | 2, 14, 17 | |
 | C-08 | Calorie count per Menu Item | Low | S | Later | Only with real recipe data, invented numbers would mislead; QC requires it of all food places from 2027-12-21 if real | 2, 49 | Adopted 2026-11-01 as MENU-10, labelled as a concept estimate |
-| C-09 | Pickup Time: ASAP with Prep Time estimate, or Scheduled Pickup in a 15-minute Pickup Window; same day only; last window at closing minus Prep Time; each window has a Capacity for drinks and food Lines; full windows are unavailable and ASAP moves to the next open one | High | L | MVP | Core of order-ahead; Starbucks PH stops 30 minutes before close, Pickup Coffee schedules within the day, Toast and Square tie times to prep and capacity | 1, 9, 10, 18, 26, 28, 29, 50 | 1 |
+| C-09 | Pickup Time: ASAP with Prep Time estimate, or Scheduled Pickup in a 15-minute Pickup Window; same day only; last window at closing minus Prep Time; each window has a Capacity for drinks and food Lines; full windows are unavailable and ASAP moves to the next open one | High | L | MVP | Core of order-ahead; Starbucks PH stops 30 minutes before close, Pickup Coffee schedules within the day, Toast and Square tie times to prep and capacity. Built as: windows run from opening and end by closing, each starting after now plus Prep Time; Orders until Last Order (audit DOC-24) | 1, 9, 10, 18, 26, 28, 29, 50 | 1 |
 | C-10 | Ordering Paused: Manager switch with a resume time shown at checkout; menu stays visible | High | S | MVP | Toast snoozes 20 or 40 minutes or rest of day; Square turns pickup off | 26, 28 | 8 |
 | C-11 | Order page: Order Code, live Order Status, Pickup Time, cafe directions; email when Ready | High | M | MVP | Every order-ahead app notifies on Ready; a web page plus email does it without an app | 1, 9, 27, 50 | 4 |
 | C-12 | Bar Screen: live Orders by Pickup Time; scheduled Orders appear at Pickup Time minus Prep Time; one tap per status step; Sold Out toggles | High | M | MVP | Toast fires orders to the kitchen from prep time; the bar needs one view | 28, 29 | 5 |
 | C-13 | Cancellation: Customer may cancel until Accepted; after that only the cafe cancels, with a full Refund | Medium | S | MVP | Starbucks PH allows no cancel once placed; Blue Bottle has a "very small window"; a clear rule avoids disputes | 1, 21 | |
-| C-14 | Order size cap (for example 15 drinks); larger orders are asked to call | Medium | S | MVP | Starbucks PH caps mobile orders at 15 items; protects Capacity | 1 | |
+| C-14 | Order size cap (for example 15 drinks); larger orders are asked to call | Medium | S | MVP | Starbucks PH caps mobile orders at 15 items; protects Capacity. Built as: a larger order goes through the Inquiry form on the Visit page, not a call (audit DOC-24) | 1 | |
 | C-15 | Guest checkout as the main path; after the Order, offer an account to keep Stars | High | S | MVP | 18% abandon over forced sign-up; 62% of sites bury the guest option | 51, 52 | 6 |
 | C-16 | Order again: Members repeat a past Order in one tap, Sold Out Lines flagged | Medium | S | V1 | Baymard 2026: repeat ordering is undersupported across food sites | 50 | |
 | C-17 | Curbside or "I'm here" check-in | Low | M | Skip | Chain feature tied to parking; Hoshikopi is a walk-in city cafe | 1, 3, 26, 27 | |

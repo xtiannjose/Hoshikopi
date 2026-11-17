@@ -23,7 +23,7 @@ The Bar Screen asks for changes every 3 seconds, sending the last Order version 
 ## Consequences
 
 - Poll responses carry a version number and stay under 5 kB when nothing changed (budget in `docs/05-DESIGN-SYSTEM.md` section 11).
-- Polling pauses when the tab is hidden and resumes on focus.
+- Polling pauses when the tab is hidden and resumes on focus. Update 2026-11-17 (audit DOC-23): that is the Bar Screen; the Order status page slows to every 15 seconds while hidden, so it can still alert, and stops once the Order is Ready.
 
 ## Update 2026-11-15: the Order page stops asking
 

@@ -51,7 +51,7 @@ Checked live on 2026-10-30. We borrow layout ideas and feel only, never names, c
 - **Type with three voices.** Italic serif for headings and menu categories ("Explore Our Menu", "Coffee"), small uppercase sans for item names, and a typewriter mono for prices, notes and buttons.
 - **A printed-menu section on Home.** Categories side by side, names left, prices right, add-ons with their price ("Coconut whip +$0.75"), short notes under an item, one photo beside the list. This maps directly to Categories, Menu Items, Options and Price Deltas.
 - **Film-style photos.** Big, candid, slightly grainy shots of the counter, people and cups, edge to edge.
-- **Hand-drawn line art.** Small one-colour drawings (a cup, a vase) and wobbly hand-drawn divider lines between sections.
+- **Hand-drawn line art.** Wobbly hand-drawn divider lines between sections. Flora's small one-colour drawings (a cup, a vase) were not built: with new features on hold, the spec follows the site (audit UI1-24).
 - **Events and Posts in the same voice.** "Upcoming event", a dated line, an italic title, one label button.
 
 Owner's decisions on Flora (2026-10-30):
@@ -79,7 +79,7 @@ Each has the same twelve boards, with labelled photo slots: Home at 1280 and 390
 Six rules that settle design arguments. When two choices both look fine, the one that follows these wins.
 
 1. **The menu is the product.** Big photos, clear prices, Options one tap away. Nothing decorative stands between a Customer and "Add to order".
-2. **One accent.** Gold appears in at most one place per screen. Stars are earned, not sprinkled.
+2. **One accent.** Besides the logo mark, a screen has one gold moment: the Star Card, a Ready Order, a Barista Pick. Stars are earned, not sprinkled (audit UI2-29).
 3. **Phone first, thumb first.** Primary actions sit in the bottom third; the Cart is reachable from every page.
 4. **Native where it works.** Native radio buttons, checkboxes, selects and date inputs, styled, before custom widgets ([ADR 0011](adr/0011-native-elements-and-css.md)).
 5. **Calm motion.** Short, meaningful transitions; nothing loops on screen while ordering; all motion respects reduced motion.
@@ -215,7 +215,7 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 
 - **CSS and the platform only:** transitions, keyframes, `@starting-style`, scroll-driven animations (`animation-timeline: view()`) behind `@supports`, and React's `<ViewTransition>` for page changes. No animation library ([ADR 0011](adr/0011-native-elements-and-css.md)); the only new JavaScript is the Cart count remembering its last value.
 - **Only transform and opacity move** (`translate`, `scale`, `rotate`, `opacity`), so nothing shifts the layout and CLS stays at 0. Colours change at once.
-- **Timing:** 150 ms for press feedback; 160 ms for the page change; 200 to 250 ms for UI (drawer, disclosures, crossfades); 350 to 500 ms for the delight moments; about 750 ms for a full Star Card. Easing: `--ease-calm` (`cubic-bezier(0.22, 1, 0.36, 1)`) for everything, `--ease-pop` (a small overshoot) for the delight moments only. Tokens, keyframes and the `.lift`, `.reveal`, `.drawer`, `.star-light` and `.light-on-scroll` classes live in `src/app/globals.css`.
+- **Timing:** 150 ms for press feedback; 160 ms for the page change; 200 to 250 ms for UI (drawer, disclosures, crossfades); 350 to 500 ms for the delight moments; about 750 ms for a full Star Card. Easing: `--ease-calm` (`cubic-bezier(0.22, 1, 0.36, 1)`) for the site's own motion (a few small transitions keep the browser's or Tailwind's default: the Day and Night crossfade, the FAQ plus sign and the menu view ring; audit motion:10), `--ease-pop` (a small overshoot) for the delight moments only. Tokens, keyframes and the `.lift`, `.reveal`, `.drawer`, `.star-light` and `.light-on-scroll` classes live in `src/app/globals.css`.
 
 | What moves | Where | How |
 | --- | --- | --- |
@@ -224,7 +224,7 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 | Lift | Menu Item, Event and Post cards (the whole card is a link) | Rises 4 px on hover or keyboard focus, 200 ms |
 | Reveal | The same cards and the Barista picks | Rise 2 rem and fade in as they scroll into view, tied to the scroll; still in browsers without scroll timelines |
 | Page change | Every customer page (`src/app/(site)/template.tsx`) | The old page fades out in 120 ms while the new one rises 8 px and fades in over 160 ms, at the same time. The page takes taps once its fade ends; the header and footer stay clickable throughout. Only navigation animates: `router.refresh()` and Server Actions never move the page. `/manage` pages fade the same way (`src/app/manage/template.tsx`) |
-| Phone menu | The header popover | Slides in from the right while the backdrop fades, 250 ms; slides back out |
+| Phone menu | The header popover | Slides in from the right while the backdrop fades, 250 ms; slides back out where the browser can animate the popover's `overlay` (Chromium); in Firefox and Safari it closes at once (audit motion:11) |
 | Disclosures | Every `details` (Visit FAQ, Later today, Cancel) | The answer rises in, 250 ms |
 | Day and Night | The theme switch, and 6:00 and 18:00 on an open page | The palettes crossfade, 250 ms (a View Transition) |
 | Add to order | Menu Item page | "Added" with a check on the button for 1.6 s; the Cart count bumps (to 1.3, 300 ms) each time it goes up, never on page load or on the way down; the floating Cart rises in when it first appears (250 ms) |
@@ -235,7 +235,7 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 
 - **Quiet zones:** nothing moves on its own while the Customer chooses Options or pays (the Options on a Menu Item, the Cart, checkout, the fake payment page); there is only press feedback under the finger. The Pickup Time chips at checkout stay plain chips (batch 8.3, 2026-11-08, replaced the old row of 42 with the next 6 and a "Later today" list).
 - **Never animated:** the hero, because it holds the LCP (batch 7.6); loops of any kind; parallax and scroll-jacking.
-- **Reduced motion:** `prefers-reduced-motion: reduce` turns all of it off. Animations land on their final state at once and transitions are `0s` (a near-zero duration still started hundreds of real transitions on a Day and Night switch), View Transitions are skipped and scroll reveals are not applied. One exception: the "Added" on Add to order holds still for its 1.6 s, since its last frame is invisible and on a phone it is the only sign of the add. Browser tests run this way (`playwright.config.ts`), so axe checks the settled page and never a frame mid-fade, except `tests/e2e/motion.spec.ts`, which turns motion on to check that a tap right after a page change lands within the fade budget and that a new Order arrives on the Bar Screen once.
+- **Reduced motion:** `prefers-reduced-motion: reduce` turns all of it off. Animations land on their final state at once and transitions are `0s` (a near-zero duration still started hundreds of real transitions on a Day and Night switch), View Transitions still swap the page but without animation (audit motion:10), and scroll reveals are not applied. One exception: the "Added" on Add to order holds still for its 1.6 s, since its last frame is invisible and on a phone it is the only sign of the add. Browser tests run this way (`playwright.config.ts`), so axe checks the settled page and never a frame mid-fade, except `tests/e2e/motion.spec.ts`, which turns motion on to check that a tap right after a page change lands within the fade budget and that a new Order arrives on the Bar Screen once.
 
 ## 8. Imagery, icons, copy
 

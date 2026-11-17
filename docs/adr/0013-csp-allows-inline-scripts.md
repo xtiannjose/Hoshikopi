@@ -25,7 +25,7 @@ So the policy is `script-src 'self' 'unsafe-inline'`, with no hash: a hash or no
 
 ## Consequences
 
-- An HTML injection bug would be able to run script, so content rendering keeps its rules: no raw HTML in Markdown, no `dangerouslySetInnerHTML` except the theme script and the JSON-LD on `/cafe` and Event pages, which escape every `<` as `<` so Manager-written text cannot close the script tag.
+- An HTML injection bug would be able to run script, so content rendering keeps its rules: no raw HTML in Markdown, no `dangerouslySetInnerHTML` except the theme script and the JSON-LD on `/cafe` and Event pages, which write every `<` as the unicode escape `\u003c`, as the code does, so Manager-written text cannot close the script tag (audit DOC-23).
 - Revisit when Next can hash or nonce the inline scripts of prerendered pages.
 
 ## Update 2026-11-07

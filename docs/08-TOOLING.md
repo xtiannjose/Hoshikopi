@@ -102,7 +102,7 @@ These are prompts to paste into Claude Code. They follow the working rules in `C
 
 Start of a session:
 
-> Read CLAUDE.md and docs/07-ROADMAP.md. Take the next unchecked batch, make its branch, build it test-first where the roadmap says so, run npm run qa (and test:e2e for UI), show me the result at 375 and 1280 px, then tick the batch.
+> Read CLAUDE.md and docs/07-ROADMAP.md. Take the next unchecked batch, make its branch, build it test-first where the roadmap says so, run npm run qa (and test:e2e for UI), show me the result at 375, 768 and 1280 px in both palettes, then tick the batch.
 
 Before a merge:
 
