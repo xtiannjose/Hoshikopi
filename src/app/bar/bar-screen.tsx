@@ -8,18 +8,14 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { SpeakerHighIcon, SpeakerSlashIcon } from "@phosphor-icons/react";
 
 import { formatTime, now } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 
-import {
-  busyAction,
-  endBusyAction,
-  pauseAction,
-  resumeAction,
-} from "../manage/hours/actions";
 import { advanceOrder, cancelAtBar } from "./actions";
+import { ManagerControls } from "./manager-controls";
 
 type Status = "placed" | "paid" | "accepted" | "preparing" | "ready";
 
@@ -132,11 +128,14 @@ function without(set: Set<string>, ids: string[]) {
  */
 export function BarScreen({
   initial,
+  soldOut,
   manager,
   staffName,
   links,
 }: {
   initial: Board;
+  /** Today's Sold Out stamp; a new one refreshes the Sold Out panel. */
+  soldOut: string;
   manager: boolean;
   staffName: string;
   /** The way back and the staff links, left of the h1. */
@@ -155,6 +154,8 @@ export function BarScreen({
   const [pending, startTransition] = useTransition();
   const known = useRef(new Set(initial.orders.map((o) => o.id)));
   const version = useRef(initial.version);
+  const soldOutSeen = useRef(soldOut);
+  const router = useRouter();
   const mutedRef = useRef(false);
 
   useEffect(() => {
@@ -169,12 +170,13 @@ export function BarScreen({
   }, []);
 
   const poll = useCallback(async () => {
-    const response = await fetch(
-      `/api/bar?v=${encodeURIComponent(version.current)}`,
-      {
-        cache: "no-store",
-      }
-    ).catch(() => null);
+    const seen = new URLSearchParams({
+      v: version.current,
+      m: soldOutSeen.current,
+    });
+    const response = await fetch(`/api/bar?${seen}`, {
+      cache: "no-store",
+    }).catch(() => null);
     // Offline for a moment: the next tick tries again.
     if (!response) return;
     if (response.status === 401) {
@@ -183,21 +185,32 @@ export function BarScreen({
     }
     if (!response.ok) return;
     const data = (await response.json().catch(() => null)) as
-      Board | { same: true } | null;
+      (Board & { menu: string }) | { same: true } | null;
     if (!data || "same" in data) return;
+    // Sold Out changed on another device, or the day turned and yesterday's
+    // marks cleared: the panel below the board renders again (audit DC-13).
+    if (data.menu !== soldOutSeen.current) {
+      soldOutSeen.current = data.menu;
+      router.refresh();
+    }
     const arrived = data.orders.filter((o) => !known.current.has(o.id));
     data.orders.forEach((o) => known.current.add(o.id));
     version.current = data.version;
     setBoard(data);
     if (arrived.length > 0) {
       if (!mutedRef.current) chime();
+      // The chime and the glow are not enough for a screen reader with the
+      // sound off (audit a11y:15).
+      setNotice(
+        `New order${arrived.length > 1 ? "s" : ""}: ${arrived.map((o) => o.code).join(", ")}`
+      );
       // Each arrival keeps its own 4 seconds; a later one no longer clears
       // it early (audit motion:5).
       const ids = arrived.map((o) => o.id);
       setFresh((prev) => new Set([...prev, ...ids]));
       setTimeout(() => setFresh((prev) => without(prev, ids)), 4_000);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (signedOut) return undefined;
@@ -379,88 +392,13 @@ export function BarScreen({
               )}
               Sound for new orders
             </button>
-            {manager &&
-              (board.paused ? (
-                <form
-                  action={resumeAction}
-                  onSubmit={() => setTimeout(poll, 500)}
-                >
-                  <button
-                    type="submit"
-                    className="bg-primary text-primary-foreground min-h-12 rounded-full px-5 font-semibold"
-                  >
-                    Resume ordering
-                  </button>
-                </form>
-              ) : (
-                <form
-                  action={pauseAction}
-                  onSubmit={() => setTimeout(poll, 500)}
-                >
-                  <input type="hidden" name="minutes" value="30" />
-                  <input
-                    type="hidden"
-                    name="message"
-                    value="The bar is swamped. Back in 30 minutes, salamat!"
-                  />
-                  <button
-                    type="submit"
-                    className="border-warning text-warning min-h-12 rounded-full border px-5 font-semibold"
-                  >
-                    Pause ordering 30 min
-                  </button>
-                </form>
-              ))}
-            {manager &&
-              !board.paused &&
-              (board.busy ? (
-                <form
-                  action={endBusyAction}
-                  onSubmit={() => setTimeout(poll, 500)}
-                >
-                  <button
-                    type="submit"
-                    className="border-input min-h-12 rounded-full border px-5 font-semibold"
-                  >
-                    End Busy Mode
-                  </button>
-                </form>
-              ) : (
-                // A rush the queue can't see (walk-ins): longer, honest
-                // times instead of pausing (8.4).
-                <div
-                  role="group"
-                  aria-label="Busy Mode"
-                  className="flex flex-wrap gap-2"
-                >
-                  {(
-                    [
-                      [10, 30],
-                      [15, 60],
-                    ] as const
-                  ).map(([minutes, forMinutes]) => (
-                    <form
-                      key={minutes}
-                      action={busyAction}
-                      onSubmit={() => setTimeout(poll, 500)}
-                    >
-                      <input type="hidden" name="minutes" value={minutes} />
-                      <input
-                        type="hidden"
-                        name="forMinutes"
-                        value={forMinutes}
-                      />
-                      <button
-                        type="submit"
-                        className="border-input min-h-12 rounded-full border px-5 font-semibold"
-                      >
-                        Busy +{minutes} min,{" "}
-                        {forMinutes === 60 ? "1 hour" : `${forMinutes} min`}
-                      </button>
-                    </form>
-                  ))}
-                </div>
-              ))}
+            {manager && (
+              <ManagerControls
+                paused={board.paused !== null}
+                busy={board.busy !== null}
+                onDone={() => setTimeout(poll, 500)}
+              />
+            )}
           </div>
         </header>
         {/* Not role=status: the paused banner below already has it. */}

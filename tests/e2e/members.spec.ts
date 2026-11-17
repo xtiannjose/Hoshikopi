@@ -66,6 +66,9 @@ test("a Guest is offered an account after ordering (ORD-05)", async ({
 test("a Member saves a Favourite and orders a past Order again (ORD-11)", async ({
   page,
 }) => {
+  // Sign-in and eight pages: past 30 s when the machine is busy, though
+  // every step passed (it ran out of time on the Cart, twice).
+  test.setTimeout(60_000);
   await signIn(page, newMember(), "/menu/item/hoshi-latte");
   await page.getByText("Large", { exact: true }).click();
   await page.getByText("Oat milk", { exact: true }).click();

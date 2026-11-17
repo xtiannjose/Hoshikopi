@@ -1,4 +1,6 @@
-import { manila, now } from "@/lib/clock";
+import { createHash } from "node:crypto";
+
+import { dayValue, manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
 
 import { isSoldOutToday } from "./pricing";
@@ -71,4 +73,28 @@ export async function itemsOfferingGroup(groupId: string) {
     orderBy: [{ category: { sort: "asc" } }, { sort: "asc" }],
     select: { id: true, name: true },
   });
+}
+
+/**
+ * A short stamp of today's Sold Out marks and the Manila day. The Bar
+ * Screen's poll compares it and refreshes its Sold Out panel when another
+ * device changes a mark, or when the day turns and yesterday's marks clear
+ * (audit DC-13).
+ */
+export async function soldOutStamp(at: Date): Promise<string> {
+  const day = manila(at).day;
+  const where = { soldOutOn: dayValue(day) };
+  const [items, options] = await Promise.all([
+    db.menuItem.findMany({
+      where,
+      select: { id: true },
+      orderBy: { id: "asc" },
+    }),
+    db.option.findMany({ where, select: { id: true }, orderBy: { id: "asc" } }),
+  ]);
+  const marks = [...items, { id: "|" }, ...options].map((row) => row.id);
+  return createHash("sha256")
+    .update([day, ...marks].join(","))
+    .digest("hex")
+    .slice(0, 16);
 }

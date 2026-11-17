@@ -244,6 +244,15 @@ test("a Barista with no authenticator marks Sold Out and back on the Bar Screen 
     await expect(
       page.getByRole("button", { name: "Sold out for Butter Croissant" })
     ).toBeVisible();
+    // Marked on another device: the panel catches up within a poll, with
+    // no reload (audit DC-13).
+    await e2eQuery(
+      `UPDATE menu_items SET sold_out_on = (now() AT TIME ZONE 'Asia/Manila')::date
+       WHERE slug = 'butter-croissant'`
+    );
+    await expect(
+      page.getByRole("button", { name: "Back on for Butter Croissant" })
+    ).toBeVisible({ timeout: 10_000 });
     const { rows } = await e2eQuery(
       "SELECT 1 FROM two_factors WHERE user_id = $1",
       [id]
@@ -296,6 +305,11 @@ test("the Bar Screen stays awake, asks for a tap for sound, and shows when an Or
   const code = await guest.getByRole("heading", { level: 1 }).innerText();
   const card = bar.getByRole("article", { name: `Order ${code}` });
   await expect(card).toHaveClass(/animate-arrive/);
+  // Said, not only chimed, for a screen reader with the sound off (audit
+  // a11y:15).
+  await expect(
+    bar.getByText(new RegExp(`New orders?: .*${code}`))
+  ).toBeVisible();
   await expect(card).toContainText(/ASAP, due \d{1,2}:\d{2} [AP]M/);
   await card.getByRole("button", { name: `Accept ${code}` }).click();
   await expect(

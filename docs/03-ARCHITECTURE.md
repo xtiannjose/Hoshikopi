@@ -235,7 +235,7 @@ Stars are kept like a bank statement, called a ledger. Every change is a new lin
 
 Two screens need fresh news: the Bar Screen and the Order status page. Each asks the server again every few seconds, which is called polling. Polling is simpler than a live connection and is enough for one cafe.
 
-- **Bar Screen.** It fetches `/api/bar` every 3 seconds with the last-seen board version, and the server answers "no change" cheaply.
+- **Bar Screen.** It fetches `/api/bar` every 3 seconds with the last-seen board version and Sold Out stamp (today's marks and the Manila day), and the server answers "no change" cheaply. A new stamp refreshes the page, so the Sold Out panel shows another device's change and clears at midnight (audit DC-13). New Orders are also announced in the screen's live region, not only chimed (audit a11y:15).
   - The version covers the Orders, the pause, Busy Mode, the Prep Time and how many Orders are make-next, so a Scheduled Order coming due refreshes the board.
   - A new Order plays a sound and highlights its card in New for 4 seconds. The sound needs one tap after each load (browsers start audio suspended), and the board says "Tap to turn on sound" until then.
   - The board asks the tablet to stay awake (Screen Wake Lock, asked again when the page shows), since a sleeping tablet stops polling (audit staff:22, FEAT-11).

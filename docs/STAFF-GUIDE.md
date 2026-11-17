@@ -224,7 +224,7 @@ At the bottom of the board is a folded list, **Sold out today**, with the number
 2. Find the Menu Item (listed by Category) or the Option (listed by Option Group, such as Oat milk under Milk).
 3. Tap **Sold out**. The button turns into **Back on**. Tap that when it is back.
 
-Sold Out needs no code. Customers still see the item on the menu but cannot order it. Everything Sold Out comes back on by itself at midnight Manila time.
+Sold Out needs no code. Customers still see the item on the menu but cannot order it. Everything Sold Out comes back on by itself at midnight Manila time. The list keeps itself up to date: a change made on another device, or the midnight reset, shows within a few seconds.
 
 ### 5.9 Pause ordering and Busy Mode (Managers)
 
@@ -578,9 +578,8 @@ On the concept site these are demo Orders.
 
 1. Sign in on the bar tablet and open the **Bar Screen**.
 2. Tap **Tap to turn on sound**. Check **Sound for new orders** is on.
-3. Reload the page once, so the **Sold out today** list shows today (section 19). Yesterday's Sold Out has already cleared itself.
-4. Mark anything you are out of as **Sold out**.
-5. Manager: on Manage, check the **Ordering** tile says "Taking orders" at opening time, and look at **New inquiries**. On Orders and Refunds, check the **Needs a refund** box is not there.
+3. Mark anything you are out of as **Sold out**.
+4. Manager: on Manage, check the **Ordering** tile says "Taking orders" at opening time, and look at **New inquiries**. On Orders and Refunds, check the **Needs a refund** box is not there.
 
 ### During service
 
@@ -618,8 +617,6 @@ The 2026-11-17 check of the whole app ([docs/audit/2026-11-17.md](audit/2026-11-
 
 | Gap | Workaround |
 | --- | --- |
-| The Bar Screen's **Sold out today** list does not refresh itself. A change made on another device, or a new day, does not show (DC-13). | Reload the Bar Screen at opening and after changing Sold Out elsewhere. |
-| On a Bar Screen open more than 12 hours, a Manager's **Pause ordering** or **Busy** tap asks for the code, then lands on Hours and Capacity without pausing (DC-12). | After the code, pause on Hours and Capacity, then reopen the Bar Screen. |
 | Changing today's Opening Hours, or removing today's Special Hours, gives no warning about Orders booked after the new closing (DC-14). | Check today's Orders on Orders and Refunds after such a change. |
 | Emptying **Seats** on an Event with Sign-ups saves without a warning (DC-15). | Email the guests from the Sign-ups panel before you clear it. |
 | A new Menu Item whose photo fails to upload says "Added." with no word about the photo (DC-16). | Check the photo shows; if not, choose it again and save. |
