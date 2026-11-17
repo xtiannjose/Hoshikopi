@@ -36,11 +36,14 @@ export function FocusOnNavigate() {
       first.current = false;
       return;
     }
-    if (focusHeading()) return;
-    // The heading may still be streaming in (Suspense): wait for it, unless
-    // the person has moved focus somewhere real meanwhile.
+    focusHeading();
+    // The page may still be streaming in (Suspense): its heading may not be
+    // there yet, or a loading heading that took focus is replaced by the
+    // real one, which dropped focus to <body> (audit DC-20). For a few
+    // seconds, whenever focus is lost, give it to the visible heading;
+    // focus the person moved somewhere real is left alone.
     const observer = new MutationObserver(() => {
-      if (!focusLost() || focusHeading()) observer.disconnect();
+      if (focusLost()) focusHeading();
     });
     observer.observe(document.body, { childList: true, subtree: true });
     const stop = setTimeout(() => observer.disconnect(), 5000);
