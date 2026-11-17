@@ -14,7 +14,7 @@ A few words the script uses:
 - **Demo Mode:** on the live demo nobody works behind the bar, so a visitor's own Order page offers the bar's steps under **Be the barista** ([ADR 0015](adr/0015-demo-mode-visitor-plays-the-barista.md)). Staff do the same on the Bar Screen ([docs/STAFF-GUIDE.md](STAFF-GUIDE.md)).
 - **Concept Notice:** the line at the foot of every page that says Hoshikopi is a concept cafe, with a link **About this concept**.
 
-The live demo takes Orders all day, so it works alone and from any time zone. One known gap: ordering is unavailable from about 11:25 PM to midnight Manila time (audit DC-29 in [docs/audit/2026-11-17.md](audit/2026-11-17.md)).
+The live demo takes Orders all day, so it works alone and from any time zone. One known gap: from 11:15 PM to midnight Manila time the demo takes no Orders, and checkout says so (audit DC-29 in [docs/audit/2026-11-17.md](audit/2026-11-17.md)).
 
 **Before you start:** open the site in one window. If you want to show Stars, sign in with Google first in a private window or a second browser, so you can switch to it at 1:30. (Two tabs of the same browser share one sign-in, so the first tab would no longer be a Guest.) On the live site, email sign-in links go only to the seeded demo accounts, so Continue with Google is the quick way in.
 
@@ -31,7 +31,7 @@ The live demo takes Orders all day, so it works alone and from any time zone. On
 ## If something goes wrong
 
 - **Checkout says "Ordering is paused until 3:30 PM."**: a Manager paused ordering. Sign in as a Manager and tap **Resume ordering** on `/manage/hours` or on the Bar Screen (both ask for the Manager's 6-digit code).
-- **Checkout says "No Pickup Times are left today. Walk in and order at the counter."**: either it is about 11:25 PM to midnight Manila time (the known gap above), or the day's Pickup Windows (15-minute periods, each holding a set number of drinks) are full of earlier demo Orders. A Manager can raise Capacity on `/manage/hours`. Unpaid online demo Orders also give their room back when they expire after 15 minutes.
+- **Checkout says "No Pickup Times are left today. Walk in and order at the counter."**: the day's Pickup Windows (15-minute periods, each holding a set number of drinks) are full of earlier demo Orders. A Manager can raise Capacity on `/manage/hours`. Unpaid online demo Orders also give their room back when they expire after 15 minutes.
 - **The Test Mode checkout shows an error**: tap **Go back without paying** to return to the Order page. While it says Placed, **Finish paying** reopens the checkout, and after a failed payment **Try paying again** does. (The checkout's **Make the payment fail** button shows this on purpose.) An unpaid online Order lets go of its Pickup Time after 15 minutes.
 
 ## Rehearsal
