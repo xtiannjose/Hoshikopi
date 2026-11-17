@@ -379,7 +379,7 @@ Menu Items cannot be deleted; hide them instead. Past Orders keep their own copy
 
 ### 8.4 Categories
 
-**Categories** (`/manage/menu/categories`) shows one small form per Category: **Name**, **Web address**, **Order** (lower numbers come first) and **Hidden** ("Takes the whole Category and its items off the menu."). Tap **Save** (with the Category's name) to keep a change. **See it on the site** opens its public page.
+**Categories** (`/manage/menu/categories`) shows one small form per Category: **Name**, **Web address** (set when the Category is added and fixed after that, so links to it keep working), **Order** (lower numbers come first) and **Hidden** ("Takes the whole Category and its items off the menu."). Tap **Save** (with the Category's name) to keep a change. **See it on the site** opens its public page.
 
 To add one, fill **Add a Category** and tap **Add Category**. You see "Added. It's in the list now." and a link **Add an item to it**.
 
@@ -426,7 +426,7 @@ It ends by itself, or tap **Resume ordering**. Busy Mode starts only from the Ba
 3. Tick **Closed all day**, or set **Opens**, **Last order** and **Closes** (in 15-minute steps).
 4. Tap **Add Special Hours**.
 
-The list shows the days coming up; **Remove** deletes one. Adding Special Hours for a day that has some replaces them. If you shorten or close today and Orders are booked after the new closing, the form says how many: cancel them with a reason on the Orders page (section 7.6).
+The list shows the days coming up; **Remove** deletes one. Adding Special Hours for a day that has some replaces them. If a change leaves Orders booked after today's new closing (shortening or closing today in Special Hours or Opening Hours, or removing today's later Special Hours), the page says how many: cancel them with a reason on the Orders page (section 7.6).
 
 ### 9.3 Opening Hours
 
@@ -458,7 +458,7 @@ Tap **Add an Event**, or tap an Event's tile.
 | Field | What to put |
 | --- | --- |
 | **Title** | Up to 80 characters. |
-| **Web address** | Lowercase words joined by dashes, like `latte-art-night`. |
+| **Web address** | Lowercase words joined by dashes, like `latte-art-night`. If you change it later, Sign-up links already emailed still work. |
 | **Starts (Manila time)**, **Ends** | Date and time. The end comes after the start. A new Event starts as a week from today, 7 to 9 PM. |
 | **One line about it** | A short summary. |
 | **Price (PHP, empty for free)** | Paid at the door; the site takes no money for Events. |
@@ -617,9 +617,5 @@ The 2026-11-17 check of the whole app ([docs/audit/2026-11-17.md](audit/2026-11-
 
 | Gap | Workaround |
 | --- | --- |
-| Changing today's Opening Hours, or removing today's Special Hours, gives no warning about Orders booked after the new closing (DC-14). | Check today's Orders on Orders and Refunds after such a change. |
-| Emptying **Seats** on an Event with Sign-ups saves without a warning (DC-15). | Email the guests from the Sign-ups panel before you clear it. |
-| A new Menu Item whose photo fails to upload says "Added." with no word about the photo (DC-16). | Check the photo shows; if not, choose it again and save. |
-| The three Barista Picks count Hidden items too (DC-17). | Untick the badge on a Hidden item to free its place. |
 | A free Reward Order's card says "collect PHP 0.00" (DC-30). | Nothing to collect; tap **Paid and picked up**. |
-| Renaming the "Beans and merch" Category's web address, or hiding every Category, breaks parts of the site (DC-18, DC-27). | Leave that web address as it is, and keep at least one Category showing. |
+| Hiding every Category stops the next update of the site from building (DC-27). | Keep at least one Category showing. |
