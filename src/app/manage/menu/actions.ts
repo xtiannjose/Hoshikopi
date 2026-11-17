@@ -61,7 +61,13 @@ export async function saveMenuItemAction(
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("menu");
-  if (!id) redirect(`/manage/menu/item/${result.id}?added=1`);
+  // A new item whose photo failed to store says so on its page; the redirect
+  // dropped the error (audit DC-16).
+  if (!id) {
+    redirect(
+      `/manage/menu/item/${result.id}?added=1${result.photoError ? "&photo=failed" : ""}`
+    );
+  }
   if (result.photoError) {
     return { status: "error", errors: { photo: result.photoError } };
   }
