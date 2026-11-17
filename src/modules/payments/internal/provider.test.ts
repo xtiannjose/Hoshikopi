@@ -122,6 +122,8 @@ describe("fake provider webhooks", () => {
       type: "paid",
       checkoutId: "cs_1",
       paymentId: "pay_1",
+      amountCents: null,
+      currency: null,
     });
     expect(fake.verifyWebhook(body, headers)).toBe(true);
     expect(fake.verifyWebhook(body.replace("cs_1", "cs_2"), headers)).toBe(
@@ -133,6 +135,8 @@ describe("fake provider webhooks", () => {
       type: "paid",
       checkoutId: "cs_1",
       paymentId: "pay_1",
+      amountCents: null,
+      currency: null,
     });
   });
 
@@ -180,6 +184,8 @@ describe("PayMongo webhook signature", () => {
       type: "paid",
       checkoutId: "cs_9",
       paymentId: "pay_7",
+      amountCents: null,
+      currency: null,
     });
   });
 

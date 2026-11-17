@@ -39,6 +39,8 @@ export function fakeProvider(secret: string): FakeProvider {
         type: event.type,
         checkoutId: event.checkoutId,
         paymentId: event.paymentId,
+        amountCents: event.amountCents ?? null,
+        currency: event.currency ?? null,
       };
     },
     signedEvent(event) {

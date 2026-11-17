@@ -88,14 +88,14 @@ The tables are grouped by the module that owns them. "Notes" gives the rules and
 | `order_lines` | `id`, `order_id` FK, `menu_item_id` FK null, `name` (snapshot), `options` jsonb (snapshot: group, name, `delta_cents`), `option_ids` text[] (for Order again, V1), `unit_cents`, `quantity`, `line_cents`, `is_drink` bool, `is_reward` bool, `note` | Never changes after placement |
 | `order_events` | `id`, `order_id` FK, `from_status` null, `to_status`, `actor_kind` enum (`customer`, `staff`, `system`, `webhook`, `demo`), `actor_id` null, `reason` null, `at` | Append-only history: a database trigger refuses UPDATE and DELETE. `demo` is a visitor playing the barista on their own Order (Demo Mode, ADR 0015) |
 | `pickup_window_usage` | `window_start` timestamptz (PK), `service_day` date, `drinks` int, `food` int | Locked and updated in `placeOrder` and when an Order closes |
-| `order_code_counters` | `service_day` date (PK), `last_number` int | Next code `K-043` by `UPDATE ... RETURNING` |
+| `order_code_counters` | `service_day` date (PK), `last_number` int | Next code `K-043` by `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` (audit DATA-13) |
 
 ### Payments (module `payments`)
 
 | Table | Columns | Notes |
 | --- | --- | --- |
 | `payments` | `id`, `order_id` FK unique, `provider` (`paymongo`, `fake`), `provider_checkout_id`, `provider_payment_id` null, `checkout_url`, `method`, `amount_cents`, `status` enum (`pending`, `paid`, `failed`, `expired`, `refunded`) | One online Payment per Order in the MVP |
-| `payment_events` | `id`, `provider`, `provider_event_id`, `type`, `payload` jsonb, `received_at`; unique (`provider`, `provider_event_id`) | Webhook dedupe: a repeated webhook finds its row already there and changes nothing |
+| `payment_events` | `id`, `provider`, `provider_event_id`, `type`, `payload` jsonb, `received_at`; unique (`provider`, `provider_event_id`) | Webhook dedupe: a repeated webhook finds its row already there and changes nothing. `payload` is the parsed event (ids, type, amount, currency), never the raw body, which from PayMongo would carry the payer's billing details (audit PAY-10) |
 | `refunds` | `id`, `payment_id` FK, `provider_refund_id`, `amount_cents`, `reason`, `actor_id`, `created_at` | Full refunds only in the MVP |
 
 ### Loyalty (module `loyalty`)

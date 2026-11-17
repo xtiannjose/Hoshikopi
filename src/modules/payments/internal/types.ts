@@ -17,6 +17,9 @@ export type ProviderEvent = {
   type: "paid" | "failed" | "other";
   checkoutId: string | null;
   paymentId: string | null;
+  /** What was paid, when the provider says: checked against the Payment (audit PAY-08). */
+  amountCents?: number | null;
+  currency?: string | null;
 };
 
 /** What business code may ask of a payment provider (ADR 0003). */

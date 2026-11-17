@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  eventSignupEmail,
+  inquiryEmail,
   orderPlacedEmail,
   orderReadyEmail,
+  signInEmail,
   type OrderForEmail,
 } from "./templates";
 
@@ -118,5 +121,74 @@ describe("orderReadyEmail (ORD-10)", () => {
         lines: [{ ...ORDER.lines[0], quantity: 2 }],
       }).text
     ).toContain("Your order is ready at the counter.");
+  });
+});
+
+// These three lived inline in notify/index.ts with no test (audit
+// architecture:22).
+describe("signInEmail", () => {
+  it("carries the link and how long it works", () => {
+    const email = signInEmail("hoshi@example.com", "https://x.test/link");
+    expect(email).toMatchObject({
+      to: "hoshi@example.com",
+      subject: "Your Hoshikopi sign-in link",
+    });
+    expect(email.text).toContain("It works once, for 5 minutes.");
+    expect(email.text).toContain("https://x.test/link");
+  });
+});
+
+describe("inquiryEmail", () => {
+  it("tells the Manager what was asked, and says when a field was left out", () => {
+    const email = inquiryEmail("cafe@example.com", {
+      kind: "large_order",
+      name: "Lia",
+      email: "lia@example.com",
+      wantedOn: null,
+      guests: 30,
+      message: "Thirty iced lattes for an office party.",
+    });
+    expect(email.subject).toBe("New inquiry: a large order from Lia");
+    expect(email.text).toContain("Reply to: lia@example.com");
+    expect(email.text).toContain("Date: not given");
+    expect(email.text).toContain("Guests: 30");
+    expect(email.text).toContain("Thirty iced lattes for an office party.");
+  });
+});
+
+describe("eventSignupEmail", () => {
+  const signup = {
+    to: "hoshi@example.com",
+    seats: 2,
+    event: {
+      title: "Latte art night",
+      startsAt: new Date("2026-11-20T11:00:00Z"),
+      priceCents: 35000,
+    },
+    link: "https://x.test/signup",
+    confirmed: false,
+    holdMinutes: 30,
+  };
+
+  it("asks a Guest to confirm within the hold, with the price at the door", () => {
+    const email = eventSignupEmail(signup);
+    expect(email.subject).toMatch(/^Confirm your seats: Latte art night, /);
+    expect(email.text).toContain(
+      "Open this link within 30 minutes to keep your 2 seats"
+    );
+    expect(email.text).toContain("Pay PHP 350 a seat at the door.");
+    expect(email.text).not.toMatch(new RegExp("[\u2013\u2014]"));
+  });
+
+  it("only offers to cancel once confirmed, and says a free Event is free", () => {
+    const email = eventSignupEmail({
+      ...signup,
+      confirmed: true,
+      seats: 1,
+      event: { ...signup.event, priceCents: null },
+    });
+    expect(email.subject).toMatch(/^You're in: Latte art night, /);
+    expect(email.text).toContain("You have 1 seat for Latte art night");
+    expect(email.text).toContain("It's free. Just come by.");
   });
 });

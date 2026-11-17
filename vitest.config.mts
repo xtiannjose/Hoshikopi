@@ -18,6 +18,8 @@ export default defineConfig({
       ...loadEnv("test", process.cwd(), ""),
       // loadEnv reads .env and .env.local too (audit DC-04).
       ...NO_OUTSIDE_SERVICES,
+      // The tests read the emails they send (audit DATA-10).
+      MAIL_OUTBOX: "1",
       MAIL_DIR: path.join(process.cwd(), "data", "mail-test"),
     },
     globalSetup: ["tests/db/global-setup.ts"],

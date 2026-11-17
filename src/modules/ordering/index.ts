@@ -6,7 +6,9 @@ export {
   MAX_DRINKS_PER_ORDER,
   orderLimit,
 } from "./internal/rules";
-export { nextOrderCode, transition, type Actor } from "./internal/status";
+export { transition, type Actor } from "./internal/status";
+/** Tests only (audit architecture:19). */
+export { nextOrderCode } from "./internal/status";
 export {
   cartFingerprint,
   placeOrder,
@@ -28,6 +30,7 @@ export { orderAgain } from "./internal/again";
 export { nextPickupTimes, type PickupPreview } from "./internal/preview";
 export {
   getPopularDrinks,
+  /** Tests only (audit architecture:19). */
   popularDrinks,
   salesReport,
 } from "./internal/reports";

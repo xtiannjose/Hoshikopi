@@ -13,9 +13,17 @@ describe("canEmail (audit journeys:9)", () => {
     expect(canEmail(env({ VERCEL: "1" }))).toBe(false);
   });
 
-  it("is on with a Resend key, and off Vercel (the local outbox)", () => {
+  it("is on with a Resend key, and with the local outbox off Vercel", () => {
     expect(canEmail(env({ VERCEL: "1", RESEND_API_KEY: "re_x" }))).toBe(true);
-    expect(canEmail(env({}))).toBe(true);
+    expect(canEmail(env({ NODE_ENV: "development" }))).toBe(true);
+    expect(canEmail(env({ NODE_ENV: "production", MAIL_OUTBOX: "1" }))).toBe(
+      true
+    );
+  });
+
+  // A self-hosted production server kept live links on disk (DATA-10).
+  it("is off on a production server with neither", () => {
+    expect(canEmail(env({ NODE_ENV: "production" }))).toBe(false);
   });
 
   it("knows the seeded demo accounts' reserved domain", () => {
@@ -98,5 +106,25 @@ describe("send through Resend", () => {
       /422.*The from address is not verified/
     );
     expect(fetch.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+  });
+});
+
+describe("send with the local outbox off (audit DATA-10)", () => {
+  it("drops the email with a line naming its subject, and writes no file", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("VERCEL", "");
+    vi.stubEnv("MAIL_OUTBOX", "");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("MAIL_DIR", path.join(process.cwd(), "data", "mail-off-test"));
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    await send(email);
+    expect(error.mock.calls.flat().join(" ")).toContain(email.subject);
+    expect(
+      [...log.mock.calls, ...error.mock.calls].flat().join(" ")
+    ).not.toContain("secret-token");
+    await expect(
+      readdir(path.join(process.cwd(), "data", "mail-off-test"))
+    ).rejects.toThrow();
   });
 });

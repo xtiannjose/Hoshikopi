@@ -7,7 +7,9 @@ export {
   getEvents,
   getPost,
   getPosts,
+  /** Tests only (audit architecture:19). */
   readEvents,
+  /** Tests only (audit architecture:19). */
   readPosts,
   saveEvent,
   savePost,
@@ -19,6 +21,7 @@ export { rollDemoEvents } from "./internal/demo";
 export { forgetGuest, guestRecordsFor } from "./internal/guests";
 export {
   getRecurringEvents,
+  /** Tests only (audit architecture:19). */
   readRecurringEvents,
   recurringForStaff,
   saveRecurringEvent,

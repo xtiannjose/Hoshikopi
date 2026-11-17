@@ -88,6 +88,9 @@ export default defineConfig({
       MAIL_DIR: E2E_MAIL_DIR,
       // Empty, never the developer's .env.local (audit tests:16).
       ...NO_OUTSIDE_SERVICES,
+      // A production build that still writes its emails for the tests to
+      // read (audit DATA-10).
+      MAIL_OUTBOX: "1",
     },
   },
 });
