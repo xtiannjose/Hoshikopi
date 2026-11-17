@@ -5,6 +5,17 @@ import { useEffect } from "react";
 const FOCUSABLE =
   'a[href], button, input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])';
 
+/** The visible page's heading, focused without scrolling. */
+function focusHeading() {
+  const main = [...document.querySelectorAll("main")].find((el) =>
+    el.checkVisibility()
+  );
+  const heading = main?.querySelector<HTMLElement>("h1");
+  if (!heading) return;
+  heading.tabIndex = -1;
+  heading.focus({ preventScroll: true });
+}
+
 /**
  * When the focused control leaves the page (a Cart line's Remove, the last
  * Demo Mode step), focus would drop to <body> and a screen reader loses its
@@ -30,6 +41,9 @@ export function KeepFocus() {
       const gone = path;
       path = [];
       if (document.activeElement !== document.body) return;
+      // A loading page's heading had focus and the real page replaced it:
+      // its heading takes focus, not the first link near it (audit DC-20).
+      if (gone[0].tagName === "H1") return focusHeading();
       for (const el of gone) {
         if (el === document.body) break;
         if (!el.isConnected) continue;
@@ -38,13 +52,7 @@ export function KeepFocus() {
         );
         if (next) return next.focus({ preventScroll: true });
       }
-      const main = [...document.querySelectorAll("main")].find((el) =>
-        el.checkVisibility()
-      );
-      const heading = main?.querySelector<HTMLElement>("h1");
-      if (!heading) return;
-      heading.tabIndex = -1;
-      heading.focus({ preventScroll: true });
+      focusHeading();
     });
     document.addEventListener("focusin", onFocusIn);
     document.addEventListener("pointerdown", onPointerDown);

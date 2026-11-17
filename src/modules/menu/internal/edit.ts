@@ -226,12 +226,15 @@ export async function saveMenuItem(
   // INFO-13: the Manager picks three for each palette.
   for (const pick of ["barista_pick", "night_pick"] as const) {
     if (!data.badges.includes(pick)) continue;
-    // A Seasonal item past its date no longer shows on Home, so its pick
-    // does not count (audit staff:20).
+    // Only what Home can show counts: a Seasonal item past its date (audit
+    // staff:20), and a Hidden item or one in a Hidden Category (audit
+    // DC-17), take no place.
     const others = await db.menuItem.findMany({
       where: {
         badges: { has: pick },
         ...(id ? { id: { not: id } } : {}),
+        isHidden: false,
+        category: { isHidden: false },
         OR: [{ availableUntil: null }, { availableUntil: { gte: today() } }],
       },
       orderBy: { name: "asc" },
@@ -343,8 +346,14 @@ export async function saveCategory(
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
   try {
     const saved = await db.$transaction(async (tx) => {
+      // A Category keeps the web address it was added with: links to
+      // /menu/<slug> keep working, and beans and merch keep their place
+      // outside the diet filters (audit DC-18).
       const category = id
-        ? await tx.category.update({ where: { id }, data: parsed.data })
+        ? await tx.category.update({
+            where: { id },
+            data: { ...parsed.data, slug: undefined },
+          })
         : await tx.category.create({ data: parsed.data });
       await audit(
         actor,
@@ -386,6 +395,21 @@ export async function saveOptionGroup(
     const saved = id
       ? await tx.optionGroup.update({ where: { id }, data: parsed.data })
       : await tx.optionGroup.create({ data: parsed.data });
+    // Now single-choice: keep only the first default by sort, as saveOption
+    // does (docs/04, audit DATA-11).
+    if (id && saved.maxSelect === 1) {
+      const defaults = await tx.option.findMany({
+        where: { optionGroupId: id, isDefault: true },
+        orderBy: [{ sort: "asc" }, { name: "asc" }],
+        select: { id: true },
+      });
+      if (defaults.length > 1) {
+        await tx.option.updateMany({
+          where: { id: { in: defaults.slice(1).map((o) => o.id) } },
+          data: { isDefault: false },
+        });
+      }
+    }
     await audit(
       actor,
       id ? "menu.option_group.update" : "menu.option_group.create",

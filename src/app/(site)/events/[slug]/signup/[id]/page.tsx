@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
@@ -54,7 +54,15 @@ async function Signup({
       </div>
     );
   }
-  if (!signup || signup.event.slug !== slug) notFound();
+  if (!signup) notFound();
+  // The link's token already proves which Sign-up this is. If the Manager
+  // has since changed the Event's address, the emailed link still works and
+  // lands on the new one (audit DC-19).
+  if (signup.event.slug !== slug) {
+    redirect(
+      `/events/${signup.event.slug}/signup/${id}?${new URLSearchParams({ t: token })}`
+    );
+  }
   const { event } = signup;
   const seats = `${signup.seats} ${signup.seats === 1 ? "seat" : "seats"}`;
   return (

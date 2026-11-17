@@ -52,11 +52,16 @@ export async function saveEventAction(
   // so say so (audit staff:10).
   const signups = await signupsForEvent(id);
   const taken = signups.reduce((sum, signup) => sum + signup.seats, 0);
-  const seats = Number(text(form, "seats") || NaN);
+  // An empty field turns Sign-ups off: 0 Seats, so the warning shows
+  // (it compared with NaN and never did, audit DC-15).
+  const seats = Number(text(form, "seats")) || 0;
   if (taken > seats) {
     return {
       status: "saved",
-      saved: `Saved. ${taken} Seats are already taken, more than the ${seats} you set. Guests aren't told: remove Sign-ups or email them from the list.`,
+      saved:
+        seats === 0
+          ? `Saved. Sign-ups are off now, but ${taken} Seats are already taken. Guests aren't told: remove Sign-ups or email them from the list.`
+          : `Saved. ${taken} Seats are already taken, more than the ${seats} you set. Guests aren't told: remove Sign-ups or email them from the list.`,
     };
   }
   if (signups.length > 0 && !form.get("isPublished")) {

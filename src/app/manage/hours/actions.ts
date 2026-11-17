@@ -6,11 +6,14 @@ import { refresh, updateTag } from "next/cache";
 // Hours and the cafe's details. Pause, Busy Mode, Capacity and Prep Time are
 // read fresh, so those saves just refresh the page (audit PERF-13).
 
+import { redirect } from "next/navigation";
+
 import {
   BUSY_FOR_MINUTES,
   BUSY_MINUTES,
   deleteSpecialHours,
   endBusyMode,
+  getOrderingDay,
   pauseOrdering,
   resumeOrdering,
   saveCapacity,
@@ -22,6 +25,8 @@ import { manila, manilaInstant, now } from "@/lib/clock";
 import { toMinutes } from "@/lib/hours";
 import { requireStaff } from "@/modules/identity";
 import { ordersBookedAfter } from "@/modules/ordering";
+
+import { bookedNote } from "./booked-note";
 
 export type FormState = {
   status: "idle" | "saved" | "error";
@@ -44,6 +49,21 @@ const manager = (form?: FormData) =>
     form?.get("from") === "/bar" ? "/bar" : "/manage/hours"
   );
 
+/**
+ * Orders already booked after today's closing as the hours now stand: a
+ * shorter or closed day leaves them stranded, so say how many and the
+ * Manager can cancel them (audit ORD-20). Every change to today's hours
+ * checks, not only saving Special Hours (audit DC-14).
+ */
+async function bookedAfterTodaysClosing(): Promise<number> {
+  const at = now();
+  const today = await getOrderingDay(at);
+  const closes = today.hours
+    ? manilaInstant(today.day, toMinutes(today.hours.closesAt))
+    : at;
+  return ordersBookedAfter(closes);
+}
+
 export async function saveWeeklyHoursAction(
   _prev: FormState,
   form: FormData
@@ -61,7 +81,10 @@ export async function saveWeeklyHoursAction(
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("hours");
-  return { status: "saved" };
+  const booked = await bookedAfterTodaysClosing();
+  return booked > 0
+    ? { status: "saved", saved: bookedNote("Saved.", booked) }
+    : { status: "saved" };
 }
 
 export async function saveSpecialHoursAction(
@@ -83,19 +106,10 @@ export async function saveSpecialHoursAction(
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("hours");
-  // Closing or shortening today can leave Orders after the new closing:
-  // say how many, so the Manager can cancel them (audit ORD-20).
-  const day = text(form, "day");
-  if (day === manila(now()).day) {
-    const closesAt = text(form, "closesAt");
-    const booked = await ordersBookedAfter(
-      isClosed || !closesAt ? now() : manilaInstant(day, toMinutes(closesAt))
-    );
+  if (text(form, "day") === manila(now()).day) {
+    const booked = await bookedAfterTodaysClosing();
     if (booked > 0) {
-      return {
-        status: "saved",
-        saved: `Saved. ${booked === 1 ? "1 Order today is" : `${booked} Orders today are`} booked after the new closing. Cancel ${booked === 1 ? "it" : "them"} with a reason on the Orders page.`,
-      };
+      return { status: "saved", saved: bookedNote("Saved.", booked) };
     }
   }
   return { status: "saved" };
@@ -103,8 +117,15 @@ export async function saveSpecialHoursAction(
 
 export async function deleteSpecialHoursAction(form: FormData) {
   const staff = await manager();
-  await deleteSpecialHours(text(form, "day"), staff);
+  const day = text(form, "day");
+  await deleteSpecialHours(day, staff);
   updateTag("hours");
+  // Removing today's later Special Hours brings back an earlier weekly
+  // closing (audit DC-14).
+  if (day === manila(now()).day) {
+    const booked = await bookedAfterTodaysClosing();
+    if (booked > 0) redirect(`/manage/hours?booked=${booked}`);
+  }
 }
 
 export async function saveCapacityAction(

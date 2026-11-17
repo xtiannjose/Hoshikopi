@@ -16,6 +16,7 @@ import {
   priceChoices,
   saveMenuItem,
   saveMenuItemWithPhoto,
+  saveCategory,
   saveOption,
   saveOptionGroup,
   setMenuItemSoldOut,
@@ -154,6 +155,34 @@ describe("saveMenuItem", () => {
 });
 
 describe("Barista Picks and Pairings (INFO-13, MENU-08)", () => {
+  // A Hidden pick, or one in a Hidden Category, still held its place,
+  // though Home shows only what the menu shows (audit DC-17).
+  it("does not count a Hidden pick, or one in a Hidden Category", async () => {
+    const [first, second] = await db.menuItem.findMany({
+      where: { badges: { has: "barista_pick" } },
+      orderBy: { name: "asc" },
+    });
+    await db.menuItem.update({
+      where: { id: first.id },
+      data: { isHidden: true },
+    });
+    const coldBrew = await itemInput("cold-brew", {
+      badges: ["barista_pick"],
+    });
+    expect(
+      (await saveMenuItem(coldBrew.id, coldBrew.input, christian)).ok
+    ).toBe(true);
+    // Hiding a pick's whole Category frees its place too.
+    await db.category.update({
+      where: { id: second.categoryId },
+      data: { isHidden: true },
+    });
+    const third = await itemInput("ube-latte", { badges: ["barista_pick"] });
+    expect((await saveMenuItem(third.id, third.input, christian)).ok).toBe(
+      true
+    );
+  });
+
   // A Seasonal item past its date still held its pick, so Home showed two
   // and the Manager was told the slots were full (audit staff:20).
   it("does not count a pick whose Seasonal date has passed", async () => {
@@ -389,5 +418,81 @@ describe("menu photos", () => {
     expect(
       (await db.menuItem.findUniqueOrThrow({ where: { id } })).photoUrl
     ).toMatch(/\/menu\/hoshi-latte-\d+\.png$/);
+  });
+});
+
+// Renaming the Beans and merch Category's address put "Nut-free" back on
+// beans, and broke links to the old address (audit DC-18).
+describe("saveCategory", () => {
+  it("keeps the web address a Category was added with", async () => {
+    const beans = await db.category.findUniqueOrThrow({
+      where: { slug: "beans-and-merch" },
+    });
+    expect(
+      (
+        await saveCategory(
+          beans.id,
+          {
+            name: "Beans & merch",
+            slug: "beans-merch",
+            isHidden: undefined,
+            sort: String(beans.sort),
+          },
+          christian
+        )
+      ).ok
+    ).toBe(true);
+    expect(
+      await db.category.findUniqueOrThrow({ where: { id: beans.id } })
+    ).toMatchObject({ name: "Beans & merch", slug: "beans-and-merch" });
+  });
+});
+
+// Lowering a group to one pick left two defaults, against docs/04's "at most
+// one default per single-choice group" (audit DATA-11).
+describe("saveOptionGroup", () => {
+  it("keeps only the first default when a group becomes single-choice", async () => {
+    const group = await db.optionGroup.create({
+      data: { name: "Toppings", minSelect: 0, maxSelect: 3, sort: 9 },
+    });
+    await db.option.createMany({
+      data: [
+        {
+          optionGroupId: group.id,
+          name: "Cinnamon",
+          deltaCents: 0,
+          isDefault: true,
+          sort: 2,
+        },
+        {
+          optionGroupId: group.id,
+          name: "Cocoa",
+          deltaCents: 0,
+          isDefault: true,
+          sort: 1,
+        },
+        {
+          optionGroupId: group.id,
+          name: "Sea salt",
+          deltaCents: 0,
+          isDefault: false,
+          sort: 3,
+        },
+      ],
+    });
+    expect(
+      (
+        await saveOptionGroup(
+          group.id,
+          { name: "Toppings", minSelect: "0", maxSelect: "1" },
+          christian
+        )
+      ).ok
+    ).toBe(true);
+    const defaults = await db.option.findMany({
+      where: { optionGroupId: group.id, isDefault: true },
+      select: { name: true },
+    });
+    expect(defaults).toEqual([{ name: "Cocoa" }]);
   });
 });

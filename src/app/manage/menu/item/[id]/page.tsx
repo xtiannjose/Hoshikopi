@@ -169,6 +169,14 @@ async function Editor({
           </Link>
         </p>
       )}
+      {query.added === "1" && query.photo === "failed" && (
+        <p
+          role="alert"
+          className="text-destructive mt-3 max-w-3xl font-semibold"
+        >
+          The photo didn&apos;t save. Choose it again below, then save.
+        </p>
+      )}
       <div className="mt-8 grid gap-10 xl:grid-cols-[minmax(0,48rem)_minmax(0,1fr)] xl:items-start">
         <ItemForm
           item={item}

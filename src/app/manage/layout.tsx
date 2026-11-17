@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { ConceptNotice } from "@/components/concept-notice";
+import { FocusOnNavigate } from "@/components/shell/focus-on-navigate";
+import { KeepFocus } from "@/components/shell/keep-focus";
 import { Logo } from "@/components/shell/logo";
 import { ThemeSwitch } from "@/components/theme-switch";
 
@@ -16,7 +19,7 @@ export default function ManageLayout({ children }: LayoutProps<"/manage">) {
   return (
     <>
       <header className="border-border border-b">
-        <div className="page-width flex items-center gap-3 py-3">
+        <div className="page-width flex flex-wrap items-center gap-3 py-3">
           <Link href="/" aria-label="Hoshikopi home" className="no-underline">
             <Logo />
           </Link>
@@ -26,13 +29,21 @@ export default function ManageLayout({ children }: LayoutProps<"/manage">) {
           >
             Staff
           </Link>
-          <div className="ml-auto hidden lg:block">
+          {/* At every width: pinning Day or Night is for comfort and
+              access, as in the public header's phone menu (audit DC-23). */}
+          <div className="ml-auto">
             <ThemeSwitch name="theme-staff" />
           </div>
         </div>
       </header>
       {children}
       <ConceptNotice className="page-width py-6" />
+      {/* As on the customer pages (a11y:3, a11y:5): a removed row hands
+          focus on, and a new page takes it (audit DC-20). */}
+      <KeepFocus />
+      <Suspense>
+        <FocusOnNavigate />
+      </Suspense>
     </>
   );
 }

@@ -57,7 +57,12 @@ export function CategoryForm({
             id={`slug-${key}`}
             name="slug"
             label="Web address"
-            hint="Lowercase words joined by dashes, like all-day-food."
+            hint={
+              category.id
+                ? "Set when the Category was added, so links to it keep working."
+                : "Lowercase words joined by dashes, like all-day-food."
+            }
+            readOnly={Boolean(category.id)}
             defaultValue={category.slug}
             error={state.errors?.slug}
           />

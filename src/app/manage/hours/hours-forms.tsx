@@ -68,7 +68,10 @@ export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
                   <th scope="row" className="py-3 pr-3 font-semibold">
                     {name}
                     {error && (
-                      <p className="text-destructive text-sm font-normal">
+                      <p
+                        id={`hours-error-${day.weekday}`}
+                        className="text-destructive text-sm font-normal"
+                      >
                         {error}
                       </p>
                     )}
@@ -97,6 +100,10 @@ export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
                         defaultValue={day[key]}
                         aria-label={`${name} ${label}`}
                         aria-invalid={error ? true : undefined}
+                        // The row's error, read with each time (audit DC-22).
+                        aria-describedby={
+                          error ? `hours-error-${day.weekday}` : undefined
+                        }
                         className={cell}
                       />
                     </td>
@@ -111,6 +118,7 @@ export function WeeklyHoursForm({ weekly }: { weekly: Hours["weekly"] }) {
         pending={pending}
         status={state.status}
         label="Save Opening Hours"
+        savedText={state.saved}
       />
     </form>
   );
@@ -221,7 +229,10 @@ export function CapacityForm({
                   <th scope="row" className="py-3 pr-3 font-semibold">
                     {name}
                     {error && (
-                      <p className="text-destructive text-sm font-normal">
+                      <p
+                        id={`capacity-error-${row.weekday}`}
+                        className="text-destructive text-sm font-normal"
+                      >
                         {error}
                       </p>
                     )}
@@ -235,6 +246,10 @@ export function CapacityForm({
                       name={`drinks-${row.weekday}`}
                       defaultValue={row.drinks}
                       aria-label={`${name} drinks per window`}
+                      aria-invalid={error ? true : undefined}
+                      aria-describedby={
+                        error ? `capacity-error-${row.weekday}` : undefined
+                      }
                       className={cell}
                     />
                   </td>
@@ -247,6 +262,10 @@ export function CapacityForm({
                       name={`food-${row.weekday}`}
                       defaultValue={row.food}
                       aria-label={`${name} food Lines per window`}
+                      aria-invalid={error ? true : undefined}
+                      aria-describedby={
+                        error ? `capacity-error-${row.weekday}` : undefined
+                      }
                       className={cell}
                     />
                   </td>
