@@ -70,7 +70,7 @@ Changing either rule (dropping the Concept Notice, or taking real money) needs a
 
 **How Staff sign in.** Staff sign in like Members, then type a 6-digit code from an authenticator app (the Second Factor) before using `/manage`. They type it again after 12 hours. A Barista's taps on the Bar Screen never ask for it.
 
-**How someone becomes Staff.** The person signs in once. A Manager then gives them a role by email at `/manage/staff`. A Manager cannot change their own role, so at least one Manager always stays. One known gap: the only Manager can still delete their own account on `/account`, which locks everyone out of `/manage` (DC-01, fixed in batch 11.2). Until then, never delete a Manager's account.
+**How someone becomes Staff.** The person signs in once. A Manager then gives them a role by email at `/manage/staff`. A Manager cannot change their own role, so at least one Manager always stays. A Staff account cannot be deleted from `/account` either: another Manager removes the Staff role first (DC-01, fixed in batch 11.2).
 
 How Baristas and the Manager use each screen, step by step, is in [docs/STAFF-GUIDE.md](STAFF-GUIDE.md).
 
@@ -154,7 +154,7 @@ Every change, however small, takes the same path. A pull request is a request to
 1. **A developer makes a branch** from `main`, one per batch (for example `feature/11.2-safety-first`), and does the work there.
 2. **They run the checks on their computer:** `npm run qa`, and `npm run qa:full` for anything visible (see [section 11](#11-for-the-next-developer)).
 3. **They push the branch and open a pull request** on GitHub. (When Claude Code does the work, it commits, pushes and opens pull requests only when the owner asks.)
-4. **CI runs by itself.** GitHub Actions checks the code style, formatting and types, runs the unit and database tests against a throwaway database, and looks for known security holes in the libraries. When it passes, the pull request shows a green tick. It does not build the site or run the browser tests yet (DC-02, batch 11.2).
+4. **CI runs by itself.** GitHub Actions checks the code style, formatting and types, runs the unit and database tests against a throwaway database, builds the whole site, and looks for known security holes in the libraries. When it passes, the pull request shows a green tick. The browser tests still run only on a developer's computer.
 5. **Vercel builds a Preview deployment** with its own web address. Use it only to see that the build works. **Previews share the production database:** an Order placed on a preview is a real row in the live data. A pull request whose code needs a new database column fails its Preview check until it is merged; that is expected.
 6. **If the change includes a migration** (a script in `prisma/migrations` that changes the database's shape), make a snapshot first: in the Neon console, create a branch from the production branch. Delete it a few days later.
 7. **The owner merges it on GitHub** with **Create a merge commit**, once CI is green.
@@ -175,7 +175,7 @@ Because migrations run before the new code is live, the old code must keep worki
 | An Order stays under **Needs a refund** on `/manage/orders` | It was paid after it had closed (Expired or Cancelled), or its automatic Refund failed | A Manager opens its day (the link on its Order Code) and presses **Refund**. Pressing again finishes a refund that stopped half way. On the live site this is `fake` money. If it still stays, look in **Logs** within the hour; one rare case is known (DC-05, fixed in batch 11.2). |
 | A change went live and broke something | A bad merge | In Vercel **Deployments**, open the menu of the last good Production deployment and choose **Instant Rollback**. A rollback changes the code only; the database keeps every migration. **Never roll back past a deployment whose migration removed or renamed something:** fix forward with a new pull request instead. |
 | Data was deleted or changed by mistake | A wrong edit, or a bad migration | Neon's point-in-time restore, in the Neon console, brings the database back to any moment in the last 6 hours. After 6 hours, fix it forward by hand. |
-| Nobody can open `/manage` | The only Manager deleted their account (DC-01), or no Manager was ever set | In the Neon SQL editor: `UPDATE users SET role = 'manager' WHERE email = '<their email>';` ([docs/06-SETUP.md](06-SETUP.md) section 9, step 5) |
+| Nobody can open `/manage` | No Manager was ever set, or the role was changed in the database by hand | In the Neon SQL editor: `UPDATE users SET role = 'manager' WHERE email = '<their email>';` ([docs/06-SETUP.md](06-SETUP.md) section 9, step 5) |
 | A Staff member lost the phone with their authenticator | | Delete their Second Factor row (the command in [docs/06-SETUP.md](06-SETUP.md) section 6, run in the Neon SQL editor on the live site). They set up again on their next `/manage` visit. |
 | Checkout says "We're not taking orders right now" | A Manager paused ordering | A Manager resumes it on `/manage/hours` or the Bar Screen |
 
