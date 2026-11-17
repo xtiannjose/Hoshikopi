@@ -82,7 +82,12 @@ test("a Guest's Scheduled Order goes through the Bar Screen and the status page 
   await expect(guest.getByText("Paid at the counter.")).toBeVisible();
 });
 
-test("a full Pickup Window is never offered (ORD-04)", async ({ page }) => {
+// Once, after the phone and desktop tests, and with the counts given back:
+// at both widths it filled the window another test was ordering into
+// (audit DC-40).
+test("a full Pickup Window is never offered (ORD-04) @cafe-wide", async ({
+  page,
+}) => {
   await page.goto("/menu/item/kopi-hitam");
   await page.getByRole("button", { name: "Add to order" }).click();
   await expect(page.getByRole("status")).toContainText("Added");
@@ -93,14 +98,23 @@ test("a full Pickup Window is never offered (ORD-04)", async ({ page }) => {
   );
   // The last window is offered at any hour the test cafe is open.
   const full = await offered.last().getAttribute("value");
+  // The e2e cafe takes 200 drinks a window: 200 more fills it whatever is
+  // booked, and taking them back leaves other Orders' counts alone.
   await e2eQuery(
     `INSERT INTO pickup_window_usage (window_start, service_day, drinks, food, updated_at)
      VALUES ($1, ($1::timestamptz AT TIME ZONE 'Asia/Manila')::date, 200, 0, now())
-     ON CONFLICT (window_start) DO UPDATE SET drinks = 200`,
+     ON CONFLICT (window_start) DO UPDATE SET drinks = pickup_window_usage.drinks + 200`,
     [full]
   );
-  await page.reload();
-  await expect(page.locator(`[value="${full}"]`)).toHaveCount(0);
+  try {
+    await page.reload();
+    await expect(page.locator(`[value="${full}"]`)).toHaveCount(0);
+  } finally {
+    await e2eQuery(
+      "UPDATE pickup_window_usage SET drinks = drinks - 200 WHERE window_start = $1",
+      [full]
+    );
+  }
 });
 
 test("the daily cron needs its secret", async ({ request }) => {

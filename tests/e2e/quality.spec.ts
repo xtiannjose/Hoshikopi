@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { expectNoAxeViolations, openIn } from "./axe";
 import { openAllDayToday } from "./db";
 import { addToCart } from "./order";
+import { signIn } from "./sign-in";
 
 const PAGES = [
   "/",
@@ -366,6 +367,29 @@ for (const palette of ["day", "night"] as const) {
       "/menu/coffee",
       "/no-such-page",
     ]) {
+      await openIn(page, palette, path);
+      await expectNoAxeViolations(page);
+    }
+  });
+}
+
+// Checkout, an Event's Sign-up form, the account page and Manage were
+// checked only in the palette of the hour the run happened to be in (audit
+// DC-41). The Bar Screen keeps Night at all hours (ADR 0010), so the bar
+// tests' own check covers it.
+for (const palette of ["day", "night"] as const) {
+  test(`checkout, an Event, the account page and Manage pass axe in the ${palette} palette (audit DC-41)`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "once is enough");
+    test.setTimeout(120_000);
+    await addToCart(page, "kopi-hitam");
+    for (const path of ["/checkout", "/events/latte-art-night"]) {
+      await openIn(page, palette, path);
+      await expectNoAxeViolations(page);
+    }
+    await signIn(page, "christian@hoshikopi.example", "/manage");
+    for (const path of ["/account", "/manage", "/manage/hours"]) {
       await openIn(page, palette, path);
       await expectNoAxeViolations(page);
     }
