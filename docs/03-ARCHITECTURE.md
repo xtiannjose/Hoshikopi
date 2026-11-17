@@ -253,7 +253,7 @@ Vercel's free Hobby plan runs a scheduled job (a cron job) only once a day. So a
   - cancels earlier days' Pay at Pickup Orders still Placed, and paid ones the bar never accepted, which are then refunded (section 7, audit DC-07);
   - deletes rate-limit rows older than a day and guest Carts untouched for 30 days;
   - in Demo Mode, moves the seeded demo Events forward and renews the demo Promo and Seasonal drink (ADR 0015);
-  - refreshes the `menu` tag so yesterday's Sold Out marks clear.
+  - expires the `menu` tag at once (`{ expire: 0 }`, audit PERF-21), so the first visitor after it sees yesterday's Sold Out marks cleared (the menu's one-minute cache lifetime would clear them anyway, a minute later).
 - Order Codes restart by themselves each Service Day.
 - All "now" values come from one `clock` helper (`src/lib/clock.ts`) so tests can freeze time.
 

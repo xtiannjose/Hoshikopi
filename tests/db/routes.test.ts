@@ -8,6 +8,8 @@ import {
   vi,
 } from "vitest";
 
+import { revalidateTag } from "next/cache";
+
 import { GET as cron } from "@/app/api/cron/daily/route";
 import { POST as webhook } from "@/app/api/webhooks/[provider]/route";
 
@@ -20,7 +22,7 @@ vi.mock("next/server", async (importOriginal) => ({
 }));
 vi.mock("next/cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/cache")>()),
-  revalidateTag: () => {},
+  revalidateTag: vi.fn(),
 }));
 
 const db = createTestDb();
@@ -88,5 +90,7 @@ describe("GET /api/cron/daily", () => {
     const response = await call(`Bearer ${SECRET}`);
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ expired: 0, cancelled: 0 });
+    // At once, not stale-while-revalidate (audit PERF-21).
+    expect(revalidateTag).toHaveBeenCalledWith("menu", { expire: 0 });
   });
 });
