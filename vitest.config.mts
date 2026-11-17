@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
-import { NO_OUTSIDE_SERVICES } from "./tests/no-outside-services";
+import { NO_OUTSIDE_SERVICES } from "./tests/no-outside-services.mts";
 
 export default defineConfig({
   resolve: {

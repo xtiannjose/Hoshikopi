@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import config from "../playwright.config";
-import vitestConfig from "../vitest.config.mjs";
-import { NO_OUTSIDE_SERVICES } from "./no-outside-services";
+import vitestConfig from "../vitest.config.mts";
+import { NO_OUTSIDE_SERVICES } from "./no-outside-services.mts";
 
 /** The settings tests need; everything else in .env.example is an outside service. */
 const CORE = [

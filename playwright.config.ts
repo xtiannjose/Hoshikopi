@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 import { E2E_MAIL_DIR } from "./tests/e2e/mail";
-import { NO_OUTSIDE_SERVICES } from "./tests/no-outside-services";
+import { NO_OUTSIDE_SERVICES } from "./tests/no-outside-services.mts";
 
 // Browser tests build and serve the app on port 3100 against the
 // hoshikopi_e2e database, migrated, reset and seeded first, at phone and
