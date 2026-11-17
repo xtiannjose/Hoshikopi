@@ -4,18 +4,19 @@ import {
   BowlFoodIcon,
   BreadIcon,
   CoffeeIcon,
+  DropIcon,
   ForkKnifeIcon,
   LeafIcon,
   MicrophoneStageIcon,
   NewspaperIcon,
-  OrangeSliceIcon,
   PackageIcon,
   StorefrontIcon,
 } from "@phosphor-icons/react/ssr";
 
 export const ICONS = {
   coffee: CoffeeIcon,
-  "non-coffee": OrangeSliceIcon,
+  // A neutral drink, not a fruit (audit UI2-23).
+  "non-coffee": DropIcon,
   tea: LeafIcon,
   pastries: BreadIcon,
   "all-day-food": BowlFoodIcon,

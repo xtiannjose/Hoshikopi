@@ -244,7 +244,7 @@ This section covers pictures, icons and the voice of the words. Photos are still
 - Photos: warm natural light, close crops of cups and pastries, people's hands rather than faces. Every stand-in photo has a row in `docs/ASSETS.md` with its source and licence (AI-generated concept images, ADR 0012).
 - Room photos: AI-generated, one consistent room (the counter, window seats, evening light), empty or with hands only, each captioned "Concept image".
 - Alt text describes the item as a menu would ("Iced Spanish latte with a layer of milk over espresso").
-- Icons: Phosphor, one weight (regular), 20 or 24 px.
+- Icons: Phosphor, one weight (regular), 20 or 24 px. One exception: a photo's stand-in panel (ADR 0012) draws its Category's icon thin at 48 px, as a quiet illustration rather than a control (audit UI2-23).
 - Copy: short sentences, "you" and "we", prices as `PHP 165`, times as `9:15 AM`, dates as `Sat, Nov 8`.
 - Pickup and Dine-in in one line, on `/cafe` and the menu: "Order here for pickup at the counter. Staying? Walk in and find a seat." The Order page has a "Picking up" Panel in its place while the Order is still to collect: the neighbourhood with Directions (a new tab, so the page keeps polling), today's open status, "Show code K-012 at the bar." and, for a Scheduled Pickup, Add to calendar. An As Soon As Possible Order on the bar also says how many drinks are ahead of it ("No drinks ahead of yours. You're next at the bar.").
 
