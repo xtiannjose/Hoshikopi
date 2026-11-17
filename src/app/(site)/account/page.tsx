@@ -119,7 +119,7 @@ async function Account() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-muted-foreground font-mono text-sm">
-            {greetingFor(now())}
+            <span lang="fil">{greetingFor(now())}</span>
           </p>
           <h1 className="font-display pb-1 text-5xl leading-[1.1] italic md:text-6xl">
             Hi{member.name ? `, ${member.name}` : ""}!

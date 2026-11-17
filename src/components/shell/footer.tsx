@@ -49,7 +49,8 @@ export async function Footer() {
         <div className="grid content-start gap-3">
           <Logo />
           <p className="font-display text-2xl italic">
-            Salamat sa pagdaan. See you at the counter.
+            {/* Read with a Filipino voice, not an English one (a11y:10). */}
+            <span lang="fil">Salamat sa pagdaan.</span> See you at the counter.
           </p>
         </div>
         <nav aria-label="Footer" className="grid gap-4 md:grid-cols-3 md:gap-6">
