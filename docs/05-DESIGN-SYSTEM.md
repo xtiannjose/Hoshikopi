@@ -1,8 +1,30 @@
 # Design System
 
-Status: v0.4, 2026-11-07 (page polish, batch 8.10). The look and feel of Hoshikopi. Built with native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)); library parts (the old Sample B) were not built.
+> **In plain words:** This is the rulebook for how Hoshikopi looks and feels: colours, fonts, spacing, components, motion and accessibility. It keeps every page looking like one cafe, and it saves a new designer or developer from guessing. The idea is "Star coffee": warm cream by day, deep night-sky blue by night, and one small gold star. The site is built with the browser's own elements and plain CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)); no component or animation library was added.
+>
+> **Who should read it:** designers and developers before any screen or style change; the owner when judging whether a page "feels right". If you are not a designer, read sections 1 and 2 and skip the tables.
+> **Last checked:** 2026-11-17 (the colour, radius, content-width and easing values were compared with `src/app/globals.css` and matched).
+
+## Contents
+
+1. [Design read](#1-design-read): the feeling we want, reference sites, wireframes
+2. [Principles](#2-principles)
+3. [Colour tokens](#3-colour-tokens): the Day and Night palettes
+4. [Typography](#4-typography)
+5. [Shape, space, elevation](#5-shape-space-elevation) and page layout
+6. [Components](#6-components)
+7. [Motion](#7-motion)
+8. [Imagery, icons, copy](#8-imagery-icons-copy)
+9. [Bar Screen](#9-bar-screen)
+10. [Accessibility checklist](#10-accessibility-checklist-per-component-and-per-page)
+11. [Performance budget](#11-performance-budget)
+12. [Tailwind v4 mapping](#12-tailwind-v4-mapping-phase-0)
+
+Terms used throughout: a **palette** is one full set of colours (Hoshikopi has two, Day and Night). A **design token** is a named design value, such as a colour called `--background`, stored once and used everywhere by its name, so changing it in one place changes the whole site. The product words (Menu Item, Order Code, Star, Bar Screen and the rest) are defined in the [Glossary](../GLOSSARY.md). Library parts (the old "Sample B") were not built.
 
 ## 1. Design read
+
+This section says what the site should feel like, which cafe websites we looked at for ideas and the rough page drawings made before building. If you read only one part of this document, read the first two paragraphs.
 
 **"Star coffee": a neighbourhood cafe that stays open into the evening.** Warm cream and espresso by day and deep night-sky ink by night, switching with the cafe's clock (section 3), and one small gold star used with restraint: the logo mark, the Star Card, the "ready" moment. It should feel like a real Kapitolyo cafe with a point of view, not a template and not a theme park. Photos carry the warmth; the interface stays calm and quick to scan on a phone.
 
@@ -11,6 +33,8 @@ Status: v0.4, 2026-11-07 (page polish, batch 8.10). The look and feel of Hoshiko
 Reference mood: paper stamp cards, a window seat at dusk, a well-designed cafe you would photograph.
 
 ### 1.1 Reference sites (shortlist; the owner picked Flora Café)
+
+These are real cafe websites we studied for layout and mood. The owner chose one as the main inspiration, and the notes below say what we took and what we changed.
 
 Checked live on 2026-10-30. We borrow layout ideas and feel only, never names, copy, photos or code.
 
@@ -39,6 +63,8 @@ We redraw everything ourselves: no Flora photos, drawings, copy or logo.
 
 ### 1.2 Wireframes (claude.ai canvases, 2026-10-30)
 
+A wireframe is a rough drawing of a page that shows where things go before anything is built. These two are shared canvases (online drawing pages), one per palette. They are the visual source the build followed.
+
 Each has the same twelve boards, with labelled photo slots: Home at 1280 and 390 px; at 390 px the Hoshi Latte page, the Visit page (`/cafe`), Cart and checkout, Order status, the Star Card and account page (`/account`), Events, a Post and About this concept (`/concept`); the Bar Screen on a 1194 px tablet; and the Manager pages at 1280 px (Today with Refunds and Ordering Paused, the Menu editor with Sold Out, Hours and capacity). Preview settings: Home's pickup card (sample time, live clock, closing soon, closed, Ordering Paused); Order status for each Order Status; the account page for a Member with 5 Stars, a Reward ready, a new Member or signed out; the Manager pages for each section. Not wireframed: Cafe details, Events, Posts and Staff forms in `/manage`, and V1 features.
 
 | Direction | Link | What it is |
@@ -50,6 +76,8 @@ Each has the same twelve boards, with labelled photo slots: Home at 1280 and 390
 
 ## 2. Principles
 
+Six rules that settle design arguments. When two choices both look fine, the one that follows these wins.
+
 1. **The menu is the product.** Big photos, clear prices, Options one tap away. Nothing decorative stands between a Customer and "Add to order".
 2. **One accent.** Gold appears in at most one place per screen. Stars are earned, not sprinkled.
 3. **Phone first, thumb first.** Primary actions sit in the bottom third; the Cart is reachable from every page.
@@ -59,7 +87,9 @@ Each has the same twelve boards, with labelled photo slots: Home at 1280 and 390
 
 ## 3. Colour tokens
 
-Values match `src/app/globals.css` (checked 2026-11-07); they must pass the contrast checks in section 10. Two palettes share every token: **Day** (cream paper, kopi brown, paper grain) and **Night** (night ink, moonlight). The Day column comes from the Day wireframe, the Night column from the main wireframe.
+This section lists every colour the site uses, by name, in both palettes. Each name is a design token (see the terms above), so a component asks for `--muted` and never for a raw colour. The Use column says what each one is for. In `globals.css` each name carries a `color-` prefix (`--color-background`); this document drops the prefix.
+
+Values match `src/app/globals.css` (checked 2026-11-17); they must pass the contrast checks in section 10 (contrast is how strongly text stands out from its background; "4.5:1" is the minimum ratio the accessibility standard asks for normal text). Two palettes share every token: **Day** (cream paper, kopi brown, paper grain) and **Night** (night ink, moonlight). The Day column comes from the Day wireframe, the Night column from the main wireframe.
 
 | Token | Day | Night | Use |
 | --- | --- | --- | --- |
@@ -82,9 +112,11 @@ Values match `src/app/globals.css` (checked 2026-11-07); they must pass the cont
 
 **Which palette shows** ([ADR 0010](adr/0010-theme-follows-manila-time.md)): Day from 6:00 AM to 5:59 PM Manila time, Night from 6:00 PM to 5:59 AM, for every visitor wherever they are; the site follows the cafe's sky. A switch in the header (Auto, Day, Night, shown as a stopwatch, a sun and a star with the words as screen-reader labels and tooltips) pins one, saved per browser; Auto is the default. The device's light or dark setting is not used. The Bar Screen always uses the night palette.
 
-Native radios and checkboxes take `accent-color` from `--primary`, so they are kopi by Day and moonlight by Night.
+Native radios and checkboxes take `accent-color` (the CSS setting that colours built-in form controls) from `--primary`, so they are kopi by Day and moonlight by Night.
 
 ## 4. Typography
+
+This section says which fonts the site uses and how big text is. Three fonts share the work: a warm serif for headlines, a clear sans-serif for everything else and a typewriter font for small accents. "Tabular figures" means every digit has the same width, so a column of prices lines up.
 
 | Role | Font | Notes |
 | --- | --- | --- |
@@ -93,9 +125,11 @@ Native radios and checkboxes take `accent-color` from `--primary`, so they are k
 | Order Codes and prices in tables | Plus Jakarta Sans with tabular figures | `font-variant-numeric: tabular-nums` |
 | Typewriter accents | Courier Prime, regular only | Prices in the printed-menu section, short notes under items, dates, small label buttons (the Flora feel, section 1.1); never body text; open font licence |
 
-Self-hosted through `next/font`, `display: swap`: two variable families plus the mono at one weight. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for reading text (Posts, Events, page intros, the concept, privacy and Visit pages). The token for it is `max-w-measure` (`--container-measure: 34em` in `globals.css`): in em, so it follows the text's own size, about 68 to 72 characters at 16 to 18 px. Tailwind's `max-w-prose` (65ch) is not used: the zero in Plus Jakarta Sans is wide, so 65ch runs about 100 characters.
+Self-hosted through `next/font` (Next.js's way of serving fonts from our own site, so no request goes to Google when a page loads), `display: swap` (show text in a fallback font until the real one arrives): two variable families (one file holds many weights) plus the mono at one weight. Scale (rem): 0.875, 1, 1.125, 1.25, 1.5, 2, 2.75, 3.5. Body 1 rem (16 px) at minimum; line length 60 to 75 characters for reading text (Posts, Events, page intros, the concept, privacy and Visit pages). The token for it is `max-w-measure` (`--container-measure: 34em` in `globals.css`): in em, so it follows the text's own size, about 68 to 72 characters at 16 to 18 px. Tailwind's `max-w-prose` (65ch) is not used: the zero in Plus Jakarta Sans is wide, so 65ch runs about 100 characters.
 
 ## 5. Shape, space, elevation
+
+This section sets how rounded things are, how much empty space sits between them and how wide pages get. Radius is the roundness of a corner. A gutter is the empty margin at the sides of a page. Elevation is how much something seems to lift off the page. Tailwind's screen-width names are used below: `sm` 640 px, `md` 768 px, `lg` 1024 px, `xl` 1280 px, `2xl` 1536 px.
 
 - Radius: 12 px for cards and inputs, full pills for chips and the Cart button.
 - Spacing on a 4 px grid; page gutter 16 px on phones, 24 px on tablets, 32 px on desktop.
@@ -117,7 +151,7 @@ Grids add columns as the screen grows:
 | Event cards | 2 from md, 3 from xl |
 | Post cards | 2 from md, 3 from lg, 4 from 2xl; on `/news` the newest is a lead card spanning 2 |
 | Tiles (Manage areas, Amenities) | 2 from sm, 3 from lg |
-| Main column and aside | From lg, a main column plus a 24rem aside, sticky at `top-6` (Cart, checkout, the Order page, an Event, an inquiry) |
+| Main column and aside | From lg, a main column plus a 24rem aside, sticky (it stays in view while the page scrolls) at `top-6` (Cart, checkout, the Order page, an Event, an inquiry) |
 | Equal pairs | 2 from lg |
 | Stat strips | `auto-fit` columns of at least 14rem |
 | Bar Screen lane | A second card per row only when each keeps 17rem (`auto-fill`), about 1900 px wide and up |
@@ -125,6 +159,10 @@ Grids add columns as the screen grows:
 Number columns in tables are right aligned with tabular figures.
 
 ## 6. Components
+
+A component is a reusable piece of the screen, such as a card or a button. This table says what each one looks like and where it is used. Names in code style (`BackLink`, `Panel`, `Pill`) are the actual component names developers search for.
+
+Browser features named in this table: a `popover` is a built-in pop-up layer. A `details` element is a built-in show-and-hide block. A `fieldset` with a `legend` is a built-in group of related form controls with a caption. A live region is an area that a screen reader announces when its text changes. A container query is CSS that reacts to the width of its own box, not of the screen. `aria-current` is a tag that tells a screen reader which item is the current one.
 
 | Component | Notes |
 | --- | --- |
@@ -171,6 +209,8 @@ Native elements and CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)). 
 
 ## 7. Motion
 
+This section says what moves on the site, how fast and what never moves. Motion is small and calm on purpose, and it switches off for people who ask their device for less movement. Terms: CLS (cumulative layout shift) measures how much a page jumps around while it loads; LCP (largest contentful paint) is how long until the biggest thing on screen appears; easing is how speed changes during a movement; reduced motion is a phone or computer setting that asks websites to stop animating. Features named below: transitions and keyframes are the two plain-CSS ways to animate; `@starting-style` sets how an element looks on its first frame; a scroll-driven animation ties movement to how far the page has scrolled; a View Transition is the browser's way of animating between two versions of a page; `router.refresh()` and Server Actions are Next.js ways to save a form or reload data without leaving the page.
+
 Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still, so every state change now moves a little. Still calm, still CSS first.
 
 - **CSS and the platform only:** transitions, keyframes, `@starting-style`, scroll-driven animations (`animation-timeline: view()`) behind `@supports`, and React's `<ViewTransition>` for page changes. No animation library ([ADR 0011](adr/0011-native-elements-and-css.md)); the only new JavaScript is the Cart count remembering its last value.
@@ -193,11 +233,13 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 | Order status (delight) | Order page | Marks pop in step order (60 ms apart) on load and when the poll moves the Order on; the message rises in. Ready: the gold star spins in (500 ms) and a gold ring spreads once |
 | New Order | Bar Screen | Slides in from above with a gold edge and one small pulse, 700 ms (it used to blink for 4 seconds) |
 
-- **Quiet zones:** nothing moves on its own while the Customer chooses Options or pays (the Options on a Menu Item, the Cart, checkout, the fake payment page); there is only press feedback under the finger. The Pickup Time chips at checkout stay plain chips until batch 8.3 replaces them.
+- **Quiet zones:** nothing moves on its own while the Customer chooses Options or pays (the Options on a Menu Item, the Cart, checkout, the fake payment page); there is only press feedback under the finger. The Pickup Time chips at checkout stay plain chips (batch 8.3, 2026-11-08, replaced the old row of 42 with the next 6 and a "Later today" list).
 - **Never animated:** the hero, because it holds the LCP (batch 7.6); loops of any kind; parallax and scroll-jacking.
 - **Reduced motion:** `prefers-reduced-motion: reduce` turns all of it off. Animations land on their final state at once and transitions are `0s` (a near-zero duration still started hundreds of real transitions on a Day and Night switch), View Transitions are skipped and scroll reveals are not applied. One exception: the "Added" on Add to order holds still for its 1.6 s, since its last frame is invisible and on a phone it is the only sign of the add. Browser tests run this way (`playwright.config.ts`), so axe checks the settled page and never a frame mid-fade, except `tests/e2e/motion.spec.ts`, which turns motion on to check that a tap right after a page change lands within the fade budget and that a new Order arrives on the Bar Screen once.
 
 ## 8. Imagery, icons, copy
+
+This section covers pictures, icons and the voice of the words. Photos are still stand-in panels: the AI-generated concept images are listed in [ASSETS.md](ASSETS.md) and real photos are on hold (owner, 2026-11-07).
 
 - Photos: warm natural light, close crops of cups and pastries, people's hands rather than faces. Every stand-in photo has a row in `docs/ASSETS.md` with its source and licence (AI-generated concept images, ADR 0012).
 - Room photos: AI-generated, one consistent room (the counter, window seats, evening light), empty or with hands only, each captioned "Concept image".
@@ -207,6 +249,8 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 - Pickup and Dine-in in one line, on `/cafe` and the menu: "Order here for pickup at the counter. Staying? Walk in and find a seat." The Order page has a "Picking up" Panel in its place while the Order is still to collect: the neighbourhood with Directions (a new tab, so the page keeps polling), today's open status, "Show code K-012 at the bar." and, for a Scheduled Pickup, Add to calendar. An As Soon As Possible Order on the bar also says how many drinks are ahead of it ("No drinks ahead of yours. You're next at the bar.").
 
 ## 9. Bar Screen
+
+The Bar Screen is the page the baristas use on a tablet behind the counter. It gets its own rules because it is used with wet hands, in a hurry, from a distance. Annika is the barista persona in [the PRD](01-PRD.md#3-personas).
 
 Built for a tablet behind the counter, used by Annika with wet hands and a queue waiting.
 
@@ -220,6 +264,8 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 
 ## 10. Accessibility checklist (per component and per page)
 
+Accessibility means the site works for people who use a keyboard, a screen reader, big text or less movement. The target is WCAG 2.2 level AA (the international web accessibility standard), in both palettes. Use this list on every new component and page. axe is a free tool that finds accessibility mistakes automatically; it runs inside the browser tests.
+
 - Contrast: text 4.5:1 (3:1 for 24 px+ or bold 18.66 px+), UI parts and focus rings 3:1, in both themes.
 - Every control reachable and usable by keyboard; focus always visible and never hidden by sticky elements (WCAG 2.4.11): `scroll-padding` on the root clears the Category tabs, the floating Cart and the phone Add to order bar.
 - Focus is never lost: a drawer (the phone menu, the Cart) moves focus to its Close button when it opens, closes when focus leaves it and hands focus back on Esc; after a client navigation focus moves to the new page's h1; a refused form focuses the first field to fix (`useFocusInvalid`).
@@ -232,6 +278,8 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 
 ## 11. Performance budget
 
+A performance budget is a limit on how heavy or slow a page may get, so speed does not slip a little with every change. Lighthouse is Google's free tool that scores a page out of 100 for speed and quality. Terms: kB is a kilobyte (1,000 bytes); TBT (total blocking time) is how long the page is too busy to respond to a tap; JavaScript "compressed" means the size sent over the network; AVIF and WebP are image formats smaller than JPEG; hydration is the step where the browser makes a server-built page interactive; a Suspense boundary lets part of a page load later without holding up the rest.
+
 | Page | Budget (mobile, Lighthouse simulated) |
 | --- | --- |
 | Home, menu, Menu Item | Performance 90+, LCP under 2.5 s, CLS under 0.05, total blocking time under 200 ms |
@@ -241,6 +289,8 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 Measure on the live site, or a local production build for the other numbers: on localhost the scripts arrive before the first paint, so Lighthouse's simulated LCP is about half a second worse than on the live site (7.6). What keeps the pages light: icons render on the server (a client component takes them as props), `partialPrefetching` stays off, and big client parts sit in their own Suspense boundary so hydration runs in short tasks. A known trade-off, kept on purpose (7.6, audit PERF-09): Home ships the menu's Photos view hidden beside the printed list, and Barista Picks for both palettes, so its flight payload is the largest of any page (about 138k characters). Switching views and palettes is then instant and needs no request. If Home's weight matters again, load the Photos grid only when Photos is chosen.
 
 ## 12. Tailwind v4 mapping (Phase 0)
+
+Tailwind CSS is the styling toolkit the site uses: small ready-made class names such as `bg-background` set a colour or a size. This section says where the tokens live in it. It is for developers; a non-programmer can skip it.
 
 - Tokens live in `src/app/globals.css` under `@theme` (`--color-background`, `--color-primary`, `--color-night`, `--color-star`, `--font-display`, `--font-sans`, `--radius-card`), with the Night palette redefining them under `[data-theme="night"]` on `<html>`, set before first paint (section 3, ADR 0010).
 - Use token classes (`bg-background`, `text-muted-foreground`, `bg-night`) everywhere; no raw hex values in components.

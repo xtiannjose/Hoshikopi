@@ -1,6 +1,21 @@
 # Research: cafe websites, order-ahead and loyalty
 
-Checked 2026-10-30 14:24 Manila.
+> **In plain words:** Before building, we studied how working cafe websites and ordering apps behave, so Hoshikopi could copy what works and skip what does not. This file is a dated record of that study, kept as it was written. The Summary below gives the ten best ideas; the later sections hold the evidence.
+>
+> **Who should read it:** the owner or a designer who asks "why does the site do it this way?"; a developer who sees an ID like C-09 in the PRD or the code and wants the reason behind it.
+> **Last checked:** 2026-11-17 (the research itself was gathered on 2026-10-30 and is not redone; later changes are in the PRD and the ADRs).
+
+Part 1 checked 2026-10-30 14:24 Manila. Part 2 checked 2026-10-30 21:24 Manila.
+
+## Contents
+
+1. [Summary](#summary): the ten best ideas
+2. [Candidates](#candidates): every feature idea, with its ID (C-01 and up)
+3. [Patterns that matter](#patterns-that-matter)
+4. [Rules and platforms](#rules-and-platforms): PayMongo, Google, Philippine law, UX research
+5. [Site notes](#site-notes)
+6. [Part 2: the cafe as a place](#part-2-the-cafe-as-a-place) (its own summary, candidates, patterns and gaps)
+7. [Sources](#sources): the numbered list behind every `[n]` mark
 
 Purpose: learn what working cafe sites and ordering platforms do, so Hoshikopi can borrow what works and skip what does not. We take ideas and structure only. We do not copy names, branding, copy, photos or code. Words follow `GLOSSARY.md` (Menu Item, Option Group, Option, Pickup Time, Pickup Window, Star, Star Card, Reward, Bar Screen, Event, Post).
 
@@ -8,15 +23,19 @@ How this was gathered, and its limits: server HTML of each site (saved outside t
 
 ## Summary
 
+These are the ten ideas that matter most, best first. Each starts with its ID (C-09 and so on), which the PRD and the roadmap use to point back here. The numbers in square brackets, such as [1, 9], are the sources listed at the end of this file. Status on 2026-11-17: all ten were built; the payments one (C-19) runs on the `fake` provider, because no PayMongo account was ever set up.
+
+Words you will meet below: ASAP means as soon as possible. A webhook is a message a payment company's server sends ours when a payment changes. Test Mode means practice payments with no real money. Baymard is an independent research institute that studies how online shops are used.
+
 The 10 best ideas, in priority order:
 
 1. **C-09 Pickup Time with Pickup Windows and Capacity.** ASAP ("ready in about N minutes") or a Scheduled Pickup in a 15-minute Pickup Window, same day, last window at closing minus Prep Time. Every order-ahead system checked does a version of this, and Baymard finds pickup timing is usually too vague to commit to [1, 9, 26, 29, 50].
 2. **C-02 Option Groups on the Menu Item page.** Size, Milk, Sugar Level, Ice Level, Extra Shots and Add-ons, with each Price Delta shown and a live total. No benchmarked website shows this; it hides inside apps [8, 15, 50].
-3. **C-19 PayMongo Hosted Checkout (v2) in Test Mode, confirmed by a verified webhook.** GCash, Maya, Card and QR Ph on one hosted page; the Order becomes Paid only from a signed `checkout_session.payment.paid` event [31, 36].
+3. **C-19 PayMongo Hosted Checkout (v2) in Test Mode, confirmed by a verified webhook.** (PayMongo is the Philippine payment company; "hosted" means it runs the payment page, so card details never touch our site.) GCash, Maya, Card and QR Ph on one hosted page; the Order becomes Paid only from a signed `checkout_session.payment.paid` event [31, 36].
 4. **C-11 Order page with Order Code and live Order Status.** Chains notify "when your order is ready"; on the web this is a status page plus an email [1, 9, 27].
 5. **C-12 Bar Screen.** Live Orders by Pickup Time, scheduled Orders surface at Pickup Time minus Prep Time, one tap per status step [29].
-6. **C-15 Guest checkout first, account offered after the Order.** 18% of shoppers abandon when forced to sign up [51, 52].
-7. **C-20 Expire unpaid Orders.** PayMongo sessions never expire on their own and GCash allows 4 hours, so Hoshikopi must expire them to free Pickup Window room [32, 33].
+6. **C-15 Guest checkout first (ordering without an account), account offered after the Order.** 18% of shoppers abandon when forced to sign up [51, 52].
+7. **C-20 Expire unpaid Orders.** PayMongo sessions (one payment attempt on its page) never expire on their own and GCash allows 4 hours, so Hoshikopi must expire them to free Pickup Window room [32, 33].
 8. **C-10 Ordering Paused.** One switch for a busy bar, with the resume time shown; Toast and Square both have it [26, 28].
 9. **C-34 Opening Hours and Special Hours everywhere.** "Open now, closes 8pm" plus dated Special Hours; no benchmarked site shows dated holiday hours [3, 14, 18].
 10. **C-25 Star Card.** 1 Star per drink, 9 Stars for a free drink. Simpler than the tiered points programs at Starbucks PH and Pickup Coffee, and easy to show as 9 spaces [4, 7].
