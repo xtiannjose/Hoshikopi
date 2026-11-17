@@ -248,7 +248,7 @@ Two screens need fresh news: the Bar Screen and the Order status page. Each asks
 Vercel's free Hobby plan runs a scheduled job (a cron job) only once a day. So anything urgent, like freeing the room an unpaid Order holds, happens whenever someone loads a page. The daily job only tidies up.
 
 - **Expiry on read.** Unpaid online Orders older than 15 minutes are expired whenever Pickup Windows, the Bar Screen or an Order are loaded, including each poll of the Order page. The payment webhook also expires one before it pays it. Both work in the same transaction style as section 6.
-- **The daily cron** (`/api/cron/daily`, before opening; schedule in `vercel.json`, 22:00 UTC) runs only with the `Authorization: Bearer <CRON_SECRET>` header that Vercel Cron sends. It:
+- **The daily cron** (`/api/cron/daily`, before opening; schedule in `vercel.json`, 22:00 UTC) runs only with the `Authorization: Bearer <CRON_SECRET>` header that Vercel Cron sends, compared in constant time (`src/lib/secret.ts`, audit SEC1-21). It:
   - expires anything the sweeps on read missed;
   - cancels earlier days' Pay at Pickup Orders still Placed, and paid ones the bar never accepted, which are then refunded (section 7, audit DC-07);
   - deletes rate-limit rows older than a day and guest Carts untouched for 30 days;

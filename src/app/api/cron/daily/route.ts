@@ -2,6 +2,7 @@ import { revalidateTag } from "next/cache";
 import { connection } from "next/server";
 
 import { now } from "@/lib/clock";
+import { sameSecret } from "@/lib/secret";
 import { pruneRateLimits } from "@/lib/rate-limit";
 import { pruneGuestCarts } from "@/modules/cart";
 import { rollDemoEvents } from "@/modules/content";
@@ -19,7 +20,8 @@ import { cancelUncollected, expireUnpaid } from "@/modules/ordering";
 export async function GET(request: Request) {
   await connection();
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  const given = request.headers.get("authorization") ?? "";
+  if (!secret || !sameSecret(given, `Bearer ${secret}`)) {
     return new Response("Not allowed", { status: 401 });
   }
   const at = now();
