@@ -244,6 +244,15 @@ test("a Barista with no authenticator marks Sold Out and back on the Bar Screen 
     await expect(
       page.getByRole("button", { name: "Sold out for Butter Croissant" })
     ).toBeVisible();
+    // Marked on another device: the panel catches up within a poll, with
+    // no reload (audit DC-13).
+    await e2eQuery(
+      `UPDATE menu_items SET sold_out_on = (now() AT TIME ZONE 'Asia/Manila')::date
+       WHERE slug = 'butter-croissant'`
+    );
+    await expect(
+      page.getByRole("button", { name: "Back on for Butter Croissant" })
+    ).toBeVisible({ timeout: 10_000 });
     const { rows } = await e2eQuery(
       "SELECT 1 FROM two_factors WHERE user_id = $1",
       [id]

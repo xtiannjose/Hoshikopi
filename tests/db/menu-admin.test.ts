@@ -19,6 +19,8 @@ import {
   saveOption,
   saveOptionGroup,
   setMenuItemSoldOut,
+  setOptionSoldOut,
+  soldOutStamp,
   type MenuItemInput,
 } from "@/modules/menu";
 
@@ -85,6 +87,31 @@ describe("Sold Out", () => {
     expect(
       (await db.menuItem.findUniqueOrThrow({ where: { id } })).soldOutOn
     ).toBeNull();
+  });
+});
+
+// The Bar Screen's Sold Out panel never refreshed: a change on another
+// device, or yesterday's marks clearing at midnight, did not show (audit
+// DC-13). Its poll compares this stamp.
+describe("soldOutStamp", () => {
+  it("changes when a mark changes, and when the Manila day turns", async () => {
+    freezeClock("2026-11-02T03:00:00Z");
+    const at = new Date("2026-11-02T03:00:00Z");
+    const before = await soldOutStamp(at);
+    expect(await soldOutStamp(at)).toBe(before);
+    const { id } = await latteInput();
+    await setMenuItemSoldOut(id, true, christian);
+    const itemOut = await soldOutStamp(at);
+    expect(itemOut).not.toBe(before);
+    const oat = await db.option.findFirstOrThrow({
+      where: { name: "Oat milk" },
+    });
+    await setOptionSoldOut(oat.id, true, christian);
+    expect(await soldOutStamp(at)).not.toBe(itemOut);
+    // Midnight Manila is 16:00 UTC: the marks clear and the stamp moves.
+    expect(await soldOutStamp(new Date("2026-11-02T16:00:00Z"))).not.toBe(
+      await soldOutStamp(new Date("2026-11-02T15:59:00Z"))
+    );
   });
 });
 

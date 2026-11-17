@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
 import { now } from "@/lib/clock";
 import { requireStaff, secondFactorEntered } from "@/modules/identity";
-import { getMenuForStaff } from "@/modules/menu";
+import { getMenuForStaff, soldOutStamp } from "@/modules/menu";
 import { barBoard } from "@/modules/ordering";
 
 import { BarScreen } from "./bar-screen";
@@ -27,15 +27,18 @@ async function Bar() {
   // Pause, Busy Mode and Cancel need the Second Factor; without it a tap
   // would leave the board for the code page (audit staff:1).
   const manager = staff.role === "manager";
-  const [unlocked, board, menu] = await Promise.all([
+  const at = now();
+  const [unlocked, board, menu, stamp] = await Promise.all([
     manager ? secondFactorEntered() : false,
-    barBoard(now()),
+    barBoard(at),
     getMenuForStaff(),
+    soldOutStamp(at),
   ]);
   return (
     <>
       <BarScreen
         initial={JSON.parse(JSON.stringify(board))}
+        soldOut={stamp}
         manager={unlocked}
         staffName={staff.name}
         links={

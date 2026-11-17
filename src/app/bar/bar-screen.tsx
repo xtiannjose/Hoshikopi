@@ -8,6 +8,7 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { SpeakerHighIcon, SpeakerSlashIcon } from "@phosphor-icons/react";
 
 import { formatTime, now } from "@/lib/clock";
@@ -127,11 +128,14 @@ function without(set: Set<string>, ids: string[]) {
  */
 export function BarScreen({
   initial,
+  soldOut,
   manager,
   staffName,
   links,
 }: {
   initial: Board;
+  /** Today's Sold Out stamp; a new one refreshes the Sold Out panel. */
+  soldOut: string;
   manager: boolean;
   staffName: string;
   /** The way back and the staff links, left of the h1. */
@@ -150,6 +154,8 @@ export function BarScreen({
   const [pending, startTransition] = useTransition();
   const known = useRef(new Set(initial.orders.map((o) => o.id)));
   const version = useRef(initial.version);
+  const soldOutSeen = useRef(soldOut);
+  const router = useRouter();
   const mutedRef = useRef(false);
 
   useEffect(() => {
@@ -164,12 +170,13 @@ export function BarScreen({
   }, []);
 
   const poll = useCallback(async () => {
-    const response = await fetch(
-      `/api/bar?v=${encodeURIComponent(version.current)}`,
-      {
-        cache: "no-store",
-      }
-    ).catch(() => null);
+    const seen = new URLSearchParams({
+      v: version.current,
+      m: soldOutSeen.current,
+    });
+    const response = await fetch(`/api/bar?${seen}`, {
+      cache: "no-store",
+    }).catch(() => null);
     // Offline for a moment: the next tick tries again.
     if (!response) return;
     if (response.status === 401) {
@@ -178,8 +185,14 @@ export function BarScreen({
     }
     if (!response.ok) return;
     const data = (await response.json().catch(() => null)) as
-      Board | { same: true } | null;
+      (Board & { menu: string }) | { same: true } | null;
     if (!data || "same" in data) return;
+    // Sold Out changed on another device, or the day turned and yesterday's
+    // marks cleared: the panel below the board renders again (audit DC-13).
+    if (data.menu !== soldOutSeen.current) {
+      soldOutSeen.current = data.menu;
+      router.refresh();
+    }
     const arrived = data.orders.filter((o) => !known.current.has(o.id));
     data.orders.forEach((o) => known.current.add(o.id));
     version.current = data.version;
@@ -192,7 +205,7 @@ export function BarScreen({
       setFresh((prev) => new Set([...prev, ...ids]));
       setTimeout(() => setFresh((prev) => without(prev, ids)), 4_000);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (signedOut) return undefined;
