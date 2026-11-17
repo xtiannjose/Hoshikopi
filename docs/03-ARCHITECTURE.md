@@ -196,7 +196,9 @@ Hoshikopi never takes real money. Online payments go through a payment provider 
 - **`fake`** has a hosted checkout at `/dev/pay/[id]` whose Pay button sends a signed webhook, so demos and tests run without a PayMongo account. When `NODE_ENV=production` it runs only on a local address, a `*.vercel.app` address or a Vercel preview, and only with `NEXT_PUBLIC_SITE_URL` and `BETTER_AUTH_SECRET` set; anywhere else it refuses to start (`src/modules/payments/internal/provider.ts`).
 - **The webhook route**:
   - It has the provider verify its signature header (`Paymongo-Signature`, or `fake-signature` for `fake`) over the raw body. A signature proves the message came from the provider and was not changed.
-  - It then inserts the event under a unique `(provider, provider_event_id)`. A repeat is acknowledged and ignored (deduplicated). Only then does it transition the Order.
+  - It then inserts the event under a unique `(provider, provider_event_id)`, keeping only the parsed ids, type, amount and currency (audit PAY-10). A repeat is acknowledged and ignored (deduplicated).
+  - A paid event whose amount or currency does not match the Payment is logged and ignored, never marked paid; the provider still gets its 200 (audit PAY-08). PayMongo's parser takes the payment whose status is paid, not just the first try.
+  - Only then does it transition the Order.
   - The Payment row is locked while an event is decided, so two events for one checkout never overwrite each other.
   - A paid event still counts after a failed attempt (a retry in the same checkout) and after the Order Expired or was Cancelled. The money was taken, so the Order is refunded in full right after the commit (a Refund row with actor `webhook`).
   - A paid event for an Order still Placed past its 15 minutes Expires it first, in the same transaction, so it takes that late path too (audit PAY-07).

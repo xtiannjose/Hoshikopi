@@ -93,13 +93,26 @@ export function payMongoProvider(
             type: string;
             data?: {
               id?: string;
-              attributes?: { payments?: { id: string }[] };
+              attributes?: {
+                payments?: {
+                  id: string;
+                  attributes?: {
+                    amount?: number;
+                    currency?: string;
+                    status?: string;
+                  };
+                }[];
+              };
             };
           };
         };
       };
       const type = event.data.attributes.type;
       const resource = event.data.attributes.data;
+      // The payment that went through, not just the first try (PAY-08).
+      const payments = resource?.attributes?.payments ?? [];
+      const paid =
+        payments.find((p) => p.attributes?.status === "paid") ?? payments[0];
       return {
         id: event.data.id,
         // Only the checkout session's own paid event counts. payment.failed
@@ -107,7 +120,9 @@ export function payMongoProvider(
         // stays open for another try, so it changes nothing (audit PAY-06).
         type: type === "checkout_session.payment.paid" ? "paid" : "other",
         checkoutId: resource?.id ?? null,
-        paymentId: resource?.attributes?.payments?.[0]?.id ?? null,
+        paymentId: paid?.id ?? null,
+        amountCents: paid?.attributes?.amount ?? null,
+        currency: paid?.attributes?.currency ?? null,
       };
     },
   };

@@ -174,6 +174,44 @@ describe("receivePaymentWebhook (PAY-03)", () => {
     });
   });
 
+  // A paid event was trusted for its ids alone: a payment of the wrong
+  // amount or currency would have marked the Order paid (audit PAY-08).
+  it("marks paid only when the amount and currency match the Payment", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const order = await onlineOrder();
+    const { amountCents } = await db.payment.findFirstOrThrow();
+    expect(
+      await webhook({ id: "evt_short", amountCents: amountCents - 100 })
+    ).toEqual({ status: 200, result: "ignored" });
+    expect(
+      await webhook({ id: "evt_usd", amountCents, currency: "USD" })
+    ).toEqual({ status: 200, result: "ignored" });
+    expect(
+      await db.order.findUniqueOrThrow({ where: { id: order.orderId } })
+    ).toMatchObject({ status: "placed" });
+    expect(
+      await webhook({ id: "evt_ok", amountCents, currency: "PHP" })
+    ).toEqual({ status: 200, result: "paid" });
+  });
+
+  // The whole body was stored and never read back; PayMongo's carries the
+  // payer's billing name, email and phone (audit PAY-10).
+  it("keeps only the event's ids and type, not the body it came in", async () => {
+    await onlineOrder();
+    const payment = await db.payment.findFirstOrThrow();
+    const signed = fake.signedEvent({
+      id: "evt_body",
+      type: "paid",
+      checkoutId: payment.providerCheckoutId,
+      paymentId: "fake_pay_1",
+      ...({ billing: { email: "payer@example.com" } } as object),
+    });
+    await receivePaymentWebhook("fake", signed.body, signed.headers);
+    const { payload } = await db.paymentEvent.findFirstOrThrow();
+    expect(JSON.stringify(payload)).not.toContain("payer@example.com");
+    expect(payload).toMatchObject({ id: "evt_body", type: "paid" });
+  });
+
   it("acknowledges a replayed event and changes nothing", async () => {
     await onlineOrder();
     await webhook({ id: "evt_1" });

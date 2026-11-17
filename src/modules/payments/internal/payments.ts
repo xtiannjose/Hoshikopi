@@ -83,21 +83,23 @@ export type RecordedEvent =
 export async function recordPaymentEvent(
   tx: Prisma.TransactionClient,
   provider: string,
-  event: ProviderEvent,
-  rawBody: string
+  event: ProviderEvent
 ): Promise<RecordedEvent> {
+  // The parsed ids and type, never the raw body: nothing reads it back, and
+  // PayMongo's carries the payer's billing name, email and phone (audit
+  // PAY-10).
   const inserted = await tx.$queryRaw<{ id: string }[]>`
     INSERT INTO payment_events (id, provider, provider_event_id, type, payload)
-    VALUES (${randomUUID()}, ${provider}, ${event.id}, ${event.type}, ${rawBody}::jsonb)
+    VALUES (${randomUUID()}, ${provider}, ${event.id}, ${event.type}, ${JSON.stringify(event)}::jsonb)
     ON CONFLICT (provider, provider_event_id) DO NOTHING
     RETURNING id`;
   if (inserted.length === 0) return { kind: "duplicate" };
   if (!event.checkoutId || event.type === "other") return { kind: "ignored" };
   // Locked, so two events for one checkout decide one at a time.
   const [payment] = await tx.$queryRaw<
-    { id: string; status: string; order_id: string }[]
+    { id: string; status: string; order_id: string; amount_cents: number }[]
   >`
-    SELECT id, status::text AS status, order_id FROM payments
+    SELECT id, status::text AS status, order_id, amount_cents FROM payments
     WHERE provider = ${provider} AND provider_checkout_id = ${event.checkoutId}
     FOR UPDATE`;
   if (!payment) return { kind: "ignored" };
@@ -110,6 +112,20 @@ export async function recordPaymentEvent(
     return { kind: "failed" };
   }
   if (payment.status === "paid" || payment.status === "refunded") {
+    return { kind: "ignored" };
+  }
+  // Paid, but not what this Payment asked for: never mark it paid; a
+  // person looks (audit PAY-08). The provider still gets its 200.
+  const wrongAmount =
+    event.amountCents != null && event.amountCents !== payment.amount_cents;
+  const wrongCurrency = event.currency != null && event.currency !== "PHP";
+  if (wrongAmount || wrongCurrency) {
+    console.error("[payments] paid event does not match its Payment:", {
+      paymentId: payment.id,
+      expectedCents: payment.amount_cents,
+      paidCents: event.amountCents,
+      currency: event.currency,
+    });
     return { kind: "ignored" };
   }
   await tx.payment.update({

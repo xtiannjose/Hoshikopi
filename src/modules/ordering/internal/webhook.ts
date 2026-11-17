@@ -41,8 +41,7 @@ export async function receivePaymentWebhook(
     const recorded = await recordPaymentEvent(
       tx,
       verified.provider,
-      verified.event,
-      rawBody
+      verified.event
     );
     if (recorded.kind !== "paid") return { result: recorded.kind };
     // Still Placed past its 15 minutes with no sweep since: it Expires

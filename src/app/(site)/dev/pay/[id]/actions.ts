@@ -25,6 +25,9 @@ export async function fakePayAction(form: FormData) {
     type,
     checkoutId,
     paymentId: `fake_pay_${randomUUID()}`,
+    // What a real provider reports, so the amount check runs here too (PAY-08).
+    amountCents: payment.amountCents,
+    currency: "PHP",
   });
   const site = siteUrl();
   // redirect() throws, so it stays outside the promise's handlers.
