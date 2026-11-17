@@ -26,7 +26,7 @@
 What is still open from November:
 
 - **ops:8 (P1), an owner step:** the seeded Event, Promo and Seasonal dates on the live site. Since batch 10.18 the daily job moves them forward by itself; the owner checks the live site and closes the item.
-- **43 P3 items:** observations, nits and ideas, listed under "P3 (43)" in [2026-11-13.md](2026-11-13.md). No action is planned for them.
+- **43 P3 items:** observations, nits and ideas, listed under "P3 (43)" in [2026-11-13.md](2026-11-13.md). On 2026-11-17 the owner scheduled all of them in Phase 11: each joins the batch that touches the same code, and batches 11.7 and 11.8 take the rest ([roadmap](../07-ROADMAP.md) section 12).
 
 ## 2. What P0 to P3 mean
 

@@ -204,10 +204,12 @@ The 2026-11-17 deep check found no serious problem and 46 smaller ones (0 P0, 2 
 | 11.4 Staff tools | DC-12 to DC-23 | The Bar Screen's pause after 12 hours and its Sold Out panel, hours and Seats warnings, photo errors, Barista Picks, Category and Event addresses, keyboard and screen reader fixes in `/manage` and `/bar` |
 | 11.5 Customer pages | DC-24 to DC-37 | Old Event pages, Home's jump while loading and its hours line, a build fallback for the menu, fewer account reads, the demo's late-night gap, eight small copy and form fixes |
 | 11.6 Tests | DC-38 to DC-46 | Missing tests: Staff-cancel refunds, the Sold Out reset, browser-test collisions and time limits, accessibility in both palettes, the daily job, the Staff role test |
+| 11.7 Payments and data hygiene | November P3s | Paid webhooks checked against the amount, no payer details kept in webhook rows, a rare deadlock, the local email folder, small schema drifts, email texts in one tested place |
+| 11.8 Docs and decisions | November P3s | The last stale doc lines, and a written reason for the few items kept as they are |
 
 ### 9.3 Polish nobody has planned
 
-The November audit leaves **43 P3 items**: observations, nits and ideas, with no action planned. They are listed under "P3 (43)" in [docs/audit/2026-11-13.md](audit/2026-11-13.md). Pick one up when a batch already touches that part of the code.
+The November audit leaves **43 P3 items**: observations, nits and ideas, listed under "P3 (43)" in [docs/audit/2026-11-13.md](audit/2026-11-13.md). On 2026-11-17 the owner scheduled all of them in Phase 11: each joins the batch that touches the same code, and batches 11.7 (payments and data hygiene) and 11.8 (docs and decisions) take the rest.
 
 ### 9.4 After V1, and becoming real
 
