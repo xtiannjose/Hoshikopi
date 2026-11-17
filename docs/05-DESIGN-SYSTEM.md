@@ -234,7 +234,7 @@ Built for a tablet behind the counter, used by Annika with wet hands and a queue
 | Page | Budget (mobile, Lighthouse simulated) |
 | --- | --- |
 | Home, menu, Menu Item | Performance 90+, LCP under 2.5 s, CLS under 0.05, total blocking time under 200 ms |
-| Every page | JavaScript under 170 kB compressed on first load; images in AVIF or WebP, menu photos under 80 kB each at card size; the Day paper grain is a small tiled image (under 5 kB), never a live SVG filter over the page, which is slow to paint on phones |
+| Every page | JavaScript under 170 kB compressed on first load; HTML under 300 kB raw (uncompressed) per public page; images in AVIF or WebP, menu photos under 80 kB each at card size; the Day paper grain is a small tiled image (under 5 kB), never a live SVG filter over the page, which is slow to paint on phones |
 | Bar Screen | First data within 1 s on a tablet over Wi-Fi; each poll response under 5 kB when nothing changed |
 
 Measure on the live site, or a local production build for the other numbers: on localhost the scripts arrive before the first paint, so Lighthouse's simulated LCP is about half a second worse than on the live site (7.6). What keeps the pages light: icons render on the server (a client component takes them as props), `partialPrefetching` stays off, and big client parts sit in their own Suspense boundary so hydration runs in short tasks. A known trade-off, kept on purpose (7.6, audit PERF-09): Home ships the menu's Photos view hidden beside the printed list, and Barista Picks for both palettes, so its flight payload is the largest of any page (about 138k characters). Switching views and palettes is then instant and needs no request. If Home's weight matters again, load the Photos grid only when Photos is chosen.

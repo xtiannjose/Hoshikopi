@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openIn } from "./axe";
+import { expectNoAxeViolations, openIn } from "./axe";
 import { openAllDayToday } from "./db";
 
 const PAGES = [
@@ -36,6 +36,16 @@ test.describe("budgets (docs/05 section 11)", () => {
           )
       );
       expect(bytes).toBeLessThan(170_000);
+    });
+  }
+
+  // Raw HTML, streamed parts included (audit PERF-11).
+  for (const path of PAGES.slice(0, 7)) {
+    test(`${path} serves under 300 kB of HTML (audit PERF-11)`, async ({
+      request,
+    }) => {
+      const html = await (await request.get(path)).body();
+      expect(html.length).toBeLessThan(300_000);
     });
   }
 });
@@ -234,14 +244,22 @@ test("a page that is not there is titled so", async ({ page }, testInfo) => {
 });
 
 // Font settings, not zoom: the header row wraps instead of pushing the
-// Cart and menu buttons off screen (audit a11y:8).
-test("a doubled default text size keeps the header on a phone screen", async ({
+// Cart and menu buttons off screen (audit a11y:8), and long words and
+// headings wrap instead of running past the screen edge (audit a11y:12).
+test("a doubled default text size fits a phone screen (audit a11y:8, a11y:12)", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "phone", "the header row is for phones");
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32 } });
-  for (const path of PAGES) {
+  for (const path of [
+    ...PAGES,
+    "/menu/coffee",
+    "/cafe/inquire",
+    "/accessibility",
+    "/privacy",
+    "/no-such-page",
+  ]) {
     await page.goto(path);
     await expect(
       page.getByRole("button", { name: "Open the menu" }),
@@ -252,8 +270,32 @@ test("a doubled default text size keeps the header on a phone screen", async ({
       (el) => el.scrollWidth - el.clientWidth
     );
     expect(overflow, path).toBeLessThanOrEqual(0);
+    const pageOverflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth
+    );
+    expect(pageOverflow, path).toBeLessThanOrEqual(0);
   }
 });
+
+// Pages axe missed before: sign-in, the customer inquiry form, a Category
+// page and the in-site 404 (audit a11y:12).
+for (const palette of ["day", "night"] as const) {
+  test(`sign-in, the inquiry form, a Category page and a missing page pass axe in the ${palette} palette (audit a11y:12)`, async ({
+    page,
+  }) => {
+    for (const path of [
+      "/sign-in",
+      "/cafe/inquire",
+      "/menu/coffee",
+      "/no-such-page",
+    ]) {
+      await openIn(page, palette, path);
+      await expectNoAxeViolations(page);
+    }
+  });
+}
 
 // WCAG 1.4.3 covers placeholder text too (audit a11y:7).
 test("placeholder text has 4.5:1 contrast in both palettes", async ({

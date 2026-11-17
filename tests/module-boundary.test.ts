@@ -1,15 +1,21 @@
 import { ESLint } from "eslint";
 import { describe, expect, it } from "vitest";
 
-const eslint = new ESLint({ cwd: process.cwd() });
+import { moduleBoundary } from "../eslint.module-boundary.mjs";
+
+// Only the boundary rule, not the full Next config, so the run is fast (audit tests:10).
+const eslint = new ESLint({
+  cwd: process.cwd(),
+  overrideConfigFile: true,
+  overrideConfig: [{ files: ["**/*.{ts,tsx}"], rules: moduleBoundary }],
+});
 
 async function violations(filePath: string, code: string) {
   const [result] = await eslint.lintText(code, { filePath });
   return result.messages.filter((m) => m.ruleId === "no-restricted-imports");
 }
 
-// The first ESLint run loads the full Next config and is slow.
-describe("module boundary lint rule", { timeout: 120_000 }, () => {
+describe("module boundary lint rule", () => {
   it("blocks alias imports into another module's internal/", async () => {
     const found = await violations(
       "src/app/page.tsx",

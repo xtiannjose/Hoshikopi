@@ -4,15 +4,13 @@ import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
 import { placeOrder, transition } from "@/modules/ordering";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, mailTo, resetDb } from "./helpers";
+import { createTestDb, mailTo, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock("2026-11-02T01:00:00Z");
 });
 afterEach(unfreezeClock);

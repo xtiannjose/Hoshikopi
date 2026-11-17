@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
@@ -12,19 +20,20 @@ import {
   transition,
 } from "@/modules/ordering";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const owner = { guestTokenHash: "hoshi-browser" };
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock("2026-11-02T01:00:00Z");
 });
-afterEach(unfreezeClock);
+afterEach(() => {
+  unfreezeClock();
+  vi.unstubAllEnvs();
+});
 afterAll(() => db.$disconnect());
 
 async function placed(paymentMethod: PaymentMethod = "pay_at_pickup") {
@@ -254,6 +263,15 @@ describe("Demo Mode: the visitor plays the barista (8.1)", () => {
       "demo",
       "demo",
     ]);
+  });
+
+  it("refuses the visitor when Demo Mode is off, as on a PayMongo deploy (audit tests:3)", async () => {
+    const order = await placed();
+    // After placing, so placeOrder runs as usual.
+    vi.stubEnv("PAYMENT_PROVIDER", "paymongo");
+    expect(
+      await advanceInDemo(order.orderId, order.accessToken, "placed")
+    ).toMatchObject({ ok: false, reason: "not_allowed", status: "placed" });
   });
 
   it("leaves an unpaid online Order to the checkout", async () => {

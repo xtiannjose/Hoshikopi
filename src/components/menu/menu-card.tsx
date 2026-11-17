@@ -45,7 +45,7 @@ export function MenuCard({
             {item.name}
           </Link>
         </Heading>
-        <p className="shrink-0 font-mono">
+        <p className="font-mono">
           {item.soldOut ? (
             <span className="text-muted-foreground">Sold out today</span>
           ) : (

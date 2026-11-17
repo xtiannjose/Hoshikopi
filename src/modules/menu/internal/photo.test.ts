@@ -41,6 +41,22 @@ describe("readMenuPhoto (audit ops:15)", () => {
     });
   });
 
+  // The type comes from the first bytes, so an SVG never passes as an image
+  // (audit SEC1-20).
+  it("refuses an SVG, even named and typed as a PNG (audit SEC1-20)", async () => {
+    const svg = new File(
+      [
+        '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+      ],
+      "x.png",
+      { type: "image/png" }
+    );
+    expect(await readMenuPhoto(svg)).toEqual({
+      ok: false,
+      error: "Choose a JPEG, PNG or WebP photo.",
+    });
+  });
+
   it("refuses a photo over 2 MB", async () => {
     const big = new File([new Uint8Array(2 * 1024 * 1024 + 1)], "x.jpg");
     expect(await readMenuPhoto(big)).toEqual({

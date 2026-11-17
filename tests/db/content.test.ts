@@ -10,8 +10,7 @@ import {
   savePost,
 } from "@/modules/content";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const christian = {
@@ -21,8 +20,7 @@ const christian = {
 };
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock(new Date());
 });
 afterEach(unfreezeClock);

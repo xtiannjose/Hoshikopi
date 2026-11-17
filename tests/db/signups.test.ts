@@ -9,8 +9,7 @@ import {
   signUpForEvent,
 } from "@/modules/content";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 // Latte art night has 12 Seats; the seed dates it a week from today.
@@ -22,8 +21,7 @@ const later = (minutes: number) =>
   freezeClock(new Date(start + minutes * 60_000));
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock(new Date(start));
 });
 afterEach(unfreezeClock);

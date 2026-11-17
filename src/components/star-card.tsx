@@ -49,7 +49,7 @@ export function StarCard({ balance }: { balance: number }) {
           viewBox="0 0 100 100"
           role="img"
           aria-label={`Star Card: ${lit} of ${STARS_PER_REWARD} Stars`}
-          className="w-48 justify-self-center"
+          className="w-48 max-w-full justify-self-center"
         >
           {EDGES.map(([a, b]) => {
             const on = a < lit && b < lit;

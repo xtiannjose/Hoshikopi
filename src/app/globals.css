@@ -108,6 +108,24 @@
     color: var(--color-muted-foreground);
   }
 
+  /* Long words, headings and the email address wrap instead of running
+     past a phone's edge at a doubled text size (audit a11y:12). Staff
+     tables keep whole words and scroll in their overflow-x-auto wrappers. */
+  body {
+    overflow-wrap: anywhere;
+  }
+  table {
+    overflow-wrap: normal;
+  }
+  /* A field's built-in width grows with the text size; this stops it
+     pushing its column off screen (audit a11y:12). Checkboxes and radios
+     keep their minimum width so long text beside them cannot squeeze them
+     (audit a11y:13). */
+  :where(input:not([type="checkbox"], [type="radio"]), select, textarea) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   /* Links in text are underlined; navigation opts out with no-underline. */
   a {
     text-decoration-line: underline;

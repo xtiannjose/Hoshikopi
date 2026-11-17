@@ -17,8 +17,7 @@ import {
   type PlaceOrderInput,
 } from "@/modules/ordering";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
@@ -31,8 +30,7 @@ const ids: Record<string, string> = {};
 const items: Record<string, string> = {};
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   for (const option of await db.option.findMany()) ids[option.name] = option.id;
   for (const item of await db.menuItem.findMany()) items[item.slug] = item.id;
   freezeClock(NINE_AM);

@@ -33,7 +33,7 @@ Status: v0.2, 2026-11-07. Which tool fits which job on Hoshikopi.
 | --- | --- |
 | 3000 | `npm run dev` |
 | 3100 | Playwright (production build) |
-| 3300, 3400 | Ad-hoc production servers for reviews and Lighthouse runs |
+| 3300, 3400 | Ad-hoc production servers for reviews and Lighthouse runs; they serve `.next`, which `npm run test:e2e` rebuilds, so stop them before an e2e run |
 | 5434 | Docker Postgres (`hoshikopi-db`) |
 
 Stop every server you start. On Windows a server started through `npx` can outlive its shell; check with `Get-NetTCPConnection -LocalPort <port>` and stop only the process whose command line matches.

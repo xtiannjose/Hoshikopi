@@ -320,7 +320,7 @@ function RoomPhoto({
   large?: boolean;
 }) {
   return (
-    <figure className="grid gap-2 md:grid-rows-[minmax(0,1fr)_auto]">
+    <figure className="grid grid-cols-1 gap-2 md:grid-rows-[minmax(0,1fr)_auto]">
       <Photo
         src={photo.src}
         alt={photo.alt}

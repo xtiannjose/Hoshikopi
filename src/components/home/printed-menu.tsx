@@ -27,7 +27,7 @@ export function PrintedMenu({
             size, milk and sugar.
           </p>
         </div>
-        <fieldset className="flex items-center gap-3">
+        <fieldset className="flex flex-wrap items-center gap-3">
           <legend className="sr-only">View</legend>
           <ViewChoice id="view-list" label="List" defaultChecked />
           <span

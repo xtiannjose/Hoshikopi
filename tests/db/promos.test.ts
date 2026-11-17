@@ -3,8 +3,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { dayValue, freezeClock, unfreezeClock } from "@/lib/clock";
 import { priceChoices, saveMenuItem, type MenuItemInput } from "@/modules/menu";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const ids: Record<string, string> = {};
@@ -16,8 +15,7 @@ const christian = {
 };
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db, { people: true });
+  await resetToSeed(db);
   for (const option of await db.option.findMany()) ids[option.name] = option.id;
   for (const item of await db.menuItem.findMany()) items[item.slug] = item.id;
 });

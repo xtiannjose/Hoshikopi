@@ -12,8 +12,7 @@ import {
   updateQuantity,
 } from "@/modules/cart";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const hoshi = { guestTokenHash: "hoshi-browser" };
@@ -22,8 +21,7 @@ let ids: Record<string, string> = {};
 let items: Record<string, string> = {};
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db, { people: false });
+  await resetToSeed(db, { people: false });
   ids = {};
   items = {};
   for (const option of await db.option.findMany()) ids[option.name] = option.id;

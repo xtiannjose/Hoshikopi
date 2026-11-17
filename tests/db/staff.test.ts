@@ -22,8 +22,7 @@ import {
   staffMembers,
 } from "@/modules/identity";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, mailTo, resetDb } from "./helpers";
+import { createTestDb, mailTo, resetToSeed } from "./helpers";
 
 // The guards read the request's cookie, and a test has no request: the
 // browser's cookie lives here.
@@ -69,8 +68,7 @@ async function sessionFor(userId: string) {
 
 beforeEach(async () => {
   browser.cookie = "";
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
 });
 afterEach(unfreezeClock);
 afterAll(() => db.$disconnect());

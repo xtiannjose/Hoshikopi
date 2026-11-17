@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 
@@ -84,5 +84,22 @@ describe("schema constraints", () => {
         data: { reason: "edited" },
       })
     ).rejects.toThrow(/never updated or deleted/);
+  });
+});
+
+// Tests restore the seed from a copy taken once per run (audit tests:10).
+describe("resetToSeed", () => {
+  it("resetToSeed undoes a change and leaves out people when asked", async () => {
+    await db.menuItem.update({
+      where: { slug: "hoshi-latte" },
+      data: { baseCents: 100 },
+    });
+    await resetToSeed(db, { people: false });
+    expect(
+      (await db.menuItem.findUniqueOrThrow({ where: { slug: "hoshi-latte" } }))
+        .baseCents
+    ).toBe(18500);
+    expect(await db.user.count()).toBe(0);
+    expect(await db.category.count()).toBe(6);
   });
 });

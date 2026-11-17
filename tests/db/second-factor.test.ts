@@ -5,8 +5,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { enterSecondFactor, secondFactorEnrolment } from "@/modules/identity";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const CHRISTIAN = "seed-manager";
@@ -49,8 +48,7 @@ async function passedAt(sessionId: string) {
 }
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock(AT);
 });
 afterEach(unfreezeClock);

@@ -11,8 +11,7 @@ import {
   transition,
 } from "@/modules/ordering";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const at = (hhmm: string) => new Date(`2026-11-02T${hhmm}:00+08:00`);
@@ -21,8 +20,7 @@ let n = 0;
 
 beforeEach(async () => {
   n = 0;
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
   freezeClock(at("09:00"));
 });
 afterEach(unfreezeClock);

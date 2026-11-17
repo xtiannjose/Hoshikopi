@@ -22,8 +22,7 @@ import {
   type MenuItemInput,
 } from "@/modules/menu";
 
-import { seedDatabase } from "../../prisma/seed-data";
-import { createTestDb, resetDb } from "./helpers";
+import { createTestDb, resetToSeed } from "./helpers";
 
 const db = createTestDb();
 const christian = {
@@ -33,8 +32,7 @@ const christian = {
 };
 
 beforeEach(async () => {
-  await resetDb(db);
-  await seedDatabase(db);
+  await resetToSeed(db);
 });
 afterEach(() => {
   unfreezeClock();
