@@ -90,6 +90,23 @@ describe("priceChoices: the server prices every Line (ORD-06)", () => {
     expect(ensaymada).toEqual({ ok: false, reason: "sold_out" });
   });
 
+  // Nothing tested where Sold Out ends: midnight in Manila, which is 16:00
+  // UTC, not midnight UTC (audit DC-39).
+  it("clears Sold Out at the start of the next Manila day, not before", async () => {
+    await db.menuItem.update({
+      where: { id: items["ensaymada"] },
+      data: { soldOutOn: new Date("2026-11-02") },
+    });
+    const ensaymada = { menuItemId: items["ensaymada"], optionIds: [] };
+    freezeClock("2026-11-02T15:59:59Z");
+    expect((await priceChoices([ensaymada]))[0]).toEqual({
+      ok: false,
+      reason: "sold_out",
+    });
+    freezeClock("2026-11-02T16:00:00Z");
+    expect((await priceChoices([ensaymada]))[0]).toMatchObject({ ok: true });
+  });
+
   it("refuses Hidden and unknown Menu Items", async () => {
     await db.menuItem.update({
       where: { id: items["cold-brew"] },
