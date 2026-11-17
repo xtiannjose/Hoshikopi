@@ -174,7 +174,7 @@ export default async function CafePage() {
         title="Visit Hoshikopi"
         intro={
           <>
-            {cafe.area}. <OpenStatus hours={hours} fallback="Open every day." />
+            {cafe.area}. <OpenStatus hours={hours} />
           </>
         }
       />

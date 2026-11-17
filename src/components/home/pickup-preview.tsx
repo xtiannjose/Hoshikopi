@@ -1,6 +1,8 @@
 import { connection } from "next/server";
 
+import { LastOrderNote } from "@/components/cafe/last-order-note";
 import { formatTime, now } from "@/lib/clock";
+import type { Hours } from "@/lib/hours";
 import { nextPickupTimes } from "@/modules/ordering";
 
 const STAR =
@@ -15,10 +17,31 @@ export const PICKUP_SPACE = "min-h-24";
  * thread, the soonest a gold star. Read only: the time is chosen at
  * checkout, where Capacity is checked. Read at request time, in Suspense.
  */
-export async function PickupPreview() {
+export async function PickupPreview({ hours }: { hours: Hours }) {
   await connection();
-  const next = await nextPickupTimes(now());
-  if (next.kind === "closed") return null;
+  const at = now();
+  const next = await nextPickupTimes(at);
+  // Every state keeps the space the loading card held, and the Last Order
+  // note renders here with its first value, so nothing jumps once the page
+  // has loaded (audit DC-25).
+  return (
+    <div className={`grid content-start gap-2 ${PICKUP_SPACE}`}>
+      <LastOrderNote hours={hours} at={at.toISOString()} />
+      <Times next={next} />
+    </div>
+  );
+}
+
+function Times({
+  next,
+}: {
+  next: Awaited<ReturnType<typeof nextPickupTimes>>;
+}) {
+  if (next.kind === "closed") {
+    return (
+      <p className="text-muted-foreground">Order ahead here once we open.</p>
+    );
+  }
   if (next.kind === "paused") {
     return (
       <p className="text-warning font-semibold">
@@ -27,7 +50,13 @@ export async function PickupPreview() {
     );
   }
   const [soonest] = next.times;
-  if (!soonest) return null;
+  if (!soonest) {
+    return (
+      <p className="text-muted-foreground">
+        No Pickup Times are left today. Walk in and order at the counter.
+      </p>
+    );
+  }
   return (
     <div className="grid gap-2">
       <p className="flex flex-wrap items-baseline gap-x-2">

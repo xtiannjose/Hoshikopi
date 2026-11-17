@@ -40,7 +40,7 @@ Hoshikopi is a portfolio project. The cafe, its address and its people are inven
   - Event Sign-ups are confirmed on the spot, since no confirmation link could be sent.
   - With an email service set up (Resend, `docs/06-SETUP.md` section 9), all of these go to real inboxes. On a developer's computer they go to the terminal and the `data/mail/` folder.
 - **Demo Mode.** On the hosted demo, a visitor can tap the bar's steps on their own Order page ("Be the barista"), because nobody is behind the bar ([ADR 0015](adr/0015-demo-mode-visitor-plays-the-barista.md)). So an Order on the demo's Bar Screen can move without a Barista. The site records those taps as `demo`, never as a Staff member.
-- **The hosted demo takes Orders all day**, from midnight to 11:45 PM Manila time, so visitors in any time zone can try it. In practice ordering stops from about 11:25 PM to midnight (a known gap, audit DC-29). The Manage pages and the Visit page still show the real Opening Hours, so the Ordering tile on Manage may say "Not taking orders" while the demo's checkout still takes them.
+- **The hosted demo takes Orders all day**, from midnight to 11:15 PM Manila time, so visitors in any time zone can try it. From 11:15 PM to midnight it takes no Orders, and checkout says so (audit DC-29). The Manage pages and the Visit page still show the real Opening Hours, so the Ordering tile on Manage may say "Not taking orders" while the demo's checkout still takes them.
 
 ## 2. Signing in
 
@@ -618,4 +618,3 @@ The 2026-11-17 check of the whole app ([docs/audit/2026-11-17.md](audit/2026-11-
 | Gap | Workaround |
 | --- | --- |
 | A free Reward Order's card says "collect PHP 0.00" (DC-30). | Nothing to collect; tap **Paid and picked up**. |
-| Hiding every Category stops the next update of the site from building (DC-27). | Keep at least one Category showing. |

@@ -459,7 +459,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
               </li>
               <li className="flex gap-3">
                 <ClockIcon aria-hidden size={20} className="mt-0.5 shrink-0" />
-                <OpenStatus hours={hours} fallback="Open daily" />
+                <OpenStatus hours={hours} />
               </li>
               <li className="flex gap-3">
                 <TicketIcon aria-hidden size={20} className="mt-0.5 shrink-0" />

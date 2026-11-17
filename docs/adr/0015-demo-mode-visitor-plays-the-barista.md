@@ -34,3 +34,5 @@ The November audit found the two-minute demo closed from 8:30 PM to 7:00 AM Mani
 ## Update 2026-11-17: the demo's dates roll forward
 
 The seeded demo Events and the demo Promo were dated from the day of the seed, so on the live demo they went stale and the owner had to re-date them in `/manage`. While Demo Mode is on, the daily cron now moves a seeded demo Event that has ended forward by whole weeks (same weekday, time and length; its old Sign-ups are cleared) and renews the demo Promo and Seasonal drink once they lapse (`rollDemoEvents` in `content`, `rollDemoMenu` in `menu`). Only the seeded rows, by slug, and only once expired: an Event a Manager makes, or a Promo a Manager takes off, is left alone.
+
+Update 2026-11-17 (audit DC-29): Last Order on the hosted demo is 23:15, not 23:45. Pickup Windows end by closing (23:59), so the last starts at 23:30 and Prep Time removes it before 23:45; at 23:15 the demo now says it has stopped taking Orders instead of offering no Pickup Times.

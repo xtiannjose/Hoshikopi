@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRightIcon, MapPinIcon } from "@phosphor-icons/react/ssr";
 
-import { LastOrderNote } from "@/components/cafe/last-order-note";
 import { ManilaClock } from "@/components/cafe/manila-clock";
 import { mapsUrl } from "@/components/cafe/maps";
 import { OpenStatus } from "@/components/cafe/open-status";
@@ -81,9 +80,8 @@ export function Hero({
           </p>
           <p className="flex flex-wrap items-baseline gap-x-3">
             <ManilaClock />
-            <OpenStatus hours={hours} fallback="Open every day." />
+            <OpenStatus hours={hours} />
           </p>
-          <LastOrderNote hours={hours} />
           {pickup}
         </div>
       </div>

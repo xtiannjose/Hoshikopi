@@ -34,9 +34,12 @@ export async function GET(request: Request) {
   // The hosted demo's Events, Promo and Seasonal drink stay current
   // without anyone re-dating them (Demo Mode, ADR 0015).
   if (demoMode()) {
-    if (await rollDemoEvents(at)) revalidateTag("events", "max");
+    if (await rollDemoEvents(at)) revalidateTag("events", { expire: 0 });
     await rollDemoMenu(at);
   }
-  revalidateTag("menu", "max");
+  // Expired at once, so the first visitor after the job sees yesterday's
+  // Sold Out cleared and the new dates; "max" served them the old page once
+  // more (audit PERF-21).
+  revalidateTag("menu", { expire: 0 });
   return Response.json({ expired, cancelled });
 }

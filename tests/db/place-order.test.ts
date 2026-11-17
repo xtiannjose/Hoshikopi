@@ -208,17 +208,25 @@ describe("placeOrder on the hosted demo (ADR 0015 update, audit journeys:1)", ()
     expect(placed.ok).toBe(true);
   });
 
-  // The last window starts at 23:30; at 23:40 none is left (audit tests:8).
-  it("says no Pickup Times are left at 23:40, after the last window", async () => {
+  // The last window starts at 23:30 and Prep Time takes it away near
+  // 23:25, so from 23:15 the demo says it has stopped taking Orders, not
+  // "walk in and order at the counter" (audit tests:8, DC-29).
+  it("takes an Order at 23:10 and says it is closed from 23:15", async () => {
     const hoshi = guest();
     await addLatte(hoshi);
-    freezeClock(at("23:40"));
-    expect(await placeOrder(await input(hoshi))).toEqual({
-      ok: false,
-      reason: "no_window",
-    });
-    expect(await db.order.count()).toBe(0);
-    expect((await getCart(hoshi)).lines).toHaveLength(1);
+    freezeClock(at("23:10"));
+    expect((await placeOrder(await input(hoshi))).ok).toBe(true);
+    for (const time of ["23:15", "23:40"]) {
+      const late = guest();
+      await addLatte(late);
+      freezeClock(at(time));
+      expect(await placeOrder(await input(late)), time).toEqual({
+        ok: false,
+        reason: "closed",
+      });
+      expect((await getCart(late)).lines).toHaveLength(1);
+    }
+    expect(await db.order.count()).toBe(1);
   });
 
   it("still refuses while Ordering is Paused", async () => {
