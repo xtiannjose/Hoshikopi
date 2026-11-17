@@ -196,6 +196,13 @@ test("a visitor signs up for an Event, confirms by email, the Manager sees it an
   await expect(list).toContainText("2 seats");
   await expect(list).toContainText("Waiting for the email link");
 
+  // The Event's address changed after the email: the old link still finds
+  // the Sign-up, on the new address (audit DC-19).
+  await page.goto(
+    link.replace("/events/latte-art-night/", "/events/old-name/")
+  );
+  await expect(page).toHaveURL(/\/events\/latte-art-night\/signup\//);
+
   // The link confirms, then cancels; Seats are held only while confirmed.
   await page.goto(link);
   await expect(page.getByRole("status")).toHaveText(
