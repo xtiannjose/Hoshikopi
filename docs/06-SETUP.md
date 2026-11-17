@@ -122,7 +122,7 @@ Two database addresses appear below. A **pooled** URL goes through a connection 
 | `BLOB_STORE_ID` | Vercel Blob store, set by Vercel when the store is connected (it signs in with Vercel's OIDC token; an older store gives `BLOB_READ_WRITE_TOKEN` instead); empty uses `data/menu-photos/` | Batch 5.4 |
 | `CRON_SECRET` | random string; `/api/cron/daily` checks it (Vercel Cron sends it as `Authorization: Bearer <CRON_SECRET>`) | Phase 2 |
 | `DATABASE_URL_UNPOOLED` | Set by Vercel's Neon integration: the direct URL migrations use when `DIRECT_URL` is not set (`prisma.config.ts`) | Batch 5.4 |
-| `ALLOW_REMOTE_SEED` | `1` only to seed a remote (Neon) database on purpose; `npm run db:seed` refuses any host but this computer without it | Batch 5.4 |
+| `ALLOW_REMOTE_SEED` | `1` only to use a remote (Neon) database from your computer on purpose. Without it, `npm run db:seed` and every Prisma command (`db:migrate`, `db:reset`, `db:studio`, `db:deploy`) refuse any database not on this computer, so a `vercel env pull` can never point them at the live data (`prisma/local-only.ts`, audit DC-03). Vercel's own builds are allowed | Batch 5.4 |
 | `E2E_DATABASE_URL` | Leave unset: Playwright uses `hoshikopi_e2e` in the local container (`playwright.config.ts`); set it to run the e2e tests against another database | Phase 2 |
 | `FORM_MIN_FILL_MS` | Leave unset. The Inquiry and Event Sign-up forms refuse a post sent faster than 2 seconds; the end-to-end run sets it to `0` (`src/lib/bot-check.ts`) | Batch 10.13 |
 | `AUTH_RATE_LIMIT` | Leave unset. `off` turns Better Auth's own rate limit off; only the end-to-end run sets it (`src/modules/identity/internal/auth.ts`) | Batch 10.13 |
@@ -209,7 +209,7 @@ These are the commands you use day to day, defined in `package.json` (Phase 0). 
 | `npm run qa:full` | `qa` plus the browser tests (they build their own copy against `hoshikopi_e2e`) |
 | `npm run format` | Prettier writes every file it checks (Markdown is left alone) |
 | `npm run db:migrate` | Applies new migrations to the dev database (`prisma migrate dev`) |
-| `npm run db:seed` | Seeds the dev database once; refuses a remote one without `ALLOW_REMOTE_SEED=1` |
+| `npm run db:seed` | Seeds the dev database once; refuses a remote one without `ALLOW_REMOTE_SEED=1` (so do the other `db:` commands) |
 | `npm run db:studio` | Opens Prisma Studio, a browser view of the dev database |
 | `npm run db:reset` | Drops, migrates and seeds the dev database (asks first) |
 
