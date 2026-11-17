@@ -6,7 +6,7 @@ import type { MenuItemCard } from "@/modules/menu";
 
 // No time of day in the heading or note: a pinned palette shows all day (audit UI1-15).
 const COPY = {
-  day: { heading: "Barista picks this week", note: "New picks every Monday." },
+  day: { heading: "Barista picks this week", note: "Chosen by our baristas." },
   night: {
     heading: "Barista picks to take it slow",
     note: "Slower cups for a long sit.",
