@@ -596,7 +596,7 @@ On the concept site these are demo Orders.
 2. Manager: on Orders and Refunds, check **Pay at Pickup still to collect** matches the cash, and that **Needs a refund** is empty.
 3. Close the **Bar Screen** tab (section 5.11). On a shared device, tap **Sign out** on your account page.
 
-The site also tidies up by itself. Online Orders unpaid after 15 minutes expire. Each morning before opening, Pay at Pickup Orders from earlier days that the bar never accepted are cancelled with the reason "The day ended before it was picked up".
+The site also tidies up by itself. Online Orders unpaid after 15 minutes expire. Each morning before opening, Orders from earlier days that the bar never accepted are cancelled: Pay at Pickup ones with the reason "The day ended before it was picked up", and paid online ones with the reason "The day ended before we made it", which also refunds the payment in full.
 
 ## 18. Common questions
 
@@ -620,8 +620,6 @@ The 2026-11-17 check of the whole app ([docs/audit/2026-11-17.md](audit/2026-11-
 | --- | --- |
 | The Bar Screen's **Sold out today** list does not refresh itself. A change made on another device, or a new day, does not show (DC-13). | Reload the Bar Screen at opening and after changing Sold Out elsewhere. |
 | On a Bar Screen open more than 12 hours, a Manager's **Pause ordering** or **Busy** tap asks for the code, then lands on Hours and Capacity without pausing (DC-12). | After the code, pause on Hours and Capacity, then reopen the Bar Screen. |
-| A paid online Order the bar never accepted disappears after its day, with no refund (DC-07). | At closing, make sure every Order on the board is Picked Up or Cancelled. |
-| The only Manager can delete their own account on `/account`, which leaves nobody able to open Manage (DC-01). | Never delete a Staff account. First ask another Manager to change your role to Member. |
 | Changing today's Opening Hours, or removing today's Special Hours, gives no warning about Orders booked after the new closing (DC-14). | Check today's Orders on Orders and Refunds after such a change. |
 | Emptying **Seats** on an Event with Sign-ups saves without a warning (DC-15). | Email the guests from the Sign-ups panel before you clear it. |
 | A new Menu Item whose photo fails to upload says "Added." with no word about the photo (DC-16). | Check the photo shows; if not, choose it again and save. |

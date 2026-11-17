@@ -172,8 +172,9 @@ describe("transition: online payment", () => {
 
 describe("transition: cancelling (ORD-09)", () => {
   // The daily cron closes a Pay at Pickup Order nobody took by the end of
-  // its day, and nothing else (audit ORD-13).
-  it("lets the system cancel only an earlier day's Placed Pay at Pickup Order", async () => {
+  // its day (audit ORD-13), and a paid one the bar never accepted (audit
+  // DC-07, in the table below and tests/db/refunds.test.ts), nothing else.
+  it("lets the system cancel only an earlier day's Placed Pay at Pickup Order or Paid Order", async () => {
     freezeClock("2026-11-02T20:00:00+08:00");
     const today = await placedOrder();
     expect(await transition(today.id, "cancelled", system, "x")).toEqual({
@@ -339,6 +340,7 @@ describe("transition: the docs/03 section 7 table (audit tests:3)", () => {
     "placed-online>cancelled:customer",
     "paid>cancelled:customer",
     "placed-pap>cancelled:system",
+    "paid>cancelled:system",
     "placed-pap>cancelled:manager",
     "placed-online>cancelled:manager",
     "paid>cancelled:manager",

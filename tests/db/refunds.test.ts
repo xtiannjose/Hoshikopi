@@ -13,6 +13,7 @@ import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
 import {
   cancelByCustomer,
+  cancelUncollected,
   dayOrders,
   ordersToRefund,
   placeOrder,
@@ -284,6 +285,30 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
         .status
     ).toBe("picked_up");
     expect(await db.refund.count()).toBe(0);
+  });
+
+  // A paid online Order the bar never accepted stayed Paid for good: not
+  // cancelled, refunded or listed, and its page still said it was on its
+  // way (audit DC-07).
+  it("cancels and refunds a paid Order the bar never accepted, the next morning", async () => {
+    const placed = await order("gcash");
+    const lateThatNight = new Date("2026-11-02T15:30:00Z");
+    freezeClock(lateThatNight);
+    expect(await cancelUncollected(lateThatNight)).toBe(0);
+    const nextMorning = new Date("2026-11-02T22:00:00Z");
+    freezeClock(nextMorning);
+    expect(await cancelUncollected(nextMorning)).toBe(1);
+    const after = await db.order.findUniqueOrThrow({
+      where: { id: placed.orderId },
+      include: { payment: { include: { refunds: true } } },
+    });
+    expect(after).toMatchObject({
+      status: "refunded",
+      cancelReason: "The day ended before we made it",
+    });
+    expect(after.payment?.status).toBe("refunded");
+    expect(after.payment?.refunds).toHaveLength(1);
+    expect(await cancelUncollected(nextMorning)).toBe(0);
   });
 
   it("refuses an Order that was never paid", async () => {

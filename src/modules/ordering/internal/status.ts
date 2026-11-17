@@ -61,12 +61,12 @@ function allowed(order: Order, to: OrderStatus, actor: Actor): boolean {
     case "cancelled":
       if (actor.kind === "customer")
         return from === "placed" || from === "paid";
-      // The daily cron: a Pay at Pickup Order nobody took by the end of its
-      // day (audit ORD-13).
+      // The daily cron: by the end of its day, a Pay at Pickup Order nobody
+      // took (audit ORD-13), or a paid one the bar never accepted, which is
+      // then refunded (audit DC-07).
       if (actor.kind === "system")
         return (
-          from === "placed" &&
-          !ONLINE(order) &&
+          ((from === "placed" && !ONLINE(order)) || from === "paid") &&
           order.serviceDay.getTime() < dayValue(manila(now()).day).getTime()
         );
       return (

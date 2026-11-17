@@ -182,10 +182,10 @@ Every Order moves through a fixed set of steps, from Placed to Picked Up. Only t
 | `ready` | `picked_up` | Barista, or Demo Mode (marks paid at the counter for Pay at Pickup) | Stars earned (`loyalty`); Redemption final |
 | `placed`, `paid` | `cancelled` | Customer, before `accepted` | Window and Stars released; a paid Order goes on to `refunded` |
 | any before `picked_up` | `cancelled` | Manager | Same as above; reason required |
-| `placed` (Pay at Pickup), after its service day | `cancelled` | The daily cron (system) | Window and Stars released; reason "The day ended before it was picked up" |
-| `cancelled` (was paid), `picked_up` | `refunded` | Manager; also the system, right after a Customer cancels a paid Order | Full refund through the provider (cash at the counter for Pay at Pickup); Stars earned are taken back |
+| `placed` (Pay at Pickup) or `paid`, after its service day | `cancelled` | The daily cron (system) | Window and Stars released; reason "The day ended before it was picked up", or for a paid Order the bar never accepted "The day ended before we made it", which then goes on to `refunded` (audit DC-07) |
+| `cancelled` (was paid), `picked_up` | `refunded` | Manager; also the system, right after a Customer or the daily cron cancels a paid Order | Full refund through the provider (cash at the counter for Pay at Pickup); Stars earned are taken back |
 
-`transition(orderId, to, actor)` (in `src/modules/ordering/internal/status.ts`) checks the table, locks the Order row, applies side effects and writes an `order_events` row. Anything else is a bug and throws. A Pay at Pickup Order still `placed` after its service day is cancelled by the daily cron, so a Reward's Stars come back (audit ORD-13). One left `accepted`, `preparing` or `ready` stays for the Manager to close.
+`transition(orderId, to, actor)` (in `src/modules/ordering/internal/status.ts`) checks the table, locks the Order row, applies side effects and writes an `order_events` row. Anything else is a bug and throws. A Pay at Pickup Order still `placed` after its service day is cancelled by the daily cron, so a Reward's Stars come back (audit ORD-13); so is a `paid` one the bar never accepted, which is then refunded (audit DC-07). One left `accepted`, `preparing` or `ready` stays for the Manager to close.
 
 ## 8. Payments
 
