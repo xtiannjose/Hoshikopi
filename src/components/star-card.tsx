@@ -47,7 +47,8 @@ export function StarCard({ balance }: { balance: number }) {
   // Stars page keeps it in a narrow column.
   return (
     <div className="@container">
-      <div className="bg-muted rounded-card grid gap-4 p-6 @lg:grid-cols-[12rem_1fr] @lg:items-center">
+      {/* A border: the muted fill alone is 1.16:1 on the page (UI2-22). */}
+      <div className="bg-muted border-border rounded-card grid gap-4 border p-6 @lg:grid-cols-[12rem_1fr] @lg:items-center">
         <svg
           viewBox="0 0 100 100"
           role="img"
