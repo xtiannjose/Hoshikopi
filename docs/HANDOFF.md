@@ -30,7 +30,7 @@ Hoshikopi is a concept cafe in Metro Manila and the website that runs it. The si
 | --- | --- |
 | Live site | https://hoshikopi.vercel.app |
 | Code | https://github.com/xtiannjose/Hoshikopi |
-| State on 2026-11-17 | Phases 0 to 10 of the [roadmap](07-ROADMAP.md) are done: every planned feature, a full audit and all its fixes except polish. Phase 11 is done (2026-11-17, pull requests #111 to #119): these handoff docs, every fix from the 2026-11-17 deep check, and the November audit's last 43 small items. New features are on hold. |
+| State on 2026-11-17 | Phases 0 to 10 of the [roadmap](07-ROADMAP.md) are done: every planned feature, a full audit and all its fixes except polish. Phase 11 is done (2026-11-17, pull requests #111 to #120): these handoff docs, every fix from the 2026-11-17 deep check, and the November audit's last 43 small items. New features are on hold. |
 
 The site uses fixed words for its parts, such as Menu Item, Pickup Time, Order Code and Star. Each one is defined in the [Glossary](../GLOSSARY.md), and this page capitalises them the same way.
 
@@ -195,7 +195,7 @@ The two-minute demo has its own list of fixes in [docs/DEMO-SCRIPT.md](DEMO-SCRI
 
 ### 9.2 The 2026-11-17 deep check and the November polish: done
 
-The deep check found no serious problem and 46 smaller ones (0 P0, 2 P1, 29 P2, 15 P3), and the November audit had 43 small items left. All of them were fixed, or decided with a written reason, in Phase 11 (batches 11.2 to 11.8, 2026-11-17, pull requests #112 to #119). [docs/audit/2026-11-17.md](audit/2026-11-17.md) and the Fixed list in [docs/audit/2026-11-13.md](audit/2026-11-13.md) say what changed for each. The only audit item still open is ops:8, a look at the live site's demo dates (section 9.1).
+The deep check found no serious problem and 46 smaller ones (0 P0, 2 P1, 29 P2, 15 P3), and the November audit had 43 small items left. All of them were fixed, or decided with a written reason, in Phase 11 (batches 11.2 to 11.8, 2026-11-17, pull requests #112 to #120). [docs/audit/2026-11-17.md](audit/2026-11-17.md) and the Fixed list in [docs/audit/2026-11-13.md](audit/2026-11-13.md) say what changed for each. The only audit item still open is ops:8, a look at the live site's demo dates (section 9.1).
 
 ### 9.4 After V1, and becoming real
 

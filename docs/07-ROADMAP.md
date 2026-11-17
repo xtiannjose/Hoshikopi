@@ -65,7 +65,7 @@
 
 ### Next
 
-- **Phase 11 is done** (2026-11-17, pull requests #111 to #119): handoff docs, every deep check fix, and the November audit's last 43 items. Merge the pull requests in order. Then nothing is planned: new features wait for the owner.
+- **Phase 11 is done** (2026-11-17, pull requests #111 to #120): handoff docs, every deep check fix, and the November audit's last 43 items. Merge the pull requests in order. Then nothing is planned: new features wait for the owner.
 - **New features are on hold** (owner).
 
 ### Waiting on the owner

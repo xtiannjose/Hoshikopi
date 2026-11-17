@@ -30,7 +30,7 @@ A concept cafe in Metro Manila, and the website that runs it. The site sells the
 Built and live at https://hoshikopi.vercel.app, hosted on Vercel with a Neon database. Payments run in Test Mode on the built-in `fake` provider, and the live site sends no email until the project has a domain (visitors sign in with Google).
 
 - **Done: Phases 0 to 10.** The MVP and V1 features, the November audit and its fixes, the portfolio review (the [case study](docs/CASE-STUDY.md), the [measured success metrics](docs/METRICS.md) and the [two-minute demo script](docs/DEMO-SCRIPT.md)), and the rest of the audit backlog. Only 43 small polish items from that audit stay open.
-- **Phase 11, done 2026-11-17 (in pull requests #111 to #119):** these handoff docs, the fixes for all 46 findings of the [2026-11-17 deep check](docs/audit/2026-11-17.md), which found no serious problem, and the 43 small items the November audit had left. After they merge, no audit item is open except ops:8, a look at the live site's demo dates. New features are on hold.
+- **Phase 11, done 2026-11-17 (in pull requests #111 to #120):** these handoff docs, the fixes for all 46 findings of the [2026-11-17 deep check](docs/audit/2026-11-17.md), which found no serious problem, and the 43 small items the November audit had left. After they merge, no audit item is open except ops:8, a look at the live site's demo dates. New features are on hold.
 
 Where things stand on any day: [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
 
