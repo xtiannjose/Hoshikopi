@@ -5,7 +5,7 @@ Status: draft v0.1, 2026-10-30. How Hoshikopi is built. Scope comes from `docs/0
 ## 1. Principles
 
 1. **One Next.js app, organised in modules** ([ADR 0001](adr/0001-modular-monolith-nextjs.md)). Customer pages, Staff pages, webhooks and jobs deploy together; business logic lives in `src/modules/*`, each with one public `index.ts`.
-2. **Server Components by default.** `"use client"` only for leaf components with state or browser APIs (Option picker, Cart drawer, Bar Screen list).
+2. **Server Components by default.** `"use client"` only for leaf components with state or browser APIs (the Option picker, the Cart count and the Bar Screen, which is one client component). The Cart drawer is a Server Component with a native `popover`.
 3. **The server decides money.** Prices, Price Deltas, Rewards and totals are recomputed on the server at every step; integer centavos everywhere ([ADR 0002](adr/0002-money-as-integer-centavos.md)).
 4. **Order Status is a state machine.** Only the transitions in section 7 exist, each in one function with its side effects.
 5. **Public pages are prerendered.** Menu, cafe, Events and Posts render at build time and refresh by cache tag when Staff change them (section 4).
@@ -42,8 +42,8 @@ No other services. Search, analytics and error tracking are added only when a ph
 | `notify` | Email templates and sending | `sendOrderPlaced(order)`, `sendOrderReady(order)` |
 
 Rules:
-- A module touches only its own tables. Another module's data comes through its `index.ts`. An ESLint import rule blocks `src/modules/*/internal/**` from outside the module.
-- Modules return results the same way: reads return `null` when missing; business refusals return `{ ok: false, reason }`; form checks return `{ ok: false, errors }`; bugs throw and are caught at the edge.
+- A module touches only its own tables, by convention: nothing enforces it, and `rate_limits` belongs to `src/lib/rate-limit.ts`, which any module may call. Another module's data comes through its `index.ts`; an ESLint import rule blocks `src/modules/*/internal/**` from outside the module (a dynamic `import()` is the one shape it misses).
+- Modules mostly return results the same way: reads return `null` when missing; business refusals return `{ ok: false, reason }`; form checks return `{ ok: false, errors }`; bugs throw and are caught at the edge. A few simple writes return `true` when done and `false` when there was nothing to do (`deleteOptionGroup`, `removeSignup`, `deletePost`).
 - `placeOrder` coordinates `cafe`, `cart` (which prices through `menu`) and `loyalty` inside one database transaction; an online Order starts its `payments` checkout after the commit (section 6).
 
 ## 4. Routes and rendering
@@ -130,7 +130,7 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 
 ([ADR 0007](adr/0007-pickup-windows-and-capacity.md))
 
-- A day is cut into 15-minute Pickup Windows from opening to the last order time. Capacity per window (drinks, food Lines) is set per day of the week; Special Hours close or shorten a day.
+- A day is cut into 15-minute Pickup Windows from opening; the last one ends at closing time, and a window is offered only if it starts after now plus Prep Time. Orders are taken until Last Order (audit D-7). Capacity per window (drinks, food Lines) is set per day of the week; Special Hours close or shorten a day.
 - `pickup_window_usage(day, window_start)` holds counts taken; `placeOrder` locks and updates it.
 - **Prep Time** for As Soon As Possible: `base_minutes + per_drink_minutes × (drinks ahead + this Order's drinks − 1) + Busy Mode minutes`, rounded up to the next 5 minutes; both numbers are Manager settings (defaults 4 and 1.5). Drinks ahead are those the bar is making (Accepted, Preparing) and the As Soon As Possible Orders waiting on the Bar Screen (Paid, or Placed Pay at Pickup); Scheduled Orders still waiting do not count (ADR 0007 update). ASAP takes the earliest window that starts after now + Prep Time and has room, and checkout shows it as "Ready by" that window.
 - The checkout lists only windows with room, and says "Filling up" or "2 drinks left" on one close to full; the server checks again when placing. As Soon As Possible walks the offered windows in order under each one's row lock and takes the first with room, so a window that filled after it was offered passes to the next.
@@ -163,7 +163,7 @@ Expired and cancelled Orders give back their Pickup Window counts and reserved S
 - A sign-in link's token is stored only as its SHA-256 hash, like Order link tokens (SEC1-13). A used or expired link comes back to `/sign-in?link=expired`, which says so and keeps where it was going; someone still signed in just gets that page. Deleting an account also ends that person's pending links and removes their sign-in limit rows; the daily cron forgets rate-limit rows older than a day.
 - Rate limits (Postgres-backed): sign-in emails per IP (30 per 15 minutes) first, then per address from that IP (3) and per address from anywhere (5), so a stranger on another connection can't use up someone's links; Google sign-in starts per IP (30 per 15 minutes); checkout tries per Cart (10 per 15 minutes) and IP (20), webhook calls per IP (120 a minute), Second Factor tries per Staff member (10 per 15 minutes), Inquiries per IP (V1).
 - Security headers: a Content-Security-Policy locked to this site (PayMongo's checkout is a redirect, so no third-party scripts on our pages); scripts need `'unsafe-inline'` because prerendered pages carry Next's inline RSC scripts, which take no nonce or hash ([ADR 0013](adr/0013-csp-allows-inline-scripts.md)); HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
-- Every input is parsed with zod at the edge (Server Action or route handler). Fields a Customer types refuse hidden control characters (`plainText`, `src/lib/text.ts`), a Cart note and an account name leave them out, and the proxy (`src/proxy.ts`) answers an address with broken percent-encoding or a NUL with the not-found page: Postgres refuses a NUL, and Next had no page to render its 400 for broken encoding, so both gave a bare 500 (audit SEC2-10).
+- Every input is parsed with zod where it enters a module: Server Actions and route handlers pass the raw strings to a module function, which parses them (no file under `src/app` imports zod). Fields a Customer types refuse hidden control characters (`plainText`, `src/lib/text.ts`), a Cart note and an account name leave them out, and the proxy (`src/proxy.ts`) answers an address with broken percent-encoding or a NUL with the not-found page: Postgres refuses a NUL, and Next had no page to render its 400 for broken encoding, so both gave a bare 500 (audit SEC2-10).
 - Privacy (Data Privacy Act): a privacy notice, marketing email only with a separate opt-in, Member data export and deletion (orders are kept, de-identified, for the cafe's records). The export holds the profile, Orders with their contact details and notes, Star history, Favourites, and Event Sign-ups and Inquiries under the Member's email. Deletion runs in one transaction: Orders, Sign-ups and Inquiries lose the person, Star entries stay (so past totals hold) without the Manager's notes, and the Cart, Favourites and sign-in records go (audit ID2-09, SEC1-19, DATA-08, architecture:9).
 
 ## 14. Content and images
