@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import type { PaymentStatus } from "@/generated/prisma/enums";
 import { PRIMARY_PILL } from "@/components/panel";
 import { formatReceipt } from "@/lib/money";
 import { getOrderBrief, orderLink } from "@/modules/ordering";
@@ -27,8 +28,8 @@ const METHOD = {
   pay_at_pickup: "",
 };
 
-/** What a closed checkout says, by Payment status. */
-const DONE: Record<string, string> = {
+/** What a closed checkout says, by Payment status (audit architecture:20). */
+const DONE: Record<Exclude<PaymentStatus, "pending" | "failed">, string> = {
   paid: "Paid. Your order is on its way to the bar.",
   expired: "This checkout timed out.",
   refunded: "This payment was refunded.",

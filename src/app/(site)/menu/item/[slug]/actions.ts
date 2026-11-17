@@ -8,6 +8,7 @@ import {
   cartOwnerForWrite,
   changeLine,
   currentCartOwner,
+  MAX_FAVOURITES,
   MAX_LINE_QUANTITY,
   saveFavourite,
 } from "@/modules/cart";
@@ -94,7 +95,7 @@ export type FavouriteState =
 const FAVOURITE_MESSAGES = {
   unavailable: MESSAGES.unavailable,
   invalid_options: MESSAGES.invalid_options,
-  too_many: "You have 20 Favourites. Remove one in your account first.",
+  too_many: `You have ${MAX_FAVOURITES} Favourites. Remove one in your account first.`,
 };
 
 /** A Member saves this choice as a Favourite (ORD-11). */

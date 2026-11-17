@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  dayOf,
+  dayValue,
   formatDate,
+  formatDay,
   formatTime,
   freezeClock,
   greetingFor,
@@ -44,6 +47,13 @@ describe("manilaInstant", () => {
   });
 });
 
+describe("dayOf", () => {
+  it("gives the Manila day a date column holds", () => {
+    expect(dayOf(new Date("2026-11-02T00:00:00Z"))).toBe("2026-11-02");
+    expect(dayOf(dayValue("2026-12-31"))).toBe("2026-12-31");
+  });
+});
+
 describe("formatting", () => {
   it("shows Manila times as 9:15 AM", () => {
     expect(formatTime(new Date("2026-11-02T01:15:00Z"))).toBe("9:15 AM");
@@ -51,6 +61,9 @@ describe("formatting", () => {
   });
   it("shows dates as Sat, Nov 7", () => {
     expect(formatDate(new Date("2026-11-07T03:00:00Z"))).toBe("Sat, Nov 7");
+  });
+  it("shows a Manila day as Sat, Nov 7", () => {
+    expect(formatDay("2026-11-07")).toBe("Sat, Nov 7");
   });
 });
 

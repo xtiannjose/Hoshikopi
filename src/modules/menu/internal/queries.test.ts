@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { oneTapOptions, type OptionGroupView } from "./queries";
+import { filterTags, oneTapOptions, type OptionGroupView } from "./queries";
 
 const option = (id: string, isDefault = false, soldOut = false) => ({
   id,
@@ -35,5 +35,49 @@ describe("oneTapOptions (MENU-08)", () => {
 
   it("gives up when a required group has nothing left today", () => {
     expect(oneTapOptions([group([option("whole", true, true)])])).toBeNull();
+  });
+});
+
+// Read from keys, not labels (audit architecture:17); merch gets none and
+// only a drink is caffeine-free (audit journeys:22).
+describe("filterTags (MENU-05)", () => {
+  const drink = { isDrink: true, categorySlug: "coffee" };
+  it("tags vegan, caffeine-free and nut-free from the keys", () => {
+    expect(
+      filterTags({
+        ...drink,
+        badges: ["vegan", "no_caffeine"],
+        allergens: ["milk"],
+      })
+    ).toEqual(["vegan", "no-caffeine", "nut-free"]);
+    expect(
+      filterTags({
+        ...drink,
+        badges: ["best_seller"],
+        allergens: ["tree_nuts"],
+      })
+    ).toEqual([]);
+    expect(
+      filterTags({ ...drink, badges: [], allergens: ["peanuts"] })
+    ).not.toContain("nut-free");
+  });
+
+  it("gives beans and merch no tags, and food no caffeine tag", () => {
+    expect(
+      filterTags({
+        badges: [],
+        allergens: [],
+        isDrink: false,
+        categorySlug: "beans-and-merch",
+      })
+    ).toEqual([]);
+    expect(
+      filterTags({
+        badges: ["no_caffeine"],
+        allergens: [],
+        isDrink: false,
+        categorySlug: "pastries",
+      })
+    ).toEqual(["nut-free"]);
   });
 });

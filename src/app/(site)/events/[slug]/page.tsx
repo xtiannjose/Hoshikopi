@@ -17,7 +17,7 @@ import { Photo } from "@/components/photo";
 import { formatDate, formatTime } from "@/lib/clock";
 import { formatDecimal, formatPrice } from "@/lib/money";
 import { getCafeDetails } from "@/modules/cafe";
-import { getEvent, getEvents } from "@/modules/content";
+import { getEvent, getEvents, HOLD_MINUTES } from "@/modules/content";
 
 import { SignupForm } from "./signup-form";
 
@@ -76,7 +76,7 @@ async function Event({ params }: Pick<PageProps<"/events/[slug]">, "params">) {
       name: "Hoshikopi",
       address: {
         "@type": "PostalAddress",
-        addressLocality: "Kapitolyo, Pasig",
+        addressLocality: cafe.area,
         addressCountry: "PH",
       },
     },
@@ -187,6 +187,7 @@ async function Event({ params }: Pick<PageProps<"/events/[slug]">, "params">) {
                     startsAt={event.startsAt.toISOString()}
                     calendar={calendar}
                     directions={directions}
+                    holdMinutes={HOLD_MINUTES}
                   />
                 </>
               ) : (

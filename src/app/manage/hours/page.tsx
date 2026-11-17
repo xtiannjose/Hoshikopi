@@ -12,8 +12,8 @@ import {
 import { BackLink } from "@/components/back-link";
 import { Field } from "@/components/fields";
 import { PageHeader } from "@/components/page-header";
-import { Empty, Panel, Pill } from "@/components/panel";
-import { formatDate, formatTime, manila, now } from "@/lib/clock";
+import { Empty, Panel, Pill, PRIMARY_PILL_LG } from "@/components/panel";
+import { formatDay, formatTime, manila, now } from "@/lib/clock";
 import { formatClock } from "@/lib/hours";
 import {
   getHoursForStaff,
@@ -51,9 +51,6 @@ export default function ManageHoursPage() {
     </main>
   );
 }
-
-const button =
-  "min-h-12 rounded-full px-6 font-semibold bg-primary text-primary-foreground";
 
 async function Editor() {
   await requireStaff("manager", "/manage/hours");
@@ -114,7 +111,7 @@ async function Editor() {
                   New Orders are paused until {formatTime(hours.pausedUntil)}.
                   {hours.pauseMessage && ` "${hours.pauseMessage}"`}
                 </p>
-                <button type="submit" className={button}>
+                <button type="submit" className={PRIMARY_PILL_LG}>
                   Resume ordering
                 </button>
               </form>
@@ -146,7 +143,7 @@ async function Editor() {
                 />
                 <button
                   type="submit"
-                  className={`${button} justify-self-start`}
+                  className={`${PRIMARY_PILL_LG} justify-self-start`}
                 >
                   Pause ordering
                 </button>
@@ -168,7 +165,7 @@ async function Editor() {
                   >
                     <span>
                       <span className="font-mono text-sm">
-                        {formatDate(new Date(`${s.day}T04:00:00Z`))}
+                        {formatDay(s.day)}
                       </span>{" "}
                       {s.isClosed || !s.opensAt || !s.closesAt
                         ? "Closed"

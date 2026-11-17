@@ -13,6 +13,7 @@ import {
   TicketIcon,
 } from "@phosphor-icons/react/ssr";
 
+import type { OrderStatus } from "@/generated/prisma/enums";
 import { BackLink } from "@/components/back-link";
 import { mapsUrl } from "@/components/cafe/maps";
 import { OpenStatus } from "@/components/cafe/open-status";
@@ -62,7 +63,8 @@ function steps(order: OrderView): Step[] {
   ];
 }
 
-const CURRENT: Record<string, string> = {
+// Partial: closed statuses have no step (audit architecture:20).
+const CURRENT: Partial<Record<OrderStatus, string>> = {
   placed: "Placed",
   paid: "Paid",
   accepted: "Accepted",
@@ -410,7 +412,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
             {order.lines.map((line, index) => (
               <li key={index} className="flex justify-between gap-4">
                 <span>
-                  {line.quantity} x {lineName(line)}
+                  {line.quantity} x {lineName(line, order.rewardStars)}
                   {line.options.length > 0 && (
                     <span className="text-muted-foreground block text-sm">
                       {line.options.map((o) => o.name).join(", ")}

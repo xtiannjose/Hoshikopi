@@ -117,6 +117,11 @@ test("the Bar Screen says it stopped when its session ends (audit, 7.4)", async 
 }) => {
   await signIn(page, "annika@hoshikopi.example", "/bar");
   await expect(page.getByRole("heading", { name: "Bar Screen" })).toBeVisible();
+  // The Bar Screen frame carries the Concept Notice too (audit tests:15).
+  await expect(page.getByText("Hoshikopi is a concept cafe.")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "About this concept" })
+  ).toHaveAttribute("href", "/concept");
   await context.clearCookies();
   const alert = page.getByRole("alert").filter({ hasText: "signed out" });
   await expect(alert).toBeVisible({ timeout: 10_000 });

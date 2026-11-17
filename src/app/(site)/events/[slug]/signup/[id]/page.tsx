@@ -9,7 +9,7 @@ import { OUTLINE_PILL } from "@/components/panel";
 import { PageHeader } from "@/components/page-header";
 import { formatDate, formatTime } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
-import { signupForGuest } from "@/modules/content";
+import { HOLD_MINUTES, signupForGuest } from "@/modules/content";
 
 import { CancelledNote, SignupAnswer } from "./signup-answer";
 
@@ -32,7 +32,7 @@ export default function SignupPage(
   );
 }
 
-/** What the email link opens: confirm within 30 minutes, or cancel (8.7). */
+/** What the email link opens: confirm within HOLD_MINUTES, or cancel (8.7). */
 async function Signup({
   params,
   searchParams,
@@ -72,7 +72,8 @@ async function Signup({
       {signup.expired ? (
         <div className="bg-muted rounded-card grid justify-items-start gap-3 p-5">
           <p className="text-lg">
-            This link waited more than 30 minutes, so the seats went back.
+            This link waited more than {HOLD_MINUTES} minutes, so the seats went
+            back.
           </p>
           <Link href={`/events/${slug}`} className={OUTLINE_PILL}>
             Sign up again
@@ -84,6 +85,7 @@ async function Signup({
           token={token}
           slug={slug}
           confirmed={signup.confirmed}
+          holdMinutes={HOLD_MINUTES}
         />
       )}
     </div>

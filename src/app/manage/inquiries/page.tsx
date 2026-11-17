@@ -18,7 +18,7 @@ import {
   Pill,
   PRIMARY_PILL,
 } from "@/components/panel";
-import { formatDate, formatTime, manilaInstant } from "@/lib/clock";
+import { formatDate, formatDay, formatTime } from "@/lib/clock";
 import { inquiriesForStaff, type InquiryView } from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
@@ -168,8 +168,7 @@ function Card({ inquiry, done }: { inquiry: InquiryView; done: boolean }) {
         <a href={`mailto:${encodeURIComponent(inquiry.email)}`}>
           {inquiry.email}
         </a>
-        {inquiry.wantedOn &&
-          `, for ${formatDate(manilaInstant(inquiry.wantedOn, 12 * 60))}`}
+        {inquiry.wantedOn && `, for ${formatDay(inquiry.wantedOn)}`}
         {inquiry.guests && `, ${inquiry.guests} guests or drinks`}
       </p>
       <p className="max-w-measure whitespace-pre-line">{inquiry.message}</p>

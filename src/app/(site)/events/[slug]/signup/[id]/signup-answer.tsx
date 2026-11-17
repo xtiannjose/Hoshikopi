@@ -34,11 +34,14 @@ export function SignupAnswer({
   token,
   slug,
   confirmed,
+  holdMinutes,
 }: {
   id: string;
   token: string;
   slug: string;
   confirmed: boolean;
+  /** How long the link holds the Seats (audit architecture:17). */
+  holdMinutes: number;
 }) {
   const [state, action, pending] = useActionState<AnswerState, FormData>(
     answerSignupAction,
@@ -72,7 +75,7 @@ export function SignupAnswer({
       <p role="status" className="text-lg">
         {status === "confirmed"
           ? "You're in! See you there."
-          : "One more step: confirm within 30 minutes to keep your seats."}
+          : `One more step: confirm within ${holdMinutes} minutes to keep your seats.`}
       </p>
       <div className="flex flex-wrap gap-3">
         {status === "waiting" ? (

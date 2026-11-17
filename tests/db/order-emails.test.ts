@@ -20,6 +20,12 @@ describe("Order emails (ORD-10)", () => {
   it("sends Order placed for Pay at Pickup and Ready for pickup", async () => {
     const address = `hoshi-${Date.now()}@example.com`;
     const owner = { guestTokenHash: address };
+    // The footer reads the area fresh from Cafe Settings (audit
+    // architecture:17).
+    await db.cafeSettings.update({
+      where: { id: 1 },
+      data: { area: "Maginhawa, Quezon City" },
+    });
     const item = await db.menuItem.findUniqueOrThrow({
       where: { slug: "ube-pandesal" },
     });
@@ -45,6 +51,7 @@ describe("Order emails (ORD-10)", () => {
     expect(placed).toContain(
       `/orders/${result.orderId}?t=${result.accessToken}`
     );
+    expect(placed).toContain("Hoshikopi, Maginhawa, Quezon City.");
 
     for (const to of ["accepted", "preparing", "ready"] as const) {
       await transition(result.orderId, to, annika);

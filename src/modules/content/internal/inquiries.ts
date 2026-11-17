@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { plainText } from "@/lib/text";
 
-import { dayValue, manila, now } from "@/lib/clock";
+import { dayOf, dayValue, manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
 import { audit, type Staff } from "@/modules/identity";
 
@@ -94,7 +94,7 @@ function toView(row: {
 }): InquiryView {
   return {
     ...row,
-    wantedOn: row.wantedOn?.toISOString().slice(0, 10) ?? null,
+    wantedOn: row.wantedOn && dayOf(row.wantedOn),
   };
 }
 

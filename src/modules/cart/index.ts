@@ -18,6 +18,7 @@ export {
 } from "./internal/cart";
 export {
   favouritesFor,
+  MAX_FAVOURITES,
   removeFavourite,
   saveFavourite,
   type FavouriteView,

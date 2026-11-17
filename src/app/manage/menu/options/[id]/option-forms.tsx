@@ -2,13 +2,9 @@
 
 import { useActionState } from "react";
 
-import {
-  ALLERGEN_LABELS,
-  Checkboxes,
-  Field,
-  SaveBar,
-} from "@/components/fields";
+import { Checkboxes, Field, SaveBar } from "@/components/fields";
 import { useKeptForm } from "@/components/use-kept-form";
+import { ALLERGENS } from "@/lib/menu-labels";
 
 import {
   saveOptionAction,
@@ -146,7 +142,7 @@ export function OptionForm({
       <Checkboxes
         legend="Allergens it adds"
         name="addsAllergens"
-        options={ALLERGEN_LABELS}
+        options={ALLERGENS}
         checked={option.addsAllergens}
       />
       <SaveBar

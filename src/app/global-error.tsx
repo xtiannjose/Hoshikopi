@@ -1,5 +1,6 @@
 "use client";
 
+import { ConceptNotice } from "@/components/concept-notice";
 import { THEME_SCRIPT } from "@/components/theme";
 
 import "./globals.css";
@@ -51,10 +52,7 @@ export default function GlobalError({
               Back home
             </a>
           </div>
-          <p className="text-muted-foreground mt-6 font-mono text-sm">
-            Hoshikopi is a concept cafe. Orders and payments here are for
-            demonstration. <a href="/concept">About this concept</a>
-          </p>
+          <ConceptNotice plain className="mt-6" />
         </main>
       </body>
     </html>

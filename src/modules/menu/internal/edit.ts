@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { dayValue, manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
+import { ALLERGENS, BADGES } from "@/lib/menu-labels";
 import { MAX_PRICE_CENTS, parsePesos } from "@/lib/money";
 import { audit, type Staff } from "@/modules/identity";
 
@@ -11,26 +12,8 @@ import { readMenuPhoto, removeMenuPhoto, storeMenuPhoto } from "./photo";
 // Staff writes to the menu (STAFF-03, STAFF-04). Callers check the role and
 // call updateTag("menu") after a successful write.
 
-export const BADGE_KEYS = [
-  "new",
-  "best_seller",
-  "barista_pick",
-  "night_pick",
-  "vegan",
-  "no_caffeine",
-] as const;
-
-export const ALLERGEN_KEYS = [
-  "milk",
-  "egg",
-  "wheat",
-  "soy",
-  "peanuts",
-  "tree_nuts",
-  "fish",
-  "shellfish",
-  "sesame",
-] as const;
+const BADGE_KEYS = BADGES.map(([key]) => key);
+const ALLERGEN_KEYS = ALLERGENS.map(([key]) => key);
 
 export type FormResult<T = object> =
   ({ ok: true } & T) | { ok: false; errors: Partial<Record<string, string>> };

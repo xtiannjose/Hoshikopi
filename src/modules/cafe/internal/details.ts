@@ -1,8 +1,8 @@
 import { cacheLife, cacheTag } from "next/cache";
 
-import { manila, now } from "@/lib/clock";
+import { dayOf, dayValue, manila, now } from "@/lib/clock";
 import { db } from "@/lib/db";
-import type { Hours } from "@/lib/hours";
+import { addDays, type Hours } from "@/lib/hours";
 
 export type CafeContact = { area: string; contactEmail: string };
 
@@ -37,6 +37,18 @@ export async function getCafeContact(): Promise<CafeContact> {
     where: { id: 1 },
     select: { area: true, contactEmail: true },
   });
+}
+
+/**
+ * The cafe's area for the order emails. Uncached: they are sent outside a
+ * cache scope, where cacheTag throws (audit architecture:17).
+ */
+export async function cafeArea(): Promise<string> {
+  const row = await db.cafeSettings.findUniqueOrThrow({
+    where: { id: 1 },
+    select: { area: true },
+  });
+  return row.area;
 }
 
 /** Everything /cafe shows about visiting (INFO-01, INFO-04 to INFO-07). */
@@ -80,8 +92,8 @@ export async function getHours(): Promise<Hours> {
     db.specialHours.findMany({
       where: {
         day: {
-          gte: new Date(`${today}T00:00:00Z`),
-          lt: new Date(Date.parse(`${today}T00:00:00Z`) + 28 * 86_400_000),
+          gte: dayValue(today),
+          lt: dayValue(addDays(today, 28)),
         },
       },
       orderBy: { day: "asc" },
@@ -96,7 +108,7 @@ export async function getHours(): Promise<Hours> {
       isClosed: w.isClosed,
     })),
     special: special.map((s) => ({
-      day: s.day.toISOString().slice(0, 10),
+      day: dayOf(s.day),
       isClosed: s.isClosed,
       opensAt: s.opensAt && hhmm(s.opensAt),
       lastOrderAt: s.lastOrderAt && hhmm(s.lastOrderAt),

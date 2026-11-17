@@ -14,6 +14,8 @@ const ORDER: OrderForEmail = {
   windowStart: new Date("2026-11-02T08:15:00Z"),
   paymentMethod: "pay_at_pickup",
   totalCents: 33500,
+  rewardStars: 0,
+  area: "Kapitolyo, Pasig",
   lines: [
     {
       name: "Hoshi Latte",
@@ -45,6 +47,7 @@ describe("orderPlacedEmail (ORD-10)", () => {
     const free = orderPlacedEmail(
       {
         ...ORDER,
+        rewardStars: 9,
         lines: [
           {
             name: "Hoshi Latte",
@@ -74,6 +77,13 @@ describe("orderPlacedEmail (ORD-10)", () => {
     expect(email.text).toContain("Hoshikopi is a concept cafe.");
     // No en or em dashes in Customer copy.
     expect(email.text).not.toMatch(new RegExp("[\\u2013\\u2014]"));
+  });
+
+  // The cafe's area comes from Cafe Settings (audit architecture:17).
+  it("names the cafe's area in the footer", () => {
+    expect(
+      orderPlacedEmail({ ...ORDER, area: "Maginhawa, Quezon City" }, "x").text
+    ).toContain("Hoshikopi, Maginhawa, Quezon City.");
   });
 });
 

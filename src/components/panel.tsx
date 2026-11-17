@@ -3,8 +3,12 @@ import type { ReactNode } from "react";
 // No "use client" and no server-only imports: client forms use the pill
 // classes too.
 
-export const PRIMARY_PILL =
-  "bg-primary text-primary-foreground inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 font-semibold no-underline hover:opacity-90 disabled:opacity-60";
+// One primary pill in two sizes; LG is the form submit. aria-disabled dims
+// a busy() button too (audit architecture:11).
+const PRIMARY =
+  "bg-primary text-primary-foreground inline-flex items-center justify-center gap-2 rounded-full font-semibold no-underline hover:opacity-90 disabled:opacity-60 aria-disabled:opacity-60";
+export const PRIMARY_PILL = `${PRIMARY} min-h-11 px-5`;
+export const PRIMARY_PILL_LG = `${PRIMARY} min-h-12 px-6`;
 export const OUTLINE_PILL =
   "border-input hover:bg-muted inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-5 font-semibold no-underline disabled:opacity-60";
 

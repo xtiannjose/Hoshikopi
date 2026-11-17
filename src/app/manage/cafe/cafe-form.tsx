@@ -13,7 +13,7 @@ import {
 } from "@phosphor-icons/react";
 
 import { mapsUrl } from "@/components/cafe/maps";
-import { IconCircle } from "@/components/panel";
+import { IconCircle, PRIMARY_PILL_LG } from "@/components/panel";
 import { useKeptForm } from "@/components/use-kept-form";
 import type { CafeDetails } from "@/modules/cafe";
 
@@ -190,11 +190,7 @@ export function CafeForm({ cafe }: { cafe: CafeDetails }) {
       )}
 
       <div className="flex flex-wrap items-center gap-4 xl:col-span-2">
-        <button
-          type="submit"
-          {...busy(pending)}
-          className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold aria-disabled:opacity-60"
-        >
+        <button type="submit" {...busy(pending)} className={PRIMARY_PILL_LG}>
           {pending ? "Saving..." : "Save cafe details"}
         </button>
         <p role="status" className="font-semibold">

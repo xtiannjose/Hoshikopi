@@ -9,7 +9,9 @@ export function eventCalendar(
     startsAt: Date;
     endsAt: Date;
   },
-  siteUrl: string
+  siteUrl: string,
+  /** The cafe's area from Cafe Settings (audit architecture:17). */
+  area: string
 ): string {
   return calendarFile({
     uid: `${event.slug}@hoshikopi`,
@@ -17,7 +19,7 @@ export function eventCalendar(
     endsAt: event.endsAt,
     summary: event.title,
     description: `${event.summary} (Hoshikopi is a concept cafe.)`,
-    location: "Hoshikopi, Kapitolyo, Pasig",
+    location: `Hoshikopi, ${area}`,
     url: `${siteUrl}/events/${event.slug}`,
   });
 }

@@ -8,7 +8,7 @@ import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, Pill } from "@/components/panel";
 import { Photo } from "@/components/photo";
-import { formatDate, manila, now } from "@/lib/clock";
+import { dayOf, formatDate, manila, now } from "@/lib/clock";
 import { formatReceipt } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
 import { getMenuForStaff, getMenuItemForEdit } from "@/modules/menu";
@@ -39,7 +39,7 @@ export default function ManageItemPage({
   );
 }
 
-const day = (at: Date | null) => at?.toISOString().slice(0, 10);
+const day = (at: Date | null) => (at ? dayOf(at) : "");
 
 async function Editor({
   params,
@@ -106,9 +106,9 @@ async function Editor({
     pairingId: row.pairingId ?? "",
     calories: row.calorieKcal?.toString() ?? "",
     promoPrice: row.promoCents === null ? "" : formatReceipt(row.promoCents),
-    promoFrom: day(row.promoFrom) ?? "",
-    promoUntil: day(row.promoUntil) ?? "",
-    availableUntil: day(row.availableUntil) ?? "",
+    promoFrom: day(row.promoFrom),
+    promoUntil: day(row.promoUntil),
+    availableUntil: day(row.availableUntil),
     photoUrl: row.photoUrl,
     photoAlt: row.photoAlt ?? "",
     sort: row.sort,
@@ -117,7 +117,7 @@ async function Editor({
   // Dates still to come; a promo or season that ended says nothing.
   const today = manila(now()).day;
   const ahead = (at: Date | null) =>
-    at && at.toISOString().slice(0, 10) >= today ? formatDate(at) : null;
+    at && dayOf(at) >= today ? formatDate(at) : null;
   const promoUntil = row.promoCents === null ? null : ahead(row.promoUntil);
   const availableUntil = ahead(row.availableUntil);
   const soldOut = menuItems.find((m) => m.id === row.id)?.soldOut ?? false;

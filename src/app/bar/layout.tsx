@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+
+import { ConceptNotice } from "@/components/concept-notice";
 
 export const metadata: Metadata = {
   title: "Bar Screen",
@@ -14,10 +15,7 @@ export default function BarLayout({ children }: LayoutProps<"/bar">) {
       className="bg-background text-foreground flex min-h-dvh flex-1 flex-col"
     >
       {children}
-      <p className="text-muted-foreground px-4 py-3 font-mono text-sm lg:px-6">
-        Hoshikopi is a concept cafe. Orders and payments here are for
-        demonstration. <Link href="/concept">About this concept</Link>
-      </p>
+      <ConceptNotice className="px-4 py-3 lg:px-6" />
     </div>
   );
 }

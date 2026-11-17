@@ -4,7 +4,7 @@ import { priceChoices, type ChoiceRefusal } from "@/modules/menu";
 
 import { choiceKey } from "./cart";
 
-const MAX_FAVOURITES = 20;
+export const MAX_FAVOURITES = 20;
 
 export type FavouriteResult =
   | { ok: true }

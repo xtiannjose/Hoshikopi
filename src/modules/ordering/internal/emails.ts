@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { cafeArea } from "@/modules/cafe";
 import {
   sendOrderPlaced,
   sendOrderReady,
@@ -7,6 +8,7 @@ import {
 } from "@/modules/notify";
 
 import { orderLink } from "./links";
+import { snapshotOptions } from "./snapshot";
 
 async function orderForEmail(orderId: string): Promise<OrderForEmail | null> {
   const order = await db.order.findUnique({
@@ -22,9 +24,11 @@ async function orderForEmail(orderId: string): Promise<OrderForEmail | null> {
     windowStart: order.windowStart,
     paymentMethod: order.paymentMethod,
     totalCents: order.totalCents,
+    rewardStars: order.rewardStars,
+    area: await cafeArea(),
     lines: order.lines.map((line) => ({
       name: line.name,
-      options: (line.options as { name: string }[]).map((o) => o.name),
+      options: snapshotOptions(line.options).map((o) => o.name),
       quantity: line.quantity,
       lineCents: line.lineCents,
       isReward: line.isReward,

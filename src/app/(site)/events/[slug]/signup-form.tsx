@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 
 import { busy, Field, fieldClass } from "@/components/fields";
+import { PRIMARY_PILL_LG } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 import { now } from "@/lib/clock";
 
@@ -19,6 +20,7 @@ export function SignupForm({
   startsAt,
   calendar,
   directions,
+  holdMinutes,
 }: {
   slug: string;
   seatsLeft: number;
@@ -28,6 +30,8 @@ export function SignupForm({
   /** The Event's .ics file and the cafe's maps link. */
   calendar: string;
   directions: string;
+  /** How long the emailed link holds the Seats (audit architecture:17). */
+  holdMinutes: number;
 }) {
   const [state, action, pending] = useActionState<SignupState, FormData>(
     signUpAction,
@@ -51,7 +55,7 @@ export function SignupForm({
       <div role="status" className="bg-background rounded-card mt-4 p-4">
         <p className="text-lg">
           {!state.confirmed
-            ? `Almost there! We emailed ${state.email} a link. Open it within 30 minutes to keep your seats.`
+            ? `Almost there! We emailed ${state.email} a link. Open it within ${holdMinutes} minutes to keep your seats.`
             : state.emailed === false
               ? "You're in! See you there. This demo sends no emails, so there's no cancel link to keep."
               : "You're in! See you there. The link in your email cancels it if plans change."}
@@ -123,11 +127,7 @@ export function SignupForm({
         <p className="text-muted-foreground">Pay {price} a seat at the door.</p>
       )}
       <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="submit"
-          {...busy(pending)}
-          className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold aria-disabled:opacity-60"
-        >
+        <button type="submit" {...busy(pending)} className={PRIMARY_PILL_LG}>
           {pending ? "Signing up..." : "Sign up"}
         </button>
         <p

@@ -12,6 +12,7 @@ import {
   StorefrontIcon,
 } from "@phosphor-icons/react/ssr";
 
+import type { StarKind } from "@/generated/prisma/enums";
 import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { Empty, IconCircle, Panel, PRIMARY_PILL } from "@/components/panel";
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-const KIND: Record<string, string> = {
+// Keyed by the enum, so a new kind needs a label and icon (audit architecture:20).
+const KIND: Record<StarKind, string> = {
   earn: "Earned for an order",
   reserve: "Spent on a free drink",
   release: "Back from a cancelled order",
@@ -35,7 +37,7 @@ const KIND: Record<string, string> = {
   birthday: "Birthday Treat",
 };
 
-const KIND_ICON: Record<string, typeof StarIcon> = {
+const KIND_ICON: Record<StarKind, typeof StarIcon> = {
   earn: StarIcon,
   reserve: GiftIcon,
   release: ArrowCounterClockwiseIcon,
@@ -133,7 +135,7 @@ async function Stars() {
                     </h3>
                     <ul className="divide-border divide-y">
                       {entries.map((entry, index) => {
-                        const Icon = KIND_ICON[entry.kind] ?? StarIcon;
+                        const Icon = KIND_ICON[entry.kind];
                         const order =
                           entry.kind === "earn" && entry.orderId
                             ? ordersById.get(entry.orderId)

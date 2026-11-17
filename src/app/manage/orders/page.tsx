@@ -7,11 +7,12 @@ import {
   ReceiptIcon,
 } from "@phosphor-icons/react/ssr";
 
+import type { PaymentMethod } from "@/generated/prisma/enums";
 import { BackLink } from "@/components/back-link";
 import { OrderStatusPill } from "@/components/order-status-pill";
 import { PageHeader } from "@/components/page-header";
 import { Empty, OUTLINE_PILL, Pill } from "@/components/panel";
-import { formatDate, formatTime, manila, now } from "@/lib/clock";
+import { dayOf, formatDay, formatTime, manila, now } from "@/lib/clock";
 import { addDays } from "@/lib/hours";
 import { formatPrice } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
@@ -21,7 +22,8 @@ import { cancelAction, refundAction } from "./actions";
 
 export const metadata: Metadata = { title: "Orders and Refunds" };
 
-const PAYMENT: Record<string, string> = {
+// Keyed by the enum, so a new Payment Method needs a label (audit architecture:20).
+const PAYMENT: Record<PaymentMethod, string> = {
   gcash: "GCash",
   maya: "Maya",
   card: "Card",
@@ -105,7 +107,7 @@ async function Day({
       ? asked
       : today;
   const isToday = day === today;
-  const shown = formatDate(new Date(`${day}T04:00:00Z`));
+  const shown = formatDay(day);
   const [{ orders, count, totalCents }, toRefund] = await Promise.all([
     dayOrders(day),
     ordersToRefund(),
@@ -192,7 +194,7 @@ async function Day({
           </p>
           <ul className="grid gap-1">
             {toRefund.map((o) => {
-              const orderDay = o.serviceDay.toISOString().slice(0, 10);
+              const orderDay = dayOf(o.serviceDay);
               return (
                 <li key={o.id} className="flex flex-wrap items-center gap-3">
                   <Link
@@ -201,7 +203,7 @@ async function Day({
                   >
                     {o.code}
                   </Link>
-                  <span>{formatDate(new Date(`${orderDay}T04:00:00Z`))}</span>
+                  <span>{formatDay(orderDay)}</span>
                   <OrderStatusPill status={o.status} />
                   <span className="font-mono">{formatPrice(o.totalCents)}</span>
                 </li>

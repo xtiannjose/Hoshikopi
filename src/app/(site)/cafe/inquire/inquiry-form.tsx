@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { CheckCircleIcon } from "@phosphor-icons/react";
 
 import { busy, Field, fieldClass } from "@/components/fields";
-import { Empty, OUTLINE_PILL } from "@/components/panel";
+import { Empty, OUTLINE_PILL, PRIMARY_PILL_LG } from "@/components/panel";
 import { useFocusInvalid } from "@/components/use-focus-invalid";
 
 import { inquireAction, type InquiryState } from "./actions";
@@ -120,11 +120,7 @@ export function InquiryForm({
         real cafe.
       </p>
       <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="submit"
-          {...busy(pending)}
-          className="bg-primary text-primary-foreground min-h-12 rounded-full px-6 font-semibold aria-disabled:opacity-60"
-        >
+        <button type="submit" {...busy(pending)} className={PRIMARY_PILL_LG}>
           {pending ? "Sending..." : "Send inquiry"}
         </button>
         <p
