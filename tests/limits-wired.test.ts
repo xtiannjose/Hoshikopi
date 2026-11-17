@@ -40,7 +40,8 @@ describe("limits are wired", () => {
     expect(readFileSync(file, "utf8")).toContain(call);
   });
 
-  it("puts every other limit in src/lib/limits.ts", () => {
+  // It reads every source file, which can pass 5 s on a busy machine.
+  it("puts every other limit in src/lib/limits.ts", { timeout: 30_000 }, () => {
     const own = sourceFiles("src")
       .map((file) => file.split(path.sep).join("/"))
       .filter((file) => readFileSync(file, "utf8").includes("takeToken("));
