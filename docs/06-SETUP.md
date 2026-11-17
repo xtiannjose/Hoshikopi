@@ -178,7 +178,7 @@ Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `
 
 ### Test databases and constraints
 
-- Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`. It migrates and seeds it at the start of each run.
+- Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`. It migrates and seeds it at the start of each run. Outside services (email, Google, Blob, PayMongo, Vercel) are switched off in tests whatever `.env.local` holds (`tests/no-outside-services.ts`, audit DC-04).
 - Playwright uses `hoshikopi_e2e`, migrated, reset and seeded before each run.
 - The migrations add the CHECK constraints and unique indexes in [`docs/04-DATA-MODEL.md`](04-DATA-MODEL.md) section 4 by hand where Prisma cannot express them: the first migration, and later ones such as `20261116000000_database_rules`.
 
