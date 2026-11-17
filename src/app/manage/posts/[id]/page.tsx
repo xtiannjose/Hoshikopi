@@ -8,12 +8,13 @@ import { BackLink } from "@/components/back-link";
 import { DeleteForm } from "@/components/delete-form";
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, Pill } from "@/components/panel";
+import { Photo } from "@/components/photo";
 import { formatDate } from "@/lib/clock";
 import { contentForStaff } from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
 import { deletePostAction } from "../../content-actions";
-import { PostForm, type PostFormData } from "../../content-forms";
+import { PhotoFailed, PostForm, type PostFormData } from "../../content-forms";
 
 export const metadata: Metadata = { title: "Post" };
 
@@ -44,8 +45,10 @@ async function Editor({
   searchParams,
 }: Pick<PageProps<"/manage/posts/[id]">, "params" | "searchParams">) {
   await requireStaff("manager", "/manage/posts");
-  const [{ id }, { added }] = await Promise.all([params, searchParams]);
+  const [{ id }, query] = await Promise.all([params, searchParams]);
+  const { added } = query;
   let post: PostFormData;
+  let coverUrl: string | null = null;
   if (id === "new") {
     post = {
       id: null,
@@ -53,18 +56,21 @@ async function Editor({
       slug: "",
       excerpt: "",
       bodyMd: "",
+      coverAlt: "",
       isPublished: false,
       publishedOn: null,
     };
   } else {
     const row = (await contentForStaff()).posts.find((p) => p.id === id);
     if (!row) notFound();
+    coverUrl = row.coverUrl;
     post = {
       id: row.id,
       title: row.title,
       slug: row.slug,
       excerpt: row.excerpt,
       bodyMd: row.bodyMd,
+      coverAlt: row.coverAlt ?? "",
       isPublished: row.publishedAt !== null,
       publishedOn: row.publishedAt && formatDate(row.publishedAt),
     };
@@ -103,7 +109,21 @@ async function Editor({
           )}
         </p>
       )}
-      <PostForm post={post} />
+      {post.id && added && query.photo === "failed" && <PhotoFailed />}
+      <PostForm
+        post={post}
+        photo={
+          coverUrl && (
+            <Photo
+              src={coverUrl}
+              alt={post.coverAlt}
+              kind="post"
+              sizes="320px"
+              className="rounded-card aspect-16/9"
+            />
+          )
+        }
+      />
       {post.id && !post.isPublished && (
         <DeleteForm
           action={deletePostAction}

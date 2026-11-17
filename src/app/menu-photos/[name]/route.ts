@@ -2,10 +2,10 @@ import { readFile } from "node:fs/promises";
 
 import { connection } from "next/server";
 
-import { localPhotoFile } from "@/modules/menu";
+import { localPhotoFile } from "@/lib/photo";
 
 /**
- * Menu Item photos saved without a Blob store (local runs and the e2e
+ * Photos (Menu Items, Events, Posts) saved without a Blob store (local runs and the e2e
  * server), read at request time: `next start` lists public/ only when it
  * starts (audit PERF-04).
  */

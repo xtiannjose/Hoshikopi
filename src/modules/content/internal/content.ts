@@ -5,6 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { manilaInstant, now } from "@/lib/clock";
 import { db } from "@/lib/db";
 import { MAX_PRICE_CENTS, parsePesos } from "@/lib/money";
+import { readPhoto, removePhoto, storePhoto } from "@/lib/photo";
 import { audit, type Staff } from "@/modules/identity";
 
 import { heldSignups } from "./signups";
@@ -167,8 +168,9 @@ export async function contentForStaff() {
   };
 }
 
+/** `photoError`: saved, but the new photo did not store (12.3). */
 export type ContentResult =
-  | { ok: true; id: string }
+  | { ok: true; id: string; photoError?: string }
   | { ok: false; errors: Partial<Record<string, string>> };
 
 const slug = z
@@ -181,6 +183,16 @@ const slug = z
   )
   .max(80);
 const checkbox = z.preprocess((v) => v === "on" || v === true, z.boolean());
+// A photo's description; absent leaves it as it is, empty clears it.
+const altText = z
+  .string()
+  .trim()
+  .max(160)
+  .optional()
+  .transform((v) => (v === undefined ? undefined : v || null));
+/** A chosen photo, checked before anything saves (as for Menu Items). */
+const checkPhoto = async (photo?: File | null) =>
+  photo && photo.size > 0 ? readPhoto(photo) : null;
 // "2026-11-12T19:00" from a datetime-local input, in Manila time.
 const manilaTime = z
   .string()
@@ -216,6 +228,7 @@ const EventInput = z
         (v) => !v || (/^\d+$/.test(v) && +v >= 1 && +v <= 500),
         "Enter 1 to 500 seats, or leave it empty for no sign-up here."
       ),
+    photoAlt: altText,
     isPublished: checkbox,
   })
   .refine((e) => e.endsAt > e.startsAt, {
@@ -236,6 +249,7 @@ const PostInput = z.object({
   slug,
   excerpt: z.string().trim().min(1, "Write one line.").max(180),
   bodyMd: z.string().trim().min(1, "Write something.").max(12000),
+  coverAlt: altText,
   isPublished: checkbox,
 });
 
@@ -250,13 +264,23 @@ const clash = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError &&
   error.code === "P2002";
 
+/**
+ * Saves an Event, with a new photo if one is chosen (12.3): the photo is
+ * checked first, stored once the save passes, and the one it replaces is
+ * deleted (the Menu Item rules, audit ops:15).
+ */
 export async function saveEvent(
   id: string | null,
   input: z.input<typeof EventInput>,
-  actor: Staff
+  actor: Staff,
+  photo?: File | null
 ): Promise<ContentResult> {
   const parsed = EventInput.safeParse(input);
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
+  const checked = await checkPhoto(photo);
+  if (checked && !checked.ok) {
+    return { ok: false, errors: { photo: checked.error } };
+  }
   const { price, signupUrl, seats, ...rest } = parsed.data;
   const data = {
     ...rest,
@@ -279,6 +303,14 @@ export async function saveEvent(
       );
       return saved;
     });
+    if (!checked) return { ok: true, id: event.id };
+    const stored = await storePhoto(checked, "events", event.slug);
+    if (!stored.ok) return { ok: true, id: event.id, photoError: stored.error };
+    await db.event.update({
+      where: { id: event.id },
+      data: { photoUrl: stored.url },
+    });
+    if (event.photoUrl) await removePhoto(event.photoUrl);
     return { ok: true, id: event.id };
   } catch (error) {
     if (clash(error))
@@ -292,7 +324,11 @@ export async function saveEvent(
  * instead (audit staff:9).
  */
 export async function deletePost(id: string, actor: Staff): Promise<boolean> {
-  return db.$transaction(async (tx) => {
+  const draft = await db.post.findFirst({
+    where: { id, publishedAt: null },
+    select: { coverUrl: true },
+  });
+  const deleted = await db.$transaction(async (tx) => {
     const { count } = await tx.post.deleteMany({
       where: { id, publishedAt: null },
     });
@@ -300,15 +336,24 @@ export async function deletePost(id: string, actor: Staff): Promise<boolean> {
     await audit(actor, "content.post.delete", { type: "post", id }, {}, tx);
     return true;
   });
+  // Its cover goes too, so it no longer sits in the public store (12.3).
+  if (deleted && draft?.coverUrl) await removePhoto(draft.coverUrl);
+  return deleted;
 }
 
+/** Saves a Post, with a new cover photo if one is chosen (as saveEvent). */
 export async function savePost(
   id: string | null,
   input: z.input<typeof PostInput>,
-  actor: Staff
+  actor: Staff,
+  photo?: File | null
 ): Promise<ContentResult> {
   const parsed = PostInput.safeParse(input);
   if (!parsed.success) return { ok: false, errors: errorsOf(parsed.error) };
+  const checked = await checkPhoto(photo);
+  if (checked && !checked.ok) {
+    return { ok: false, errors: { photo: checked.error } };
+  }
   const { isPublished, ...rest } = parsed.data;
   try {
     const post = await db.$transaction(async (tx) => {
@@ -331,6 +376,14 @@ export async function savePost(
       );
       return saved;
     });
+    if (!checked) return { ok: true, id: post.id };
+    const stored = await storePhoto(checked, "posts", post.slug);
+    if (!stored.ok) return { ok: true, id: post.id, photoError: stored.error };
+    await db.post.update({
+      where: { id: post.id },
+      data: { coverUrl: stored.url },
+    });
+    if (post.coverUrl) await removePhoto(post.coverUrl);
     return { ok: true, id: post.id };
   } catch (error) {
     if (clash(error))

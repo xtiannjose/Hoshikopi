@@ -21,6 +21,10 @@ export type ContentFormState = {
 };
 
 const text = (form: FormData, name: string) => String(form.get(name) ?? "");
+const file = (form: FormData) => {
+  const photo = form.get("photo");
+  return photo instanceof File ? photo : null;
+};
 
 /** Managers write Events (STAFF-06); public pages refresh by the content tag. */
 export async function saveEventAction(
@@ -41,13 +45,23 @@ export async function saveEventAction(
       price: text(form, "price"),
       signupUrl: text(form, "signupUrl"),
       seats: text(form, "seats"),
+      photoAlt: text(form, "photoAlt"),
       isPublished: form.get("isPublished") ?? undefined,
     },
-    staff
+    staff,
+    file(form)
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("content");
-  if (!id) redirect(`/manage/events/${result.id}?added=1`);
+  // A new Event whose photo failed to store says so on its page (12.3).
+  if (!id) {
+    redirect(
+      `/manage/events/${result.id}?added=1${result.photoError ? "&photo=failed" : ""}`
+    );
+  }
+  if (result.photoError) {
+    return { status: "error", errors: { photo: result.photoError } };
+  }
   // Fewer Seats than taken, or off the site with Sign-ups: nobody is told,
   // so say so (audit staff:10).
   const signups = await signupsForEvent(id);
@@ -92,13 +106,22 @@ export async function savePostAction(
       slug: text(form, "slug"),
       excerpt: text(form, "excerpt"),
       bodyMd: text(form, "bodyMd"),
+      coverAlt: text(form, "coverAlt"),
       isPublished: form.get("isPublished") ?? undefined,
     },
-    staff
+    staff,
+    file(form)
   );
   if (!result.ok) return { status: "error", errors: result.errors };
   updateTag("content");
-  if (!id) redirect(`/manage/posts/${result.id}?added=1`);
+  if (!id) {
+    redirect(
+      `/manage/posts/${result.id}?added=1${result.photoError ? "&photo=failed" : ""}`
+    );
+  }
+  if (result.photoError) {
+    return { status: "error", errors: { photo: result.photoError } };
+  }
   return { status: "saved" };
 }
 

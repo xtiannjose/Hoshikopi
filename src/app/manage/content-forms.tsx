@@ -19,6 +19,54 @@ const TOP =
   "grid gap-10 xl:grid-cols-[minmax(0,48rem)_minmax(0,1fr)] xl:items-start";
 const SLUG_HINT = "Lowercase words joined by dashes, like latte-art-night.";
 
+/** Shown on a new Event or Post whose photo didn't store (12.3). */
+export function PhotoFailed() {
+  return (
+    <p role="alert" className="text-destructive font-semibold">
+      The photo didn&apos;t save. Choose it again below, then save.
+    </p>
+  );
+}
+
+/**
+ * The photo picker and its description (12.3), as for Menu Items. The
+ * saved photo shows above it; a new file replaces it on save.
+ */
+function PhotoFields({
+  label,
+  altName,
+  alt,
+  current,
+  error,
+}: {
+  label: string;
+  altName: string;
+  alt: string;
+  current?: ReactNode;
+  error: (name: string) => string | undefined;
+}) {
+  return (
+    <div className="grid gap-5">
+      {current && <div className="max-w-80">{current}</div>}
+      <Field
+        name="photo"
+        label={label}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        hint={`JPEG, PNG or WebP, 16:9, under 2 MB.${current ? " Choose a new file to replace this one." : ""}`}
+        error={error("photo")}
+      />
+      <Field
+        name={altName}
+        label="Photo description (alt text)"
+        hint="Say what the photo shows, for people who can't see it."
+        defaultValue={alt}
+        error={error(altName)}
+      />
+    </div>
+  );
+}
+
 export type EventFormData = {
   id: string | null;
   title: string;
@@ -31,15 +79,19 @@ export type EventFormData = {
   price: string;
   signupUrl: string;
   seats: string;
+  photoAlt: string;
   isPublished: boolean;
 };
 
 export function EventForm({
   event,
   aside,
+  photo,
 }: {
   event: EventFormData;
   aside?: ReactNode;
+  /** The saved photo, if it has one. */
+  photo?: ReactNode;
 }) {
   const [state, action, pending] = useActionState(saveEventAction, idle);
   const form = useKeptForm(action, state);
@@ -109,6 +161,13 @@ export function EventForm({
             defaultValue={event.seats}
             error={error("seats")}
           />
+          <PhotoFields
+            label="Photo"
+            altName="photoAlt"
+            alt={event.photoAlt}
+            current={photo}
+            error={error}
+          />
         </div>
         {aside && <div className="grid gap-6 xl:sticky xl:top-6">{aside}</div>}
       </div>
@@ -143,6 +202,7 @@ export type PostFormData = {
   slug: string;
   excerpt: string;
   bodyMd: string;
+  coverAlt: string;
   isPublished: boolean;
   /** The saved publish date, formatted ("Sat, Nov 7"); null for a draft. */
   publishedOn: string | null;
@@ -151,9 +211,12 @@ export type PostFormData = {
 export function PostForm({
   post,
   aside,
+  photo,
 }: {
   post: PostFormData;
   aside?: ReactNode;
+  /** The saved cover photo, if it has one. */
+  photo?: ReactNode;
 }) {
   const [state, action, pending] = useActionState(savePostAction, idle);
   const form = useKeptForm(action, state);
@@ -191,6 +254,13 @@ export function PostForm({
               {excerptLength} of 180
             </p>
           </div>
+          <PhotoFields
+            label="Cover photo"
+            altName="coverAlt"
+            alt={post.coverAlt}
+            current={photo}
+            error={error}
+          />
         </div>
         {aside && <div className="grid gap-6 xl:sticky xl:top-6">{aside}</div>}
       </div>

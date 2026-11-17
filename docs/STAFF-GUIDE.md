@@ -464,6 +464,8 @@ Tap **Add an Event**, or tap an Event's tile.
 | **Price (PHP, empty for free)** | Paid at the door; the site takes no money for Events. |
 | **Sign-up link (optional)** | An `https://` link if people sign up somewhere else. |
 | **Seats for Sign-ups here (optional)** | 1 to 500. People sign up on the Event page until these run out. Empty for no Sign-up here. |
+| **Photo** | JPEG, PNG or WebP, 16:9 (wide), under 2 MB. It shows on the Event's tile and page. The saved photo shows above the field; choose a new file to replace it. Without one, a plain stand-in shows. |
+| **Photo description (alt text)** | Say what the photo shows, for people who cannot see it ("Rosetta latte art in a blue cup"). |
 | **About the Event** | The full text, in Markdown (simple marks for formatting: `**bold**`, `*italic*`, `- lists`, `[links](https://...)`). A **Preview** shows it as the site will. |
 | **Published on the site** | Untick to keep it as a draft. |
 
@@ -490,11 +492,14 @@ Fill **Add a Recurring Event**: **Title**, **Day**, **Starts (Manila time)**, **
 
 1. Tap **Write a Post**.
 2. Fill **Title**, **Web address** and **One line for the news list (up to 180 characters)**. A counter shows how many characters you used.
-3. Write **The Post** in Markdown (see 10.1). **Preview** shows it as the site will.
-4. Tick **Published on the site** to publish it now, or leave it for a draft.
-5. Tap **Add Post**, then **Save Post** for later changes.
+3. Add a **Cover photo** if you have one (optional): JPEG, PNG or WebP, 16:9 (wide), under 2 MB, with a **Photo description (alt text)** saying what it shows. It shows on the news list and at the top of the Post. Choose a new file later to replace it.
+4. Write **The Post** in Markdown (see 10.1). **Preview** shows it as the site will.
+5. Tick **Published on the site** to publish it now, or leave it for a draft.
+6. Tap **Add Post**, then **Save Post** for later changes.
 
-A published Post shows the date it was published and **See it on the site**. Untick **Published on the site** to take it off the News page. A draft can be deleted: **Delete this draft**, then **Yes, delete it** (this cannot be undone).
+If a photo does not save (the photo store is down), everything else is saved and the form says "We couldn't save the photo. Try again in a moment." Choose the file again and save.
+
+A published Post shows the date it was published and **See it on the site**. Untick **Published on the site** to take it off the News page. A draft can be deleted: **Delete this draft**, then **Yes, delete it** (this cannot be undone). Its cover photo is deleted with it.
 
 ## 12. Inquiries
 

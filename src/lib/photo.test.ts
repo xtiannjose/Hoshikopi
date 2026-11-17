@@ -7,9 +7,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   LOCAL_PHOTO_DIR,
-  readMenuPhoto,
-  removeMenuPhoto,
-  storeMenuPhoto,
+  readPhoto,
+  removePhoto,
+  storePhoto,
   type CheckedPhoto,
 } from "./photo";
 
@@ -33,9 +33,9 @@ afterEach(() => {
   vi.mocked(del).mockReset();
 });
 
-describe("readMenuPhoto (audit ops:15)", () => {
+describe("readPhoto (audit ops:15)", () => {
   it("refuses a file that is not a JPEG, PNG or WebP, whatever its name", async () => {
-    expect(await readMenuPhoto(new File(["GIF89a"], "x.png"))).toEqual({
+    expect(await readPhoto(new File(["GIF89a"], "x.png"))).toEqual({
       ok: false,
       error: "Choose a JPEG, PNG or WebP photo.",
     });
@@ -51,7 +51,7 @@ describe("readMenuPhoto (audit ops:15)", () => {
       "x.png",
       { type: "image/png" }
     );
-    expect(await readMenuPhoto(svg)).toEqual({
+    expect(await readPhoto(svg)).toEqual({
       ok: false,
       error: "Choose a JPEG, PNG or WebP photo.",
     });
@@ -59,7 +59,7 @@ describe("readMenuPhoto (audit ops:15)", () => {
 
   it("refuses a photo over 2 MB", async () => {
     const big = new File([new Uint8Array(2 * 1024 * 1024 + 1)], "x.jpg");
-    expect(await readMenuPhoto(big)).toEqual({
+    expect(await readPhoto(big)).toEqual({
       ok: false,
       error: "Choose a photo under 2 MB.",
     });
@@ -74,7 +74,7 @@ describe("readMenuPhoto (audit ops:15)", () => {
       .withExif({ IFD0: { Copyright: "Taken at home, 14.58 N 121.06 E" } })
       .toBuffer();
     expect(tagged.includes("Taken at home")).toBe(true);
-    const result = await readMenuPhoto(new File([tagged], "phone.jpg"));
+    const result = await readPhoto(new File([tagged], "phone.jpg"));
     expect(result).toMatchObject({ ok: true, type: "jpg" });
     const bytes = result.ok ? result.bytes : Buffer.alloc(0);
     expect(bytes.includes("Taken at home")).toBe(false);
@@ -82,14 +82,15 @@ describe("readMenuPhoto (audit ops:15)", () => {
   });
 });
 
-describe("storeMenuPhoto (batch 1.5, 5.4)", () => {
+describe("storePhoto (batch 1.5, 5.4)", () => {
   // public/ is listed only when `next start` begins, so a photo saved
   // there was a 404 until a restart (audit PERF-04).
   it("saves to data/menu-photos/ under a clean name, served by /menu-photos/", async () => {
     vi.stubEnv("BLOB_STORE_ID", "");
     vi.stubEnv("BLOB_READ_WRITE_TOKEN", "");
-    const result = await storeMenuPhoto(
+    const result = await storePhoto(
       await checkedPng(),
+      "menu",
       "../../Hoshi Latte!"
     );
     expect(result).toMatchObject({ ok: true });
@@ -108,7 +109,7 @@ describe("storeMenuPhoto (batch 1.5, 5.4)", () => {
           url: `https://store.public.blob.vercel-storage.com/${pathname}`,
         }) as Awaited<ReturnType<typeof put>>
     );
-    const result = await storeMenuPhoto(await checkedPng(), "hoshi-latte");
+    const result = await storePhoto(await checkedPng(), "menu", "hoshi-latte");
     expect(put).toHaveBeenCalledWith(
       expect.stringMatching(/^menu\/hoshi-latte-\d+\.png$/),
       expect.anything(),
@@ -122,25 +123,40 @@ describe("storeMenuPhoto (batch 1.5, 5.4)", () => {
     });
   });
 
+  it("keeps Event and Post photos in their own Blob folders (12.3)", async () => {
+    vi.stubEnv("BLOB_STORE_ID", "store_test");
+    vi.mocked(put).mockResolvedValue({
+      url: "https://store.public.blob.vercel-storage.com/x",
+    } as Awaited<ReturnType<typeof put>>);
+    await storePhoto(await checkedPng(), "events", "latte-art-night");
+    await storePhoto(await checkedPng(), "posts", "new-beans");
+    expect(vi.mocked(put).mock.calls.map(([pathname]) => pathname)).toEqual([
+      expect.stringMatching(/^events\/latte-art-night-\d+\.png$/),
+      expect.stringMatching(/^posts\/new-beans-\d+\.png$/),
+    ]);
+  });
+
   it("tells the Manager when the Blob store refuses the photo", async () => {
     vi.stubEnv("BLOB_STORE_ID", "store_test");
     vi.mocked(put).mockRejectedValue(new Error("Access denied"));
     vi.spyOn(console, "error").mockImplementation(() => {});
-    expect(await storeMenuPhoto(await checkedPng(), "hoshi-latte")).toEqual({
-      ok: false,
-      error: "We couldn't save the photo. Try again in a moment.",
-    });
+    expect(await storePhoto(await checkedPng(), "menu", "hoshi-latte")).toEqual(
+      {
+        ok: false,
+        error: "We couldn't save the photo. Try again in a moment.",
+      }
+    );
   });
 });
 
-describe("removeMenuPhoto (audit ops:15)", () => {
+describe("removePhoto (audit ops:15)", () => {
   it("deletes a replaced Blob photo, and leaves other addresses alone", async () => {
     const old = "https://store.public.blob.vercel-storage.com/menu/a-1.png";
-    await removeMenuPhoto(old);
+    await removePhoto(old);
     expect(del).toHaveBeenCalledWith(old);
     vi.mocked(del).mockReset();
-    await removeMenuPhoto("https://example.com/menu/a-1.png");
-    await removeMenuPhoto("/menu/seeded.png");
+    await removePhoto("https://example.com/menu/a-1.png");
+    await removePhoto("/menu/seeded.png");
     expect(del).not.toHaveBeenCalled();
   });
 });

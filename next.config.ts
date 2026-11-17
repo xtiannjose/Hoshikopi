@@ -34,15 +34,19 @@ const nextConfig: NextConfig = {
   // 405 kB raw, 50 kB compressed); off, once (258 kB, 34 kB). Links still
   // prefetch, after the page has loaded.
   partialPrefetching: false,
-  // Menu photos up to 2 MB go through a Server Action (batch 1.5), which
+  // Photos up to 2 MB go through a Server Action (batch 1.5, 12.3), which
   // refuses bodies over 1 MB by default. The action checks the role first.
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
-  // Menu photos uploaded on Vercel live in the Blob store (batch 5.4); the
+  // Photos uploaded on Vercel live in the Blob store (batch 5.4, 12.3); the
   // image optimizer fetches them, so the pages' CSP stays 'self'.
   images: {
-    // This store's photos only, never every Blob store (audit ops:7).
+    // This store's photo folders only, never every Blob store (audit ops:7).
     remotePatterns: blobHostname
-      ? [{ protocol: "https", hostname: blobHostname, pathname: "/menu/**" }]
+      ? ["menu", "events", "posts"].map((folder) => ({
+          protocol: "https" as const,
+          hostname: blobHostname,
+          pathname: `/${folder}/**`,
+        }))
       : [],
   },
   // No page may be framed, sniffed as another type, leak its full address

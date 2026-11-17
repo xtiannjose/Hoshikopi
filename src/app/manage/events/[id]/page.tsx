@@ -12,13 +12,18 @@ import { BackLink } from "@/components/back-link";
 import { DeleteForm } from "@/components/delete-form";
 import { PageHeader } from "@/components/page-header";
 import { OUTLINE_PILL, Panel, Pill } from "@/components/panel";
+import { Photo } from "@/components/photo";
 import { manilaInputValue, now } from "@/lib/clock";
 import { formatReceipt } from "@/lib/money";
 import { contentForStaff, signupsForEvent } from "@/modules/content";
 import { requireStaff } from "@/modules/identity";
 
 import { removeSignupAction } from "../../content-actions";
-import { EventForm, type EventFormData } from "../../content-forms";
+import {
+  EventForm,
+  PhotoFailed,
+  type EventFormData,
+} from "../../content-forms";
 
 export const metadata: Metadata = { title: "Event" };
 
@@ -56,9 +61,11 @@ async function Editor({
   searchParams,
 }: Pick<PageProps<"/manage/events/[id]">, "params" | "searchParams">) {
   await requireStaff("manager", "/manage/events");
-  const [{ id }, { added }] = await Promise.all([params, searchParams]);
+  const [{ id }, query] = await Promise.all([params, searchParams]);
+  const { added } = query;
   let event: EventFormData;
   let saved: Saved | null = null;
+  let photoUrl: string | null = null;
   if (id === "new") {
     const week = new Date(now().getTime() + 7 * 86_400_000);
     event = {
@@ -72,12 +79,14 @@ async function Editor({
       price: "",
       signupUrl: "",
       seats: "",
+      photoAlt: "",
       isPublished: false,
     };
   } else {
     const row = (await contentForStaff()).events.find((e) => e.id === id);
     if (!row) notFound();
     saved = row;
+    photoUrl = row.photoUrl;
     event = {
       id: row.id,
       title: row.title,
@@ -89,6 +98,7 @@ async function Editor({
       price: row.priceCents ? formatReceipt(row.priceCents) : "",
       signupUrl: row.signupUrl ?? "",
       seats: row.seats?.toString() ?? "",
+      photoAlt: row.photoAlt ?? "",
       isPublished: row.isPublished,
     };
   }
@@ -126,7 +136,22 @@ async function Editor({
           )}
         </p>
       )}
-      <EventForm event={event} aside={saved && <Signups event={saved} />} />
+      {saved && added && query.photo === "failed" && <PhotoFailed />}
+      <EventForm
+        event={event}
+        aside={saved && <Signups event={saved} />}
+        photo={
+          photoUrl && (
+            <Photo
+              src={photoUrl}
+              alt={event.photoAlt}
+              kind="event"
+              sizes="320px"
+              className="rounded-card aspect-16/9"
+            />
+          )
+        }
+      />
       {/* The Sign-ups sit inside the Event form, so their Remove buttons
           post this one (forms can't nest). */}
       {saved && <form id="remove-signup" action={removeSignupAction} hidden />}
