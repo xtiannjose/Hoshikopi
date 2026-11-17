@@ -63,7 +63,10 @@ export function Photo({
           alt={alt}
           fill
           sizes={sizes}
-          priority={priority}
+          // Next 16 deprecates `priority`; its guide prefers these for the
+          // image that is the page's largest paint (audit PERF-18).
+          loading={priority ? "eager" : undefined}
+          fetchPriority={priority ? "high" : undefined}
           className="object-cover"
         />
       </div>
