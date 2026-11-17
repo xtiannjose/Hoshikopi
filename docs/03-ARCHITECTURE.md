@@ -264,15 +264,15 @@ Members and Staff sign in without passwords: by an emailed link or with Google. 
 - **Better Auth** ([ADR 0005](adr/0005-better-auth-members-and-staff.md)), the sign-in library: Members sign in with an email link (sent through Resend) or Google. Staff are users with a `role` of `barista` or `manager`, given a role by a Manager at `/manage/staff` once they have signed in (STAFF-10). Staff sign in like Members (email link or Google). They must enter a Second Factor (TOTP, a time-based one-time code) once per session before using `/manage`. `requireStaff()` checks it, rather than Better Auth's plugin ([ADR 0014](adr/0014-staff-second-factor-in-identity.md)).
 - **Guards.** `requireMember()` and `requireStaff(role)` guard pages, Server Actions and route handlers; every Staff write goes through `audit()`. Each guard checks, in the same read as the user, that the session row still exists. So Sign out everywhere, a role taken away or a deleted account takes effect on the next request (audit staff:17). `requireStaff` asks for a Second Factor under 12 hours old on every call except a Barista's taps on the Bar Screen (ADR 0014).
 - **Sign-in links.** A link's token is stored only as its SHA-256 hash (a one-way fingerprint: the database copy cannot be turned back into a working link), like Order link tokens (SEC1-13). A used or expired link comes back to `/sign-in?link=expired`, which says so and keeps where it was going; someone still signed in just gets that page. Deleting an account also ends that person's pending links and removes their sign-in limit rows. The daily cron forgets rate-limit rows older than a day.
-- **Rate limits** (Postgres-backed, `src/lib/rate-limit.ts`). A rate limit caps how many tries one person or address gets in a period.
+- **Rate limits** (Postgres-backed, `src/lib/rate-limit.ts`). A rate limit caps how many tries one person or address gets in a period. The limits on what anyone can send without being Staff live together in `src/lib/limits.ts`, and `tests/db/limits.test.ts` checks every number below (audit DC-11).
 
   | What | Limit |
   | --- | --- |
-  | Sign-in emails | Per IP first (30 per 15 minutes), then per address from that IP (3) and per address from anywhere (5), so a stranger on another connection can't use up someone's links |
+  | Sign-in emails | Per IP first (30 per 15 minutes), then per address from that IP (3) and per address from anywhere (15), so a stranger needs five connections, not two, to use up someone's links (audit ID2-05, DC-09) |
   | Google sign-in starts | Per IP (30 per 15 minutes) |
   | Checkout tries | Per Cart (10 per 15 minutes) and per IP (20) |
-  | Guest Pay at Pickup Orders | Per IP (10 a day; audit ORD-14) |
-  | Webhook calls | Per IP (120 a minute) |
+  | Pay at Pickup Orders | Per IP for Guests (10 a day; audit ORD-14) and per account for Members (5 a day; audit DC-08) |
+  | Webhook calls | Per IP (120 a minute); a body over 64 kB is refused with 413 (audit SEC1-10) |
   | Second Factor tries | Per Staff member (10 per 15 minutes) |
   | Event Sign-ups (V1) | Per IP (10 an hour), and 2 that went through per IP per Event a day |
   | Inquiries (V1) | Per IP (5 an hour) |

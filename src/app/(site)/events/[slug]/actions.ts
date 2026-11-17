@@ -5,7 +5,8 @@ import { headers } from "next/headers";
 
 import { botCheck } from "@/lib/bot-check";
 import { siteUrl } from "@/lib/env";
-import { clientIp, takeToken } from "@/lib/rate-limit";
+import { limits } from "@/lib/limits";
+import { clientIp } from "@/lib/rate-limit";
 import {
   cancelSignup,
   confirmSignup,
@@ -57,7 +58,7 @@ export async function signUpAction(
     };
   }
   const ip = clientIp(await headers());
-  if (!(await takeToken(`signup-ip:${ip}`, 10, 3600))) {
+  if (!(await limits.eventSignup(ip))) {
     return {
       status: "error",
       message: "Too many Sign-ups from here. Try again in an hour.",

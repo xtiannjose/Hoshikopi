@@ -148,8 +148,10 @@ test("a used sign-in link says so and keeps the page it was for", async ({
 });
 
 // A stranger's requests used to lock a known address out for 15 minutes
-// (audit ID2-05): now they use up only their own share.
-test("a stranger's link requests don't lock someone out, and an address still gets at most 5", async ({
+// (audit ID2-05), and two connections still did (DC-09): now a stranger
+// uses up only their own share. The address-wide 15 is in
+// tests/db/limits.test.ts.
+test("a stranger's link requests from two connections don't lock someone out", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "once is enough");
@@ -177,12 +179,13 @@ test("a stranger's link requests don't lock someone out, and an address still ge
   }
   await ask("198.51.100.31");
   await refused();
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 3; i++) {
     await ask("192.0.2.44");
     await sent();
   }
+  // The person, on their own connection.
   await ask("203.0.113.45");
-  await refused();
+  await sent();
 });
 
 // Home showed a Member the example Star Card's sign-in link, and a daily

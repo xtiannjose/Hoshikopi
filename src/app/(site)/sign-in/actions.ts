@@ -2,7 +2,8 @@
 
 import { headers } from "next/headers";
 
-import { clientIp, takeToken } from "@/lib/rate-limit";
+import { limits } from "@/lib/limits";
+import { clientIp } from "@/lib/rate-limit";
 import { isPlainText } from "@/lib/text";
 import { redirect } from "next/navigation";
 
@@ -15,7 +16,6 @@ export type SignInState =
   | { status: "error"; message: string; email: string };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const FIFTEEN_MINUTES = 15 * 60;
 
 export async function requestSignInLink(
   _prev: SignInState,
@@ -42,16 +42,9 @@ export async function requestSignInLink(
     };
   }
   const ip = clientIp(await headers());
-  // IP first, then this address from this IP, then the address from
-  // anywhere; a refused step spends nothing after it. A stranger on
-  // another connection uses up only their own share, so the person keeps
-  // links of their own, and an address still gets at most 5 emails in 15
-  // minutes (audit ID2-05).
-  const allowed =
-    (await takeToken(`link-ip:${ip}`, 30, FIFTEEN_MINUTES)) &&
-    (await takeToken(`link-pair:${email}:${ip}`, 3, FIFTEEN_MINUTES)) &&
-    (await takeToken(`link:${email}`, 5, FIFTEEN_MINUTES));
-  if (!allowed) {
+  // A stranger on another connection uses up only their own share, so the
+  // person keeps links of their own (audit ID2-05, DC-09).
+  if (!(await limits.signInLink(email, ip))) {
     return {
       status: "error",
       message: "Too many links asked for. Try again in 15 minutes.",
@@ -79,7 +72,7 @@ export async function requestSignInLink(
 export async function googleSignInAction(form: FormData) {
   const next = safeNext(String(form.get("next") ?? ""));
   const ip = clientIp(await headers());
-  if (!(await takeToken(`google-ip:${ip}`, 30, FIFTEEN_MINUTES))) {
+  if (!(await limits.googleSignIn(ip))) {
     redirect(`/sign-in?${new URLSearchParams({ next, google: "limited" })}`);
   }
   const url = await googleSignInUrl(next);
