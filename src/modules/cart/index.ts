@@ -8,10 +8,12 @@ export {
   pruneGuestCarts,
   getCart,
   lockCart,
+  /** Tests only (audit architecture:19). */
   mergeGuestCart,
   MAX_LINE_QUANTITY,
   removeLine,
   stepQuantity,
+  /** Tests only (audit architecture:19). */
   updateQuantity,
   type CartLineView,
   type CartOwner,
