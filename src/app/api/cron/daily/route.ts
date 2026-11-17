@@ -4,6 +4,9 @@ import { connection } from "next/server";
 import { now } from "@/lib/clock";
 import { pruneRateLimits } from "@/lib/rate-limit";
 import { pruneGuestCarts } from "@/modules/cart";
+import { rollDemoEvents } from "@/modules/content";
+import { rollDemoMenu } from "@/modules/menu";
+import { demoMode } from "@/modules/payments";
 import { cancelUncollected, expireUnpaid } from "@/modules/ordering";
 
 /**
@@ -25,6 +28,12 @@ export async function GET(request: Request) {
   await pruneRateLimits(at);
   // Guest Carts past their cookie's 30 days (audit ops:9).
   await pruneGuestCarts(at);
+  // The hosted demo's Events, Promo and Seasonal drink stay current
+  // without anyone re-dating them (Demo Mode, ADR 0015).
+  if (demoMode()) {
+    if (await rollDemoEvents(at)) revalidateTag("events", "max");
+    await rollDemoMenu(at);
+  }
   revalidateTag("menu", "max");
   return Response.json({ expired, cancelled });
 }
