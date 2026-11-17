@@ -35,7 +35,7 @@ Change a row here and every other document should follow. "Invented" rows are sh
 | Fulfilment | Online Orders are pickup only, at the counter. The cafe also takes walk-in Dine-in, with no table bookings (research C-45) | confirmed 2026-10-30 |
 | Payment Methods | GCash, Maya, Card in Test Mode, through the `fake` provider while PayMongo has paused sign-ups (ADR 0003); Pay at Pickup | decided 2026-11-07 |
 | Loyalty | 1 Star per drink; 9 Stars for a free drink; a Birthday Treat once a year | built (Phases 4 and 6) |
-| Menu size | About 40 Menu Items in 6 Categories, with invented names, prices and stand-in photos | invented |
+| Menu size | 19 Menu Items in 6 Categories (as seeded), with invented names, prices and stand-in photos | invented |
 | Stack | Next.js 16, TypeScript, Tailwind, PostgreSQL with Prisma, Better Auth, Vercel (ADR 0001, 0004, 0005) | confirmed 2026-10-30 |
 | Brand name | "Hoshikopi" (hoshi, Japanese for star; kopi, coffee in Malay and Indonesian, close to Filipino kape) | confirmed 2026-10-30 |
 
@@ -97,7 +97,7 @@ Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stab
 | --- | --- | --- |
 | ORD-01 | Add a Menu Item with chosen Options, quantity and a note to the Cart; identical choices merge into one Line | M |
 | ORD-02 | The Cart shows Lines, Options, Line totals and the Order total; edit quantity and Options; remove | M |
-| ORD-03 | Choose As Soon As Possible (shows Prep Time) or a Scheduled Pickup in a 15-minute Pickup Window later today, within Opening Hours and Special Hours; the last window is closing time minus Prep Time (research C-09). Ordering for tomorrow is V1 | M |
+| ORD-03 | Choose As Soon As Possible (shows Prep Time) or a Scheduled Pickup in a 15-minute Pickup Window later today, within Opening Hours and Special Hours; each window starts after now plus Prep Time and the last one ends at closing time; Orders are taken until Last Order (research C-09, audit D-7). Ordering for tomorrow is after V1 (roadmap section 13) | M |
 | ORD-04 | Pickup Windows that are full (Capacity) or past are not offered; the server re-checks Capacity when the Order is placed | M |
 | ORD-05 | Guest checkout is the main path: a name and a phone number or email; Members are prefilled. After a Guest's Order, offer an account to keep Stars (research C-15) | M |
 | ORD-06 | Prices, Price Deltas, Rewards and totals are recomputed on the server; client totals are never trusted | M |
@@ -200,4 +200,4 @@ Portfolio targets, measured in the Phase 9 review:
 | Realtime | Bar Screen and status page need near-live updates on serverless hosting | Polling every few seconds first; revisit Server-Sent Events if needed (`docs/03-ARCHITECTURE.md`) |
 | Email sender | Resend's test sender reaches only the owner's own address until a domain is verified | Resend is skipped until a domain exists; visitors sign in with Google (`docs/07-ROADMAP.md` section 4) |
 | Design direction | "Star coffee" could tip into a theme park | Direction chosen (ADR 0010) and built with native elements and CSS (ADR 0011) |
-| Becoming real | A real cafe would need a business, BIR receipts, Internet Transactions Act duties, live PayMongo keys, real photos | Out of scope; listed so nothing in the build blocks it |
+| Becoming real | A real cafe would need a business, BIR receipts, Internet Transactions Act duties, live PayMongo keys, real photos, the senior citizen and PWD discount (RA 9994, RA 10754, JMC 01-2022: 20% off plus VAT exemption, online orders included) and a paid database plan with longer backups | Out of scope; listed so nothing in the build blocks it. The discount needs an ADR beside ADR 0002 (VAT-exempt pricing) and real ID numbers, which a no-money concept should not collect (ADR 0006); the /cafe FAQ says how it would work at the counter |

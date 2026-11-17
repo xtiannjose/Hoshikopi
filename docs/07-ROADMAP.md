@@ -216,7 +216,7 @@ The 125 open P2 items from the audit, ranked on 2026-11-14 into 21 small batches
 
 ## 13. After V1 (not scheduled)
 
-The installable app (PWA) with push notifications to a locked phone; more than one cafe; delivery partners; gift cards; loyalty tiers; table QR ordering; real launch requirements (business registration, BIR receipts, Internet Transactions Act duties, live payment keys, real photos and staff).
+The installable app (PWA) with push notifications to a locked phone; ordering for tomorrow; more than one cafe; delivery partners; gift cards; loyalty tiers; table QR ordering; real launch requirements (business registration, BIR receipts, Internet Transactions Act duties, live payment keys, the senior citizen and PWD discount under RA 9994, RA 10754 and JMC 01-2022, a paid database plan with longer backups, real photos and staff).
 
 ## 14. Definition of done (every batch)
 
