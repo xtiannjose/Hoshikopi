@@ -17,7 +17,7 @@ Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): the 
 - **Environment, env vars, database, demo deploy**: `docs/06-SETUP.md`.
 - **Which skill or tool fits a job, ports, machine facts**: `docs/08-TOOLING.md`.
 - **What other cafes do**: `docs/02-RESEARCH-CAFES.md`.
-- **Open bugs and their fixes**: `docs/audit/2026-11-17.md` (`DC-` numbers, Phase 11) and the P3 list in `docs/audit/2026-11-13.md`.
+- **Audit history and fixes**: `docs/audit/2026-11-17.md` (`DC-` numbers, all fixed in Phase 11) and `docs/audit/2026-11-13.md`; only ops:8, an owner check, is open.
 - **Handing over, or how Staff use the site**: `docs/HANDOFF.md`, `docs/STAFF-GUIDE.md`. Docs follow their plain-words style: each opens with "In plain words" and "Who should read it", and explains jargon on first use.
 
 ## Rules that code and config cannot tell you

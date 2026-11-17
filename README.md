@@ -30,7 +30,7 @@ A concept cafe in Metro Manila, and the website that runs it. The site sells the
 Built and live at https://hoshikopi.vercel.app, hosted on Vercel with a Neon database. Payments run in Test Mode on the built-in `fake` provider, and the live site sends no email until the project has a domain (visitors sign in with Google).
 
 - **Done: Phases 0 to 10.** The MVP and V1 features, the November audit and its fixes, the portfolio review (the [case study](docs/CASE-STUDY.md), the [measured success metrics](docs/METRICS.md) and the [two-minute demo script](docs/DEMO-SCRIPT.md)), and the rest of the audit backlog. Only 43 small polish items from that audit stay open.
-- **In progress: Phase 11.** These handoff docs, then five small fix batches from the [2026-11-17 deep check](docs/audit/2026-11-17.md), which found no serious problem. New features are on hold.
+- **Phase 11, done 2026-11-17 (in pull requests #111 to #119):** these handoff docs, the fixes for all 46 findings of the [2026-11-17 deep check](docs/audit/2026-11-17.md), which found no serious problem, and the 43 small items the November audit had left. After they merge, no audit item is open except ops:8, a look at the live site's demo dates. New features are on hold.
 
 Where things stand on any day: [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
 
@@ -72,7 +72,7 @@ Where things stand on any day: [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 
 | [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md) | The two-minute demo, step by step, with what to say | Showing it to someone |
 | [docs/adr/README.md](docs/adr/README.md) | Every decision in one sentence, linking the ADRs (0001 to 0015) that record each one and why | Before changing a decision |
 | [docs/audit/README.md](docs/audit/README.md) | The November 2026 audit and the 2026-11-17 deep check: what each found, what is fixed, what is open | Planning fixes |
-| [docs/audit/2026-11-17.md](docs/audit/2026-11-17.md) | The 2026-11-17 deep check in plain words, grouped into the Phase 11 fix batches | Working on Phase 11 |
+| [docs/audit/2026-11-17.md](docs/audit/2026-11-17.md) | The 2026-11-17 deep check in plain words, and how each finding was fixed in Phase 11 | Checking what was found and fixed |
 
 ## Getting started
 

@@ -30,7 +30,7 @@ Hoshikopi is a concept cafe in Metro Manila and the website that runs it. The si
 | --- | --- |
 | Live site | https://hoshikopi.vercel.app |
 | Code | https://github.com/xtiannjose/Hoshikopi |
-| State on 2026-11-17 | Phases 0 to 10 of the [roadmap](07-ROADMAP.md) are done: every planned feature, a full audit and all its fixes except polish. Phase 11 is in progress: these handoff docs (11.1), then five small fix batches (11.2 to 11.6). New features are on hold. |
+| State on 2026-11-17 | Phases 0 to 10 of the [roadmap](07-ROADMAP.md) are done: every planned feature, a full audit and all its fixes except polish. Phase 11 is done (2026-11-17, pull requests #111 to #119): these handoff docs, every fix from the 2026-11-17 deep check, and the November audit's last 43 small items. New features are on hold. |
 
 The site uses fixed words for its parts, such as Menu Item, Pickup Time, Order Code and Star. Each one is defined in the [Glossary](../GLOSSARY.md), and this page capitalises them the same way.
 
@@ -193,23 +193,9 @@ The two-minute demo has its own list of fixes in [docs/DEMO-SCRIPT.md](DEMO-SCRI
    - Turn on Dependabot alerts: repository **Settings**, **Code security**. GitHub then warns when a library the site uses gets a known security hole. They are off now.
    - Require the CI check before merging: repository **Settings**, **Branches**, a rule for `main`. A pull request with failing checks then cannot be merged by accident.
 
-### 9.2 Phase 11 fix batches
+### 9.2 The 2026-11-17 deep check and the November polish: done
 
-The 2026-11-17 deep check found no serious problem and 46 smaller ones (0 P0, 2 P1, 29 P2, 15 P3). They are grouped into five batches, in order of risk. Each is one branch and one pull request, and the owner approves each before it starts. Every item, with what goes wrong and the fix, is in [docs/audit/2026-11-17.md](audit/2026-11-17.md).
-
-| Batch | Items | In one line |
-| --- | --- | --- |
-| 11.2 Safety first | DC-01 to DC-07 | The last Manager can't delete their account, CI builds the site, local commands can't reach the live database, tests can't send real email, Refund and Star edge cases, paid Orders the bar never accepted; also `better-auth` 1.7.25 |
-| 11.3 Abuse limits and inputs | DC-08 to DC-11 | A daily Pay at Pickup limit for Members, sign-in links a stranger can't use up, two inputs that crash a page, tests for every limit |
-| 11.4 Staff tools | DC-12 to DC-23 | The Bar Screen's pause after 12 hours and its Sold Out panel, hours and Seats warnings, photo errors, Barista Picks, Category and Event addresses, keyboard and screen reader fixes in `/manage` and `/bar` |
-| 11.5 Customer pages | DC-24 to DC-37 | Old Event pages, Home's jump while loading and its hours line, a build fallback for the menu, fewer account reads, the demo's late-night gap, eight small copy and form fixes |
-| 11.6 Tests | DC-38 to DC-46 | Missing tests: Staff-cancel refunds, the Sold Out reset, browser-test collisions and time limits, accessibility in both palettes, the daily job, the Staff role test |
-| 11.7 Payments and data hygiene | November P3s | Paid webhooks checked against the amount, no payer details kept in webhook rows, a rare deadlock, the local email folder, small schema drifts, email texts in one tested place |
-| 11.8 Docs and decisions | November P3s | The last stale doc lines, and a written reason for the few items kept as they are |
-
-### 9.3 Polish nobody has planned
-
-The November audit leaves **43 P3 items**: observations, nits and ideas, listed under "P3 (43)" in [docs/audit/2026-11-13.md](audit/2026-11-13.md). On 2026-11-17 the owner scheduled all of them in Phase 11: each joins the batch that touches the same code, and batches 11.7 (payments and data hygiene) and 11.8 (docs and decisions) take the rest.
+The deep check found no serious problem and 46 smaller ones (0 P0, 2 P1, 29 P2, 15 P3), and the November audit had 43 small items left. All of them were fixed, or decided with a written reason, in Phase 11 (batches 11.2 to 11.8, 2026-11-17, pull requests #112 to #119). [docs/audit/2026-11-17.md](audit/2026-11-17.md) and the Fixed list in [docs/audit/2026-11-13.md](audit/2026-11-13.md) say what changed for each. The only audit item still open is ops:8, a look at the live site's demo dates (section 9.1).
 
 ### 9.4 After V1, and becoming real
 
@@ -237,7 +223,7 @@ Not scheduled ([roadmap](07-ROADMAP.md) section 13): an installable app with pus
 | [docs/ASSETS.md](ASSETS.md) | Every non-code file, its source and licence; the Concept images still to make | Designer, developer | Adding a font or picture |
 | [docs/adr/README.md](adr/README.md) | Every decision in one sentence, linking the 15 ADRs | Everyone | Before changing how something works |
 | [docs/audit/README.md](audit/README.md) | The two audits: what they found, what is fixed, what is open | Owner, developer | Planning fixes |
-| [docs/audit/2026-11-17.md](audit/2026-11-17.md) | The 2026-11-17 deep check, in plain words | Owner, developer | Working on Phase 11 |
+| [docs/audit/2026-11-17.md](audit/2026-11-17.md) | The 2026-11-17 deep check, in plain words, and how each finding was fixed | Owner, developer | Checking what was found and fixed |
 | [CLAUDE.md](../CLAUDE.md) | The rules every working session follows | Developer, coding agent | Before any code change |
 | [vercel.json](../vercel.json), [.env.example](../.env.example) | The live build command and daily job; every setting's name | Developer | Changing the deploy or a setting |
 

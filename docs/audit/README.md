@@ -1,6 +1,6 @@
 # Hoshikopi audits
 
-> **In plain words:** an audit is a top-to-bottom check of the whole project for bugs, security holes, gaps and things worth improving. This folder holds two. The November 2026 audit is finished and fixed, apart from one owner step and 43 small polish items. The 2026-11-17 deep check found no serious problem and 46 smaller ones, which are the Phase 11 fix batches.
+> **In plain words:** an audit is a top-to-bottom check of the whole project for bugs, security holes, gaps and things worth improving. This folder holds two. Both are finished: the November 2026 audit is fixed apart from one owner step (ops:8), and the 2026-11-17 deep check found no serious problem and 46 smaller ones, all fixed in Phase 11.
 >
 > **Who should read it:** the owner deciding what to fix next; a developer picking up a fix batch; anyone running a new audit.
 > **Last checked:** 2026-11-17.
@@ -20,13 +20,13 @@
 
 | Audit | What it found | Where it stands on 2026-11-17 |
 | --- | --- | --- |
-| **November 2026 audit** (2026-11-06 to 2026-11-14), ranked in [2026-11-13.md](2026-11-13.md) | 371 findings in 16 areas, merged into 205 open items: 2 P0, 18 P1, 142 P2, 43 P3 (another 48 were already fixed, 16 out of scope, 1 refuted) | **Done**, apart from 44 items: 1 P1, 0 P2, 43 P3. Both P0 and 17 of the 18 P1 were fixed in batches 7.5 to 7.11. All 142 P2 are fixed: 17 in Phases 7 to 9, the other 125 in the 21 batches of Phase 10. |
-| **Deep check, 2026-11-17**, in [2026-11-17.md](2026-11-17.md) | 46 findings from six areas, numbered DC-01 to DC-46: 0 P0, 2 P1, 29 P2, 15 P3 | **Open.** Grouped into roadmap batches 11.2 to 11.6, in order of risk. Two GitHub settings only the owner can change are in its section 5. |
+| **November 2026 audit** (2026-11-06 to 2026-11-14), ranked in [2026-11-13.md](2026-11-13.md) | 371 findings in 16 areas, merged into 205 open items: 2 P0, 18 P1, 142 P2, 43 P3 (another 48 were already fixed, 16 out of scope, 1 refuted) | **Done**, apart from ops:8 (P1, an owner check). The 43 P3 items were fixed or decided in Phase 11. Both P0 and 17 of the 18 P1 were fixed in batches 7.5 to 7.11. All 142 P2 are fixed: 17 in Phases 7 to 9, the other 125 in the 21 batches of Phase 10. |
+| **Deep check, 2026-11-17**, in [2026-11-17.md](2026-11-17.md) | 46 findings from six areas, numbered DC-01 to DC-46: 0 P0, 2 P1, 29 P2, 15 P3 | **Done** (2026-11-17): fixed in roadmap batches 11.2 to 11.6, pull requests #112 to #118. Two GitHub settings only the owner can change are in its section 5. |
 
 What is still open from November:
 
 - **ops:8 (P1), an owner step:** the seeded Event, Promo and Seasonal dates on the live site. Since batch 10.18 the daily job moves them forward by itself; the owner checks the live site and closes the item.
-- **43 P3 items:** observations, nits and ideas, listed under "P3 (43)" in [2026-11-13.md](2026-11-13.md). On 2026-11-17 the owner scheduled all of them in Phase 11: each joins the batch that touches the same code, and batches 11.7 and 11.8 take the rest ([roadmap](../07-ROADMAP.md) section 12).
+- **The 43 P3 items** were all fixed or decided in Phase 11 (2026-11-17): each is in the Fixed list of [2026-11-13.md](2026-11-13.md) with what was done or why it stays as it is.
 
 ## 2. What P0 to P3 mean
 
