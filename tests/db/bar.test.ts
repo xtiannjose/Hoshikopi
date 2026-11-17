@@ -95,6 +95,15 @@ describe("barBoard (STAFF-02)", () => {
     });
   });
 
+  // A Reward that covers the whole Order is stored as Pay at Pickup, and
+  // the card said "collect PHP 0.00" (audit DC-30).
+  it("asks the bar to collect nothing on a PHP 0 Order", async () => {
+    const { id } = await order("09:15");
+    await db.order.update({ where: { id }, data: { totalCents: 0 } });
+    const [card] = (await barBoard(at("09:00"))).orders;
+    expect(card).toMatchObject({ payAtPickup: false, totalCents: 0 });
+  });
+
   it("marks a Reward Line, so the bar knows what to collect (audit journeys:7)", async () => {
     const { id } = await order("09:15");
     await db.orderLine.updateMany({

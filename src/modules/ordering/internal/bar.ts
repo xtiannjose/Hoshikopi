@@ -174,7 +174,9 @@ export async function barBoard(at: Date): Promise<BarBoard> {
     pickupKind: order.pickupKind,
     windowStart: order.windowStart,
     placedAt: order.placedAt,
-    payAtPickup: order.paymentMethod === "pay_at_pickup",
+    // Nothing to collect on a PHP 0 Reward Order (audit DC-30).
+    payAtPickup:
+      order.paymentMethod === "pay_at_pickup" && order.totalCents > 0,
     totalCents: order.totalCents,
     makeNext:
       order.pickupKind === "asap" ||

@@ -81,7 +81,8 @@ export function Empty({
   children: ReactNode;
 }) {
   return (
-    <div className="bg-muted rounded-card flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center">
+    // A border: the muted fill alone is 1.16:1 on the page (audit UI2-22).
+    <div className="bg-muted border-border rounded-card flex flex-col items-start gap-4 border p-5 sm:flex-row sm:items-center">
       <IconCircle size="lg" tone="background">
         {icon}
       </IconCircle>

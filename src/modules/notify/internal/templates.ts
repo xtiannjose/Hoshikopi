@@ -67,9 +67,13 @@ export function orderPlacedEmail(order: OrderForEmail, link: string): Email {
       "",
       `Order Code: ${order.code}`,
       `Pickup: ${order.pickupKind === "asap" ? "ready by" : "at"} ${formatTime(order.windowStart)} today`,
-      order.paymentMethod === "pay_at_pickup"
-        ? "Pay at the counter when you collect."
-        : "Paid online.",
+      // A PHP 0 Order is stored as Pay at Pickup (audit journeys:11), but
+      // there is nothing to collect (audit DC-30); the Order page agrees.
+      order.totalCents === 0
+        ? "Nothing to pay: a free drink."
+        : order.paymentMethod === "pay_at_pickup"
+          ? "Pay at the counter when you collect."
+          : "Paid online.",
       "",
       ...lines,
       `Total: ${formatReceipt(order.totalCents)} (VAT included: ${formatReceipt(vatPart(order.totalCents))})`,

@@ -613,8 +613,4 @@ The site also tidies up by itself. Online Orders unpaid after 15 minutes expire.
 
 ## 19. Known gaps that affect Staff
 
-The 2026-11-17 check of the whole app ([docs/audit/2026-11-17.md](audit/2026-11-17.md)) found these. Each has a planned fix; until then, work around them.
-
-| Gap | Workaround |
-| --- | --- |
-| A free Reward Order's card says "collect PHP 0.00" (DC-30). | Nothing to collect; tap **Paid and picked up**. |
+None right now. The 2026-11-17 check of the whole app ([docs/audit/2026-11-17.md](audit/2026-11-17.md)) found several, and all of those that affect Staff are fixed. If something on the Bar Screen or in Manage does not work as this guide says, tell whoever runs the site.

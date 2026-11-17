@@ -28,9 +28,10 @@ export function InquiryForm({
     return (
       <Empty icon={<CheckCircleIcon size={24} />}>
         <div>
+          {/* No "within two days": a concept's demo inbox makes no such
+              promise (audit DC-36). */}
           <p role="status" className="text-lg">
-            Salamat! Your inquiry is with the cafe. We&apos;ll email you back
-            within two days.
+            Salamat! Your inquiry is with the cafe.
           </p>
           <p className="text-muted-foreground">
             We&apos;ll reply to <b>{state.email}</b>.

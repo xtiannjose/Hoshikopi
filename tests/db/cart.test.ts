@@ -9,6 +9,7 @@ import {
   mergeGuestCart,
   pruneGuestCarts,
   removeLine,
+  stepQuantity,
   updateQuantity,
 } from "@/modules/cart";
 
@@ -110,6 +111,29 @@ describe("Cart (ORD-01, ORD-02)", () => {
         reason: "too_many",
       }
     );
+  });
+
+  // The steppers posted the new total, so two quick taps on "One more"
+  // both sent 2 and the Line stayed at 2 (audit DC-32).
+  it("steps one more or one less, every tap counting, in its own Cart only", async () => {
+    await addLine(hoshi, latte("Whole milk"));
+    const [line] = (await getCart(hoshi)).lines;
+    await Promise.all([
+      stepQuantity(hoshi, line.id, 1),
+      stepQuantity(hoshi, line.id, 1),
+    ]);
+    expect((await getCart(hoshi)).lines[0].quantity).toBe(3);
+    await stepQuantity(migs, line.id, 1);
+    expect((await getCart(hoshi)).lines[0].quantity).toBe(3);
+    await db.cartLine.update({
+      where: { id: line.id },
+      data: { quantity: 20 },
+    });
+    await stepQuantity(hoshi, line.id, 1);
+    expect((await getCart(hoshi)).lines[0].quantity).toBe(20);
+    await db.cartLine.update({ where: { id: line.id }, data: { quantity: 1 } });
+    await stepQuantity(hoshi, line.id, -1);
+    expect((await getCart(hoshi)).lines).toHaveLength(0);
   });
 
   it("changes a quantity, removes at zero, and only touches its own Cart", async () => {

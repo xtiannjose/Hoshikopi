@@ -77,8 +77,10 @@ export async function signUpAction(
     const message = {
       invalid: "Some fields need a fix.",
       closed: "Sign-up for this Event has closed.",
-      already:
-        "That email is already signed up for this Event. Check your inbox for the link.",
+      // The live demo sends no email, so no inbox to check (audit DC-33).
+      already: emailed
+        ? "That email is already signed up for this Event. Check your inbox for the link."
+        : "That email is already signed up for this Event.",
       full: "Fully booked, sorry. Every seat is taken.",
       visitor_limit: `That's ${SIGNUPS_PER_VISITOR} Sign-ups for this Event from here today. For more seats, email the cafe.`,
       too_many_seats:

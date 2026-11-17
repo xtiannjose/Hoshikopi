@@ -30,7 +30,8 @@ const SECTIONS: {
     icon: <DatabaseIcon size={20} />,
     points: [
       "For an Order: your name, and an email or a mobile number so we can reach you about it.",
-      "For an account: your email, your name if you give it, your Orders and your Star history.",
+      // Everything the account page stores (audit DC-37).
+      "For an account: your email, your name if you give it, your birth month if you give it (for the Birthday Treat), whether you want offers, your Favourites, your Orders and your Star history.",
       "For an Event Sign-up or a message from the Visit page: your name, your email and what you wrote.",
       "Nothing about cards or wallets: payments happen on the payment page, not here.",
     ],

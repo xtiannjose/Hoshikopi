@@ -192,7 +192,7 @@ async function Who() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-muted-foreground font-mono text-sm">
-            {greetingFor(at)}
+            <span lang="fil">{greetingFor(at)}</span>
             {firstName && `, ${firstName}`}
           </p>
           <h1 className="font-display pb-1 text-5xl italic">Manage</h1>

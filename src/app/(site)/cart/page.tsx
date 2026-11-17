@@ -25,7 +25,7 @@ import {
 } from "@/modules/cart";
 import { fitsOneOrder, orderingDay, orderLimit } from "@/modules/ordering";
 
-import { removeLineAction, setQuantityAction } from "./actions";
+import { removeLineAction, stepQuantityAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Your Cart",
@@ -60,7 +60,16 @@ const PROBLEMS: Record<NonNullable<CartLineView["problem"]>, string> = {
 async function LeftOut({
   searchParams,
 }: Pick<PageProps<"/cart">, "searchParams">) {
-  const { left } = await searchParams;
+  const { left, favourite } = await searchParams;
+  if (favourite === "full" || favourite === "unavailable") {
+    return (
+      <p role="status" className="bg-muted rounded-card mt-6 p-4">
+        {favourite === "full"
+          ? "Your Cart already has 20 of that Favourite, the most one Line holds."
+          : "That Favourite can't be added today: it's sold out or off the menu."}
+      </p>
+    );
+  }
   // A count, never text from the address, capped at an Order's size.
   const count = Math.min(Math.floor(Number(left)) || 0, 20);
   if (count < 1) return null;
@@ -141,13 +150,9 @@ async function Cart() {
                 aria-label={`Quantity of ${line.name}`}
                 className="flex items-center gap-1"
               >
-                <form action={setQuantityAction}>
+                <form action={stepQuantityAction}>
                   <input type="hidden" name="lineId" value={line.id} />
-                  <input
-                    type="hidden"
-                    name="quantity"
-                    value={line.quantity - 1}
-                  />
+                  <input type="hidden" name="step" value="-1" />
                   <button
                     type="submit"
                     aria-label={
@@ -161,13 +166,9 @@ async function Cart() {
                 <span className="w-8 text-center font-mono text-lg">
                   {line.quantity}
                 </span>
-                <form action={setQuantityAction}>
+                <form action={stepQuantityAction}>
                   <input type="hidden" name="lineId" value={line.id} />
-                  <input
-                    type="hidden"
-                    name="quantity"
-                    value={line.quantity + 1}
-                  />
+                  <input type="hidden" name="step" value="1" />
                   <button
                     type="submit"
                     aria-label="One more"

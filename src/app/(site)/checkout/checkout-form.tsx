@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useActionState, useRef, type ReactNode } from "react";
-import { ClockIcon, UserIcon, WalletIcon } from "@phosphor-icons/react";
+import {
+  ClockIcon,
+  CreditCardIcon,
+  DeviceMobileIcon,
+  StorefrontIcon,
+  UserIcon,
+  WalletIcon,
+} from "@phosphor-icons/react";
 
 import { formatPrice } from "@/lib/money";
 
@@ -20,22 +27,32 @@ export type WindowChoice = {
   hint?: string | null;
 };
 
+// Each card has its icon, as docs/05 section 6 says; generic glyphs, not
+// brand logos (audit UI1-25).
 const PAYMENTS = [
   {
     value: "gcash",
     label: "GCash",
     note: "Pay now on a Test Mode checkout.",
+    Icon: DeviceMobileIcon,
   },
-  { value: "maya", label: "Maya", note: "Pay now on a Test Mode checkout." },
+  {
+    value: "maya",
+    label: "Maya",
+    note: "Pay now on a Test Mode checkout.",
+    Icon: DeviceMobileIcon,
+  },
   {
     value: "card",
     label: "Card",
     note: "Visa or Mastercard, on a Test Mode checkout.",
+    Icon: CreditCardIcon,
   },
   {
     value: "pay_at_pickup",
     label: "Pay at Pickup",
     note: "Pay at the counter when you collect.",
+    Icon: StorefrontIcon,
   },
 ] as const;
 
@@ -156,7 +173,7 @@ export function CheckoutForm({
             name="useReward"
             checked={useReward}
             onChange={(event) => setUseReward(event.target.checked)}
-            className="size-5"
+            className="size-5 shrink-0"
           />
           <span>
             <span className="font-semibold">
@@ -181,7 +198,7 @@ export function CheckoutForm({
                 name="pickup"
                 value="asap"
                 defaultChecked={!pickupKept}
-                className="size-5"
+                className="size-5 shrink-0"
               />
               <span>
                 <span className="font-semibold">As soon as possible</span>
@@ -228,7 +245,7 @@ export function CheckoutForm({
                   name="pickup"
                   value="later"
                   defaultChecked={keptLater}
-                  className="size-5"
+                  className="size-5 shrink-0"
                 />
                 <span className="font-semibold">Later today</span>
               </label>
@@ -333,8 +350,9 @@ export function CheckoutForm({
                   name="paymentMethod"
                   value={p.value}
                   defaultChecked={p.value === keptPayment}
-                  className="size-5"
+                  className="size-5 shrink-0"
                 />
+                <p.Icon aria-hidden size={22} className="shrink-0" />
                 <span className="flex-1">
                   <span className="font-semibold">{p.label}</span>
                   <span className="text-muted-foreground block text-sm">

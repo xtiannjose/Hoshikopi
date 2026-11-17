@@ -11,8 +11,10 @@ export function OrderLimitNote({
 }) {
   return (
     <p className="bg-muted rounded-card p-4">
+      {/* Capacity counts food by Line: ten pandesal are one (audit
+          DC-35). */}
       One order fits one Pickup Window: up to {limit.drinks} drinks and{" "}
-      {limit.food} food items. For a bigger order,{" "}
+      {limit.food} different food items. For a bigger order,{" "}
       <Link href="/cafe/inquire?kind=large_order">send us an inquiry</Link> a
       day ahead and we&apos;ll get it ready.
     </p>

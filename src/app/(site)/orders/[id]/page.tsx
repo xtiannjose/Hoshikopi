@@ -332,6 +332,11 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
                   >
                     {step.label}
                     {step.at && (done || now) && (
+                      // A space, so a screen reader says "Placed, 7:16 AM",
+                      // not "Placed7:16 AM" (a11y:14).
+                      <span className="sr-only">, </span>
+                    )}
+                    {step.at && (done || now) && (
                       <span className="text-muted-foreground ml-2 font-mono text-sm font-normal">
                         {formatTime(step.at)}
                       </span>
@@ -483,8 +488,10 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
         )}
         {!order.isMember && (
           <p className="bg-muted rounded-card p-4">
-            Collect Stars next time: <Link href="/sign-in">sign in</Link> with
-            your email before you order. Nine Stars make a free drink.
+            {/* Not "with your email": the live demo signs in with Google
+                (audit DC-33). */}
+            Collect Stars next time: <Link href="/sign-in">sign in</Link> before
+            you order. Nine Stars make a free drink.
           </p>
         )}
       </div>
