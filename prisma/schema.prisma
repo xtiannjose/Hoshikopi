@@ -1,5 +1,5 @@
 // Source of truth for tables; docs/04-DATA-MODEL.md keeps the reasoning.
-// Covers the MVP; V1 tables (inquiries, recurring_events) arrive in Phase 6.
+// Covers the MVP and V1.
 //
 // Constraints Prisma cannot express (CHECKs, the order_events append-only
 // trigger) live in hand-edited migration SQL. Money is integer centavos in
@@ -272,7 +272,10 @@ enum ActorKind {
 }
 
 model Order {
-  id              String        @id @default(cuid())
+  // A random UUID, as placeOrder makes one before the insert so the status
+  // link's token hash goes in the same row (docs/04). A Prisma default, so
+  // no migration (audit DATA-13).
+  id              String        @id @default(uuid())
   serviceDay      DateTime      @map("service_day") @db.Date
   code            String
   status          OrderStatus
@@ -479,7 +482,6 @@ model Event {
   @@map("events")
 }
 
-// Unpublished while published_at is null.
 /// A person's place at an Event (EVT-02).
 model EventSignup {
   id          String    @id @default(cuid())
@@ -547,6 +549,7 @@ model Post {
   bodyMd      String    @map("body_md")
   coverUrl    String?   @map("cover_url")
   coverAlt    String?   @map("cover_alt")
+  /// Unpublished while null.
   publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
   authorId    String?   @map("author_id")
   author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
