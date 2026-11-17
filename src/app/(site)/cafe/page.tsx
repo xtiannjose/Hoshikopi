@@ -70,6 +70,12 @@ function faq(cafe: CafeDetails): [string, string][] {
       "Can I pay at the counter?",
       `Yes. As a guest, for up to ${GUEST_PAY_AT_PICKUP_MAX_DRINKS} drinks; signed in, for any order.`,
     ],
+    // A concept: the discount is taken at the counter, never online
+    // (audit FEAT-06, PRD Becoming real).
+    [
+      "Senior citizen or PWD?",
+      "Choose Pay at Pickup and show your ID at the counter. We take your discount off there.",
+    ],
     [
       "How do Stars work?",
       `Sign in when you order and every drink earns one Star. ${STARS_PER_REWARD} Stars get you a free drink; extras like Large or oat milk still add their price.`,
