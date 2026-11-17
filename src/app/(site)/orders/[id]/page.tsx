@@ -332,6 +332,11 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
                   >
                     {step.label}
                     {step.at && (done || now) && (
+                      // A space, so a screen reader says "Placed, 7:16 AM",
+                      // not "Placed7:16 AM" (a11y:14).
+                      <span className="sr-only">, </span>
+                    )}
+                    {step.at && (done || now) && (
                       <span className="text-muted-foreground ml-2 font-mono text-sm font-normal">
                         {formatTime(step.at)}
                       </span>
