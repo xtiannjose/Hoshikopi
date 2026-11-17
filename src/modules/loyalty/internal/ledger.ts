@@ -68,12 +68,17 @@ export async function earnForOrder(
 }
 
 /**
- * A picked-up Order was Refunded: take back what it earned, but never take
- * the balance below zero (Stars already spent stay spent).
+ * A picked-up Order was Refunded: take back what it earned, but never more
+ * than the Member still has (Stars already spent stay spent). Stars held by
+ * an open Reward Order still count as theirs, since that Reward may yet be
+ * cancelled (audit DC-06); `heldStars` is that total, which only the
+ * ordering module can tell from a spent Reward. If the Reward is then picked
+ * up, settleSpentReward gives back what this took from it.
  */
 export async function reverseForOrder(
   tx: Prisma.TransactionClient,
-  orderId: string
+  orderId: string,
+  heldStars = 0
 ) {
   const earned = await tx.starEntry.findMany({
     where: { orderId, kind: { in: ["earn", "reverse"] } },
@@ -82,9 +87,32 @@ export async function reverseForOrder(
   const memberId = earned[0]?.memberId;
   if (!memberId || net <= 0) return;
   await lockMember(tx, memberId);
-  const take = Math.min(net, await balance(memberId, tx));
+  const take = Math.min(net, (await balance(memberId, tx)) + heldStars);
   if (take <= 0) return;
   await once(tx, { memberId, orderId, kind: "reverse", stars: -take });
+}
+
+/**
+ * A Reward Order was Picked Up, so its held Stars are spent. If a Refund
+ * took some of them back while they were held, the balance is below zero:
+ * this Order gives that much back, so spent Stars stay spent and the
+ * balance never stays below zero (audit DC-06). Runs before the Order's own
+ * earn.
+ */
+export async function settleSpentReward(
+  tx: Prisma.TransactionClient,
+  memberId: string,
+  orderId: string
+) {
+  await lockMember(tx, memberId);
+  const short = -(await balance(memberId, tx));
+  if (short <= 0) return;
+  await once(tx, {
+    memberId,
+    orderId,
+    kind: "release",
+    stars: Math.min(short, STARS_PER_REWARD),
+  });
 }
 
 export type AdjustResult =

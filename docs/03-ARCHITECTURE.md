@@ -226,6 +226,7 @@ Stars are kept like a bank statement, called a ledger. Every change is a new lin
 
 - Every change is a `star_entries` row: `earn` (Order Picked Up, +1 per drink unit), `reserve` (Redemption at placement, -9), `release` (Order Cancelled or Expired, +9), `reverse` (Refund after Picked Up, minus what was earned), `adjust` (Manager, with a reason), `birthday` (the Birthday Treat, +9).
 - Balance is the sum of entries. Reserving checks the balance inside the same transaction that writes the entry, with the Member row locked, so two tabs cannot spend the same Stars.
+- A Refund takes back what the Order earned, but never Stars already spent. Stars held by the Member's open Reward Orders still count as theirs, because the Reward may be cancelled. If a held Reward is then picked up, it gives back (`release`) what the Refund took from it, so spent Stars stay spent and the balance does not stay below zero (audit DC-06). Example: 7 Stars plus 2 earned on an Order, all 9 held by a Reward; the Order is refunded. Cancel the Reward: 7 left. Pick it up: 0 left.
 - The Birthday Treat (V1) adds 9 Stars once a year in the Member's birthday month (Manila calendar), when they open their account or checkout.
 
 ## 11. Live updates

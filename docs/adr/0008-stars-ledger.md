@@ -13,7 +13,7 @@ A Member earns 1 Star per drink in an Order when it is Picked Up, and redeems 9 
 
 - Stars are earned only at Picked Up, so a cancelled or refunded Order never pays out. A Reward's free drink earns none.
 - A Redemption reserves 9 Stars when the Order is placed, inside the same transaction, with the Member row locked and the balance checked, so two tabs cannot spend the same Stars. Cancel or Expire releases them.
-- A Refund after pickup reverses the Stars that Order earned.
+- A Refund after pickup reverses the Stars that Order earned, never Stars already spent. Update 2026-11-17 (audit DC-06): Stars an open Reward Order holds count as the Member's until it is picked up; see docs/03 section 10.
 - Manager adjustments need a reason and are audited.
 
 ## Considered options

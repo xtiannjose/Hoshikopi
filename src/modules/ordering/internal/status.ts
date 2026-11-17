@@ -6,6 +6,7 @@ import {
   earnForOrder,
   releaseRedemption,
   reverseForOrder,
+  settleSpentReward,
 } from "@/modules/loyalty";
 import { demoMode } from "@/modules/payments";
 
@@ -83,6 +84,23 @@ function allowed(order: Order, to: OrderStatus, actor: Actor): boolean {
     default:
       return false;
   }
+}
+
+/**
+ * Stars the Member's other open Reward Orders hold: still theirs until those
+ * Orders are picked up, so a Refund may take from them (audit DC-06).
+ */
+async function heldForRewards(tx: Prisma.TransactionClient, order: Order) {
+  if (!order.memberId) return 0;
+  const open = await tx.order.aggregate({
+    _sum: { rewardStars: true },
+    where: {
+      memberId: order.memberId,
+      id: { not: order.id },
+      status: { in: ["placed", "paid", "accepted", "preparing", "ready"] },
+    },
+  });
+  return open._sum.rewardStars ?? 0;
 }
 
 /** Timestamps and flags each Order Status sets. */
@@ -169,6 +187,9 @@ function move(
       if (order.rewardStars > 0) await releaseRedemption(tx, order.id);
     }
     // Stars move with the Order, in the same transaction (ADR 0008).
+    if (to === "picked_up" && order.rewardStars > 0 && order.memberId) {
+      await settleSpentReward(tx, order.memberId, order.id);
+    }
     if (to === "picked_up") {
       const lines = await tx.orderLine.findMany({
         where: { orderId: order.id, isDrink: true, isReward: false },
@@ -180,7 +201,7 @@ function move(
       });
     }
     if (to === "refunded" && order.status === "picked_up") {
-      await reverseForOrder(tx, order.id);
+      await reverseForOrder(tx, order.id, await heldForRewards(tx, order));
     }
     await tx.orderEvent.create({
       data: {

@@ -17,6 +17,7 @@ import {
   cancelUncollected,
   expireUnpaid,
   placeOrder,
+  refundOrder,
   transition,
 } from "@/modules/ordering";
 import { paymentProvider } from "@/modules/payments";
@@ -26,6 +27,11 @@ import { createTestDb, resetToSeed } from "./helpers";
 const db = createTestDb();
 const HOSHI = "seed-member";
 const annika = { kind: "staff", id: "seed-barista", role: "barista" } as const;
+const christian = {
+  kind: "staff",
+  id: "seed-manager",
+  role: "manager",
+} as const;
 const ids: Record<string, string> = {};
 const items: Record<string, string> = {};
 
@@ -282,5 +288,44 @@ describe("redeeming a Reward (LOY-03)", () => {
     const results = await Promise.all([placeOrder(base), placeOrder(base)]);
     expect(results.filter((r) => r.ok)).toHaveLength(1);
     expect(await balance(HOSHI)).toBe(0);
+  });
+});
+
+// A Refund took back nothing while a Reward Order held the Member's Stars,
+// so they kept the refunded Stars once that Order was cancelled (audit
+// DC-06). Held Stars still count as the Member's; once the Reward is picked
+// up they are spent, and spent Stars stay spent.
+describe("a Refund while a Reward Order holds the Stars (audit DC-06)", () => {
+  const pickUp = async (orderId: string) => {
+    for (const to of ["accepted", "preparing", "ready", "picked_up"] as const) {
+      await transition(orderId, to, annika);
+    }
+  };
+
+  /** 7 Stars given, 2 earned on an Order that is then Refunded while a Reward Order holds all 9. */
+  async function refundWhileHeld() {
+    await giveStars(7);
+    const earned = await order(false);
+    if (!earned.ok) throw new Error(earned.reason);
+    await pickUp(earned.orderId);
+    expect(await balance(HOSHI)).toBe(9);
+    const reward = await order(true);
+    if (!reward.ok) throw new Error(reward.reason);
+    expect(await balance(HOSHI)).toBe(0);
+    expect(await refundOrder(earned.orderId, christian)).toEqual({ ok: true });
+    return reward;
+  }
+
+  it("takes the refunded Stars back once the Reward Order is cancelled", async () => {
+    const reward = await refundWhileHeld();
+    await cancelByCustomer(reward.orderId, reward.accessToken);
+    expect(await balance(HOSHI)).toBe(7);
+  });
+
+  it("keeps spent Stars spent once the Reward Order is picked up", async () => {
+    const reward = await refundWhileHeld();
+    await pickUp(reward.orderId);
+    // The 9 are spent, and the paid Hoshi Latte beside the free one earns 1.
+    expect(await balance(HOSHI)).toBe(1);
   });
 });
