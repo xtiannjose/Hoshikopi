@@ -13,6 +13,7 @@ import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { addLine, getCart } from "@/modules/cart";
 import {
   cancelByCustomer,
+  cancelOrder,
   cancelUncollected,
   dayOrders,
   ordersToRefund,
@@ -141,6 +142,44 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
         .status
     ).toBe("refunded");
     expect(await db.refund.count()).toBe(1);
+  });
+
+  // Only the Customer's cancel was tested; a Manager cancelling a paid
+  // Order that the bar had started went untested (audit DC-38).
+  it("refunds a paid Order a Manager cancels after the bar started it", async () => {
+    const placed = await order("gcash");
+    await transition(placed.orderId, "accepted", annika);
+    await transition(placed.orderId, "preparing", annika);
+    expect(
+      (await cancelOrder(placed.orderId, christian, "Out of oat milk")).ok
+    ).toBe(true);
+    const after = await db.order.findUniqueOrThrow({
+      where: { id: placed.orderId },
+      include: { payment: { include: { refunds: true } } },
+    });
+    expect(after).toMatchObject({
+      status: "refunded",
+      cancelReason: "Out of oat milk",
+    });
+    expect(after.payment?.refunds).toEqual([
+      expect.objectContaining({ actorId: "seed-manager" }),
+    ]);
+  });
+
+  it("keeps a Manager's cancel, and lists it, when the provider refuses the refund", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const placed = await order("gcash");
+    vi.spyOn(paymentProvider(), "refund").mockRejectedValueOnce(
+      new Error("provider down")
+    );
+    expect(
+      (await cancelOrder(placed.orderId, christian, "Closed early")).ok
+    ).toBe(true);
+    expect(
+      (await db.order.findUniqueOrThrow({ where: { id: placed.orderId } }))
+        .status
+    ).toBe("cancelled");
+    expect((await ordersToRefund()).map((o) => o.id)).toEqual([placed.orderId]);
   });
 
   it("refunds Pay at Pickup at the counter, with no provider call", async () => {
