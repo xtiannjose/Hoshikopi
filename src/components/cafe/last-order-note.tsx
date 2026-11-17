@@ -10,18 +10,19 @@ import { afterLastOrder, openState, type Hours } from "@/lib/hours";
  * walk in and when ordering opens again (ORD-13). Reads the clock in the
  * browser.
  */
-export function LastOrderNote({ hours }: { hours: Hours }) {
-  const [at, setAt] = useState<Date | null>(null);
+export function LastOrderNote({
+  hours,
+  at: first,
+}: {
+  hours: Hours;
+  /** The server's time, so the note is there from the first paint (DC-25). */
+  at: string;
+}) {
+  const [at, setAt] = useState(() => new Date(first));
   useEffect(() => {
-    const tick = () => setAt(now());
-    const first = setTimeout(tick, 0);
-    const timer = setInterval(tick, 30_000);
-    return () => {
-      clearTimeout(first);
-      clearInterval(timer);
-    };
+    const timer = setInterval(() => setAt(now()), 30_000);
+    return () => clearInterval(timer);
   }, []);
-  if (!at) return null;
   const state = openState(at, hours);
   if (!state.open || state.minutesToLastOrder > 60) return null;
   return (

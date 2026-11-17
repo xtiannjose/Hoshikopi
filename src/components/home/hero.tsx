@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRightIcon, MapPinIcon } from "@phosphor-icons/react/ssr";
 
-import { LastOrderNote } from "@/components/cafe/last-order-note";
 import { ManilaClock } from "@/components/cafe/manila-clock";
 import { mapsUrl } from "@/components/cafe/maps";
 import { OpenStatus } from "@/components/cafe/open-status";
@@ -83,7 +82,6 @@ export function Hero({
             <ManilaClock />
             <OpenStatus hours={hours} fallback="Open every day." />
           </p>
-          <LastOrderNote hours={hours} />
           {pickup}
         </div>
       </div>

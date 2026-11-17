@@ -44,7 +44,7 @@ export default async function Home() {
         demo={demoMode()}
         pickup={
           <Suspense fallback={<div className={PICKUP_SPACE} />}>
-            <PickupPreview />
+            <PickupPreview hours={hours} />
           </Suspense>
         }
       />
