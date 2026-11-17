@@ -483,8 +483,10 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
         )}
         {!order.isMember && (
           <p className="bg-muted rounded-card p-4">
-            Collect Stars next time: <Link href="/sign-in">sign in</Link> with
-            your email before you order. Nine Stars make a free drink.
+            {/* Not "with your email": the live demo signs in with Google
+                (audit DC-33). */}
+            Collect Stars next time: <Link href="/sign-in">sign in</Link> before
+            you order. Nine Stars make a free drink.
           </p>
         )}
       </div>

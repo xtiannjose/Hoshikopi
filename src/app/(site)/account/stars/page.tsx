@@ -187,8 +187,8 @@ async function Stars() {
         ) : (
           <Empty icon={<StarIcon size={24} />}>
             <p className="max-w-measure">
-              Sign in with your email, no password. Your first drink lights the
-              first Star.
+              Sign in, no password needed. Your first drink lights the first
+              Star.
             </p>
             <Link href="/sign-in?next=/account/stars" className={PRIMARY_PILL}>
               Get your Star Card
