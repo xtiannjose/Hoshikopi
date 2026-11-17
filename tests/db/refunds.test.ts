@@ -240,6 +240,32 @@ describe("refundOrder (PAY-05, STAFF-07)", () => {
     });
   });
 
+  // The provider had refunded, but a failed save put the Payment back to
+  // paid: the Order sat in Needs a refund for good, and a second refund
+  // could be tried (audit DC-05).
+  it("keeps the Payment refunded when the money went back but the Refund row fails", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const placed = await order("card");
+    await pickUp(placed.orderId);
+    // Postgres refuses a NUL, so the Refund row cannot be written.
+    vi.spyOn(paymentProvider(), "refund").mockResolvedValueOnce({
+      refundId: "fake_ref_\u0000",
+    });
+    expect(await refundOrder(placed.orderId, christian)).toEqual({ ok: true });
+    const after = await db.order.findUniqueOrThrow({
+      where: { id: placed.orderId },
+      include: { payment: true },
+    });
+    expect(after.status).toBe("refunded");
+    expect(after.payment?.status).toBe("refunded");
+    expect(await db.refund.count()).toBe(0);
+    expect(await ordersToRefund()).toEqual([]);
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("no Refund row"),
+      expect.objectContaining({ orderId: placed.orderId })
+    );
+  });
+
   it("leaves an Order alone while its Payment is claimed with no Refund row", async () => {
     const placed = await order("card");
     await pickUp(placed.orderId);
