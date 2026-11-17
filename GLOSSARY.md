@@ -1,6 +1,22 @@
 # Hoshikopi
 
-A concept cafe in Metro Manila with a website where customers browse the menu, order ahead for pickup, collect Stars and follow events and news. This glossary fixes the words the product, the code and the database use. Add a word here before using it in code.
+> **In plain words:** This glossary fixes the words Hoshikopi uses, so the website, the code, the database and the docs all mean the same thing by "Order", "Star" or "Pickup Window". Hoshikopi is a concept cafe in Metro Manila with a website where customers browse the menu, order ahead for pickup, collect Stars and follow events and news.
+>
+> **Who should read it:** everyone, before writing copy, code or docs; a developer before naming anything new. Add a word here before using it in code.
+> **Last checked:** 2026-11-17.
+
+## How to read this
+
+Each entry starts with the official term in **bold**, capitalised as the product uses it (for example **Menu Item**). The sentence under it says what the term means. The _Avoid_ line lists words not to use for that thing, because they mean something else here or would confuse a customer. For example, a Menu Item is never called a "product". Notes in brackets on an _Avoid_ line, such as "(in code)" or "(in UI copy)", say where the word is avoided.
+
+## Contents
+
+1. [Menu](#menu)
+2. [Ordering](#ordering)
+3. [Payments](#payments)
+4. [People and accounts](#people-and-accounts)
+5. [Loyalty](#loyalty)
+6. [Cafe and content](#cafe-and-content)
 
 ## Language
 
@@ -109,7 +125,7 @@ The estimated minutes from Accepted to Ready, from the current queue and the Lin
 _Avoid_: Wait time (for the estimate), ETA
 
 **Order Status**:
-Where an Order stands: Placed, Paid, Accepted, Preparing, Ready, Picked Up, or one of the closing states Cancelled, Expired (unpaid in time) and Refunded. Only defined transitions are allowed (`docs/03-ARCHITECTURE.md`).
+Where an Order stands: Placed, Paid, Accepted, Preparing, Ready, Picked Up, or one of the closing states Cancelled, Expired (unpaid in time) and Refunded. Only defined transitions are allowed ([`docs/03-ARCHITECTURE.md`](docs/03-ARCHITECTURE.md) section 7).
 _Avoid_: State (in UI copy), stage
 
 **Ordering Paused**:
@@ -117,11 +133,11 @@ The Manager has stopped new Orders for now (busy bar, closing early). Menu stays
 _Avoid_: Store closed (when the cafe is open)
 
 **Demo Mode**:
-On while the fake payment provider runs (locally and on the `*.vercel.app` demo): with no one behind the bar, a visitor taps the bar's steps on their own Order page ("Be the barista") and watches it move, and the concept page says how to try it (ADR 0015). Recorded as the `demo` actor, never as Staff.
+On while the fake payment provider runs (locally and on the `*.vercel.app` demo). With no one behind the bar, a visitor taps the bar's steps on their own Order page ("Be the barista") and watches it move. The concept page says how to try it (ADR 0015). Recorded as the `demo` actor, never as Staff.
 _Avoid_: Sandbox, test mode (that is the payments' Test Mode)
 
 **Busy Mode**:
-During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen; it ends by itself, or from the Bar Screen or Manage Hours. Manage shows it while it runs. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
+During a rush the queue can't see (walk-ins at the counter), the Manager adds 10 or 15 minutes to Prep Time for 30 or 60 minutes from the Bar Screen. It ends by itself, or from the Bar Screen or Manage Hours. Manage shows it while it runs. Ordering stays open: the As Soon As Possible time, the Pickup Windows and the Bar Screen's make-next all follow, and checkout says the bar is extra busy.
 _Avoid_: Rush mode, delay mode, snooze
 
 **Sales**:
@@ -241,7 +257,7 @@ Something happening at the cafe on a date: a cupping, latte art night, open mic,
 _Avoid_: Activity, happening
 
 **Sign-up**:
-A person's place at an Event: a name, an email and 1 to 4 Seats, confirmed by email. It waits for its email link and holds its Seats for 30 minutes (a signed-in Member's own email is confirmed at once); the same link cancels it, and a Manager can remove it (the guest is not told). An Event with Seats takes Sign-ups until they run out; one Sign-up per email per Event. Paid at the door.
+A person's place at an Event: a name, an email and 1 to 4 Seats, confirmed by email. It waits for its email link and holds its Seats for 30 minutes (a signed-in Member's own email is confirmed at once). The same link cancels it, and a Manager can remove it (the guest is not told). An Event with Seats takes Sign-ups until they run out; one Sign-up per email per Event. Paid at the door.
 _Avoid_: Booking, reservation, ticket, RSVP
 
 **Recurring Event**:

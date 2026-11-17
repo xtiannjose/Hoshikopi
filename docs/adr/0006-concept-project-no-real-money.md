@@ -5,6 +5,8 @@ date: 2026-10-30
 
 # Hoshikopi is a concept: invented details are labelled and no real money moves
 
+> **In plain words:** Hoshikopi is a portfolio project, not a real business, so anything invented is labelled as invented and no real money ever moves. A Concept Notice appears on every page and at checkout. Changing either limit needs a new decision record.
+
 Hoshikopi is a portfolio project, not a real business (owner, 2026-10-30). Everything is built as if the cafe were real, with two hard limits:
 
 1. **Invented details are labelled.** The cafe's name is real for the project, but its address, map pin, phone, people, menu prices and photos are invented or stand-ins. A Concept Notice in every page footer and at checkout says so: "Hoshikopi is a concept cafe. Orders and payments here are for demonstration."

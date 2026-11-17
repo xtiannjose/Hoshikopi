@@ -1,59 +1,88 @@
-# Hoshikopi audit, November 2026
+# Hoshikopi audits
 
-A deep check of the whole project as a senior web developer, a security reviewer and a QA tester: errors, bugs, inconsistencies, inefficiencies, vulnerabilities, gaps, improvements and features worth adding. It runs as a Claude Code workflow: specialist reviewers each cover one area, a second reviewer tries to disprove every finding, and a final pass merges and ranks what survives into a P0 to P3 backlog.
+> **In plain words:** an audit is a top-to-bottom check of the whole project for bugs, security holes, gaps and things worth improving. This folder holds two. The November 2026 audit is finished and fixed, apart from one owner step and 43 small polish items. The 2026-11-17 deep check found no serious problem and 46 smaller ones, which are the Phase 11 fix batches.
+>
+> **Who should read it:** the owner deciding what to fix next; a developer picking up a fix batch; anyone running a new audit.
+> **Last checked:** 2026-11-17.
 
-## Status (2026-11-13)
+## Contents
 
-Finished, apart from the flaky Playwright fix that batch 7.5 also asks for. **Start with [2026-11-13.md](2026-11-13.md), the ranked backlog.** The first three workflow runs stopped (two on Claude usage limits, one when the session ended) before the double-check and ranking steps, so the rest was done in smaller steps: the last 7 areas one at a time on 2026-11-10 (on `main` at `0aa0462`, after Phases 7 and 8 had fixed many of the earlier findings), then the double-check and ranking on 2026-11-13.
+1. [Status today](#1-status-today)
+2. [What P0 to P3 mean](#2-what-p0-to-p3-mean)
+3. [The files](#3-the-files)
+4. [How the November audit ran](#4-how-the-november-audit-ran)
+5. [Using the backlog](#5-using-the-backlog)
+6. [Running an audit again](#6-running-an-audit-again)
+
+## 1. Status today
+
+**Start with the ranked list of the audit you need:** [2026-11-17.md](2026-11-17.md) for the deep check, [2026-11-13.md](2026-11-13.md) for the November audit.
+
+| Audit | What it found | Where it stands on 2026-11-17 |
+| --- | --- | --- |
+| **November 2026 audit** (2026-11-06 to 2026-11-14), ranked in [2026-11-13.md](2026-11-13.md) | 371 findings in 16 areas, merged into 205 open items: 2 P0, 18 P1, 142 P2, 43 P3 (another 48 were already fixed, 16 out of scope, 1 refuted) | **Done**, apart from 44 items: 1 P1, 0 P2, 43 P3. Both P0 and 17 of the 18 P1 were fixed in batches 7.5 to 7.11. All 142 P2 are fixed: 17 in Phases 7 to 9, the other 125 in the 21 batches of Phase 10. |
+| **Deep check, 2026-11-17**, in [2026-11-17.md](2026-11-17.md) | 46 findings from six areas, numbered DC-01 to DC-46: 0 P0, 2 P1, 29 P2, 15 P3 | **Open.** Grouped into roadmap batches 11.2 to 11.6, in order of risk. Two GitHub settings only the owner can change are in its section 5. |
+
+What is still open from November:
+
+- **ops:8 (P1), an owner step:** the seeded Event, Promo and Seasonal dates on the live site. Since batch 10.18 the daily job moves them forward by itself; the owner checks the live site and closes the item.
+- **43 P3 items:** observations, nits and ideas, listed under "P3 (43)" in [2026-11-13.md](2026-11-13.md). On 2026-11-17 the owner scheduled all of them in Phase 11: each joins the batch that touches the same code, and batches 11.7 and 11.8 take the rest ([roadmap](../07-ROADMAP.md) section 12).
+
+## 2. What P0 to P3 mean
+
+Both audits rank every item on the same four levels.
+
+| Level | In plain words | What to do | Example |
+| --- | --- | --- | --- |
+| **P0** | Serious: breaks a main flow or the two-minute demo, someone could exploit it, or money or data could be lost | Fix now | The public menu crashed when a Manager added a new Category (fixed in 7.7a) |
+| **P1** | A real problem in a main flow: someone gets stuck, an accessibility failure, or a missing safety net | Fix next | The only Manager can delete their own account and lock everyone out of `/manage` (DC-01) |
+| **P2** | A smaller bug or gap, often in a rare situation, that will happen sooner or later | Fix soon, or when a batch touches that code | A tablet left on overnight shows yesterday's Sold Out items (DC-13) |
+| **P3** | Polish: an observation, a nit or an idea | No action planned; pick it up when nearby | A message promises a reply "within two days" on a demo inbox (DC-36) |
+
+The November files also say high, medium, low and info for P0 to P3: that is the checker's severity behind each level.
+
+## 3. The files
 
 | File | What it holds |
 | --- | --- |
-| [2026-11-13.md](2026-11-13.md) | **The ranked backlog**: 205 open items (2 P0, 18 P1, 142 P2, 43 P3), the proposed batches 7.7 to 7.11, and the closed findings |
-| [2026-11-06-interim.md](2026-11-06-interim.md) | The 236 findings of 2026-11-06 from 9 areas, with full evidence (kept as the record behind the backlog) |
-| [findings-2026-11-06.json](findings-2026-11-06.json) | The same findings as data |
-| [findings-2026-11-10.json](findings-2026-11-10.json) | 135 findings from the last 7 areas (accessibility 15, customer journeys 23, motion 12, ops and deploy readiness 20, tests 18, architecture and code quality 24, Staff tools 23) |
-| [verdicts-2026-11-06.json](verdicts-2026-11-06.json) | A checker's verdict on each of the 236 findings of 2026-11-06, keyed by id: 48 fixed, 41 duplicates of a 2026-11-10 finding, 50 confirmed, 83 partly, 14 out of scope. Batch A (45 findings believed fixed in 7.1 to 8.10): 28 fixed, 17 partly fixed, each with the proof or what remains. Batch B (41 findings that repeat a checked 2026-11-10 finding): marked "duplicate", with the 2026-11-10 finding they merge into. Batch C-1 (8 open ordering, payment and identity findings): 7 partly, 1 out of scope, all now low. Batch C-2 (7 open security, performance and data findings): 3 confirmed, 4 partly, all now low or info. Batch C-3 (11 UI findings): 4 confirmed, 1 partly, 3 fixed by 8.10, 3 out of scope (photos on hold, the Cancel confirm dropped on purpose). Batch C-4 (9 docs and feature findings): 3 fixed, 4 partly, 1 confirmed, 1 out of scope. Batch D (115 low and info findings, 7 checkers): none raised to medium; several fixed by Phases 7 and 8, the rest low or info |
-| [verdicts-2026-11-10.json](verdicts-2026-11-10.json) | A checker's verdict on each of those 135, keyed by area and finding number: 69 confirmed, 61 partly, 4 out of scope, 1 refuted, with adjusted severity, plain problem and fix, and duplicates to merge |
-| [workflow.md](workflow.md) | The workflow script the first runs used; kept for a future audit (its prompts describe the code as of 2026-11-06) |
+| [2026-11-17.md](2026-11-17.md) | **The deep check of 2026-11-17**, in plain words: what was checked, the 46 findings grouped by fix batch with the fix for each, the settings only the owner can change, and what was confirmed sound |
+| [2026-11-13.md](2026-11-13.md) | **The November audit's ranked backlog**: the counts, the batches that fixed it (7.5 to 7.11 and 10.1 to 10.21), the open items, and every closed finding |
+| [2026-11-06-interim.md](2026-11-06-interim.md) | The 236 findings of 2026-11-06 from 9 areas, with full evidence. Kept as the record behind the backlog. |
+| [findings-2026-11-06.json](findings-2026-11-06.json) | The same 236 findings as data |
+| [findings-2026-11-10.json](findings-2026-11-10.json) | The 135 findings of 2026-11-10 from the last 7 areas: accessibility 15, customer journeys 23, motion 12, ops and deploy readiness 20, tests 18, architecture and code quality 24, Staff tools 23 |
+| [verdicts-2026-11-06.json](verdicts-2026-11-06.json) | A second reviewer's verdict on each of the 236 findings of 2026-11-06: 48 fixed, 41 duplicates of a 2026-11-10 finding, 50 confirmed, 83 partly, 14 out of scope |
+| [verdicts-2026-11-10.json](verdicts-2026-11-10.json) | A second reviewer's verdict on each of the 135 findings of 2026-11-10: 69 confirmed, 61 partly, 4 out of scope, 1 refuted, each with its adjusted severity, the problem and fix in plain words, and the duplicates to merge |
+| [workflow.md](workflow.md) | The workflow script the first November runs used, kept for a future audit. Its prompts describe the code as of 2026-11-06. |
 
-**Done**
+## 4. How the November audit ran
 
-- Quality gates on 2026-11-10, all passing: lint, Prettier, type check, Vitest (228 tests in 39 files), production build, `npm audit` with and without dev dependencies (0 vulnerabilities), Playwright (180 passed, 38 skipped; the skips are deliberate phone-only or desktop-only tests).
-- Areas reviewed on 2026-11-06: ordering core, payments, identity and access (2 passes), web security (2 passes), performance, UI (2 passes), data model, docs, product features and competitor research.
-- Areas reviewed on 2026-11-10: accessibility, customer journeys, motion (graded with the free `motion` and `apple-design` skills, since Motion+ is not signed in), and ops and deploy readiness (read-only checks of the live demo; the Vercel and Neon dashboards were not reachable). The journeys reviewer saw ORD-01, ORD-02 and UI1-01 fixed in the running app; the ops reviewer saw the deploy-related SEC1-01, SEC1-02, SEC1-03, SEC2-01, SEC2-04, DATA-05 and PERF-04 fixed, and found the live functions in `sin1`, so DATA-01's cross-region timeout does not happen live. The tests reviewer ran mutants (code changed on purpose) against the suite: the race tests catch removed locks, but a Prep Time that ignores the bar's queue and a Refund that takes Stars below zero both pass every test. It also traced the flaky Playwright run to four causes (shared cafe-wide changes, the never-emptied `data/mail`, old emails satisfying the ORD-10 check, and the Manila clock after about 21:15).
+The November audit looked at the project the way a senior web developer, a security reviewer and a QA tester would. It ran as a Claude Code workflow (a script that runs many Claude agents): specialist reviewers each covered one area, a second reviewer tried to disprove every finding, and a final pass merged and ranked what survived.
 
-The architecture reviewer found the module boundaries holding (no deep imports, no cycles, Order Status written only in `status.ts`) and one real bug: the public menu crashes when a Category slug has no stand-in icon.
+1. **2026-11-06:** reviewers covered 9 areas: ordering core, payments, identity and access (2 passes), web security (2 passes), performance, UI (2 passes), the data model, the docs, and product features with competitor research. They saved 236 findings.
+2. **The first three workflow runs stopped** (two on Claude usage limits, one when the session ended) before the double-check and ranking. The rest was done in smaller steps.
+3. **2026-11-10:** the last 7 areas, one at a time, on `main` at `0aa0462`, after Phases 7 and 8 had already fixed many earlier findings. They saved 135 findings. The quality checks all passed that day: lint, Prettier, the type check, Vitest (228 tests in 39 files), the production build, `npm audit` (0 vulnerabilities) and Playwright (180 passed, 38 skipped on purpose).
+   - The ops reviewer read the live demo only (the Vercel and Neon dashboards were out of reach) and found its server code in Singapore (`sin1`).
+   - The tests reviewer changed code on purpose to see if the tests noticed. The race tests caught removed locks, but a Prep Time that ignored the bar's queue and a Refund that took Stars below zero passed every test. Both now have tests.
+   - The Staff tools reviewer left "AUDIT TEST" records in the local dev database, because Staff tools had no delete then: two Hidden Menu Items, Orders K-018 to K-022 and a net-zero Star adjustment.
+4. **2026-11-13:** a skeptical checker opened the cited code for every one of the 371 findings and gave a verdict. Of the 2026-11-10 findings that held, 2 were high, 20 medium, 93 low and 15 info. Of the 2026-11-06 findings that still held on their own, all were low (93) or info (40); none was refuted. Duplicates were merged and everything was ranked into [2026-11-13.md](2026-11-13.md).
+5. **2026-11-14 to 2026-11-17:** the P0 and P1 items became batches 7.7 to 7.11, a first P2 sweep was 7.12, and the remaining 125 P2 items became Phase 10.
 
-The Staff tools reviewer found access control holding on every Manager-only Server Action, including the 8.4 and 8.5 ones. It changed cafe-wide settings to test them and put each back (checked in the database). It left "AUDIT TEST" entities in the dev database because the Staff tools have no delete: two hidden Menu Items, Orders K-018 to K-022 (K-022 counts PHP 175 in that day's sales) and a net-zero Star adjustment, besides the ones from 6 November.
+The 2026-11-17 deep check ran differently: automatic checks first (tests, security advisories, a secrets scan, the live site's headers), then six reviewers each read one area, and every finding was checked against the code a second time. Its section 1 has the details.
 
-All 16 areas are now reviewed.
+## 5. Using the backlog
 
-On 2026-11-13 a skeptical checker opened the cited code for each of the 135 findings of 2026-11-10 (12 checkers, 9 to 15 findings each). Of the 130 that hold, the adjusted severities are 2 high, 20 medium, 93 low and 15 info (the reviewers had 3 high and 51 medium). The 2 high: the public menu crashes when a Category slug has no stand-in icon, and the two-minute demo is closed outside Manila ordering hours.
+- **Fix work is planned as roadmap batches** in [docs/07-ROADMAP.md](../07-ROADMAP.md). Each batch names its items: `DC-12` style ids for the deep check, `journeys:1` style ids for November.
+- **For the deep check,** work batches 11.2 to 11.6 in order, one branch and pull request each, after the owner approves. Each row in [2026-11-17.md](2026-11-17.md) gives what goes wrong, where in the code, and the fix.
+- **For the November P3 items,** fix one only when a batch already touches that code.
+- **When a batch fixes an item,** say so in the batch's "Done" note in the roadmap.
+- **For the full evidence behind a November item,** open its finding and its verdict. An `area:N` id is the Nth finding of that area in `findings-2026-11-10.json`, with its verdict in `verdicts-2026-11-10.json`. An `ORD-04` style id is in `2026-11-06-interim.md`, with its verdict in `verdicts-2026-11-06.json`.
 
-The 236 findings of 2026-11-06 were double-checked the same way on 2026-11-13, in four batches: A, the 45 believed fixed by Phases 7 and 8; B, the 41 that repeat a checked 2026-11-10 finding; C, the 35 still open at high or medium; D, the 115 still open at low or info. None was refuted. Of the 133 that still hold on their own, every one is now low (93) or info (40): Phases 7 and 8 fixed or shrank the rest, and the medium and high ones of that day live on through their 2026-11-10 duplicates.
+## 6. Running an audit again
 
-Every finding of the audit now has a verdict, and the merged, ranked backlog is [2026-11-13.md](2026-11-13.md): 205 open items (2 P0, 18 P1, 142 P2, 43 P3). Its P0 and P1 items became roadmap batches 7.7 to 7.11. The interim file stays, as the evidence behind the backlog.
+The November checks ran against a production build on port 3300 and the seeded local dev database. Reviewers and checkers only read the code and used the running app. They never edited the repository, ran migrations (scripts that change the database's shape) or the test suites, or wrote to the database directly (one tests reviewer ran Vitest).
 
-**Still to do**
-
-1. Fix the flaky Playwright run (backlog items tests:4 and tests:5), the last part of batch 7.5.
-
-**Done on 2026-11-13**
-
-1. Merged duplicates and ranked everything into [2026-11-13.md](2026-11-13.md), with the 48 findings fixed by Phases 7 and 8 listed there as closed.
-
-## Using the backlog
-
-- Work the batches in `docs/07-ROADMAP.md` (the rest of 7.5, then 7.7 to 7.11). Each names its backlog items, for example `journeys:1`; the backlog gives the problem, the fix, the effort and where in the code.
-- When a batch fixes an item, say so in the batch's "Done" note. Fix P2 items when a batch already touches that code.
-- For the full evidence behind an item, open its finding (`area:N` in `findings-2026-11-10.json`, `ORD-04` style ids in `2026-11-06-interim.md`) and its verdict file.
-
-## Running an audit again
-
-The checks ran against a production build on port 3300 and the seeded dev database. Reviewers and checkers only read code and used the running app; they never edited the repo, ran migrations or the test suites (one tests reviewer ran Vitest), or wrote to the database directly.
-
-1. Start Docker Desktop. The `hoshikopi-db` container (port 5434) holds `hoshikopi`, `hoshikopi_test` and `hoshikopi_e2e`. `.env.local` and `.env.test` exist on this computer only (git-ignored); on another computer, follow `docs/06-SETUP.md` sections 3 to 6.
-2. Serve a production build on port 3300, and stop it when done (PowerShell):
+1. **Start Docker Desktop.** The `hoshikopi-db` container (port 5434) holds the `hoshikopi`, `hoshikopi_test` and `hoshikopi_e2e` databases. `.env.local` and `.env.test` exist only on a computer already set up (git ignores them); on another computer, follow [docs/06-SETUP.md](../06-SETUP.md) sections 3 to 6.
+2. **Serve a production build on port 3300,** and stop it when you are done (PowerShell):
 
    ```powershell
    $env:BETTER_AUTH_URL = "http://localhost:3300"; $env:NEXT_PUBLIC_SITE_URL = "http://localhost:3300"
@@ -61,5 +90,6 @@ The checks ran against a production build on port 3300 and the seeded dev databa
    npx next start -p 3300
    ```
 
-3. Run the quality gates first (`npm run qa`, `npm run test:e2e`) and keep their output for the reviewers. Never run `next build` or the Playwright suite while reviewers use port 3300: both rebuild the `.next` folder the server reads.
-4. Run reviewers and checkers in small waves (up to 4 at a time) so a usage limit pauses one wave, not the whole audit. Give each a fresh brief with today's commit and test counts; `workflow.md`'s prompts are out of date.
+3. **Run the quality checks first** (`npm run qa`, `npm run test:e2e`) and keep their output for the reviewers. Never run `next build` or the Playwright tests while reviewers use port 3300: both rebuild the `.next` folder that server reads.
+4. **Run reviewers and checkers in small waves,** up to 4 at a time, so a usage limit pauses one wave, not the whole audit. Give each a fresh brief with today's commit and test counts; the prompts in `workflow.md` are out of date.
+5. **Have a second reviewer check every finding** against the code before it is written down, then merge duplicates and rank what is left from P0 to P3.

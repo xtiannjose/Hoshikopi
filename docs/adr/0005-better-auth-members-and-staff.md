@@ -5,6 +5,8 @@ date: 2026-10-30
 
 # Better Auth for Members and Staff
 
+> **In plain words:** Members and Staff sign in with a link sent to their email (Members can also use Google), not with passwords. Staff also use a 6-digit code from an authenticator app before they can open the Manager pages. This keeps sign-in simple for customers and stricter for the people who can change prices and refund money.
+
 Better Auth (the library Hoshimono uses) handles sessions in HTTP-only cookies.
 
 - **Members** sign in with an email link or Google. The first sign-in creates the Member. Guests can order without an account but earn no Stars.

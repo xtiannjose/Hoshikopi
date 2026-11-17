@@ -5,6 +5,8 @@ date: 2026-10-31
 
 # The Content-Security-Policy allows inline scripts so pages stay prerendered
 
+> **In plain words:** The site's security policy has to allow the site's own inline scripts. A stricter version stopped the pages from becoming interactive at all. Everything else in the policy stays strict, and nothing a person types is ever shown as raw HTML, which is the real protection.
+
 The architecture doc (section 9) planned a strict policy that allows the inline theme script by its SHA-256 hash. That does not work with Cache Components: a prerendered page also carries Next's own inline scripts (the RSC payload, `self.__next_f.push(...)`, and the Suspense reveal scripts), which differ per page and take no nonce or hash. With `script-src 'self' 'sha256-<theme>'` the theme script ran, but the browser blocked the other nine inline scripts on a Menu Item page and the page never hydrated (checked 2026-10-31 in Chromium against a production build).
 
 So the policy is `script-src 'self' 'unsafe-inline'`, with no hash: a hash or nonce in `script-src` makes browsers ignore `'unsafe-inline'`. Every other directive stays strict: `default-src 'self'`, `connect-src 'self'`, `img-src 'self' data: blob:`, `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'none'`, and `form-action` limited to this site, PayMongo's checkout and Google's sign-in. `'unsafe-eval'` is added in development only.
