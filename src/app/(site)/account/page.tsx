@@ -176,7 +176,7 @@ async function Account() {
       )}
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-start 2xl:grid-cols-[22rem_minmax(0,1fr)]">
-        <aside className="grid gap-4 lg:sticky lg:top-6">
+        <aside className="lg:top-below-header grid gap-4 lg:sticky">
           {staff && (
             // The staff screens are not in the public header; Staff find
             // them here (members never see this box).

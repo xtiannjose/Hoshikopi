@@ -78,7 +78,7 @@ async function MenuItemDetails({
           ]}
         />
       </div>
-      <div className="md:sticky md:top-6 md:self-start">
+      <div className="md:top-below-header md:sticky md:self-start">
         <Photo
           src={item.photoUrl}
           alt={item.photoAlt}

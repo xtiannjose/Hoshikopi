@@ -151,7 +151,7 @@ async function Checkout() {
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
         <section
           aria-labelledby="summary"
-          className="rounded-card border-border border p-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1"
+          className="rounded-card border-border lg:top-below-header border p-5 lg:sticky lg:col-start-2 lg:row-start-1"
         >
           <h2 id="summary" className="font-display text-2xl italic">
             Your order

@@ -18,7 +18,7 @@ export function CategoryTabs({
   return (
     <nav
       aria-label="Categories"
-      className={`bg-background sticky top-0 z-10 -mx-4 overflow-x-auto px-4 py-2 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 ${className}`}
+      className={`bg-background sticky top-[var(--header-h)] z-10 -mx-4 overflow-x-auto px-4 py-2 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 ${className}`}
     >
       <ul className="flex w-max gap-2 py-1">
         <li>

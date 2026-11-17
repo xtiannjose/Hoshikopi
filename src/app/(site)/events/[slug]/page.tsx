@@ -126,7 +126,7 @@ async function Event({ params }: Pick<PageProps<"/events/[slug]">, "params">) {
         </div>
         <aside
           aria-label="Event details"
-          className="border-input bg-muted rounded-card border border-dashed p-5 lg:sticky lg:top-6"
+          className="border-input bg-muted rounded-card lg:top-below-header border border-dashed p-5 lg:sticky"
         >
           <ul className="grid gap-4">
             <li className="flex items-center gap-3">
