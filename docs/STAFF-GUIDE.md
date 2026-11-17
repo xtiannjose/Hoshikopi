@@ -618,4 +618,3 @@ The 2026-11-17 check of the whole app ([docs/audit/2026-11-17.md](audit/2026-11-
 | Gap | Workaround |
 | --- | --- |
 | A free Reward Order's card says "collect PHP 0.00" (DC-30). | Nothing to collect; tap **Paid and picked up**. |
-| Hiding every Category stops the next update of the site from building (DC-27). | Keep at least one Category showing. |
