@@ -31,7 +31,7 @@ The amount an Option adds to the Base Price, in centavos. Zero for most Options;
 _Avoid_: Upcharge, surcharge
 
 **Sold Out**:
-A Menu Item or Option that cannot be ordered today but stays visible on the menu. It resets at the next opening.
+A Menu Item or Option that cannot be ordered today but stays visible on the menu. It clears by itself at the start of the next Manila day.
 _Avoid_: Out of stock, unavailable (for Hidden items)
 
 **Hidden**:
@@ -64,6 +64,10 @@ _Avoid_: Upsell, cross-sell (in UI copy), combo
 The Menu Items a customer has chosen but not yet ordered. One Cart per browser for guests, one per Member when signed in.
 _Avoid_: Bag, basket, tray
 
+**Choice**:
+A Menu Item with the Options and note picked for it, as one thing to price, put in the Cart or save as a Favourite. Two Lines with the same Choice merge into one (`choiceKey` in code).
+_Avoid_: Variant, configuration
+
 **Line**:
 One entry in a Cart or Order: a Menu Item, its chosen Options, a quantity and an optional note ("less ice please"). Two identical choices merge into one Line.
 _Avoid_: Item (for the entry), row
@@ -79,6 +83,10 @@ _Avoid_: Repeat order, reorder (in UI copy)
 **Order**:
 A customer's confirmed request to prepare Lines for pickup. An Order snapshots every name, Option and price at checkout, so later menu edits never change it.
 _Avoid_: Transaction, ticket (for the customer side), purchase
+
+**Service Day**:
+The Manila calendar day an Order belongs to (`serviceDay` in code), from midnight Manila time. Order Codes restart each Service Day, and Sold Out clears with it.
+_Avoid_: Business day, date (alone)
 
 **Order Code**:
 The short code the barista calls out and the customer shows at pickup (for example `K-042`). It restarts each day.
@@ -168,18 +176,22 @@ _Avoid_: Crew, operator
 Staff who also edit the menu, prices, Opening Hours, Capacity, the cafe's details and Amenities, Events and Posts, issue Refunds, and give or take Staff roles.
 _Avoid_: Admin, owner (in code)
 
+**Later today**:
+A folded list of what is not next. At checkout, the Pickup Times after the first few chips. On the Bar Screen, the New Orders whose Pickup Time is still far off, so the bar sees what to make now.
+_Avoid_: Queue, upcoming
+
 **Bar Screen**:
 The staff page on a tablet behind the counter that lists live Orders by Pickup Time and moves them through Order Status.
 _Avoid_: Kitchen display, KDS, POS, dashboard
 
 **Second Factor**:
 The 6-digit code from an authenticator app (TOTP) that Staff enter after signing in, before using `/manage` or a Manager's controls on the Bar Screen, and again after 12 hours. A Barista's taps on the Bar Screen (moving Orders, Sold Out) do not ask for it (ADR 0005, ADR 0014).
-_Avoid_: 2FA, MFA, OTP (in code; `twoFactor` only where the table is named)
+_Avoid_: 2FA, MFA (in code; `twoFactor` only where the table is named, and `otp` only inside `second-factor.ts`, for the code itself)
 
 ### Loyalty
 
 **Star**:
-The loyalty unit. A Member earns 1 Star for each drink Line unit in a Picked Up Order. Stars from a Refunded Order are taken back.
+The loyalty unit. A Member earns 1 Star for each drink Line unit in a Picked Up Order; the Reward's free drink earns none. Stars from a Refunded Order are taken back.
 _Avoid_: Point, stamp, coin
 
 **Star Card**:
@@ -234,7 +246,7 @@ _Avoid_: Booking, reservation, ticket, RSVP
 
 **Recurring Event**:
 Something that happens at the cafe on the same weekday and time every week, with no date and no Sign-up ("Open mic, Thursdays, 7 to 9 PM"). Listed on the Events and cafe pages, apart from dated Events.
-_Avoid_: Series, repeating event, weekly Event, schedule
+_Avoid_: Series, repeating event, schedule. In code, `weekly` is fine (the route is `/manage/events/weekly`)
 
 **Inquiry**:
 A Customer's request about a private event or a large Order the online Cart cannot take (name, email, date, guests, message), saved for the Manager, who answers by email.
@@ -247,3 +259,11 @@ _Avoid_: Blog, article (in code), news item
 **Concept Notice**:
 The visible note that Hoshikopi is a concept: the cafe, its address and its people are invented, and payments are in Test Mode (ADR 0006).
 _Avoid_: Disclaimer (in code), demo banner
+
+**Concept image**:
+A picture made for this concept (AI-generated, ADR 0012) and labelled "Concept image". Until one is made, a plain stand-in panel shows instead, with no caption.
+_Avoid_: Stock photo, placeholder (in copy)
+
+**Palette**:
+One of the two colour sets, Day and Night. The browser picks one by the cafe's clock, Day from 6 AM to 6 PM Manila time, unless the visitor pinned one (ADR 0010).
+_Avoid_: Theme (in copy), dark mode, light mode

@@ -25,7 +25,7 @@ orders 1──* order_lines (snapshots)        orders 1──* order_events (app
 
 opening_hours, special_hours, capacity_rules, cafe_settings (cafe)
 events, posts, recurring_events, inquiries (V1) (content)        users, sessions, accounts, verifications (Better Auth); two_factors (identity, ADR 0014)
-audit_log, rate_limits (identity)
+audit_log (identity); rate_limits (`src/lib/rate-limit.ts`, shared)
 ```
 
 ## 3. Tables
