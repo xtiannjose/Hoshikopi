@@ -117,6 +117,7 @@ Two database addresses appear below. A **pooled** URL goes through a connection 
 | `PAYMONGO_WEBHOOK_SECRET` | from the PayMongo dashboard webhook | Phase 3 |
 | `RESEND_API_KEY` | `re_...`; empty means emails go to the terminal and `data/mail/` | Phase 2 |
 | `MAIL_DIR` | Leave unset. The tests set it so their emails go to `data/mail-test/` (Vitest) and `data/mail-e2e/` (Playwright), each emptied at the start of a run, and `data/mail/` stays yours | Batch 7.5b |
+| `MAIL_OUTBOX` | Leave unset. Without Resend, emails go to the terminal and `data/mail/` only in development (`npm run dev`) or when this is `1`, which the tests set; a production server without Resend drops them with a log line, so no live sign-in or Order link sits in files (audit DATA-10) | Phase 11 |
 | `MAIL_FROM` | `Hoshikopi <onboarding@resend.dev>` until a domain exists | Phase 2 |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty turns Google sign-in off | Phase 4 |
 | `BLOB_STORE_ID` | Vercel Blob store, set by Vercel when the store is connected (it signs in with Vercel's OIDC token; an older store gives `BLOB_READ_WRITE_TOKEN` instead); empty uses `data/menu-photos/` | Batch 5.4 |

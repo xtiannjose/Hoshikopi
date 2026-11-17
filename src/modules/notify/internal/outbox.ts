@@ -10,13 +10,21 @@ export type Email = { to: string; subject: string; text: string };
 export const isDemoAccount = (to: string) => to.endsWith("@hoshikopi.example");
 
 /**
+ * The local outbox (the terminal and data/mail/) is for development and the
+ * tests, which set MAIL_OUTBOX=1 (Playwright runs a production build). A
+ * self-hosted production server without Resend kept every sign-in and Order
+ * link in files nobody pruned (audit DATA-10); there it is off.
+ */
+export const localOutbox = (env: NodeJS.ProcessEnv = process.env) =>
+  !env.VERCEL && (env.MAIL_OUTBOX === "1" || env.NODE_ENV === "development");
+
+/**
  * Whether an email to a real address goes anywhere: Resend is set up, or
- * the build runs off Vercel and writes to the local outbox. False on the
- * live demo until Resend has a domain (audit journeys:9), so the site must
- * not say an email was sent.
+ * the local outbox is on. False on the live demo until Resend has a domain
+ * (audit journeys:9), so the site must not say an email was sent.
  */
 export function canEmail(env: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env.RESEND_API_KEY) || !env.VERCEL;
+  return Boolean(env.RESEND_API_KEY) || localOutbox(env);
 }
 
 /**
@@ -62,6 +70,12 @@ export async function send(email: Email): Promise<void> {
     }
     console.error(
       `[email] not sent, RESEND_API_KEY is missing: ${email.subject}`
+    );
+    return;
+  }
+  if (!localOutbox()) {
+    console.error(
+      `[email] not sent: no RESEND_API_KEY, and the local outbox is off: ${email.subject}`
     );
     return;
   }
