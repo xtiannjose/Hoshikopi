@@ -54,11 +54,9 @@ const SECTIONS: {
     title: "What still falls short",
     icon: <WarningCircleIcon size={20} />,
     points: [
-      "Some Filipino phrases, such as Salamat sa pagdaan, are read aloud with an English voice.",
-      "On a phone, the news email checkbox on your account page shows smaller than the others.",
-      "On an Order page, a screen reader runs each step and its time together, as in Placed7:16 AM.",
-      "When a new Order reaches the Bar Screen, it chimes but gives a screen reader nothing to read.",
-      "Found something else in your way? Tell us below.",
+      // The four known gaps were fixed on 2026-11-17 (a11y:10, 13, 14, 15).
+      "Nothing we know of right now.",
+      "Found something in your way? Tell us below.",
     ],
   },
 ];
