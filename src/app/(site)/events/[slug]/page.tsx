@@ -51,14 +51,9 @@ export default function EventPage({ params }: PageProps<"/events/[slug]">) {
 
 async function Event({ params }: Pick<PageProps<"/events/[slug]">, "params">) {
   const slug = (await params).slug;
-  const [event, { past }, cafe] = await Promise.all([
-    getEvent(slug),
-    getEvents(),
-    getCafeDetails(),
-  ]);
+  const [event, cafe] = await Promise.all([getEvent(slug), getCafeDetails()]);
   if (!event) notFound();
-  // An Event is upcoming or past, never both; past means it has ended.
-  const ended = past.some((e) => e.slug === event.slug);
+  const { ended } = event;
   const calendar = `/events/${event.slug}/calendar`;
   const directions = mapsUrl(cafe);
   // Event structured data (INFO-02): no street address, an invented place.

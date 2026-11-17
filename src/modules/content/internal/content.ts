@@ -119,9 +119,25 @@ export async function getPosts() {
   return readPosts();
 }
 
-export async function getEvent(slug: string): Promise<EventCard | null> {
-  const { upcoming, past } = await getEvents();
-  return [...upcoming, ...past].find((e) => e.slug === slug) ?? null;
+/**
+ * One published Event by its address, with whether it has ended. It used to
+ * pick from the cached lists, whose past list keeps only the latest 12, so
+ * an older Event's page, share picture and calendar file went to "not found"
+ * (audit DC-24, PERF-20).
+ */
+export async function getEvent(
+  slug: string
+): Promise<(EventCard & { ended: boolean }) | null> {
+  "use cache";
+  cacheTag("content", "events");
+  cacheLife("minutes");
+  const at = now();
+  const row = await db.event.findFirst({
+    where: { slug, isPublished: true },
+    select: eventSelect(at),
+  });
+  if (!row) return null;
+  return { ...toEventCard(row), ended: row.endsAt.getTime() < at.getTime() };
 }
 
 export async function getPost(slug: string): Promise<PostCard | null> {
