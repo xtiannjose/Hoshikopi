@@ -13,13 +13,8 @@ import { SpeakerHighIcon, SpeakerSlashIcon } from "@phosphor-icons/react";
 import { formatTime, now } from "@/lib/clock";
 import { formatPrice } from "@/lib/money";
 
-import {
-  busyAction,
-  endBusyAction,
-  pauseAction,
-  resumeAction,
-} from "../manage/hours/actions";
 import { advanceOrder, cancelAtBar } from "./actions";
+import { ManagerControls } from "./manager-controls";
 
 type Status = "placed" | "paid" | "accepted" | "preparing" | "ready";
 
@@ -379,88 +374,13 @@ export function BarScreen({
               )}
               Sound for new orders
             </button>
-            {manager &&
-              (board.paused ? (
-                <form
-                  action={resumeAction}
-                  onSubmit={() => setTimeout(poll, 500)}
-                >
-                  <button
-                    type="submit"
-                    className="bg-primary text-primary-foreground min-h-12 rounded-full px-5 font-semibold"
-                  >
-                    Resume ordering
-                  </button>
-                </form>
-              ) : (
-                <form
-                  action={pauseAction}
-                  onSubmit={() => setTimeout(poll, 500)}
-                >
-                  <input type="hidden" name="minutes" value="30" />
-                  <input
-                    type="hidden"
-                    name="message"
-                    value="The bar is swamped. Back in 30 minutes, salamat!"
-                  />
-                  <button
-                    type="submit"
-                    className="border-warning text-warning min-h-12 rounded-full border px-5 font-semibold"
-                  >
-                    Pause ordering 30 min
-                  </button>
-                </form>
-              ))}
-            {manager &&
-              !board.paused &&
-              (board.busy ? (
-                <form
-                  action={endBusyAction}
-                  onSubmit={() => setTimeout(poll, 500)}
-                >
-                  <button
-                    type="submit"
-                    className="border-input min-h-12 rounded-full border px-5 font-semibold"
-                  >
-                    End Busy Mode
-                  </button>
-                </form>
-              ) : (
-                // A rush the queue can't see (walk-ins): longer, honest
-                // times instead of pausing (8.4).
-                <div
-                  role="group"
-                  aria-label="Busy Mode"
-                  className="flex flex-wrap gap-2"
-                >
-                  {(
-                    [
-                      [10, 30],
-                      [15, 60],
-                    ] as const
-                  ).map(([minutes, forMinutes]) => (
-                    <form
-                      key={minutes}
-                      action={busyAction}
-                      onSubmit={() => setTimeout(poll, 500)}
-                    >
-                      <input type="hidden" name="minutes" value={minutes} />
-                      <input
-                        type="hidden"
-                        name="forMinutes"
-                        value={forMinutes}
-                      />
-                      <button
-                        type="submit"
-                        className="border-input min-h-12 rounded-full border px-5 font-semibold"
-                      >
-                        Busy +{minutes} min,{" "}
-                        {forMinutes === 60 ? "1 hour" : `${forMinutes} min`}
-                      </button>
-                    </form>
-                  ))}
-                </div>
-              ))}
+            {manager && (
+              <ManagerControls
+                paused={board.paused !== null}
+                busy={board.busy !== null}
+                onDone={() => setTimeout(poll, 500)}
+              />
+            )}
           </div>
         </header>
         {/* Not role=status: the paused banner below already has it. */}

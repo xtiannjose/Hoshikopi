@@ -33,7 +33,16 @@ export type FormState = {
 const text = (form: FormData, name: string) => String(form.get(name) ?? "");
 const WEEK = [0, 1, 2, 3, 4, 5, 6];
 
-const manager = () => requireStaff("manager", "/manage/hours");
+/**
+ * Manager level, so past the 12-hour Second Factor pass the code page asks
+ * again and comes back. A tap from the Bar Screen comes back to the Bar
+ * Screen, not here (audit DC-12); only "/bar" is taken from the form.
+ */
+const manager = (form?: FormData) =>
+  requireStaff(
+    "manager",
+    form?.get("from") === "/bar" ? "/bar" : "/manage/hours"
+  );
 
 export async function saveWeeklyHoursAction(
   _prev: FormState,
@@ -122,7 +131,7 @@ export async function saveCapacityAction(
 
 /** Pause or resume new Orders; Managers only (STAFF-05). */
 export async function pauseAction(form: FormData) {
-  const staff = await manager();
+  const staff = await manager(form);
   const minutes = Math.min(
     Math.max(Number(text(form, "minutes")) || 30, 5),
     720
@@ -131,15 +140,15 @@ export async function pauseAction(form: FormData) {
   refresh();
 }
 
-export async function resumeAction() {
-  const staff = await manager();
+export async function resumeAction(form?: FormData) {
+  const staff = await manager(form);
   await resumeOrdering(staff);
   refresh();
 }
 
 /** Busy Mode from the Bar Screen (8.4): only the offered amounts go in. */
 export async function busyAction(form: FormData) {
-  const staff = await manager();
+  const staff = await manager(form);
   const minutes = Number(text(form, "minutes"));
   const forMinutes = Number(text(form, "forMinutes"));
   if (
@@ -152,8 +161,8 @@ export async function busyAction(form: FormData) {
   refresh();
 }
 
-export async function endBusyAction() {
-  const staff = await manager();
+export async function endBusyAction(form?: FormData) {
+  const staff = await manager(form);
   await endBusyMode(staff);
   refresh();
 }
