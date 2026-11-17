@@ -3,7 +3,8 @@
 import { headers } from "next/headers";
 
 import { botCheck } from "@/lib/bot-check";
-import { clientIp, takeToken } from "@/lib/rate-limit";
+import { limits } from "@/lib/limits";
+import { clientIp } from "@/lib/rate-limit";
 import { getCafeContact } from "@/modules/cafe";
 import { submitInquiry } from "@/modules/content";
 import { sendInquiry } from "@/modules/notify";
@@ -38,7 +39,7 @@ export async function inquireAction(
       values,
     };
   }
-  if (!(await takeToken(`inquiry-ip:${clientIp(await headers())}`, 5, 3600))) {
+  if (!(await limits.inquiry(clientIp(await headers())))) {
     return {
       status: "error",
       message: "Too many inquiries from here. Try again in an hour.",

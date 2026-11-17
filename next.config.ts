@@ -28,6 +28,8 @@ const nextConfig: NextConfig = {
     menu: { stale: 300, revalidate: 10, expire: 3600 },
   },
   cacheComponents: true,
+  // `next start` named the framework in X-Powered-By (audit ops:20).
+  poweredByHeader: false,
   // Off (7.6): with it on, every page carried its React payload twice (Home
   // 405 kB raw, 50 kB compressed); off, once (258 kB, 34 kB). Links still
   // prefetch, after the page has loaded.
@@ -44,7 +46,8 @@ const nextConfig: NextConfig = {
       : [],
   },
   // No page may be framed, sniffed as another type, leak its full address
-  // to other sites, or ask for the camera, microphone or location.
+  // to other sites, share a window with a page it opened, or ask for the
+  // camera, microphone or location.
   async headers() {
     return [
       {
@@ -52,6 +55,9 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Security-Policy", value: csp },
           { key: "X-Frame-Options", value: "DENY" },
+          // Sign-in and checkout leave by redirect, never a popup, so
+          // nothing needs a cross-origin opener (audit ops:20).
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {

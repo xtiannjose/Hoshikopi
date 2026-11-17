@@ -35,7 +35,16 @@ const InquiryInput = z.object({
   wantedOn: z
     .string()
     .trim()
-    .refine((v) => v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v), "Choose a date."),
+    // A real calendar day: 2026-13-01 gave a 500, 2026-02-31 became 3 March
+    // (audit DC-10).
+    .refine(
+      (v) =>
+        v === "" ||
+        (/^\d{4}-\d{2}-\d{2}$/.test(v) &&
+          !Number.isNaN(dayValue(v).getTime()) &&
+          dayOf(dayValue(v)) === v),
+      "Choose a date."
+    ),
   guests: z
     .string()
     .trim()

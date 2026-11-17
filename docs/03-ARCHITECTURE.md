@@ -248,7 +248,7 @@ Two screens need fresh news: the Bar Screen and the Order status page. Each asks
 Vercel's free Hobby plan runs a scheduled job (a cron job) only once a day. So anything urgent, like freeing the room an unpaid Order holds, happens whenever someone loads a page. The daily job only tidies up.
 
 - **Expiry on read.** Unpaid online Orders older than 15 minutes are expired whenever Pickup Windows, the Bar Screen or an Order are loaded, including each poll of the Order page. The payment webhook also expires one before it pays it. Both work in the same transaction style as section 6.
-- **The daily cron** (`/api/cron/daily`, before opening; schedule in `vercel.json`, 22:00 UTC) runs only with the `Authorization: Bearer <CRON_SECRET>` header that Vercel Cron sends. It:
+- **The daily cron** (`/api/cron/daily`, before opening; schedule in `vercel.json`, 22:00 UTC) runs only with the `Authorization: Bearer <CRON_SECRET>` header that Vercel Cron sends, compared in constant time (`src/lib/secret.ts`, audit SEC1-21). It:
   - expires anything the sweeps on read missed;
   - cancels earlier days' Pay at Pickup Orders still Placed, and paid ones the bar never accepted, which are then refunded (section 7, audit DC-07);
   - deletes rate-limit rows older than a day and guest Carts untouched for 30 days;
@@ -264,21 +264,21 @@ Members and Staff sign in without passwords: by an emailed link or with Google. 
 - **Better Auth** ([ADR 0005](adr/0005-better-auth-members-and-staff.md)), the sign-in library: Members sign in with an email link (sent through Resend) or Google. Staff are users with a `role` of `barista` or `manager`, given a role by a Manager at `/manage/staff` once they have signed in (STAFF-10). Staff sign in like Members (email link or Google). They must enter a Second Factor (TOTP, a time-based one-time code) once per session before using `/manage`. `requireStaff()` checks it, rather than Better Auth's plugin ([ADR 0014](adr/0014-staff-second-factor-in-identity.md)).
 - **Guards.** `requireMember()` and `requireStaff(role)` guard pages, Server Actions and route handlers; every Staff write goes through `audit()`. Each guard checks, in the same read as the user, that the session row still exists. So Sign out everywhere, a role taken away or a deleted account takes effect on the next request (audit staff:17). `requireStaff` asks for a Second Factor under 12 hours old on every call except a Barista's taps on the Bar Screen (ADR 0014).
 - **Sign-in links.** A link's token is stored only as its SHA-256 hash (a one-way fingerprint: the database copy cannot be turned back into a working link), like Order link tokens (SEC1-13). A used or expired link comes back to `/sign-in?link=expired`, which says so and keeps where it was going; someone still signed in just gets that page. Deleting an account also ends that person's pending links and removes their sign-in limit rows. The daily cron forgets rate-limit rows older than a day.
-- **Rate limits** (Postgres-backed, `src/lib/rate-limit.ts`). A rate limit caps how many tries one person or address gets in a period.
+- **Rate limits** (Postgres-backed, `src/lib/rate-limit.ts`). A rate limit caps how many tries one person or address gets in a period. The limits on what anyone can send without being Staff live together in `src/lib/limits.ts`, and `tests/db/limits.test.ts` checks every number below (audit DC-11).
 
   | What | Limit |
   | --- | --- |
-  | Sign-in emails | Per IP first (30 per 15 minutes), then per address from that IP (3) and per address from anywhere (5), so a stranger on another connection can't use up someone's links |
+  | Sign-in emails | Per IP first (30 per 15 minutes), then per address from that IP (3) and per address from anywhere (15), so a stranger needs five connections, not two, to use up someone's links (audit ID2-05, DC-09) |
   | Google sign-in starts | Per IP (30 per 15 minutes) |
   | Checkout tries | Per Cart (10 per 15 minutes) and per IP (20) |
-  | Guest Pay at Pickup Orders | Per IP (10 a day; audit ORD-14) |
-  | Webhook calls | Per IP (120 a minute) |
+  | Pay at Pickup Orders | Per IP for Guests (10 a day; audit ORD-14) and per account for Members (5 a day; audit DC-08) |
+  | Webhook calls | Per IP (120 a minute); a body over 64 kB is refused with 413 (audit SEC1-10) |
   | Second Factor tries | Per Staff member (10 per 15 minutes) |
   | Event Sign-ups (V1) | Per IP (10 an hour), and 2 that went through per IP per Event a day |
   | Inquiries (V1) | Per IP (5 an hour) |
   | Sign-in link checks | Better Auth's own limit, 60 a minute per IP |
 
-- **Security headers** (in `next.config.ts`): a Content-Security-Policy (a list of where the browser may load scripts and other files from) locked to this site. PayMongo's checkout is a redirect, so there are no third-party scripts on our pages. Scripts need `'unsafe-inline'` because prerendered pages carry Next's inline RSC scripts, which take no nonce or hash ([ADR 0013](adr/0013-csp-allows-inline-scripts.md)). Also HSTS (always use HTTPS), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
+- **Security headers** (in `next.config.ts`): a Content-Security-Policy (a list of where the browser may load scripts and other files from) locked to this site. PayMongo's checkout is a redirect, so there are no third-party scripts on our pages. Scripts need `'unsafe-inline'` because prerendered pages carry Next's inline RSC scripts, which take no nonce or hash ([ADR 0013](adr/0013-csp-allows-inline-scripts.md)). Also HSTS (always use HTTPS), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Opener-Policy: same-origin` (a page never shares a window with one it opened; sign-in and checkout leave by redirect). `poweredByHeader: false` keeps the framework's name out of the headers (audit ops:20).
 - **Input checks.** Every input is parsed with zod (a library that checks data has the expected shape) where it enters a module. Server Actions and route handlers pass the raw strings to a module function, which parses them (no file under `src/app` imports zod). Fields a Customer types refuse hidden control characters (`plainText`, `src/lib/text.ts`); a Cart note and an account name leave them out. The proxy (`src/proxy.ts`) answers an address with broken percent-encoding or a NUL with the not-found page. Postgres refuses a NUL, and Next had no page to render its 400 for broken encoding, so both gave a bare 500 (audit SEC2-10).
 - **Privacy** (Data Privacy Act): a privacy notice, marketing email only with a separate opt-in, Member data export and deletion (orders are kept, de-identified, for the cafe's records).
   - The export holds the profile, Orders with their contact details and notes, Star history, Favourites, and Event Sign-ups and Inquiries under the Member's email.

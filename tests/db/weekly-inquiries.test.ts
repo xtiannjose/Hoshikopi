@@ -108,6 +108,20 @@ describe("Inquiries (INFO-11)", () => {
     ).toBe(true);
   });
 
+  // The date was only checked against a pattern, so 2026-13-01 or
+  // 9999-99-99 reached Postgres and gave a 500, and 2026-02-31 became 3
+  // March (audit DC-10).
+  it("refuses a date that is not on the calendar", async () => {
+    for (const wantedOn of ["2026-13-01", "9999-99-99", "2026-02-31"]) {
+      expect(await submitInquiry({ ...inquiry, wantedOn })).toEqual({
+        ok: false,
+        errors: { wantedOn: "Choose a date." },
+      });
+    }
+    expect(await db.inquiry.count()).toBe(0);
+    expect((await submitInquiry({ ...inquiry, wantedOn: "" })).ok).toBe(true);
+  });
+
   it("saves one for the Manager", async () => {
     const result = await submitInquiry(inquiry);
     expect(result).toMatchObject({
