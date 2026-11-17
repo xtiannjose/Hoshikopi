@@ -25,6 +25,7 @@ Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): the 
 - **Orders snapshot names, Options and prices** at placement; menu edits never change a past Order.
 - **Order Status changes only through `transition()`** and the table in the architecture doc section 7. Anything else is a bug.
 - **Payment state comes only from verified, deduplicated webhooks**, never from the return URL. **Test Mode only:** the PayMongo adapter refuses `sk_live_` keys; `fake` refuses production domains (ADR 0003).
+- **Migrations work with the previous build**: add first; drop or rename only in a later release once no code reads it; fix forward, never roll back past a migration (`docs/06-SETUP.md` section 9).
 - **Capacity is checked under a row lock** in `placeOrder`; closing an Order gives its window counts and reserved Stars back in the same transaction (ADR 0007, 0008).
 - **Modules own their tables.** Import another module only through its `index.ts`.
 - **Dates:** store UTC, show and define hours in `Asia/Manila`; read "now" only through `src/lib/clock.ts`.
