@@ -63,5 +63,6 @@ jobs:
       - run: npm run build
       - run: npm test
       # High and critical only, so a new low advisory never blocks an
-      # unrelated pull request.
-      - run: npm audit --omit=dev --audit-level=high
+      # unrelated pull request; an advisory that reaches only the test
+      # runner is listed, with its reason, in scripts/audit.mjs.
+      - run: npm run audit
