@@ -30,7 +30,7 @@ Hoshikopi is a concept cafe in Metro Manila and the website that runs it. The si
 | --- | --- |
 | Live site | https://hoshikopi.vercel.app |
 | Code | https://github.com/xtiannjose/Hoshikopi |
-| State on 2026-11-17 | Phases 0 to 10 of the [roadmap](07-ROADMAP.md) are done: every planned feature, a full audit and all its fixes except polish. Phase 11 is done (2026-11-17, pull requests #111 to #120): these handoff docs, every fix from the 2026-11-17 deep check, and the November audit's last 43 small items. New features are on hold. |
+| State on 2026-11-18 | Phases 0 to 10 of the [roadmap](07-ROADMAP.md) are done: every planned feature, a full audit and all its fixes except polish. Phase 11 is done (2026-11-17, pull requests #111 to #120): these handoff docs, every fix from the 2026-11-17 deep check, and the November audit's last 43 small items. Phase 12 is done (2026-11-18, pull requests #121 to #126): the owner's requests, such as headers that stay at the top, photos for Events and Posts, and Adjust Stars with the Star Card. Other new features are on hold. |
 
 The site uses fixed words for its parts, such as Menu Item, Pickup Time, Order Code and Star. Each one is defined in the [Glossary](../GLOSSARY.md), and this page capitalises them the same way.
 
@@ -189,9 +189,9 @@ The two-minute demo has its own list of fixes in [docs/DEMO-SCRIPT.md](DEMO-SCRI
 2. **The seeded dates on the live site** (audit item ops:8, the one open P1). Since batch 10.18 the daily job moves the demo Events, Promo and Seasonal drink forward by itself. Check on the live site that an upcoming Event with Seats shows, then mark the item done.
 3. **Rehearse the demo.** Say the [two-minute demo](DEMO-SCRIPT.md) out loud on the live site and time it. Every step has a passing test; the spoken run is the last check.
 4. **Read the case study's "How I worked"** section ([docs/CASE-STUDY.md](CASE-STUDY.md)). It speaks in the owner's voice, so the owner confirms it is true.
-5. **Two GitHub settings** ([docs/audit/2026-11-17.md](audit/2026-11-17.md) section 5):
-   - Turn on Dependabot alerts: repository **Settings**, **Code security**. GitHub then warns when a library the site uses gets a known security hole. They are off now.
-   - Require the CI check before merging: repository **Settings**, **Branches**, a rule for `main`. A pull request with failing checks then cannot be merged by accident.
+5. **On the live site:** upload a photo to an Event or a Post (batch 12.3) and check it shows, make the Posts longer, and add tasting notes and drink links to the Menu Items.
+
+Done by the owner on 2026-11-18: the two GitHub settings (Dependabot alerts on, and the CI check required before merging to `main`), Vercel's Production-only `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` with the Singapore function region, a second Manager account, and the second PC brought up to date.
 
 ### 9.2 The 2026-11-17 deep check and the November polish: done
 
@@ -234,7 +234,7 @@ Read in this order:
 1. [docs/06-SETUP.md](06-SETUP.md): get it running. You need Node.js 22.12 or newer, npm, Git and Docker Desktop. The local database runs in Docker on port 5434. Every outside account is optional: each has a local stand-in, so the whole site runs with no sign-ups.
 2. [CLAUDE.md](../CLAUDE.md): the rules the code cannot tell you. For example, money is whole centavos (PHP 165.00 is `16500`), so it never rounds wrong; the server prices everything; Order Status changes only through `transition()`; payment state comes only from verified webhooks.
 3. [docs/03-ARCHITECTURE.md](03-ARCHITECTURE.md): how the modules fit together.
-4. [docs/07-ROADMAP.md](07-ROADMAP.md) section 0 and Phase 11: what to work on next.
+4. [docs/07-ROADMAP.md](07-ROADMAP.md) section 0 and Phase 12: what to work on next.
 
 **The checks:**
 
