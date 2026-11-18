@@ -20,7 +20,7 @@ The live demo takes Orders all day, so it works alone and from any time zone. On
 
 | Time | Do | Say |
 | --- | --- | --- |
-| 0:00 | Home. Point at the Concept Notice at the foot of the page, then use the Auto, Day and Night switch in the header to flip between Day and Night. | "A concept cafe in Manila and the site that runs it. The look follows the cafe's clock: cream by day, night sky from 6 PM Manila time." |
+| 0:00 | Home. Point at the Concept Notice at the foot of the page, then use the Auto, Day and Night switch in the header to flip between Day and Night. | "A concept cafe and the site that runs it. The look follows the cafe's clock: cream by day, night sky from 6 PM Manila time." |
 | 0:15 | Menu, then **Hoshi Latte**. Tap **Large** and **Oat milk**. | "Every Option shows its price, and the total updates as you choose: PHP 185 becomes PHP 250. The server prices everything again at checkout." |
 | 0:30 | **Add to order**, open the Cart pill (the floating button with the Cart's total), then **Check out**. | "As soon as possible shows a real time, worked out from the drinks already on the bar." (It reads, for example, "Ready by 3:15 PM".) |
 | 0:40 | Choose **GCash**, enter a name and an email, tap **Place order, PHP 250**, then **Pay PHP 250.00** on the Test Mode checkout. | "This is the provider's Test Mode page. The Order turns Paid only when a verified webhook says so, never because the browser came back." |

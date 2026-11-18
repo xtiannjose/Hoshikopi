@@ -1,6 +1,6 @@
 # Taking over Hoshikopi
 
-> **In plain words:** Hoshikopi is a finished portfolio website for an invented cafe in Metro Manila. This page is where a new owner or project manager starts: what the site is, what it runs on, who holds the keys, what to check now and then, what to do when something breaks, and what is left to do. No real money ever moves through it, and every invented detail is labelled.
+> **In plain words:** Hoshikopi is a finished portfolio website for a concept cafe. This page is where a new owner or project manager starts: what the site is, what it runs on, who holds the keys, what to check now and then, what to do when something breaks, and what is left to do. No real money ever moves through it, and every invented detail is labelled.
 >
 > **Who should read it:** a new owner or project manager, first. A developer reads it before [docs/06-SETUP.md](06-SETUP.md).
 > **Last checked:** 2026-11-17.
@@ -21,7 +21,7 @@
 
 ## 1. What Hoshikopi is
 
-Hoshikopi is a concept cafe in Metro Manila and the website that runs it. The site does two jobs:
+Hoshikopi is a concept cafe and the website that runs it. The site does two jobs:
 
 - **It sells the place:** the menu, the Opening Hours, the room, Events and Posts (news articles).
 - **It runs the counter:** Customers order ahead for pickup, pay, and collect Stars toward a free drink. Baristas work through Orders on the Bar Screen (a page on a tablet behind the counter). The Manager runs everything else from `/manage`.

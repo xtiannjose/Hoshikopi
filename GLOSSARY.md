@@ -1,6 +1,6 @@
 # Hoshikopi
 
-> **In plain words:** This glossary fixes the words Hoshikopi uses, so the website, the code, the database and the docs all mean the same thing by "Order", "Star" or "Pickup Window". Hoshikopi is a concept cafe in Metro Manila with a website where customers browse the menu, order ahead for pickup, collect Stars and follow events and news.
+> **In plain words:** This glossary fixes the words Hoshikopi uses, so the website, the code, the database and the docs all mean the same thing by "Order", "Star" or "Pickup Window". Hoshikopi is a concept cafe with a website where customers browse the menu, order ahead for pickup, collect Stars and follow events and news.
 >
 > **Who should read it:** everyone, before writing copy, code or docs; a developer before naming anything new. Add a word here before using it in code.
 > **Last checked:** 2026-11-17.

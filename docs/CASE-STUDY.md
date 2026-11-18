@@ -16,7 +16,7 @@
 7. [How I worked](#how-i-worked)
 8. [What I would do next](#what-i-would-do-next)
 
-A concept cafe in Metro Manila and the website that runs it: order ahead for pickup, pay, collect Stars (the loyalty points: one per drink, nine for a free drink), and a Bar Screen (a page on a tablet behind the counter) for the baristas. A portfolio project. The cafe, its people and its photos are invented, and no real money moves ([ADR 0006](adr/0006-concept-project-no-real-money.md)). Product words such as Menu Item, Order Code and Pickup Window are defined in the [Glossary](../GLOSSARY.md).
+A concept cafe and the website that runs it: order ahead for pickup, pay, collect Stars (the loyalty points: one per drink, nine for a free drink), and a Bar Screen (a page on a tablet behind the counter) for the baristas. A portfolio project. The cafe, its people and its photos are invented, and no real money moves ([ADR 0006](adr/0006-concept-project-no-real-money.md)). Product words such as Menu Item, Order Code and Pickup Window are defined in the [Glossary](../GLOSSARY.md).
 
 **Live demo:** https://hoshikopi.vercel.app · **Code:** https://github.com/xtiannjose/Hoshikopi
 
@@ -24,7 +24,7 @@ A concept cafe in Metro Manila and the website that runs it: order ahead for pic
 
 ## The problem
 
-A neighbourhood cafe in Manila loses the morning rush to the queue. People who would buy a kopi on the way to work skip it when the line is out the door, and the bar gets ten orders at once and then nothing. The usual fixes are a delivery app, which takes a large cut and hides the cafe's own brand, or a generic online store, which knows nothing about how a coffee bar works.
+A neighbourhood cafe loses the morning rush to the queue. People who would buy a kopi on the way to work skip it when the line is out the door, and the bar gets ten orders at once and then nothing. The usual fixes are a delivery app, which takes a large cut and hides the cafe's own brand, or a generic online store, which knows nothing about how a coffee bar works.
 
 I wanted a site that does both jobs a small cafe needs:
 

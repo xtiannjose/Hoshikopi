@@ -26,7 +26,7 @@ Terms used throughout: a **palette** is one full set of colours (Hoshikopi has t
 
 This section says what the site should feel like, which cafe websites we looked at for ideas and the rough page drawings made before building. If you read only one part of this document, read the first two paragraphs.
 
-**"Star coffee": a neighbourhood cafe that stays open into the evening.** Warm cream and espresso by day and deep night-sky ink by night, switching with the cafe's clock (section 3), and one small gold star used with restraint: the logo mark, the Star Card, the "ready" moment. It should feel like a real Kapitolyo cafe with a point of view, not a template and not a theme park. Photos carry the warmth; the interface stays calm and quick to scan on a phone.
+**"Star coffee": a neighbourhood cafe that stays open into the evening.** Warm cream and espresso by day and deep night-sky ink by night, switching with the cafe's clock (section 3), and one small gold star used with restraint: the logo mark, the Star Card, the "ready" moment. It should feel like a real neighbourhood cafe with a point of view, not a template and not a theme park. Photos carry the warmth; the interface stays calm and quick to scan on a phone.
 
 **Owner's brief (2026-10-30): very modern and aesthetic.** It should look like a design-led cafe people screenshot and share, not a small-business template: confident type, generous space, large photography, polished details. "Star coffee" stays; it is expressed in a modern way.
 

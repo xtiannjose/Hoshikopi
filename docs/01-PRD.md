@@ -23,7 +23,7 @@ Owner: project lead. Update this document before changing scope. Words follow th
 
 This section says what Hoshikopi is and what the project is judged by. Read the four goals first: every other section serves them.
 
-Hoshikopi is a concept cafe in Metro Manila and the website that runs it. The site sells both the menu and the place: Customers see the room and plan a visit, browse the menu, customize drinks, order ahead and pick up at the counter, pay online (GCash, Maya, Card) or at pickup, collect Stars toward free drinks, and follow the cafe's Events and Posts. Baristas run live Orders from a Bar Screen (a page on a tablet behind the counter that lists the Orders to make); the Manager edits the menu, hours and content without a developer.
+Hoshikopi is a concept cafe and the website that runs it. The site sells both the menu and the place: Customers see the room and plan a visit, browse the menu, customize drinks, order ahead and pick up at the counter, pay online (GCash, Maya, Card) or at pickup, collect Stars toward free drinks, and follow the cafe's Events and Posts. Baristas run live Orders from a Bar Screen (a page on a tablet behind the counter that lists the Orders to make); the Manager edits the menu, hours and content without a developer.
 
 It is a portfolio project: the cafe, its address and its people are invented and labelled as such (the Concept Notice, the visible note that says so), and online payments run in Test Mode only (practice payments that never move real money). Everything else is built as if the cafe were real, so the site could become a real cafe's site without a rebuild.
 

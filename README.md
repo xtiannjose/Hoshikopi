@@ -1,11 +1,11 @@
 # Hoshikopi
 
-> **In plain words:** Hoshikopi is a website for an invented cafe in Metro Manila. Customers order coffee ahead and pick it up; baristas see the Orders on a tablet behind the counter; the Manager runs the menu and the cafe from the same site. It is a finished portfolio project: it works end to end, but no real money ever moves.
+> **In plain words:** Hoshikopi is a website for a concept cafe. Customers order coffee ahead and pick it up; baristas see the Orders on a tablet behind the counter; the Manager runs the menu and the cafe from the same site. It is a finished portfolio project: it works end to end, but no real money ever moves.
 >
 > **Who should read it:** everyone, first. The "Start here" table sends each reader to the right document.
 > **Last checked:** 2026-11-17.
 
-A concept cafe in Metro Manila, and the website that runs it. The site sells the place and runs the counter. Customers see the space and plan a visit, browse the menu, choose their Options, order ahead and pick up at the counter, pay with GCash, Maya, card or at pickup, and collect Stars toward a free drink. Baristas run live Orders on a Bar Screen; the Manager edits the menu, hours, the cafe's details, Events and Posts. The look follows the cafe's clock: cream paper by day, night sky from 6 PM Manila time.
+A concept cafe, and the website that runs it. The site sells the place and runs the counter. Customers see the space and plan a visit, browse the menu, choose their Options, order ahead and pick up at the counter, pay with GCash, Maya, card or at pickup, and collect Stars toward a free drink. Baristas run live Orders on a Bar Screen; the Manager edits the menu, hours, the cafe's details, Events and Posts. The look follows the cafe's clock: cream paper by day, night sky from 6 PM Manila time.
 
 *Hoshi* is Japanese for star; *kopi* is coffee in Malay and Indonesian, close to the Filipino *kape*.
 

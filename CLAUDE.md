@@ -1,6 +1,6 @@
 # Hoshikopi
 
-Concept cafe website for Metro Manila (Next.js 16 + TypeScript + Postgres): the cafe as a place to visit, menu, order ahead for pickup, Stars loyalty, Events and Posts, a Bar Screen for baristas. A portfolio project: invented details are labelled and no real money moves (ADR 0006). Planning docs are complete; code is built phase by phase from `docs/07-ROADMAP.md`.
+Concept cafe website (Next.js 16 + TypeScript + Postgres): the cafe as a place to visit, menu, order ahead for pickup, Stars loyalty, Events and Posts, a Bar Screen for baristas. A portfolio project: invented details are labelled and no real money moves (ADR 0006). Planning docs are complete; code is built phase by phase from `docs/07-ROADMAP.md`.
 
 ## Start of every task
 
