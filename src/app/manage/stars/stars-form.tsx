@@ -117,7 +117,12 @@ export function StarsForm({
             required
             autoComplete="off"
             value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
+            onChange={(e) => {
+              setEmail(e.currentTarget.value);
+              // A new email starts from no change: Stars set for one
+              // Member looked carried over to the next (owner, 2026-11-18).
+              setStars("");
+            }}
             className={fieldClass}
           />
         )}
