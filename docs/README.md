@@ -22,6 +22,7 @@ Find the line that fits you and read its documents in order. You do not need the
 | **Know what Hoshikopi is** (anyone, a recruiter, a reviewer) | 1. [README](../README.md) 2. [Case study](CASE-STUDY.md) 3. [Demo script](DEMO-SCRIPT.md), then try the [live site](https://hoshikopi.vercel.app) |
 | **Run the cafe on the site** (a Barista or the Manager) | 1. [Staff guide](STAFF-GUIDE.md) 2. [Glossary](../GLOSSARY.md), for any word that is unclear |
 | **Take over the project** (a new owner or project manager) | 1. [Handoff guide](HANDOFF.md) 2. [Roadmap](07-ROADMAP.md), section 0 3. [Audit index](audit/README.md) |
+| **Run it as a real cafe** (an owner planning a launch) | 1. [Launch readiness](LAUNCH-READINESS.md) 2. [Handoff guide](HANDOFF.md) 3. [Setup](06-SETUP.md), section 9 |
 | **Change the code, new to coding** | 1. [Coding words](#4-coding-words-you-will-meet), below 2. [Setup](06-SETUP.md), to run the site on your computer 3. [Glossary](../GLOSSARY.md) 4. [Architecture](03-ARCHITECTURE.md), sections 1 to 3 5. [Tooling](08-TOOLING.md) |
 | **Change the code, already a developer** | 1. [Setup](06-SETUP.md) 2. [CLAUDE.md](../CLAUDE.md), the project's rules 3. [Architecture](03-ARCHITECTURE.md) 4. [Data model](04-DATA-MODEL.md) 5. [Decisions (ADRs)](adr/README.md) |
 | **Change how it looks** | 1. [Design system](05-DESIGN-SYSTEM.md) 2. [Assets](ASSETS.md), for fonts and images |
@@ -43,6 +44,7 @@ Short takes under 10 minutes to read, medium 10 to 30, long more than 30. You ra
 | [Design system](05-DESIGN-SYSTEM.md) | The look: colours, type, components, motion, accessibility | Designer, developer | Long |
 | [Setup](06-SETUP.md) | Running the site on a computer, every setting, the live site, backups | Developer, owner | Medium |
 | [Roadmap](07-ROADMAP.md) | The plan: every phase and batch, what is done, what is next | Everyone | Long |
+| [Launch readiness](LAUNCH-READINESS.md) | How far it is from a real cafe: a scorecard, the tests a launch needs, the setup and legal work, a suggested order | Owner, project manager | Short |
 | [Tooling](08-TOOLING.md) | Which tool fits which job, ports, the two computers | Developer | Short |
 | [Assets](ASSETS.md) | Every font and image, where it came from, its licence | Designer, developer | Short |
 | [Case study](CASE-STUDY.md) | The problem, what was built, the decisions, the quality work | Reviewer, recruiter | Medium |
