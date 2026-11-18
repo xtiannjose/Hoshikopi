@@ -31,9 +31,9 @@
 - Scope, meaning what the site must do, is in `docs/01-PRD.md` (the product requirements document). Its requirement IDs (MENU-01, ORD-03...) link a feature to the batch that built it.
 - Weeks are estimates for one developer working part time. Dates move; the order does not.
 
-## 0. Where we are (updated 2026-11-17)
+## 0. Where we are (updated 2026-11-18)
 
-**In short:** Hoshikopi is built and live as a demo. Everything planned for the first version (the MVP) and the second (V1) works, and the audit backlog (the list of problems a deep review found) is cleared. Next is Phase 11: handoff docs, then a last round of smaller fixes. A few steps wait on the owner; they are listed at the end of this section.
+**In short:** Hoshikopi is built and live as a demo. Everything planned for the first version (the MVP) and the second (V1) works, and the audit backlog (the list of problems a deep review found) is cleared. Phase 11 (handoff docs and a last round of fixes) and Phase 12 (the owner's requests) are done. A few steps wait on the owner; they are listed at the end of this section.
 
 ### Planned and designed
 
@@ -65,15 +65,17 @@
 
 ### Next
 
-- **Phase 11 is done** (2026-11-17, pull requests #111 to #120): handoff docs, every deep check fix, and the November audit's last 43 items. Merge the pull requests in order. Then nothing is planned: new features wait for the owner.
+- **Phase 11 is done** (2026-11-17, pull requests #111 to #120): handoff docs, every deep check fix, and the November audit's last 43 items.
+- **Phase 12 is done** (2026-11-18, pull requests #121 to #126): the owner's requests, batches 12.1 to 12.6, live. Batch 12.7 brings these status lines up to date, and 12.8 looks at why a published change can take about a minute to show.
+- **Settings done by the owner (2026-11-18):** Vercel's `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` for Production only and the Singapore (`sin1`) function region; Dependabot alerts on and the CI check required for `main` on GitHub; xtianjose02@gmail.com made a Manager; the second PC updated (`npm ci`, `npx playwright install`).
 - **New features are on hold** (owner).
 
 ### Waiting on the owner
 
 - **5.4's last steps.** 5.4 is the only unticked batch before Phase 11. Its last step is the first real photo upload on the live site: a Manager signs in and uploads one photo, which goes to the Blob store (online file storage) `hoshikopi-photos`. The other two open items from 2026-11-07 are settled: PageSpeed was fixed in batch 7.6, and Resend (the email service) is skipped until the owner has a domain.
 - **ops:8.** The seeded demo dates (Events, Promo, Seasonal drink) wait on the owner. Since batch 10.18 the daily job also moves them forward by itself.
-- **Rehearsing the demo** out loud on the live site with `docs/DEMO-SCRIPT.md`. This is the last check of batch 9.3.
-- **Two GitHub settings** (Dependabot alerts on, and the CI check required before merging), described in section 5 of the [deep check](audit/2026-11-17.md#5-settings-only-the-owner-can-change).
+- **Rehearsing the demo** out loud on the live site with `docs/DEMO-SCRIPT.md`, and reading the case study's "How I worked". This is the last check of batch 9.3.
+- **On the live site:** an Event or Post photo (12.3), longer Posts, and tasting notes and drink links in the Menu Items.
 - **On hold by the owner's choice:** real photos (2026-11-07), new features, and a PayMongo account (PayMongo paused sign-ups; revisit when they reopen, ADR 0003).
 
 ## 1. Timeline at a glance
@@ -339,7 +341,7 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
 
 ### Phase 12: Owner requests (2026-11-17)
 
-**In plain words:** four changes the owner asked for after Phase 11, each its own pull request.
+**In plain words:** changes the owner asked for after Phase 11, each its own pull request.
 
 - [x] **12.1 Sticky header.** Done 2026-11-17: the customer pages' header stays at the top while a page scrolls, on a full-width band with a hairline that fades in once the page scrolls; the Category tabs, sticky side panels and keyboard scroll padding sit below its height (`--header-h`). Test: `tests/e2e/header.spec.ts`; the keyboard tests check focus is never under it.
 - [x] **12.2 Manage the menu by Category, with photos.** Done 2026-11-17: on `/manage/menu` the pills show Everything, one Category (`?show=coffee`) or the Option Groups, the current one filled, instead of jumping down the page; every Menu Item row has its photo or stand-in. Test: `tests/e2e/manage-menu.spec.ts`.
@@ -347,6 +349,8 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
 - [x] **12.4 Adjust Stars with a live Star Card.** Plus and minus buttons for the Stars to add or remove, and the Member's Star Card and balance shown once their email is entered. Done 2026-11-17: `findMemberStarsAction` (Managers only) looks the Member up once a whole email is typed; the card (the Star Card's constellation, now `src/components/star-cup.tsx`) shows their name, "N Stars now, M Stars after you save" and how many more make a free drink, and follows the **+** and **−** buttons (44 px, as the quantity stepper) or a typed number; **−** stops at zero; a save moves the card to the new balance. Tests: `src/app/staff-actions.test.ts` (the new action checks the Manager role) and `tests/e2e/stars-admin.spec.ts`.
 - [x] **12.5 List and Photos on the staff menu.** Requested 2026-11-18: the View switch from Home's menu on `/manage/menu`, with photo cards for checking the photos. Done 2026-11-18: the switch is `src/components/view-choice.tsx`, shared with Home; on the staff menu it is two links (`?view=photos`), so the view stays with the Category pills, Sold Out taps and a reload. Photos shows each Category as cards like `/menu` (photo, name, price, Sold out today, Hidden, "No photo yet", and the Sold out button); Option Groups stay a list. Test: `tests/e2e/manage-menu.spec.ts`.
 - [x] **12.6 A Staff header that stays and goes home.** Requested 2026-11-18: the Staff header stays at the top like the customer one, its logo goes to the Manage home instead of the customer site, and a button goes back to the site. Done 2026-11-18: the header in `src/app/manage/layout.tsx` is sticky with the customer header's hairline and `HeaderHeight`; the logo and "Staff" are one link to `/manage`; **Back to the site** carries a mirrored shooting star; the sticky side panels on Manage pages sit below it (`top-below-header`). Test: `tests/e2e/header.spec.ts`.
+- [x] **12.7 Status lines up to date.** Done 2026-11-18: README, this section 0, `docs/HANDOFF.md` and the deep check's settings table say Phase 12 is done and which owner steps are done. Also from 2026-11-18: CI's dependency audit is `scripts/audit.mjs` (`npm run audit`), which lets through only a listed advisory that reaches nothing but the test runner (picomatch GHSA-fc5q-39xc-vjpf, no fix published yet; owner approved), each with its reason.
+- [ ] **12.8 A published change shows at once.** After a Manager saves, the public page can show the old version for about a minute (seen on a Post's new cover in `next start`; the Event e2e test already waits up to 150 s). `updateTag` should make the next visit wait for fresh data.
 
 ## 13. After V1 (not scheduled)
 
