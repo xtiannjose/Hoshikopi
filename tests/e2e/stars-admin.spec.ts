@@ -38,4 +38,10 @@ test("a Manager adjusts a Member's Stars with a reason (LOY-05)", async ({
   );
   await expect(line).toHaveText(`${now + 2} Stars now.`);
   await expect(page.getByLabel(/Stars to add/)).toHaveValue("");
+
+  // Stars set for one Member don't carry over to the next email.
+  await page.getByRole("button", { name: "One Star more" }).click();
+  await expect(page.getByLabel(/Stars to add/)).toHaveValue("1");
+  await page.getByLabel("Member's email").fill("annika@hoshikopi.example");
+  await expect(page.getByLabel(/Stars to add/)).toHaveValue("");
 });
