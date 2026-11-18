@@ -230,7 +230,7 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 | Day and Night | The theme switch, and 6:00 and 18:00 on an open page | The palettes crossfade, 250 ms (a View Transition) |
 | Add to order | Menu Item page | "Added" with a check on the button for 1.6 s; the Cart count bumps (to 1.3, 300 ms) each time it goes up, never on page load or on the way down; the floating Cart rises in when it first appears (250 ms) |
 | Star Card (delight) | Home and the account pages | The Stars light one by one in the order they draw the cup; each lit line fades in after its Stars. On Home they light as the card scrolls into view, tied to the scroll through one named view timeline (`.light-on-scroll`, behind `@supports`), so the moment is not over before anyone reaches it (audit motion:4); browsers without scroll timelines light it on load. On the account pages they light on load (350 ms each, 50 ms apart) |
-| View switch (delight) | Home menu | The ring turns into a star with a small turn, 350 ms |
+| View switch (delight) | Home menu, the staff menu (`/manage/menu`, batch 12.5) | The ring turns into a star with a small turn, 350 ms. One component (`src/components/view-choice.tsx`): radios on Home (CSS shows the view), links on the staff menu (the view is in the address, so it stays when a Category pill is tapped) |
 | Order status (delight) | Order page | Marks pop in step order (60 ms apart) on load and when the poll moves the Order on; the message rises in. Ready: the gold star spins in (500 ms) and a gold ring spreads once |
 | New Order | Bar Screen | Slides in from above with a gold edge and one small pulse, 700 ms (it used to blink for 4 seconds) |
 
