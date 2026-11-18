@@ -1109,7 +1109,16 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   - Tests: `tests/db/limits.test.ts`, `tests/limits-wired.test.ts` (both actions call the limit), `tests/db/cart.test.ts`
 
   </details>
-- [ ] **13.2 Page speed** (CK-02). Bring total blocking time under 200 ms on Home, `/menu` and a Menu Item page.
+- [x] **13.2 Page speed** (CK-02). Bring total blocking time under 200 ms on Home, `/menu` and a Menu Item page. **Done in part 2026-11-18:** Home and `/menu` are under; the Menu Item page is about 100 ms over.
+  <details><summary>How it was done</summary>
+
+  - Measured on a local production build, Lighthouse 12.8.2 mobile, the median of 3 runs per page (PageSpeed Insights was over its daily quota)
+  - `HeaderHeight` (batch 12.1) set `--header-h` on `<html>` on every page load, which restyles every element; it now sets it only when the header's height differs from the stylesheet's 68 px, so on most screens never
+  - Total blocking time before and after: `/menu` 218 to 192 ms, the Menu Item page 388 to 304 ms (Performance 84 to 87); Home 190 ms after
+  - Tried and undone: `content-visibility: auto` on the footer, which changed nothing measurable
+  - Left: the Menu Item page spends one 350 to 450 ms task bringing the page to life in the browser; profiling which part (the Option Picker or the header's links) is the next step
+
+  </details>
 - [ ] **13.3 Photos** (CK-03, CK-04). Cap the pixels an upload may unpack to and shrink photos; a Remove photo choice.
 - [ ] **13.4 The small rest** (CK-05 to CK-08). `robots.txt`; the site's description; the e2e photo left behind; the steps for a preview database.
 
