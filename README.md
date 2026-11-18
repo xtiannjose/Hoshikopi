@@ -1,15 +1,20 @@
 # Hoshikopi
 
-> **In plain words:** Hoshikopi is a website for a concept cafe. Customers order coffee ahead and pick it up; baristas see the Orders on a tablet behind the counter; the Manager runs the menu and the cafe from the same site. It is a finished portfolio project: it works end to end, but no real money ever moves.
+> **In plain words:** Hoshikopi is a website for a concept cafe. Customers order coffee ahead and pick it up. Baristas see the Orders on a tablet behind the counter. The Manager runs the menu and the cafe from the same site. It is a finished portfolio project: it works end to end, but no real money ever moves.
 >
-> **Who should read it:** everyone, first. The "Start here" table sends each reader to the right document.
-> **Last checked:** 2026-11-17.
+> **Who should read it:** everyone, first.
+> **Last checked:** 2026-11-18.
 
-A concept cafe, and the website that runs it. The site sells the place and runs the counter. Customers see the space and plan a visit, browse the menu, choose their Options, order ahead and pick up at the counter, pay with GCash, Maya, card or at pickup, and collect Stars toward a free drink. Baristas run live Orders on a Bar Screen; the Manager edits the menu, hours, the cafe's details, Events and Posts. The look follows the cafe's clock: cream paper by day, night sky from 6 PM Manila time.
+A concept cafe, and the website that runs it. The site does two jobs:
 
-*Hoshi* is Japanese for star; *kopi* is coffee in Malay and Indonesian, close to the Filipino *kape*.
+- **It sells the place.** Customers see the room, the menu and the Opening Hours, and plan a visit.
+- **It runs the counter.** Customers choose their drink and its Options, order ahead and pick up at the counter. They pay with GCash, Maya, a card or at pickup, and collect Stars toward a free drink. Baristas work through the Orders on a Bar Screen. The Manager edits the menu, the hours, the cafe's details, Events and Posts.
 
-> **Concept project.** Hoshikopi is a portfolio piece, not a real business. The cafe's address, people, prices and photos are invented, and payments run in Test Mode only: no real money is ever taken.
+The look follows the cafe's clock: cream paper by day, night sky from 6 PM Manila time.
+
+*Hoshi* is Japanese for star. *Kopi* is coffee in Malay and Indonesian, close to the Filipino *kape*.
+
+> **Concept project.** Hoshikopi is a portfolio piece, not a real business. The cafe's address, people, prices and photos are invented. Payments run in Test Mode only (practice payments), so no real money is ever taken.
 
 | | |
 | --- | --- |
@@ -18,67 +23,50 @@ A concept cafe, and the website that runs it. The site sells the place and runs 
 
 ## Start here
 
+**New here? Open the [docs map](docs/README.md).** It has a reading path for each kind of reader, a list of every document, and the coding words explained for beginners.
+
 | You are | Read first | Then |
 | --- | --- | --- |
-| Taking over the project (owner, project manager) | [docs/HANDOFF.md](docs/HANDOFF.md) | [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0 |
-| Working at the cafe (Barista, Manager) | [docs/STAFF-GUIDE.md](docs/STAFF-GUIDE.md) | [GLOSSARY.md](GLOSSARY.md) for any word that is unclear |
-| A developer | [docs/06-SETUP.md](docs/06-SETUP.md) | [CLAUDE.md](CLAUDE.md), then [docs/03-ARCHITECTURE.md](docs/03-ARCHITECTURE.md) |
-| A reviewer or recruiter | [docs/CASE-STUDY.md](docs/CASE-STUDY.md) | [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md), then try it on the live site |
+| Curious, a reviewer or a recruiter | [Case study](docs/CASE-STUDY.md) | [Demo script](docs/DEMO-SCRIPT.md), then try the [live site](https://hoshikopi.vercel.app) |
+| Working at the cafe (Barista, Manager) | [Staff guide](docs/STAFF-GUIDE.md) | [Glossary](GLOSSARY.md), for any word that is unclear |
+| Taking over the project | [Handoff guide](docs/HANDOFF.md) | [Roadmap](docs/07-ROADMAP.md), section 0 |
+| New to coding, changing the code | [Docs map](docs/README.md), "Coding words" | [Setup](docs/06-SETUP.md) |
+| A developer | [Setup](docs/06-SETUP.md) | [CLAUDE.md](CLAUDE.md), then [Architecture](docs/03-ARCHITECTURE.md) |
 
-## Status
+## Where it stands
 
-Built and live at https://hoshikopi.vercel.app, hosted on Vercel with a Neon database. Payments run in Test Mode on the built-in `fake` provider, and the live site sends no email until the project has a domain (visitors sign in with Google).
+It is live at https://hoshikopi.vercel.app. Vercel hosts the site and Neon hosts the database. Payments run in Test Mode on the site's built-in pretend provider, called `fake`. The live site sends no email until the project has a domain, so visitors sign in with Google.
 
-- **Done: Phases 0 to 10.** The MVP and V1 features, the November audit and its fixes, the portfolio review (the [case study](docs/CASE-STUDY.md), the [measured success metrics](docs/METRICS.md) and the [two-minute demo script](docs/DEMO-SCRIPT.md)), and the rest of the audit backlog.
-- **Phase 11, done 2026-11-17 (in pull requests #111 to #120):** these handoff docs, the fixes for all 46 findings of the [2026-11-17 deep check](docs/audit/2026-11-17.md), which found no serious problem, and the 43 small items the November audit had left. No audit item is open except ops:8, a look at the live site's demo dates.
-- **Phase 12, done 2026-11-18 (pull requests #121 to #126):** the owner's requests: headers that stay at the top (customer and Staff), the staff menu by Category with a List and Photos switch, photos for Events and Posts, and Adjust Stars with the Member's Star Card and plus and minus buttons. New features beyond these are on hold.
+| Phase | What | Status |
+| --- | --- | --- |
+| 0 to 10 | Every planned feature, a full audit and all its fixes, the case study and the demo script | Done |
+| 11 | The handoff docs, and fixes for every finding of a second full check (pull requests #111 to #120) | Done 2026-11-17 |
+| 12 | The owner's requests: headers that stay at the top, photos for Events and Posts, the staff menu with a List and Photos switch, Adjust Stars with the Member's Star Card | Done 2026-11-18 (#121 to #128) |
 
-Where things stand on any day: [docs/07-ROADMAP.md](docs/07-ROADMAP.md) section 0.
+New features beyond these are on hold. For where things stand on any day, see the [roadmap](docs/07-ROADMAP.md), section 0.
 
-## Stack
+## What it is built with
 
 | Part | What it does for the site |
 | --- | --- |
-| Next.js 16 (App Router, Cache Components) and React 19 | Build the pages and run the server code; public pages are made ahead of time, so they load fast |
-| TypeScript | JavaScript with types, so many mistakes show up before the code runs |
+| Next.js 16 and React 19 | Build the pages and run the server code. Public pages are built ahead of time, so they load fast. |
+| TypeScript | JavaScript that also checks the kinds of values, so many mistakes show up before the code runs |
 | Tailwind CSS 4 | The styling: colours, spacing and the Day and Night palettes |
-| PostgreSQL with Prisma | The database, and the tool that reads it and changes its shape (Docker on a developer's computer, Neon when hosted) |
-| Better Auth | Sign-in with an email link or Google (Staff then also enter a Second Factor code, which the site checks itself) |
-| A payment interface: `fake` and PayMongo | A Test Mode checkout built into the site, and a PayMongo connector ready for test keys |
-| Resend | Sends emails once a key is set; until then they go to the terminal on a developer's computer |
-| Vercel and Vercel Blob | Hosting, the daily job, and the store for uploaded photos |
+| PostgreSQL with Prisma | The database, and the tool that reads it and changes its shape. Docker runs it on a developer's computer; Neon hosts it online. |
+| Better Auth | Sign-in with an email link or Google. Staff also enter a 6-digit code, the Second Factor. |
+| `fake` and PayMongo | A Test Mode checkout built into the site, and a PayMongo connector ready for test keys |
+| Resend | Sends emails once a key is set. Until then, emails show in the terminal on a developer's computer. |
+| Vercel and Vercel Blob | Hosting, the daily job, and the storage for uploaded photos |
 | zod, sharp | Check every input; re-encode uploaded photos without their location data |
 | Vitest, Playwright with axe, Lighthouse | Tests of the rules against a real database, tests in a real browser with accessibility checks, and speed scores |
-| GitHub Actions and Dependabot | Run the checks on every pull request; propose library updates weekly |
+| GitHub Actions and Dependabot | Run the checks on every pull request; propose library updates every week |
 
-## Documents
+Every term here is explained in the [docs map](docs/README.md#4-coding-words-you-will-meet).
 
-| Document | What it holds | Read it when |
-| --- | --- | --- |
-| [docs/HANDOFF.md](docs/HANDOFF.md) | Taking over: the services the site runs on, secrets and access, routine care, what to do when something breaks, what is left | Taking over the project, or something broke |
-| [docs/STAFF-GUIDE.md](docs/STAFF-GUIDE.md) | How Baristas and the Manager use the Bar Screen and `/manage` | Working at the cafe, or training someone |
-| [CLAUDE.md](CLAUDE.md) | Rules and pointers for every working session | Starting any task |
-| [GLOSSARY.md](GLOSSARY.md) | The words the product, code and database use | A term is unclear, or you name something |
-| [docs/01-PRD.md](docs/01-PRD.md) | Goals, assumptions, personas, scope by release, requirements with IDs, risks | Deciding what is in or out |
-| [docs/02-RESEARCH-CAFES.md](docs/02-RESEARCH-CAFES.md) | What other cafe sites and ordering apps do, with sources and candidate features | Designing a feature |
-| [docs/03-ARCHITECTURE.md](docs/03-ARCHITECTURE.md) | Modules, routes, ordering, Order Status, payments, Pickup Windows, Stars, live updates, security, testing | Writing code |
-| [docs/04-DATA-MODEL.md](docs/04-DATA-MODEL.md) | Tables, columns, invariants, seed data, migration policy | Touching the database |
-| [docs/05-DESIGN-SYSTEM.md](docs/05-DESIGN-SYSTEM.md) | The "star coffee" look: colours, type, components, motion, Bar Screen, accessibility, budgets | Any UI work |
-| [docs/06-SETUP.md](docs/06-SETUP.md) | Prerequisites, accounts, getting the code, env vars, database, commands, GitHub, the live deploy, backups | Setting up, or touching the live services |
-| [docs/07-ROADMAP.md](docs/07-ROADMAP.md) | Phases 0 to 11, batches with checkboxes, exit criteria, decisions, definition of done | Picking the next piece of work |
-| [docs/08-TOOLING.md](docs/08-TOOLING.md) | Which skill fits which job, agents, ports, libraries, machine facts, prompts | Choosing how to work |
-| [docs/ASSETS.md](docs/ASSETS.md) | Every shipped file that is not code, its source and licence; the concept images still to make | Adding a font, image or other asset |
-| [docs/CASE-STUDY.md](docs/CASE-STUDY.md) | The problem, what was built, the decisions, the quality work, what comes next | Reviewing the project |
-| [docs/METRICS.md](docs/METRICS.md) | The PRD's success metrics, measured: order speed, Lighthouse, axe, rule mutations | Checking the numbers |
-| [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md) | The two-minute demo, step by step, with what to say | Showing it to someone |
-| [docs/adr/README.md](docs/adr/README.md) | Every decision in one sentence, linking the ADRs (0001 to 0015) that record each one and why | Before changing a decision |
-| [docs/audit/README.md](docs/audit/README.md) | The November 2026 audit and the 2026-11-17 deep check: what each found, what is fixed, what is open | Planning fixes |
-| [docs/audit/2026-11-17.md](docs/audit/2026-11-17.md) | The 2026-11-17 deep check in plain words, and how each finding was fixed in Phase 11 | Checking what was found and fixed |
+## Run it on your computer
 
-## Getting started
+Follow [Setup](docs/06-SETUP.md). You need no outside accounts at first: stand-ins on your computer run the whole site.
 
-Follow [docs/06-SETUP.md](docs/06-SETUP.md). Every outside account (Neon, Vercel, PayMongo, Resend, Google) is optional at first; local stand-ins run the whole site.
+## Where the project lives
 
-## Project copy
-
-The project lives on GitHub: https://github.com/xtiannjose/Hoshikopi. It is public and it is the project's only copy, so nothing secret ever goes in it.
+The code is on GitHub: https://github.com/xtiannjose/Hoshikopi. It is public and it is the project's only copy, so nothing secret ever goes in it.
