@@ -82,6 +82,38 @@ describe("readPhoto (audit ops:15)", () => {
   });
 });
 
+// A 2 MB file could unpack to 268 million pixels, about 1 GB of memory, and
+// photos were stored at whatever size they came (audit CK-03).
+describe("readPhoto, the size it unpacks to (audit CK-03)", () => {
+  it("shrinks a photo to 2400 px on its long side, and leaves a small one", async () => {
+    const wide = await sharp({
+      create: { width: 3000, height: 2000, channels: 3, background: "#e7a83f" },
+    })
+      .jpeg()
+      .toBuffer();
+    const result = await readPhoto(new File([wide], "wide.jpg"));
+    if (!result.ok) throw new Error(result.error);
+    const shrunk = await sharp(result.bytes).metadata();
+    expect([shrunk.width, shrunk.height]).toEqual([2400, 1600]);
+
+    const small = await readPhoto(new File([await pngBytes()], "small.png"));
+    if (!small.ok) throw new Error(small.error);
+    expect((await sharp(small.bytes).metadata()).width).toBe(2);
+  });
+
+  it("refuses a photo of more than 40 million pixels, before unpacking it", async () => {
+    const huge = await sharp({
+      create: { width: 7000, height: 6000, channels: 3, background: "#ffffff" },
+    })
+      .png({ palette: true })
+      .toBuffer();
+    expect(await readPhoto(new File([huge], "huge.png"))).toEqual({
+      ok: false,
+      error: "Choose a photo under 40 megapixels.",
+    });
+  });
+});
+
 describe("storePhoto (batch 1.5, 5.4)", () => {
   // public/ is listed only when `next start` begins, so a photo saved
   // there was a 404 until a restart (audit PERF-04).

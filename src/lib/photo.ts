@@ -7,6 +7,10 @@ import sharp from "sharp";
 import { now } from "@/lib/clock";
 
 const MAX_BYTES = 2 * 1024 * 1024;
+/** A small file can unpack to a huge image; more than this is refused (audit CK-03). */
+const MAX_PIXELS = 40_000_000;
+/** Photos are kept at most this many pixels on their long side. */
+const MAX_SIDE = 2400;
 
 const CONTENT_TYPE = {
   jpg: "image/jpeg",
@@ -60,9 +64,23 @@ export async function readPhoto(
   const type = imageType(bytes);
   if (!type) return { ok: false, error: "Choose a JPEG, PNG or WebP photo." };
   try {
+    // The header says the size, so a photo too big to unpack safely is
+    // refused before it is unpacked.
+    const { width = 0, height = 0 } = await sharp(bytes).metadata();
+    if (width * height > MAX_PIXELS) {
+      return { ok: false, error: "Choose a photo under 40 megapixels." };
+    }
     // sharp writes no metadata unless asked; rotate() applies EXIF's
     // orientation first, so the photo stays upright without it.
-    return { ok: true, type, bytes: await sharp(bytes).rotate().toBuffer() };
+    const image = sharp(bytes, { limitInputPixels: MAX_PIXELS })
+      .rotate()
+      .resize({
+        width: MAX_SIDE,
+        height: MAX_SIDE,
+        fit: "inside",
+        withoutEnlargement: true,
+      });
+    return { ok: true, type, bytes: await image.toBuffer() };
   } catch {
     return { ok: false, error: "We couldn't read that photo. Try another." };
   }

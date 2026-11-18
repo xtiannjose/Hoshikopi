@@ -259,6 +259,16 @@ export function ItemForm({
           }
           error={error("photo")}
         />
+        {item.photoUrl && (
+          <label className="inline-flex min-h-11 items-center gap-2">
+            <input
+              type="checkbox"
+              name="removePhoto"
+              className="size-5 shrink-0"
+            />
+            Remove this photo
+          </label>
+        )}
         <Field
           name="photoAlt"
           label="Photo description (alt text)"

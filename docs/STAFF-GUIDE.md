@@ -362,7 +362,7 @@ Tap **Add a Menu Item**, or tap an item's name. The editor has five parts. Finis
 | | **Calories (kcal, optional)** | A whole number up to 3000, for its default choices. Shown as a concept estimate. |
 | Choices | **Option Groups it offers** | Tick each group the Customer chooses from (Size, Milk...). |
 | | **Goes well with** | A **Pairing**: another Menu Item shown on its page with a one-tap Add. "Nothing" for none. |
-| Photo | **Photo** | JPEG, PNG or WebP, 4:3, under 2 MB. Choose a new file to replace the current one. |
+| Photo | **Photo** | JPEG, PNG or WebP, 4:3, under 2 MB and under 40 megapixels. Choose a new file to replace the current one, or tick **Remove this photo** and save to go back to the plain stand-in. |
 | | **Photo description (alt text)** | Describe the item as a menu would, for people who cannot see the photo. |
 
 After adding, you see "Added. It's on the menu now." (or "Added. It's hidden for now; untick Hidden when it's ready.") and a link **Add another**. On an existing item, **See it on the site** opens its public page. Pills show **Sold out today**, **Hidden**, **Promo until** a date and **On the menu until** a date.
@@ -466,7 +466,7 @@ Tap **Add an Event**, or tap an Event's tile.
 | **Price (PHP, empty for free)** | Paid at the door; the site takes no money for Events. |
 | **Sign-up link (optional)** | An `https://` link if people sign up somewhere else. |
 | **Seats for Sign-ups here (optional)** | 1 to 500. People sign up on the Event page until these run out. Empty for no Sign-up here. |
-| **Photo** | JPEG, PNG or WebP, 16:9 (wide), under 2 MB. It shows on the Event's tile and page. The saved photo shows above the field; choose a new file to replace it. Without one, a plain stand-in shows. |
+| **Photo** | JPEG, PNG or WebP, 16:9 (wide), under 2 MB. It shows on the Event's tile and page. The saved photo shows above the field; choose a new file to replace it, or tick **Remove this photo** and save to take it off. Without one, a plain stand-in shows. |
 | **Photo description (alt text)** | Say what the photo shows, for people who cannot see it ("Rosetta latte art in a blue cup"). |
 | **About the Event** | The full text, in Markdown (simple marks for formatting: `**bold**`, `*italic*`, `- lists`, `[links](https://...)`). A **Preview** shows it as the site will. |
 | **Published on the site** | Untick to keep it as a draft. |
@@ -494,7 +494,7 @@ Fill **Add a Recurring Event**: **Title**, **Day**, **Starts (Manila time)**, **
 
 1. Tap **Write a Post**.
 2. Fill **Title**, **Web address** and **One line for the news list (up to 180 characters)**. A counter shows how many characters you used.
-3. Add a **Cover photo** if you have one (optional): JPEG, PNG or WebP, 16:9 (wide), under 2 MB, with a **Photo description (alt text)** saying what it shows. It shows on the news list and at the top of the Post. Choose a new file later to replace it.
+3. Add a **Cover photo** if you have one (optional): JPEG, PNG or WebP, 16:9 (wide), under 2 MB, with a **Photo description (alt text)** saying what it shows. It shows on the news list and at the top of the Post. Choose a new file later to replace it, or tick **Remove this photo** and save to take it off.
 4. Write **The Post** in Markdown (see 10.1). **Preview** shows it as the site will.
 5. Tick **Published on the site** to publish it now, or leave it for a draft.
 6. Tap **Add Post**, then **Save Post** for later changes.

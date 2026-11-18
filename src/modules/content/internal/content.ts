@@ -229,6 +229,7 @@ const EventInput = z
         "Enter 1 to 500 seats, or leave it empty for no sign-up here."
       ),
     photoAlt: altText,
+    removePhoto: checkbox.optional(),
     isPublished: checkbox,
   })
   .refine((e) => e.endsAt > e.startsAt, {
@@ -250,6 +251,7 @@ const PostInput = z.object({
   excerpt: z.string().trim().min(1, "Write one line.").max(180),
   bodyMd: z.string().trim().min(1, "Write something.").max(12000),
   coverAlt: altText,
+  removePhoto: checkbox.optional(),
   isPublished: checkbox,
 });
 
@@ -281,7 +283,7 @@ export async function saveEvent(
   if (checked && !checked.ok) {
     return { ok: false, errors: { photo: checked.error } };
   }
-  const { price, signupUrl, seats, ...rest } = parsed.data;
+  const { price, signupUrl, seats, removePhoto: drop, ...rest } = parsed.data;
   const data = {
     ...rest,
     priceCents: price === "" ? null : parsePesos(price),
@@ -303,7 +305,17 @@ export async function saveEvent(
       );
       return saved;
     });
-    if (!checked) return { ok: true, id: event.id };
+    if (!checked) {
+      // Remove this photo: the file goes too (audit CK-04).
+      if (drop && event.photoUrl) {
+        await db.event.update({
+          where: { id: event.id },
+          data: { photoUrl: null, photoAlt: null },
+        });
+        await removePhoto(event.photoUrl);
+      }
+      return { ok: true, id: event.id };
+    }
     const stored = await storePhoto(checked, "events", event.slug);
     if (!stored.ok) return { ok: true, id: event.id, photoError: stored.error };
     await db.event.update({
@@ -354,7 +366,7 @@ export async function savePost(
   if (checked && !checked.ok) {
     return { ok: false, errors: { photo: checked.error } };
   }
-  const { isPublished, ...rest } = parsed.data;
+  const { isPublished, removePhoto: drop, ...rest } = parsed.data;
   try {
     const post = await db.$transaction(async (tx) => {
       const current = id ? await tx.post.findUnique({ where: { id } }) : null;
@@ -376,7 +388,16 @@ export async function savePost(
       );
       return saved;
     });
-    if (!checked) return { ok: true, id: post.id };
+    if (!checked) {
+      if (drop && post.coverUrl) {
+        await db.post.update({
+          where: { id: post.id },
+          data: { coverUrl: null, coverAlt: null },
+        });
+        await removePhoto(post.coverUrl);
+      }
+      return { ok: true, id: post.id };
+    }
     const stored = await storePhoto(checked, "posts", post.slug);
     if (!stored.ok) return { ok: true, id: post.id, photoError: stored.error };
     await db.post.update({

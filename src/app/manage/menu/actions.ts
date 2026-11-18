@@ -49,6 +49,7 @@ export async function saveMenuItemAction(
     promoUntil: text(form, "promoUntil"),
     availableUntil: text(form, "availableUntil"),
     photoAlt: text(form, "photoAlt"),
+    removePhoto: form.get("removePhoto") ?? undefined,
     sort: text(form, "sort") || "0",
   };
   // The photo is checked first and stored only once the save passes.
