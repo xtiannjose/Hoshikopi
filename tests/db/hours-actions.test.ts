@@ -30,6 +30,7 @@ vi.mock("@/modules/identity", async (importOriginal) => ({
 vi.mock("next/cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/cache")>()),
   updateTag: () => {},
+  revalidatePath: () => {},
   refresh: () => {},
 }));
 vi.mock("next/navigation", async (importOriginal) => ({

@@ -1,7 +1,6 @@
 "use server";
 
-import { updateTag } from "next/cache";
-
+import { refreshPublic } from "@/lib/refresh";
 import { requireStaff } from "@/modules/identity";
 import { setMenuItemSoldOut, setOptionSoldOut } from "@/modules/menu";
 import { cancelOrder, transition } from "@/modules/ordering";
@@ -55,5 +54,5 @@ export async function toggleSoldOut(form: FormData) {
   } else {
     await setMenuItemSoldOut(field("id"), soldOut, staff);
   }
-  updateTag("menu");
+  refreshPublic("menu");
 }

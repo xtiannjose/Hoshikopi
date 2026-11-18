@@ -6,7 +6,11 @@ import { saveMenuItemAction } from "./menu/actions";
 const christian = { id: "seed-manager", name: "Christian", role: "manager" };
 
 vi.mock("@/modules/identity", () => ({ requireStaff: async () => christian }));
-vi.mock("next/cache", () => ({ updateTag: () => {}, refresh: () => {} }));
+vi.mock("next/cache", () => ({
+  updateTag: () => {},
+  revalidatePath: () => {},
+  refresh: () => {},
+}));
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => {
     throw new Error(`redirect ${url}`);

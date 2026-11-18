@@ -1,8 +1,8 @@
 "use server";
 
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { refreshPublic } from "@/lib/refresh";
 import { requireStaff } from "@/modules/identity";
 import {
   deleteOptionGroup,
@@ -60,7 +60,7 @@ export async function saveMenuItemAction(
     photo instanceof File ? photo : null
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("menu");
+  refreshPublic("menu");
   // A new item whose photo failed to store says so on its page; the redirect
   // dropped the error (audit DC-16).
   if (!id) {
@@ -91,7 +91,7 @@ export async function saveCategoryAction(
     staff
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("menu");
+  refreshPublic("menu");
   return { status: "saved", id: id ? undefined : result.id };
 }
 
@@ -111,7 +111,7 @@ export async function saveOptionGroupAction(
     staff
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("menu");
+  refreshPublic("menu");
   if (!id) redirect(`/manage/menu/options/${result.id}?added=1`);
   return { status: "saved" };
 }
@@ -138,7 +138,7 @@ export async function saveOptionAction(
     staff
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("menu");
+  refreshPublic("menu");
   return { status: "saved" };
 }
 
@@ -146,7 +146,7 @@ export async function saveOptionAction(
 export async function deleteOptionGroupAction(form: FormData) {
   const staff = await requireStaff("manager", "/manage/menu");
   if (await deleteOptionGroup(text(form, "id"), staff)) {
-    updateTag("menu");
+    refreshPublic("menu");
     redirect("/manage/menu");
   }
 }
