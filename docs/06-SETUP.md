@@ -274,6 +274,16 @@ The live demo runs on Vercel with its database on Neon (batch 5.4, live since 20
 - A pull request whose code needs a new column fails its Preview check until it is merged (PR #102). Merging is safe because the Production build migrates first.
 - To try a migration on a preview, first turn on a database branch per Preview deployment in the Vercel project's Neon integration.
 
+**To give previews their own database (optional, audit CK-08).** Neon can copy the live database into a branch for each Preview deployment, so a preview never touches live data:
+
+1. In the Vercel project, open **Storage** and choose the Neon database.
+2. In its settings, turn on a database branch for each **Preview** deployment (Neon calls this preview branching). Leave Production on the main branch.
+3. In `vercel.json`, let previews migrate their own branch: change the build command's `if [ "$VERCEL_ENV" = "production" ]` to run `prisma migrate deploy` on Preview too. This is safe only once step 2 is on.
+4. Check it: open a preview, add a test Inquiry, and confirm it does not show in the live site's `/manage/inquiries`.
+5. Delete old preview branches in the Neon console now and then: the free plan allows only a few.
+
+Until then, the rules above hold: previews are for build checks only.
+
 ### Setting up the demo, in order
 
 1. **Neon**, through Vercel: in the Vercel project, **Storage**, connect a **Neon** database in Singapore (`ap-southeast-1`). The integration sets `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` (direct, for migrations) in every environment, so there is nothing to copy. By hand instead: create a Neon project and set `DATABASE_URL` to the pooled URL (its host has `-pooler`) and `DIRECT_URL` to the direct one.

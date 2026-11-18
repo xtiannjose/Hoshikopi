@@ -1127,7 +1127,15 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   - Tests: `src/lib/photo.test.ts`, `tests/db/content.test.ts`, `tests/db/menu-admin.test.ts`, and the e2e "a Manager publishes an Event" now removes the photo it added
 
   </details>
-- [ ] **13.4 The small rest** (CK-05 to CK-08). `robots.txt`; the site's description; the e2e photo left behind; the steps for a preview database.
+- [x] **13.4 The small rest** (CK-05 to CK-08). `robots.txt`; the site's description; the e2e photo left behind; the steps for a preview database. **Done 2026-11-18.**
+  <details><summary>How it was done</summary>
+
+  - `src/app/robots.ts` answers `/robots.txt` and lets crawlers in, so they read every page's `noindex` (blocking them would let a linked address show in search without its page)
+  - The site's description and the share card no longer name Kapitolyo, Pasig: "A concept cafe. Order ahead for pickup and earn Stars." The Visit page still shows the neighbourhood
+  - The e2e photo is removed by the test itself since 13.3
+  - `docs/06-SETUP.md` section 9 has the steps to give previews their own database; the owner decides
+
+  </details>
 
 ## 13. After V1 (not scheduled)
 
