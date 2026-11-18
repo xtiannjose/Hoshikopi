@@ -48,6 +48,16 @@ function PhotoFields({
   return (
     <div className="grid gap-5">
       {current && <div className="max-w-80">{current}</div>}
+      {current && (
+        <label className="inline-flex min-h-11 items-center gap-2">
+          <input
+            type="checkbox"
+            name="removePhoto"
+            className="size-5 shrink-0"
+          />
+          Remove this photo
+        </label>
+      )}
       <Field
         name="photo"
         label={label}

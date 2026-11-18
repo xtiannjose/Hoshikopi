@@ -131,6 +131,8 @@ const MenuItemInput = z.object({
       "Enter a whole number of kcal up to 3000, or leave it empty."
     ),
   photoAlt: z.string().trim().max(160),
+  /** Remove this photo (audit CK-04); a new file wins over it. */
+  removePhoto: checkbox.optional(),
   sort: z.coerce.number().int().min(0).max(999),
 });
 
@@ -210,6 +212,9 @@ export async function saveMenuItem(
     promoFrom,
     promoUntil,
     availableUntil,
+    // Not a column: saveMenuItemWithPhoto acts on it.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    removePhoto,
     ...data
   } = parsed.data;
   const promo = promoFields(basePrice, promoPrice, promoFrom, promoUntil);
@@ -315,7 +320,23 @@ export async function saveMenuItemWithPhoto(
     return { ok: false, errors: { photo: checked.error } };
   }
   const result = await saveMenuItem(id, input, actor);
-  if (!result.ok || !checked) return result;
+  if (!result.ok) return result;
+  if (!checked) {
+    if (checkbox.parse(input.removePhoto)) {
+      const { photoUrl } = await db.menuItem.findUniqueOrThrow({
+        where: { id: result.id },
+        select: { photoUrl: true },
+      });
+      if (photoUrl) {
+        await db.menuItem.update({
+          where: { id: result.id },
+          data: { photoUrl: null, photoAlt: null },
+        });
+        await removePhoto(photoUrl);
+      }
+    }
+    return result;
+  }
   const stored = await storePhoto(checked, "menu", input.slug);
   if (!stored.ok) return { ...result, photoError: stored.error };
   const before = await db.menuItem.findUniqueOrThrow({

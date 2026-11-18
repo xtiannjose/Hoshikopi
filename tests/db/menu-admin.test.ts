@@ -419,6 +419,21 @@ describe("menu photos", () => {
       (await db.menuItem.findUniqueOrThrow({ where: { id } })).photoUrl
     ).toMatch(/\/menu\/hoshi-latte-\d+\.png$/);
   });
+
+  // A photo could be replaced but never removed (audit CK-04).
+  it("removes the photo when Remove this photo is ticked", async () => {
+    vi.stubEnv("BLOB_STORE_ID", "store_test");
+    const old = "https://store.public.blob.vercel-storage.com/menu/old.png";
+    const { id, input } = await latteInput({ removePhoto: "on" });
+    await db.menuItem.update({ where: { id }, data: { photoUrl: old } });
+    expect((await saveMenuItemWithPhoto(id, input, christian, null)).ok).toBe(
+      true
+    );
+    expect(
+      (await db.menuItem.findUniqueOrThrow({ where: { id } })).photoUrl
+    ).toBeNull();
+    expect(del).toHaveBeenCalledWith(old);
+  });
 });
 
 // Renaming the Beans and merch Category's address put "Nut-free" back on

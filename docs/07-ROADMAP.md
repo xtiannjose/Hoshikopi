@@ -1120,7 +1120,14 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   - Left: about 35 ms on the Menu Item page, all in loading the Next.js and React runtime (about 415 kB) and bringing the page to life. Tried at the owner's request: the page with no Option Picker at all measures about 203 ms (194 to 260), so starting the picker later could save about 30 ms at most, within the run-to-run noise, at the cost of a slower first tap. Not done
 
   </details>
-- [ ] **13.3 Photos** (CK-03, CK-04). Cap the pixels an upload may unpack to and shrink photos; a Remove photo choice.
+- [x] **13.3 Photos** (CK-03, CK-04). Cap the pixels an upload may unpack to and shrink photos; a Remove photo choice. **Done 2026-11-18** (tests first).
+  <details><summary>How it was done</summary>
+
+  - `readPhoto` reads the size from the file's header and refuses more than 40 million pixels ("Choose a photo under 40 megapixels.") before unpacking; `sharp` also gets `limitInputPixels`, and every photo is kept at most 2,400 px on its long side
+  - **Remove this photo** under a saved photo on the Menu Item, Event and Post editors: saving with it ticked clears the photo and its description and deletes the file; a new file wins over the tick
+  - Tests: `src/lib/photo.test.ts`, `tests/db/content.test.ts`, `tests/db/menu-admin.test.ts`, and the e2e "a Manager publishes an Event" now removes the photo it added
+
+  </details>
 - [ ] **13.4 The small rest** (CK-05 to CK-08). `robots.txt`; the site's description; the e2e photo left behind; the steps for a preview database.
 
 ## 13. After V1 (not scheduled)

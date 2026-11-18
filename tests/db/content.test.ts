@@ -273,6 +273,69 @@ describe("Event and Post photos (12.3)", () => {
     expect(del).toHaveBeenCalledWith(post.coverUrl);
   });
 
+  // A photo could be replaced but never removed (audit CK-04).
+  it("removes an Event's photo when Remove this photo is ticked", async () => {
+    useBlob();
+    const event = await db.event.findUniqueOrThrow({
+      where: { slug: "latte-art-night" },
+    });
+    const old = `${BLOB}events/old.png`;
+    await db.event.update({
+      where: { id: event.id },
+      data: { photoUrl: old, photoAlt: "Old photo" },
+    });
+    const input = {
+      title: event.title,
+      slug: event.slug,
+      startsAt: "2026-12-04T19:00",
+      endsAt: "2026-12-04T21:00",
+      summary: event.summary,
+      bodyMd: event.bodyMd,
+      price: "",
+      signupUrl: "",
+      photoAlt: "Old photo",
+      removePhoto: "on",
+      isPublished: "on",
+    };
+    expect(await saveEvent(event.id, input, christian)).toEqual({
+      ok: true,
+      id: event.id,
+    });
+    const saved = await db.event.findUniqueOrThrow({ where: { id: event.id } });
+    expect([saved.photoUrl, saved.photoAlt]).toEqual([null, null]);
+    expect(del).toHaveBeenCalledWith(old);
+  });
+
+  it("removes a Post's cover, and a new file wins over the tick", async () => {
+    useBlob();
+    const post = await db.post.findUniqueOrThrow({
+      where: { slug: "our-beans-from-benguet" },
+    });
+    const input = {
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt,
+      bodyMd: post.bodyMd,
+      removePhoto: "on",
+      isPublished: "on",
+    };
+    expect((await savePost(post.id, input, christian, await png())).ok).toBe(
+      true
+    );
+    const replaced = await db.post.findUniqueOrThrow({
+      where: { id: post.id },
+    });
+    expect(replaced.coverUrl).toMatch(
+      /\/posts\/our-beans-from-benguet-\d+\.png$/
+    );
+
+    expect((await savePost(post.id, input, christian)).ok).toBe(true);
+    expect(
+      (await db.post.findUniqueOrThrow({ where: { id: post.id } })).coverUrl
+    ).toBeNull();
+    expect(del).toHaveBeenCalledWith(replaced.coverUrl);
+  });
+
   it("keeps the save and says so when the photo store fails", async () => {
     vi.stubEnv("BLOB_STORE_ID", "store_test");
     vi.mocked(put).mockRejectedValue(new Error("Access denied"));

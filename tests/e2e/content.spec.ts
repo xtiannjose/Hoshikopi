@@ -92,6 +92,7 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
   await expect(
     page.getByRole("img", { name: "Three cups lined up for a cupping" })
   ).toBeVisible();
+  const editor = page.url();
   await expectNoAxeViolations(page);
   await expect(async () => {
     await page.goto("/events");
@@ -107,6 +108,16 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
   await expect
     .poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth))
     .toBeGreaterThan(0);
+
+  // And it can be taken off again (audit CK-04).
+  await page.goto(editor);
+  await page.getByLabel("Remove this photo").check();
+  await page.getByRole("button", { name: "Save Event" }).click();
+  await expect(page.getByText(/^Saved/).first()).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "Three cups lined up for a cupping" })
+  ).toHaveCount(0);
+  await expect(page.getByLabel("Remove this photo")).toHaveCount(0);
 });
 
 test("Recurring Events list weekly and an Event adds to a calendar (EVT-03, EVT-04)", async ({
