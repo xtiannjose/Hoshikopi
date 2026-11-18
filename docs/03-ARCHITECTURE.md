@@ -3,7 +3,7 @@
 > **In plain words:** This document explains how the Hoshikopi website is built: its parts, what each part is in charge of, and the rules that keep Orders, money and Stars correct. Two rules matter most. The server works out every price itself. An Order changes status only through one function and the table in section 7.
 >
 > **Who should read it:** developers before changing how the site works; reviewers checking a pull request; an owner or project manager who wants to know why the site behaves as it does.
-> **Last checked:** 2026-11-17.
+> **Last checked:** 2026-11-18.
 
 Scope comes from the [PRD](01-PRD.md), words from the [Glossary](../GLOSSARY.md), tables from the [Data Model](04-DATA-MODEL.md). An ADR (Architecture Decision Record, a short note in [`docs/adr/`](adr/) that records one decision and why) settles some rules here. Changing such a rule needs a new ADR.
 
@@ -29,7 +29,7 @@ Scope comes from the [PRD](01-PRD.md), words from the [Glossary](../GLOSSARY.md)
 
 These eight rules shape everything else in this document. When a choice is unclear, they decide it.
 
-1. **One Next.js app, organised in modules** ([ADR 0001](adr/0001-modular-monolith-nextjs.md)). Next.js is the web framework the site is built with. Customer pages, Staff pages, webhooks and jobs deploy together as one program. Business logic lives in `src/modules/*`. A module is a folder of code in charge of one part of the business, such as the menu or the Stars, and each has one public front door, its `index.ts`.
+1. **One Next.js app, organised in modules** ([ADR 0001](adr/0001-modular-monolith-nextjs.md)). Next.js is the web framework the site is built with. Customer pages, Staff pages, webhooks and jobs deploy together as one program. Business logic lives in `src/modules/*`. A module is a folder of code in charge of one part of the business, such as the menu or the Stars. Each has one public front door, its `index.ts`.
 2. **Server Components by default.** A Server Component is a part of a page that the server builds and sends as finished HTML, so the phone downloads less code. `"use client"` marks a client component, one that runs in the browser. It is used only for leaf components (small parts at the edge of a page) that hold state or need browser features: the Option picker, the Cart count and the Bar Screen, which is one client component. The Cart drawer is a Server Component with a native `popover`.
 3. **The server decides money.** Prices, Price Deltas, Rewards and totals are worked out again on the server at every step. Money is integer centavos everywhere, so PHP 165.00 is `16500` ([ADR 0002](adr/0002-money-as-integer-centavos.md)). Whole numbers never round wrong.
 4. **Order Status is a state machine.** A state machine is a fixed list of allowed moves between statuses. Only the moves in section 7 exist, each in one function with its side effects.
@@ -133,7 +133,7 @@ Next.js 16 can keep a stored copy (a cache) of the data a public page needs. Eac
 - Popular this week (MENU-09) reads Orders under `cacheTag("orders")` with an hourly lifetime and is never updated by tag.
 - Every Staff change to cached data calls `refreshPublic(tag)` (`src/lib/refresh.ts`, Server Actions; route handlers use `revalidateTag(tag, "max")`). It is `updateTag` for the tag, plus `revalidatePath` for the pages with a slug in their address (`/menu/[category]`, `/menu/item/[slug]`, `/events/[slug]`, `/news/[slug]`): on Next 16.4.6 `updateTag` alone refreshed `/news` at once but left `/news/<slug>` on its old copy until its one-minute timer (batch 12.8). So the menu shows a Sold Out mark, and a saved Post its new words, on the next visit while pages stay static.
 - Pause, Busy Mode, Capacity and Prep Time are read fresh, so their saves only `refresh()` the page (audit PERF-13).
-- The menu readers use a `menu` profile (revalidate 10 seconds, expire 1 hour, in `next.config.ts`). The other public reads use `cacheLife("minutes")`. Kept on purpose for the Vercel demo (audit PERF-10): its one-hour expire only matters to a self-hosted `next start`, which would then re-render a rarely visited page while the visitor waits; a self-hosted site would add a profile that expires after 30 days. Likewise the account link and the two Cart indicators make every public page partly dynamic (audit PERF-08): no cost on Vercel, but a self-hosted site behind a CDN would move them into one small client island that reads a JSON endpoint, so public pages become fully static. If two saves a moment apart race a cache refill and the old data is stored as fresh, the menu heals within about 10 seconds and the rest within a minute (MENU-04, audit staff:2).
+- The menu readers use a `menu` profile (revalidate 10 seconds, expire 1 hour, in `next.config.ts`). The other public reads use `cacheLife("minutes")`. Kept on purpose for the Vercel demo (audit PERF-10): its one-hour expire only matters to a self-hosted `next start`, which would then re-render a rarely visited page while the visitor waits; a self-hosted site would add a profile that expires after 30 days. Likewise the account link and the two Cart indicators make every public page partly dynamic (audit PERF-08): no cost on Vercel, but a self-hosted site behind a CDN would move them into one small client island that reads a JSON endpoint, so public pages become fully static. Two saves a moment apart can race a cache refill, so the old data is stored as fresh. Then the menu heals within about 10 seconds, and the rest within a minute (MENU-04, audit staff:2).
 - A dynamic route such as `/menu/[category]` may also serve its old page once after a save and the new one a few seconds later. The end-to-end tests look again until the change shows.
 - Dynamic routes read `params` inside Suspense (a React boundary that shows a fallback while the part inside waits), as Partial Prefetching needs. The `partialPrefetching` flag itself is off since batch 7.6 (`next.config.ts`).
 - Read the guides in `node_modules/next/dist/docs/` before using a Next API, and keep two rules. Dynamic routes (those with a `[name]` part) list their params in `generateStaticParams`. No `Date.now()`, `new Date()` or `Math.random()` while rendering, except inside cached functions or client islands.
@@ -189,7 +189,7 @@ Every Order moves through a fixed set of steps, from Placed to Picked Up. Only t
 
 ## 8. Payments
 
-Hoshikopi never takes real money. Online payments go through a payment provider in test mode. The site believes a payment happened only when the provider's server says so in a webhook (a message the provider's server sends ours when a payment changes), never because of what the browser shows.
+Hoshikopi never takes real money. Online payments go through a payment provider in test mode. The site believes a payment happened only when the provider's server says so, never because of what the browser shows. The provider's server says so in a webhook: a message it sends ours when a payment changes.
 
 - Business code talks to a `PaymentProvider` interface (one shared set of functions that each provider fills in): `createCheckout`, `expireCheckout`, `refund`, `verifyWebhook`, `parseEvent` ([ADR 0003](adr/0003-payments-paymongo-test-mode.md)). Adapters (the provider-specific code behind it): `paymongo` and `fake`.
 - **PayMongo in Test Mode only.** The adapter refuses to start if its secret key is not a test key (`sk_test_`), on every environment.
@@ -205,7 +205,7 @@ Hoshikopi never takes real money. Online payments go through a payment provider 
   - Closing a checkout marks the Payment `expired` only after the provider confirms; a checkout with a payment going through stays open.
   - The browser's return page reads the Order, never the URL, to decide what to show.
 - Refunds are full only (PRD PAY-05); the Refund row records the provider refund id. A refund that stopped after the provider refunded (Payment `refunded`, Refund row written, Order not moved) is finished by trying again. One still at the provider, with no Refund row, is left alone until refund webhooks exist (ADR 0003).
-- Money that needs a person: an Order Expired or Cancelled whose Payment is still `paid` (the late refund above threw, or a Cancel's automatic Refund failed) is listed as **Needs a refund** at the top of `/manage/orders`, any day, and `refundOrder` takes it from the Manager. A late-paid Order was never Paid in its own record, so only the money goes back and its Order Status stays. Every server error is also one JSON line in the logs (`src/instrumentation.ts`, `onRequestError`), path without its query.
+- Money that needs a person: an Order can be Expired or Cancelled while its Payment is still `paid`. That happens when the late refund above threw, or a Cancel's automatic Refund failed. Such an Order is listed as **Needs a refund** at the top of `/manage/orders`, any day, and `refundOrder` takes it from the Manager. A late-paid Order was never Paid in its own record, so only the money goes back and its Order Status stays. Every server error is also one JSON line in the logs (`src/instrumentation.ts`, `onRequestError`), path without its query.
 
 ## 9. Pickup Windows, Capacity and Prep Time
 
@@ -217,7 +217,7 @@ The day is split into 15-minute Pickup Windows, and each window holds only so ma
 - `pickup_window_usage(day, window_start)` holds counts taken; `placeOrder` locks and updates it.
 - **Prep Time** for As Soon As Possible: `base_minutes + per_drink_minutes × (drinks ahead + this Order's drinks − 1) + Busy Mode minutes`, rounded up to the next 5 minutes. Both numbers are Manager settings (defaults 4 and 1.5). For example, with the defaults, 2 drinks ahead and 1 drink in this Order: 4 + 1.5 × 2 = 7, rounded up to 10 minutes.
 - Drinks ahead are those the bar is making (Accepted, Preparing) and the As Soon As Possible Orders waiting on the Bar Screen (Paid, or Placed Pay at Pickup). Scheduled Orders still waiting do not count (ADR 0007 update). As Soon As Possible takes the earliest window that starts after now + Prep Time and has room, and checkout shows it as "Ready by" that window.
-- The checkout lists only windows with room, and says "Filling up" or "2 drinks left" on one close to full; the server checks again when placing. As Soon As Possible walks the offered windows in order under each one's row lock and takes the first with room, so a window that filled after it was offered passes to the next.
+- The checkout lists only windows with room, and says "Filling up" or "2 drinks left" on one close to full; the server checks again when placing. As Soon As Possible walks the offered windows in order, under each one's row lock, and takes the first with room. So a window that filled after it was offered passes to the next.
 - **The hosted demo takes Orders all day** ([ADR 0015](adr/0015-demo-mode-visitor-plays-the-barista.md) update). `demoAllDayOrdering()` (`payments`) is true on a production build where Demo Mode runs: the live demo on `*.vercel.app`, its previews and the local e2e build. Then `orderingDay()` (`ordering`) swaps in 00:00 to 23:15 (Last Order; closing 23:59, so the last Pickup Window starts 23:30, audit DC-29) for checkout, placement, the Cart and the Bar Screen. Local development and tests keep the cafe's real hours. Pause, Busy Mode, Capacity and Prep Time still apply, and the pages that show Opening Hours still show the real ones.
 
 ## 10. Loyalty
@@ -228,7 +228,7 @@ Stars are kept like a bank statement, called a ledger. Every change is a new lin
 
 - Every change is a `star_entries` row: `earn` (Order Picked Up, +1 per drink unit), `reserve` (Redemption at placement, -9), `release` (Order Cancelled or Expired, +9), `reverse` (Refund after Picked Up, minus what was earned), `adjust` (Manager, with a reason), `birthday` (the Birthday Treat, +9).
 - Balance is the sum of entries. Reserving checks the balance inside the same transaction that writes the entry, with the Member row locked, so two tabs cannot spend the same Stars.
-- A Refund takes back what the Order earned, but never Stars already spent. Stars held by the Member's open Reward Orders still count as theirs, because the Reward may be cancelled. If a held Reward is then picked up, it gives back (`release`) what the Refund took from it, so spent Stars stay spent and the balance does not stay below zero (audit DC-06). Example: 7 Stars plus 2 earned on an Order, all 9 held by a Reward; the Order is refunded. Cancel the Reward: 7 left. Pick it up: 0 left.
+- A Refund takes back what the Order earned, but never Stars already spent. Stars held by the Member's open Reward Orders still count as theirs, because the Reward may be cancelled. If a held Reward is then picked up, it gives back (`release`) what the Refund took from it. So spent Stars stay spent, and the balance does not stay below zero (audit DC-06). Example: 7 Stars plus 2 earned on an Order, all 9 held by a Reward; the Order is refunded. Cancel the Reward: 7 left. Pick it up: 0 left.
 - The Birthday Treat (V1) adds 9 Stars once a year in the Member's birthday month (Manila calendar), when they open their account or checkout.
 
 ## 11. Live updates
@@ -242,7 +242,7 @@ Two screens need fresh news: the Bar Screen and the Order status page. Each asks
   - A new Order plays a sound and highlights its card in New for 4 seconds. The sound needs one tap after each load (browsers start audio suspended), and the board says "Tap to turn on sound" until then.
   - The board asks the tablet to stay awake (Screen Wake Lock, asked again when the page shows), since a sleeping tablet stops polling (audit staff:22, FEAT-11).
   - Signed out, `/api/bar` answers 401 JSON (not a redirect), and the board stops polling and says so, with a link to sign in again.
-- **Order status page.** It polls every 5 seconds until `ready` (15 while the tab is hidden, so it can still alert), then every 30 seconds while the tab shows, until `picked_up` or closed. It stops 3 hours past the Pickup Time and its last change, says so, and checks once when the tab comes back. So a forgotten tab can't keep the database awake (audit ops:14).
+- **Order status page.** It polls every 5 seconds until `ready`, or every 15 while the tab is hidden, so it can still alert. Then it polls every 30 seconds while the tab shows, until `picked_up` or closed. It stops 3 hours past the Pickup Time and its last change, says so, and checks once when the tab comes back. So a forgotten tab can't keep the database awake (audit ops:14).
 - Server-Sent Events or a hosted realtime service are a later upgrade if polling cost or delay is measured as a problem.
 
 ## 12. Jobs and time
@@ -307,3 +307,9 @@ Automated tests check the rules in this document every time the code changes. Th
 | Speed | Lighthouse (mobile) on the menu and Home | Section 7 of the PRD |
 
 Vitest runs unit and database tests; Playwright drives a real browser through the site; axe checks accessibility; Lighthouse measures speed. Money, Capacity, Stars and Order Status are built test-first (the `tdd` skill). How to run each one: [`docs/06-SETUP.md`](06-SETUP.md) section 7.
+
+## Where to go next
+
+- The database tables behind these modules: [docs/04-DATA-MODEL.md](04-DATA-MODEL.md).
+- The decisions behind the design: [docs/adr/README.md](adr/README.md).
+- Every other document, and the coding words explained: the [docs map](README.md).

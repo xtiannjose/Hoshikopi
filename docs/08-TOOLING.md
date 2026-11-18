@@ -3,7 +3,7 @@
 > **In plain words:** This document says which tool fits which job on Hoshikopi: the Claude Code skills, how to use helper agents, which ports the local servers use, why each library is installed, and the facts about the two computers the project is built on.
 >
 > **Who should read it:** a developer or AI assistant starting a session; anyone adding a library or checking which computer they are on.
-> **Last checked:** 2026-11-17.
+> **Last checked:** 2026-11-18.
 
 ## Contents
 
@@ -107,3 +107,8 @@ Start of a session:
 Before a merge:
 
 > Run code-review and security-review on this branch, fix what is confirmed, run qa:full, then summarise what changed for me in plain words.
+
+## Where to go next
+
+- Getting the site running: [docs/06-SETUP.md](06-SETUP.md).
+- Every other document, and the coding words explained: the [docs map](README.md).

@@ -3,7 +3,7 @@
 > **In plain words:** This guide gets Hoshikopi running on a computer, step by step, and explains how the live demo is deployed. You need no outside accounts to run it locally: each outside service has a local stand-in, so the whole site works with no sign-ups. Follow the sections in order the first time; each step says what you should see when it worked.
 >
 > **Who should read it:** a developer setting up a new computer; whoever looks after the live demo (deploys, backups, demo sign-in); an owner checking what each account is for.
-> **Last checked:** 2026-11-17.
+> **Last checked:** 2026-11-18.
 
 Update this guide when a step changes. Product words follow the [Glossary](../GLOSSARY.md).
 
@@ -123,7 +123,7 @@ Two database addresses appear below. A **pooled** URL goes through a connection 
 | `BLOB_STORE_ID` | Vercel Blob store, set by Vercel when the store is connected (it signs in with Vercel's OIDC token; an older store gives `BLOB_READ_WRITE_TOKEN` instead); empty uses `data/menu-photos/` | Batch 5.4 |
 | `CRON_SECRET` | random string; `/api/cron/daily` checks it (Vercel Cron sends it as `Authorization: Bearer <CRON_SECRET>`) | Phase 2 |
 | `DATABASE_URL_UNPOOLED` | Set by Vercel's Neon integration: the direct URL migrations use when `DIRECT_URL` is not set (`prisma.config.ts`) | Batch 5.4 |
-| `ALLOW_REMOTE_SEED` | `1` only to use a remote (Neon) database from your computer on purpose. Without it, `npm run db:seed` and every Prisma command (`db:migrate`, `db:reset`, `db:studio`, `db:deploy`) refuse any database not on this computer, so a `vercel env pull` can never point them at the live data (`prisma/local-only.ts`, audit DC-03). Vercel's own builds are allowed | Batch 5.4 |
+| `ALLOW_REMOTE_SEED` | `1` only to use a remote (Neon) database from your computer on purpose. Without it, `npm run db:seed` and every Prisma command (`db:migrate`, `db:reset`, `db:studio`, `db:deploy`) refuse any database not on this computer. So a `vercel env pull` can never point them at the live data (`prisma/local-only.ts`, audit DC-03). Vercel's own builds are allowed | Batch 5.4 |
 | `E2E_DATABASE_URL` | Leave unset: Playwright uses `hoshikopi_e2e` in the local container (`playwright.config.ts`); set it to run the e2e tests against another database | Phase 2 |
 | `FORM_MIN_FILL_MS` | Leave unset. The Inquiry and Event Sign-up forms refuse a post sent faster than 2 seconds; the end-to-end run sets it to `0` (`src/lib/bot-check.ts`) | Batch 10.13 |
 | `AUTH_RATE_LIMIT` | Leave unset. `off` turns Better Auth's own rate limit off; only the end-to-end run sets it (`src/modules/identity/internal/auth.ts`) | Batch 10.13 |
@@ -180,7 +180,7 @@ Staff set up an authenticator app (the Second Factor, ADR 0014) on their first `
 ### Test databases and constraints
 
 - Vitest uses `hoshikopi_test` (from `.env.test`, git-ignored) and refuses any database whose name does not end in `_test`. It migrates and seeds it at the start of each run. Outside services (email, Google, Blob, PayMongo, Vercel) are switched off in tests whatever `.env.local` holds (`tests/no-outside-services.mts`, audit DC-04).
-- Playwright uses `hoshikopi_e2e`, migrated, reset and seeded before each run. It refuses to start after 10 PM Manila time, since a run would reach the demo's 11:15 PM Last Order or midnight (`tests/e2e/time-guard.ts`, audit DC-42). A test that fails once is tried again and, if it passes, reported as "flaky" (a timing problem, often a busy computer), so one slow moment no longer stops the `@cafe-wide` tests that wait for the rest (audit DC-44). A committed `test.only` fails the run (audit DC-43). Avoid running other heavy work (Vitest, builds) during a browser run.
+- Playwright uses `hoshikopi_e2e`, migrated, reset and seeded before each run. It refuses to start after 10 PM Manila time, since a run would reach the demo's 11:15 PM Last Order or midnight (`tests/e2e/time-guard.ts`, audit DC-42). A test that fails once is tried again. If it then passes, it is reported as "flaky": a timing problem, often a busy computer. So one slow moment no longer stops the `@cafe-wide` tests that wait for the rest (audit DC-44). A committed `test.only` fails the run (audit DC-43). Avoid running other heavy work (Vitest, builds) during a browser run.
 - The migrations add the CHECK constraints and unique indexes in [`docs/04-DATA-MODEL.md`](04-DATA-MODEL.md) section 4 by hand where Prisma cannot express them: the first migration, and later ones such as `20261116000000_database_rules`.
 
 ### A Staff member lost their authenticator phone
@@ -301,7 +301,7 @@ The live demo runs on Vercel with its database on Neon (batch 5.4, live since 20
    You should see the deployment finish in the Vercel dashboard and the seed print `Seed complete.`. The live site then shows the menu.
 
 5. **Sign in as a demo account**: on the live site, ask for a link for one of the seeded accounts (section 6). Then open the Vercel project's **Logs**, find `[email] demo account <email>` and open the link under it. Or sign in with Google (step 7) and make that account a Manager in the Neon SQL editor: `UPDATE users SET role = 'manager' WHERE email = '<your email>';`. After that, give other people roles at `/manage/staff`. You should see the first `/manage` visit ask you to set up the Second Factor.
-6. **Blob** (for photo uploads): in the Vercel project, **Storage**, **Create Storage**, **Blob**, Public access, connected to Production, Preview and Development. Vercel adds `BLOB_STORE_ID` (and `BLOB_WEBHOOK_PUBLIC_KEY`, unused) and the store signs in with the deployment's OIDC token, so there is no secret to copy. Created 2026-11-07 as `hoshikopi-photos`. Uploads in `/manage` then go to `menu/`, `events/` or `posts/` in the store, and `next/image` fetches them (`images.remotePatterns` in `next.config.ts`, which allows only this store's host, worked out from `BLOB_STORE_ID` at build time). Locally there is no OIDC token without `vercel env pull`, so uploads go to `data/menu-photos/` and `/menu-photos/<name>` serves them. You should see `BLOB_STORE_ID` in the project's variables, and an uploaded photo on its Menu Item page.
+6. **Blob** (for photo uploads): in the Vercel project, **Storage**, **Create Storage**, **Blob**, Public access, connected to Production, Preview and Development. Vercel adds `BLOB_STORE_ID` (and `BLOB_WEBHOOK_PUBLIC_KEY`, unused) and the store signs in with the deployment's OIDC token, so there is no secret to copy. Created 2026-11-07 as `hoshikopi-photos`. Uploads in `/manage` then go to `menu/`, `events/` or `posts/` in the store, and `next/image` fetches them. `images.remotePatterns` in `next.config.ts` allows only this store's host, worked out from `BLOB_STORE_ID` at build time. Locally there is no OIDC token without `vercel env pull`, so uploads go to `data/menu-photos/` and `/menu-photos/<name>` serves them. You should see `BLOB_STORE_ID` in the project's variables, and an uploaded photo on its Menu Item page.
 7. **Google sign-in** (done 2026-11-07):
    1. In Google Cloud, a project "Hoshikopi".
    2. **OAuth consent screen** (Google Auth Platform): External, then **Branding** (app name, support email, home page `https://hoshikopi.vercel.app`, privacy policy `https://hoshikopi.vercel.app/privacy`, authorized domain `hoshikopi.vercel.app`, no logo, which would need Google's review), then **Audience**, **Publish app**.
@@ -317,8 +317,14 @@ The live demo runs on Vercel with its database on Neon (batch 5.4, live since 20
 
 ### Migrations work with the previous build
 
-(audit ops:3) `prisma migrate deploy` runs before `next build`, so the new schema is live while the old code still serves, and it stays if the build fails or a deployment is rolled back. So add first (a new column nullable or with a default), drop or rename only in a later release once no code reads it, and fix forward instead of rolling back past a migration.
+(audit ops:3) `prisma migrate deploy` runs before `next build`, so the new schema is live while the old code still serves, and it stays if the build fails or a deployment is rolled back. So add first: a new column must allow empty values or have a default. Drop or rename only in a later release, once no code reads the old name. And fix forward instead of rolling back past a migration.
 
 ### When something needs a person
 
 Vercel Hobby keeps runtime logs for an hour and sends no alerts. A payment that needs a Refund by hand shows as **Needs a refund** at the top of `/manage/orders` until a Manager refunds it, so open that page with the day. Server errors are one JSON line each in **Logs** (search `"level":"error"`).
+
+## Where to go next
+
+- How the code is organised, once it runs: [docs/03-ARCHITECTURE.md](03-ARCHITECTURE.md).
+- Which tool fits which job: [docs/08-TOOLING.md](08-TOOLING.md).
+- Every other document, and the coding words explained: the [docs map](README.md).
