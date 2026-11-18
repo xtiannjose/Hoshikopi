@@ -185,13 +185,12 @@ The two-minute demo has its own list of fixes in [docs/DEMO-SCRIPT.md](DEMO-SCRI
 
 ### 9.1 Steps only the owner can take
 
-1. **The first live photo upload** (roadmap batch 5.4). Sign in as a Manager on the live site and upload a photo to one Menu Item in `/manage/menu`, then check it shows on the menu. This proves the Blob store `hoshikopi-photos` works. Real photos are on hold (owner, 2026-11-07).
-2. **The seeded dates on the live site** (audit item ops:8, the one open P1). Since batch 10.18 the daily job moves the demo Events, Promo and Seasonal drink forward by itself. Check on the live site that an upcoming Event with Seats shows, then mark the item done.
-3. **Rehearse the demo.** Say the [two-minute demo](DEMO-SCRIPT.md) out loud on the live site and time it. Every step has a passing test; the spoken run is the last check.
-4. **Read the case study's "How I worked"** section ([docs/CASE-STUDY.md](CASE-STUDY.md)). It speaks in the owner's voice, so the owner confirms it is true.
-5. **On the live site:** upload a photo to an Event or a Post (batch 12.3) and check it shows, make the Posts longer, and add tasting notes and drink links to the Menu Items.
+1. **The seeded dates on the live site** (audit item ops:8, the one open P1). Since batch 10.18 the daily job moves the demo Events, Promo and Seasonal drink forward by itself. Check on the live site that an upcoming Event with Seats shows, then mark the item done.
+2. **Rehearse the demo.** Say the [two-minute demo](DEMO-SCRIPT.md) out loud on the live site and time it. Every step has a passing test; the spoken run is the last check.
+3. **Read the case study's "How I worked"** section ([docs/CASE-STUDY.md](CASE-STUDY.md)). It speaks in the owner's voice, so the owner confirms it is true.
+4. **On the live site:** upload a photo to an Event or a Post (batch 12.3) and check it shows, make the Posts longer, and add tasting notes and drink links to the Menu Items.
 
-Done by the owner on 2026-11-18: the two GitHub settings (Dependabot alerts on, and the CI check required before merging to `main`), Vercel's Production-only `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` with the Singapore function region, a second Manager account, and the second PC brought up to date.
+Done by the owner on 2026-11-18: the two GitHub settings (Dependabot alerts on, and the CI check required before merging to `main`), Vercel's Production-only `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` with the Singapore function region, a second Manager account, the second PC brought up to date, and 19 menu photos uploaded on the live site (the first live upload, roadmap batch 5.4).
 
 ### 9.2 The 2026-11-17 deep check and the November polish: done
 
