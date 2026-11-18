@@ -55,6 +55,7 @@ const NEEDS: Record<string, ["barista" | "manager", string]> = {
   setRoleAction: ["manager", "/manage"],
   endSessionsAction: ["manager", "/manage"],
   adjustStarsAction: ["manager", "/manage"],
+  findMemberStarsAction: ["manager", "/manage"],
 };
 
 type Action = (...args: unknown[]) => Promise<unknown>;

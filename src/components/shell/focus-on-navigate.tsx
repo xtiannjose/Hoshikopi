@@ -30,12 +30,13 @@ function focusHeading() {
  */
 export function FocusOnNavigate() {
   const pathname = usePathname();
-  const first = useRef(true);
+  // The page it last ran for, not a "first run" flag: React runs effects
+  // twice in development, so the flag let the second run focus the h1 on
+  // first load, before hydration (a hydration error on tabindex).
+  const last = useRef(pathname);
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    if (last.current === pathname) return;
+    last.current = pathname;
     focusHeading();
     // The page may still be streaming in (Suspense): its heading may not be
     // there yet, or a loading heading that took focus is replaced by the

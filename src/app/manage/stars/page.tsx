@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { InfoIcon, StarIcon } from "@phosphor-icons/react/ssr";
+import {
+  InfoIcon,
+  MinusIcon,
+  PlusIcon,
+  StarIcon,
+} from "@phosphor-icons/react/ssr";
 
 import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { Panel } from "@/components/panel";
 import { requireStaff } from "@/modules/identity";
+import { STARS_PER_REWARD } from "@/modules/loyalty";
 
 import { StarsForm } from "./stars-form";
 
@@ -63,5 +69,14 @@ export default function ManageStarsPage() {
 
 async function Gate() {
   await requireStaff("manager", "/manage/stars");
-  return <StarsForm />;
+  return (
+    <StarsForm
+      perReward={STARS_PER_REWARD}
+      // Rendered here, so no icon code ships with the form (7.6).
+      icons={{
+        minus: <MinusIcon aria-hidden size={18} />,
+        plus: <PlusIcon aria-hidden size={18} />,
+      }}
+    />
+  );
 }

@@ -517,10 +517,10 @@ The site also emails each new Inquiry to the cafe's email (Cafe details), where 
 
 A Member earns 1 **Star** per drink at pickup; 9 Stars buy a free drink (a Reward). **Adjust Stars** (`/manage/stars`, Managers) adds or takes Stars by hand, for example after a long wait.
 
-1. Type the **Member's email** (the one they sign in with).
-2. In **Stars to add (use a minus to remove)**, type a number: `2` adds two, `-2` takes two away.
+1. Type the **Member's email** (the one they sign in with). Their Star Card shows under it: their name, the cup with their Stars lit, "N Stars now" and how many more make a free drink. "No Member has that email yet." means nobody signed up with it; check the spelling.
+2. In **Stars to add or remove**, tap **+** to add a Star or **−** to take one away, or type a number: `2` adds two, `-2` takes two away. The card follows as you tap: "N Stars now, M Stars after you save." The **−** button stops at zero.
 3. Write a **Reason**, up to 120 characters. The Member sees it in their Star history as "Changed by the cafe", so write it for them: "Sorry about the wait, a Star on us."
-4. Tap **Save adjustment**. You see "Saved for (email). (Name) now has N Stars."
+4. Tap **Save adjustment**. You see "Saved for (email). (Name) now has N Stars." The card shows the new balance, ready for another change to the same Member.
 
 Then **Adjust another Member**, or **See Reports**.
 
