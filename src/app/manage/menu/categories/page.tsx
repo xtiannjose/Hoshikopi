@@ -45,7 +45,7 @@ async function Forms() {
         id="add-category"
         title="Add a Category"
         icon={<PlusIcon size={20} />}
-        className="xl:sticky xl:top-6"
+        className="xl:top-below-header xl:sticky"
       >
         <CategoryForm
           category={{

@@ -47,7 +47,7 @@ export default function ManageStarsPage() {
           id="before"
           title="Before you adjust"
           icon={<InfoIcon size={20} />}
-          className="lg:sticky lg:top-6"
+          className="lg:top-below-header lg:sticky"
         >
           <ul className="max-w-measure grid gap-3">
             {BEFORE.map((line) => (

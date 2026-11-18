@@ -41,7 +41,7 @@ async function Staff() {
         id="add-staff"
         title="Add Staff"
         icon={<UserPlusIcon size={20} />}
-        className="lg:sticky lg:top-6"
+        className="lg:top-below-header lg:sticky"
       >
         <RoleForm />
         <dl className="border-border mt-5 grid gap-2 border-t pt-5 text-sm">

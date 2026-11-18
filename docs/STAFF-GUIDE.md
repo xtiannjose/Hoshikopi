@@ -121,6 +121,8 @@ The Staff page sums it up: "Barista: the Bar Screen and Sold Out on the menu." a
 
 ### Every staff page
 
+The header stays at the top while you scroll. Tap the **Hoshikopi Staff** logo to go back to the Manage home, and **Back to the site** (the shooting star; on a phone, the star alone) to see the customer site. The Day and Night switch is beside it.
+
 | Page | Address | Who |
 | --- | --- | --- |
 | Your code (Second Factor) | `/manage/two-factor` | Staff |
