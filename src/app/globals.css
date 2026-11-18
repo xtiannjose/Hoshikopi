@@ -81,11 +81,46 @@
   outline-offset: 3px;
 }
 
+/* The customer pages' sticky header: its height for the first paint
+   (HeaderHeight keeps it exact when the header wraps), and a hairline that
+   fades in once the page scrolls under it, so the top of a page looks as
+   before. Without scroll timelines the hairline simply shows. */
+:root {
+  --header-h: 4.25rem;
+}
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-border);
+  pointer-events: none;
+}
+@supports (animation-timeline: scroll()) {
+  .site-header::after {
+    animation: header-edge linear both;
+    animation-timeline: scroll();
+    animation-range: 0 2rem;
+  }
+}
+@keyframes header-edge {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Keyboard focus scrolls clear of what sticks to the screen's edges: the
-   Category tabs, the floating Cart and, on phones, a Menu Item's Add to
-   order bar (WCAG 2.4.11, audit a11y:1). */
+   header, the Category tabs below it, the floating Cart and, on phones, a
+   Menu Item's Add to order bar (WCAG 2.4.11, audit a11y:1). */
+:root:has(.site-header) {
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
 :root:has(nav[aria-label="Categories"]) {
-  scroll-padding-top: 5rem;
+  scroll-padding-top: calc(var(--header-h) + 5rem);
 }
 :root:has(.cart-pill) {
   scroll-padding-bottom: 5rem;
@@ -383,4 +418,10 @@
   to {
     opacity: 0;
   }
+}
+
+/* A side panel that sticks while its page scrolls, clear of the sticky
+   header (it used top-6, which slid under it). */
+@utility top-below-header {
+  top: calc(var(--header-h) + 1.5rem);
 }

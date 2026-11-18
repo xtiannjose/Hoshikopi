@@ -337,6 +337,15 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
 - [x] **11.7 Payments and data hygiene.** Done 2026-11-17: a paid webhook must match the Payment's amount and currency (PAY-08) and its row keeps only the parsed ids and type (PAY-10); the Member lock is FOR NO KEY UPDATE, so a Reward and a release can't deadlock (ORD-15); the local email folder only in development or with MAIL_OUTBOX=1 (DATA-10); Order ids default to a UUID and the schema comments match (DATA-13); test-only exports say so (architecture:19); the sign-in, Inquiry and Sign-up emails are tested templates (architecture:22). Tests: `tests/db/payments.test.ts`, `paymongo.test.ts`, `outbox.test.ts`, `templates.test.ts`.
 - [x] **11.8 Docs and decisions.** Done 2026-11-17: the last stale lines in docs/03, docs/05, docs/08, the PRD, the research doc and ADRs 0007, 0008, 0009 and 0013 match the code (motion:10, motion:11, ops:19, ORD-17, ID1-15, ID1-19, UI2-29, DOC-10, DOC-21, DOC-23, DOC-24); DOC-08, DOC-17 and DOC-20 were already fixed; PERF-08, PERF-10, UI1-24, FEAT-15 and architecture:18 stay as they are, each with its reason in `docs/audit/2026-11-13.md`. No November item is open but ops:8, an owner check.
 
+### Phase 12: Owner requests (2026-11-17)
+
+**In plain words:** four changes the owner asked for after Phase 11, each its own pull request.
+
+- [x] **12.1 Sticky header.** Done 2026-11-17: the customer pages' header stays at the top while a page scrolls, on a full-width band with a hairline that fades in once the page scrolls; the Category tabs, sticky side panels and keyboard scroll padding sit below its height (`--header-h`). Test: `tests/e2e/header.spec.ts`; the keyboard tests check focus is never under it.
+- [ ] **12.2 Manage the menu by Category, with photos.** On `/manage/menu` the Category pills filter the list to that Category instead of jumping down the page, and each Menu Item shows its photo.
+- [ ] **12.3 Photos for Events and Posts.** Upload a photo in the Event and Post editors, as for Menu Items.
+- [ ] **12.4 Adjust Stars with a live Star Card.** Plus and minus buttons for the Stars to add or remove, and the Member's Star Card and balance shown once their email is entered.
+
 ## 13. After V1 (not scheduled)
 
 These are ideas for later. Nothing here is planned, dated or promised, and new features are on hold (owner). The list is here so nobody has to wonder whether an idea was considered.

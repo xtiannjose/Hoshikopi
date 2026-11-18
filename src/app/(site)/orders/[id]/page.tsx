@@ -408,7 +408,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
         )}
       </div>
 
-      <div className="grid gap-6 lg:sticky lg:top-6">
+      <div className="lg:top-below-header grid gap-6 lg:sticky">
         <section
           aria-labelledby="lines"
           className="rounded-card border-border border p-5"

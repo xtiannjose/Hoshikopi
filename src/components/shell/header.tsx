@@ -13,6 +13,7 @@ import {
   SignInMenuLink,
 } from "./account-link";
 import { CartButton, CartLink } from "./cart-button";
+import { HeaderHeight } from "./header-height";
 import { Logo } from "./logo";
 import { MenuLink } from "./menu-link";
 import { NavLink } from "./nav-link";
@@ -26,56 +27,63 @@ const SMALL_LINKS = [
 
 export function Header() {
   return (
-    // flex-wrap: with a larger default text size the right group moves to
-    // a second row instead of off screen (audit a11y:8). From lg a 1fr auto
-    // 1fr grid keeps the Main nav centred whatever the Cart pill's width
-    // (audit UI2-13). The right group never wraps there, so a narrow row
-    // pushes the nav aside instead of growing a second row.
-    <header className="page-width flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3 lg:grid lg:grid-cols-[1fr_auto_1fr]">
-      <Link
-        href="/"
-        aria-label="Hoshikopi home"
-        className="justify-self-start no-underline"
-      >
-        <Logo />
-      </Link>
-      <nav aria-label="Main" className="hidden lg:block">
-        {/* usePathname suspends on routes with fallback params (Cache
-            Components), so the prerendered shell shows plain links. */}
-        <Suspense fallback={<MainNav live={false} />}>
-          <MainNav live />
-        </Suspense>
-      </nav>
-      <div className="flex flex-wrap items-center gap-3 justify-self-end lg:flex-nowrap lg:justify-end lg:gap-5">
-        <div className="hidden lg:block">
-          <ThemeSwitch name="theme-header" />
-        </div>
-        <Suspense fallback={<SignInLink />}>
-          <AccountLink />
-        </Suspense>
-        <Suspense fallback={<CartLink />}>
-          <CartButton />
-        </Suspense>
-        <button
-          type="button"
-          popoverTarget="site-menu"
-          aria-label="Open the menu"
-          className="border-input grid size-11 place-items-center rounded-full border lg:hidden"
+    // Sticky, so the menu, account and Cart are always one tap away (owner,
+    // 2026-11-17): a full-width band with the page's own background, and a
+    // hairline that appears once the page scrolls under it (globals.css).
+    <header className="site-header bg-background sticky top-0 z-30">
+      {/* flex-wrap: with a larger default text size the right group moves
+          to a second row instead of off screen (audit a11y:8). From lg a
+          1fr auto 1fr grid keeps the Main nav centred whatever the Cart
+          pill's width (audit UI2-13). The right group never wraps there, so
+          a narrow row pushes the nav aside instead of growing a second
+          row. */}
+      <div className="page-width flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3 lg:grid lg:grid-cols-[1fr_auto_1fr]">
+        <Link
+          href="/"
+          aria-label="Hoshikopi home"
+          className="justify-self-start no-underline"
         >
-          <ListIcon aria-hidden size={20} />
-        </button>
+          <Logo />
+        </Link>
+        <nav aria-label="Main" className="hidden lg:block">
+          {/* usePathname suspends on routes with fallback params (Cache
+            Components), so the prerendered shell shows plain links. */}
+          <Suspense fallback={<MainNav live={false} />}>
+            <MainNav live />
+          </Suspense>
+        </nav>
+        <div className="flex flex-wrap items-center gap-3 justify-self-end lg:flex-nowrap lg:justify-end lg:gap-5">
+          <div className="hidden lg:block">
+            <ThemeSwitch name="theme-header" />
+          </div>
+          <Suspense fallback={<SignInLink />}>
+            <AccountLink />
+          </Suspense>
+          <Suspense fallback={<CartLink />}>
+            <CartButton />
+          </Suspense>
+          <button
+            type="button"
+            popoverTarget="site-menu"
+            aria-label="Open the menu"
+            className="border-input grid size-11 place-items-center rounded-full border lg:hidden"
+          >
+            <ListIcon aria-hidden size={20} />
+          </button>
+        </div>
+        <div
+          id="site-menu"
+          popover="auto"
+          // open:flex, never plain flex: it would override the closed
+          // popover's display: none.
+          className="drawer bg-background text-foreground m-0 ml-auto h-dvh w-[min(22rem,100vw)] flex-col p-6 shadow-xl backdrop:bg-black/40 open:flex"
+        >
+          <Suspense fallback={<Drawer live={false} />}>
+            <Drawer live />
+          </Suspense>
+        </div>
       </div>
-      <div
-        id="site-menu"
-        popover="auto"
-        // open:flex, never plain flex: it would override the closed
-        // popover's display: none.
-        className="drawer bg-background text-foreground m-0 ml-auto h-dvh w-[min(22rem,100vw)] flex-col p-6 shadow-xl backdrop:bg-black/40 open:flex"
-      >
-        <Suspense fallback={<Drawer live={false} />}>
-          <Drawer live />
-        </Suspense>
-      </div>
+      <HeaderHeight />
     </header>
   );
 }

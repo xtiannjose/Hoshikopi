@@ -203,7 +203,7 @@ async function Cart() {
         ))}
       </ul>
 
-      <aside className="rounded-card border-border grid gap-5 border p-5 lg:sticky lg:top-6">
+      <aside className="rounded-card border-border lg:top-below-header grid gap-5 border p-5 lg:sticky">
         <div>
           <div
             aria-live="polite"

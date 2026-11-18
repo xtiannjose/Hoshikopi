@@ -50,7 +50,7 @@ export default function InquirePage({
           <Suspense fallback={<div className="min-h-96" />}>
             <Form searchParams={searchParams} />
           </Suspense>
-          <aside className="rounded-card border-border border p-5 lg:sticky lg:top-6">
+          <aside className="rounded-card border-border lg:top-below-header border p-5 lg:sticky">
             <h2 className="font-display text-2xl italic">Good to know</h2>
             <ul className="mt-4 grid gap-4">
               {GOOD_TO_KNOW.map((item) => (

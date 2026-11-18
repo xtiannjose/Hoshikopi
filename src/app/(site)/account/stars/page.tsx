@@ -91,7 +91,7 @@ async function Stars() {
         title="Your Stars"
       />
       <div className="grid gap-10 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start">
-        <div className="grid gap-8 lg:sticky lg:top-6">
+        <div className="lg:top-below-header grid gap-8 lg:sticky">
           <StarCard balance={stars} />
           <section aria-labelledby="how" className="grid gap-4">
             <h2 id="how" className="font-display text-3xl italic">
