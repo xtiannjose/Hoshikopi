@@ -126,7 +126,8 @@ Two database addresses appear below. A **pooled** URL goes through a connection 
 | `ALLOW_REMOTE_SEED` | `1` only to use a remote (Neon) database from your computer on purpose. Without it, `npm run db:seed` and every Prisma command (`db:migrate`, `db:reset`, `db:studio`, `db:deploy`) refuse any database not on this computer. So a `vercel env pull` can never point them at the live data (`prisma/local-only.ts`, audit DC-03). Vercel's own builds are allowed | Batch 5.4 |
 | `E2E_DATABASE_URL` | Leave unset: Playwright uses `hoshikopi_e2e` in the local container (`playwright.config.ts`); set it to run the e2e tests against another database | Phase 2 |
 | `FORM_MIN_FILL_MS` | Leave unset. The Inquiry and Event Sign-up forms refuse a post sent faster than 2 seconds; the end-to-end run sets it to `0` (`src/lib/bot-check.ts`) | Batch 10.13 |
-| `AUTH_RATE_LIMIT` | Leave unset. `off` turns Better Auth's own rate limit off; only the end-to-end run sets it (`src/modules/identity/internal/auth.ts`) | Batch 10.13 |
+| `AUTH_RATE_LIMIT` | Leave unset. `off` turns Better Auth's own rate limit off; only the end-to-end run sets it (`src/modules/identity/internal/auth.ts`). On Vercel it does nothing | Batch 10.13, 13.4 |
+| `CART_RATE_LIMIT` | Leave unset. `off` lifts the limit on adding to a Cart; only the end-to-end run sets it, because every test adds from one address (`src/lib/limits.ts`). On Vercel it does nothing | Batch 13.4 |
 
 ## 6. Database
 
