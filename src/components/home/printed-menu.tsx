@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { MenuSection } from "@/components/menu/menu-section";
+import { VIEW_THREAD, ViewChoice } from "@/components/view-choice";
 import { formatDelta, formatPrice } from "@/lib/money";
 import type { MenuCategory } from "@/modules/menu";
 
@@ -30,10 +31,7 @@ export function PrintedMenu({
         <fieldset className="flex flex-wrap items-center gap-3">
           <legend className="sr-only">View</legend>
           <ViewChoice id="view-list" label="List" defaultChecked />
-          <span
-            aria-hidden
-            className="border-input w-10 border-t border-dashed"
-          />
+          {VIEW_THREAD}
           <ViewChoice id="view-photos" label="Photos" />
         </fieldset>
       </div>
@@ -103,46 +101,5 @@ export function PrintedMenu({
         ))}
       </div>
     </section>
-  );
-}
-
-/** A ring on the dashed thread that turns into the gold star when picked. */
-function ViewChoice({
-  id,
-  label,
-  defaultChecked = false,
-}: {
-  id: string;
-  label: string;
-  defaultChecked?: boolean;
-}) {
-  return (
-    <label
-      htmlFor={id}
-      className="group/choice has-[:focus-visible]:outline-ring text-muted-foreground has-[:checked]:text-foreground inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full pr-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
-    >
-      <input
-        id={id}
-        type="radio"
-        name="menu-view"
-        defaultChecked={defaultChecked}
-        className="sr-only"
-      />
-      <span className="bg-muted relative grid size-7 place-items-center rounded-full">
-        <span className="border-input size-3 rounded-full border-[1.5px] transition-transform group-has-[:checked]/choice:scale-0 motion-reduce:transition-none" />
-        <svg
-          viewBox="0 0 24 24"
-          aria-hidden
-          className="ease-pop absolute size-5 scale-0 -rotate-72 transition-transform duration-350 group-has-[:checked]/choice:scale-100 group-has-[:checked]/choice:rotate-0 motion-reduce:transition-none"
-        >
-          <path
-            d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
-            className="fill-star stroke-star-edge"
-            strokeWidth="1"
-          />
-        </svg>
-      </span>
-      <span className="font-display text-lg italic">{label}</span>
-    </label>
   );
 }

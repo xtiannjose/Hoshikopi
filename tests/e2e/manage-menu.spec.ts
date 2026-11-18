@@ -120,3 +120,37 @@ test("the menu pills show one Category or the Option Groups, with photos", async
   await expect(panel("Option Groups")).toBeVisible();
   await expect(panel("Coffee")).toHaveCount(0);
 });
+
+// Photo cards, as on /menu, to check the photos at a glance (batch 12.5).
+test("the staff menu switches between List and Photos, and keeps it", async ({
+  page,
+}) => {
+  await signIn(page, "annika@hoshikopi.example", "/manage/menu?show=coffee");
+  const view = page.getByRole("navigation", { name: "View" });
+  await expect(view.getByRole("link", { name: "List" })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  await view.getByRole("link", { name: "Photos" }).click();
+  await expect(page).toHaveURL(/show=coffee&view=photos$/);
+  await expect(view.getByRole("link", { name: "Photos" })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  const cards = page.getByRole("main").getByRole("listitem");
+  await expect(
+    cards.filter({ has: page.getByRole("heading", { name: "Hoshi Latte" }) })
+  ).toBeVisible();
+  // The seed has no photos yet, so each card says so.
+  await expect(page.getByText("No photo yet").first()).toBeVisible();
+  await expectNoAxeViolations(page);
+
+  // A Category pill keeps the view.
+  await page
+    .getByRole("navigation", { name: "Show" })
+    .getByRole("link", { name: "Tea", exact: true })
+    .click();
+  await expect(page).toHaveURL(/show=tea&view=photos$/);
+  await view.getByRole("link", { name: "List" }).click();
+  await expect(page).toHaveURL(/\/manage\/menu\?show=tea$/);
+});
