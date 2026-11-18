@@ -9,7 +9,12 @@ function assertCentavos(value: number): void {
 function format(cents: number, alwaysCentavos: boolean): string {
   assertCentavos(cents);
   const abs = Math.abs(cents);
-  const pesos = Math.trunc(abs / 100).toLocaleString("en-PH");
+  // A comma every three digits, as en-PH writes them. toLocaleString built a
+  // locale formatter on every call, which a slow phone felt (audit CK-02).
+  const pesos = String(Math.trunc(abs / 100)).replace(
+    /\B(?=(\d{3})+(?!\d))/g,
+    ","
+  );
   const centavos = abs % 100;
   const fraction =
     alwaysCentavos || centavos ? `.${String(centavos).padStart(2, "0")}` : "";
