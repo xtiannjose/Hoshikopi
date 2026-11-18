@@ -1117,7 +1117,7 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   - Total blocking time before and after: `/menu` 218 to 192 ms, the Menu Item page 388 to 304 ms (Performance 84 to 87); Home 190 ms after
   - A CPU profile (4x slower CPU) showed the money formatter as the page's biggest cost of its own, 121 ms: `toLocaleString("en-PH")` built a locale formatter on every price, and the Option Picker formats one per choice. `src/lib/money.ts` now adds the commas itself; the Menu Item page went from 304 to 234 ms, Performance 87 to 90
   - Tried and undone: `content-visibility: auto` on the footer, and the phone menu without its live links; neither changed anything measurable
-  - Left: about 35 ms on the Menu Item page, all in loading the Next.js and React runtime (about 415 kB) and bringing the page to life. The next step would be to bring the Option Picker to life a moment later, which risks a slower first tap
+  - Left: about 35 ms on the Menu Item page, all in loading the Next.js and React runtime (about 415 kB) and bringing the page to life. Tried at the owner's request: the page with no Option Picker at all measures about 203 ms (194 to 260), so starting the picker later could save about 30 ms at most, within the run-to-run noise, at the cost of a slower first tap. Not done
 
   </details>
 - [x] **13.3 Photos** (CK-03, CK-04). Cap the pixels an upload may unpack to and shrink photos; a Remove photo choice. **Done 2026-11-18** (tests first).
