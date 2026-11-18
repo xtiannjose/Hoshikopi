@@ -16,9 +16,13 @@ export const auth = betterAuth({
   // Better Auth counts until a full window passes with no request, so the
   // end-to-end run, 60+ sign-ins from one IP with no minute's pause, ran
   // into it near the end. Only that run sets AUTH_RATE_LIMIT=off; otherwise
-  // Better Auth's default holds (on in production).
+  // Better Auth's default holds (on in production). On Vercel (VERCEL=1)
+  // the switch does nothing, so it can never lift the live limit (13.4).
   rateLimit: {
-    enabled: process.env.AUTH_RATE_LIMIT === "off" ? false : undefined,
+    enabled:
+      process.env.AUTH_RATE_LIMIT === "off" && process.env.VERCEL !== "1"
+        ? false
+        : undefined,
   },
   session: {
     // A signed copy of the session in a cookie saves a database read per
