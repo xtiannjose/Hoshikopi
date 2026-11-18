@@ -33,6 +33,9 @@ export async function getMenuForStaff() {
         baseCents: item.baseCents,
         isHidden: item.isHidden,
         soldOut: isSoldOutToday(item.soldOutOn, today),
+        // For the list's thumbnails (batch 12.2).
+        photoUrl: item.photoUrl,
+        photoAlt: item.photoAlt,
       })),
     })),
     optionGroups: groups.map((group) => ({

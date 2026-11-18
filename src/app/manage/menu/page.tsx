@@ -12,7 +12,7 @@ import {
   Pill,
   PRIMARY_PILL,
 } from "@/components/panel";
-import { iconFor } from "@/components/photo";
+import { iconFor, Photo } from "@/components/photo";
 import { formatDelta, formatPrice } from "@/lib/money";
 import { requireStaff } from "@/modules/identity";
 import { getMenuForStaff } from "@/modules/menu";
@@ -31,7 +31,9 @@ const header = (actions?: ReactNode) => (
   />
 );
 
-export default function ManageMenuPage() {
+export default function ManageMenuPage({
+  searchParams,
+}: PageProps<"/manage/menu">) {
   return (
     <main id="main" className="page-width flex-1 py-10">
       <Suspense
@@ -42,7 +44,7 @@ export default function ManageMenuPage() {
           </>
         }
       >
-        <MenuEditor />
+        <MenuEditor searchParams={searchParams} />
       </Suspense>
     </main>
   );
@@ -55,23 +57,29 @@ function count(rows: { soldOut: boolean }[], noun: string) {
   return out ? `${all}, ${out} sold out today` : all;
 }
 
-/** A compact row: name, price and pills on the left, the button on the right. */
+/**
+ * A compact row: the photo (a Menu Item's, or its stand-in), then name,
+ * price and pills, the button on the right.
+ */
 function Row({
   name,
   price,
   soldOut,
   hidden = false,
+  photo,
   form,
 }: {
   name: ReactNode;
   price: string;
   soldOut: boolean;
   hidden?: boolean;
+  photo?: ReactNode;
   form: ReactNode;
 }) {
   return (
     <li className="flex items-center justify-between gap-3 py-2">
-      <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+      {photo}
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
         <span className={soldOut ? "text-muted-foreground" : undefined}>
           {name}
         </span>
@@ -84,10 +92,27 @@ function Row({
   );
 }
 
-async function MenuEditor() {
+const PILL =
+  "border-input hover:bg-muted aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground aria-[current=page]:border-primary inline-flex min-h-11 items-center rounded-full border px-4 text-sm no-underline";
+
+async function MenuEditor({
+  searchParams,
+}: {
+  searchParams: PageProps<"/manage/menu">["searchParams"];
+}) {
   const staff = await requireStaff("barista", "/manage/menu");
   const manager = staff.role === "manager";
-  const { categories, optionGroups } = await getMenuForStaff();
+  const [{ categories: all, optionGroups }, { show }] = await Promise.all([
+    getMenuForStaff(),
+    searchParams,
+  ]);
+  // A pill shows one Category, or the Option Groups, instead of jumping
+  // down a long page (owner, 2026-11-17, batch 12.2).
+  const shown = typeof show === "string" ? show : "";
+  const onlyOptions = shown === "options";
+  const picked = all.find((c) => c.slug === shown);
+  const categories = onlyOptions ? [] : picked ? [picked] : all;
+  const showOptions = onlyOptions || (!picked && shown !== "options");
   return (
     <>
       {header(
@@ -107,25 +132,34 @@ async function MenuEditor() {
         )
       )}
 
-      <nav aria-label="Jump to" className="mt-6">
+      <nav aria-label="Show" className="mt-6">
         <ul className="flex flex-wrap gap-2">
           {[
-            ...categories.map((c) => [`category-${c.slug}`, c.name]),
-            ["option-groups", "Option Groups"],
-          ].map(([id, label]) => (
-            <li key={id}>
-              <a
-                href={`#${id}`}
-                className="border-input hover:bg-muted inline-flex min-h-11 items-center rounded-full border px-4 text-sm no-underline"
+            ["", "Everything"],
+            ...all.map((c) => [c.slug, c.name]),
+            ["options", "Option Groups"],
+          ].map(([value, label]) => (
+            <li key={value || "all"}>
+              <Link
+                href={value ? `/manage/menu?show=${value}` : "/manage/menu"}
+                scroll={false}
+                aria-current={
+                  value === shown || (!value && !picked && !onlyOptions)
+                    ? "page"
+                    : undefined
+                }
+                className={PILL}
               >
                 {label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
       </nav>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2 2xl:grid-cols-3">
+      <div
+        className={`mt-8 grid gap-6 ${picked ? "" : "lg:grid-cols-2 2xl:grid-cols-3"}`}
+      >
         {categories.map((category) => {
           const Icon = iconFor(category.slug);
           return (
@@ -170,6 +204,15 @@ async function MenuEditor() {
                       price={formatPrice(item.baseCents)}
                       soldOut={item.soldOut}
                       hidden={item.isHidden}
+                      photo={
+                        <Photo
+                          src={item.photoUrl}
+                          alt={item.photoAlt ?? item.name}
+                          kind={category.slug}
+                          sizes="56px"
+                          className="rounded-card size-14 shrink-0"
+                        />
+                      }
                       form={
                         <SoldOutForm
                           kind="item"
@@ -187,66 +230,74 @@ async function MenuEditor() {
         })}
       </div>
 
-      <section aria-labelledby="option-groups" className="mt-16">
-        <h2
-          id="option-groups"
-          className="font-display scroll-mt-6 pb-1 text-3xl italic"
+      {showOptions && (
+        <section
+          aria-labelledby="option-groups"
+          className={onlyOptions ? "mt-8" : "mt-16"}
         >
-          Option Groups
-        </h2>
-        {optionGroups.length === 0 ? (
-          <div className="mt-6">
-            <Empty icon={<SlidersHorizontalIcon size={24} />}>
-              <p>No Option Groups yet. Sizes and milks live here.</p>
-              {manager && (
-                <Link href="/manage/menu/options/new" className={PRIMARY_PILL}>
-                  Add an Option Group
-                </Link>
-              )}
-            </Empty>
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {optionGroups.map((group) => (
-              <Panel
-                key={group.id}
-                id={`group-${group.id}`}
-                headingLevel={3}
-                title={
-                  manager ? (
-                    <Link href={`/manage/menu/options/${group.id}`}>
-                      {group.name}
-                    </Link>
-                  ) : (
-                    group.name
-                  )
-                }
-                icon={<SlidersHorizontalIcon size={20} />}
-                aside={count(group.options, "option")}
-              >
-                <ul className="divide-border -my-2 divide-y">
-                  {group.options.map((option) => (
-                    <Row
-                      key={option.id}
-                      name={option.name}
-                      price={formatDelta(option.deltaCents)}
-                      soldOut={option.soldOut}
-                      form={
-                        <SoldOutForm
-                          kind="option"
-                          id={option.id}
-                          name={option.name}
-                          soldOut={option.soldOut}
-                        />
-                      }
-                    />
-                  ))}
-                </ul>
-              </Panel>
-            ))}
-          </div>
-        )}
-      </section>
+          <h2
+            id="option-groups"
+            className="font-display scroll-mt-6 pb-1 text-3xl italic"
+          >
+            Option Groups
+          </h2>
+          {optionGroups.length === 0 ? (
+            <div className="mt-6">
+              <Empty icon={<SlidersHorizontalIcon size={24} />}>
+                <p>No Option Groups yet. Sizes and milks live here.</p>
+                {manager && (
+                  <Link
+                    href="/manage/menu/options/new"
+                    className={PRIMARY_PILL}
+                  >
+                    Add an Option Group
+                  </Link>
+                )}
+              </Empty>
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {optionGroups.map((group) => (
+                <Panel
+                  key={group.id}
+                  id={`group-${group.id}`}
+                  headingLevel={3}
+                  title={
+                    manager ? (
+                      <Link href={`/manage/menu/options/${group.id}`}>
+                        {group.name}
+                      </Link>
+                    ) : (
+                      group.name
+                    )
+                  }
+                  icon={<SlidersHorizontalIcon size={20} />}
+                  aside={count(group.options, "option")}
+                >
+                  <ul className="divide-border -my-2 divide-y">
+                    {group.options.map((option) => (
+                      <Row
+                        key={option.id}
+                        name={option.name}
+                        price={formatDelta(option.deltaCents)}
+                        soldOut={option.soldOut}
+                        form={
+                          <SoldOutForm
+                            kind="option"
+                            id={option.id}
+                            name={option.name}
+                            soldOut={option.soldOut}
+                          />
+                        }
+                      />
+                    ))}
+                  </ul>
+                </Panel>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </>
   );
 }

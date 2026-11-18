@@ -342,7 +342,7 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
 **In plain words:** four changes the owner asked for after Phase 11, each its own pull request.
 
 - [x] **12.1 Sticky header.** Done 2026-11-17: the customer pages' header stays at the top while a page scrolls, on a full-width band with a hairline that fades in once the page scrolls; the Category tabs, sticky side panels and keyboard scroll padding sit below its height (`--header-h`). Test: `tests/e2e/header.spec.ts`; the keyboard tests check focus is never under it.
-- [ ] **12.2 Manage the menu by Category, with photos.** On `/manage/menu` the Category pills filter the list to that Category instead of jumping down the page, and each Menu Item shows its photo.
+- [x] **12.2 Manage the menu by Category, with photos.** Done 2026-11-17: on `/manage/menu` the pills show Everything, one Category (`?show=coffee`) or the Option Groups, the current one filled, instead of jumping down the page; every Menu Item row has its photo or stand-in. Test: `tests/e2e/manage-menu.spec.ts`.
 - [ ] **12.3 Photos for Events and Posts.** Upload a photo in the Event and Post editors, as for Menu Items.
 - [ ] **12.4 Adjust Stars with a live Star Card.** Plus and minus buttons for the Stars to add or remove, and the Member's Star Card and balance shown once their email is entered.
 

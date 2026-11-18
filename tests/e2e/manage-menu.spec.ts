@@ -82,3 +82,41 @@ test("a Barista cannot edit a Menu Item", async ({ page }) => {
     page.getByRole("heading", { name: /could not be found/i })
   ).toBeVisible();
 });
+
+// The pills jumped down one long page; now each shows only its own part,
+// and every Menu Item row carries its photo or stand-in (owner, batch 12.2).
+test("the menu pills show one Category or the Option Groups, with photos", async ({
+  page,
+}) => {
+  await signIn(page, "annika@hoshikopi.example", "/manage/menu");
+  const show = page.getByRole("navigation", { name: "Show" });
+  const panel = (name: string) =>
+    page.getByRole("heading", { name, level: 2, exact: true });
+  await expect(show.getByRole("link", { name: "Everything" })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  await expect(panel("Pastries")).toBeVisible();
+  await expect(panel("Option Groups")).toBeVisible();
+
+  await show.getByRole("link", { name: "Coffee", exact: true }).click();
+  await expect(page).toHaveURL(/\/manage\/menu\?show=coffee$/);
+  await expect(
+    show.getByRole("link", { name: "Coffee", exact: true })
+  ).toHaveAttribute("aria-current", "page");
+  await expect(panel("Coffee")).toBeVisible();
+  await expect(panel("Pastries")).toHaveCount(0);
+  await expect(panel("Option Groups")).toHaveCount(0);
+  // A photo or its stand-in beside every item.
+  const rows = page.getByRole("main").locator("li:has(form)");
+  await expect(rows.first()).toBeVisible();
+  for (const row of await rows.all()) {
+    await expect(row.locator("img, [aria-hidden]").first()).toBeAttached();
+  }
+  await expectNoAxeViolations(page);
+
+  await show.getByRole("link", { name: "Option Groups" }).click();
+  await expect(page).toHaveURL(/show=options$/);
+  await expect(panel("Option Groups")).toBeVisible();
+  await expect(panel("Coffee")).toHaveCount(0);
+});
