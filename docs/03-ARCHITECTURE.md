@@ -272,6 +272,7 @@ Members and Staff sign in without passwords: by an emailed link or with Google. 
   | --- | --- |
   | Sign-in emails | Per IP first (30 per 15 minutes), then per address from that IP (3) and per address from anywhere (15), so a stranger needs five connections, not two, to use up someone's links (audit ID2-05, DC-09) |
   | Google sign-in starts | Per IP (30 per 15 minutes) |
+  | Adding or changing a Cart Line | Per IP (60 per 15 minutes), and at most 30 Lines in a Cart (audit CK-01) |
   | Checkout tries | Per Cart (10 per 15 minutes) and per IP (20) |
   | Pay at Pickup Orders | Per IP for Guests (10 a day; audit ORD-14) and per account for Members (5 a day; audit DC-08) |
   | Webhook calls | Per IP (120 a minute); a body over 64 kB is refused with 413 (audit SEC1-10) |

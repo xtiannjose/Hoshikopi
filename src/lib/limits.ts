@@ -51,6 +51,12 @@ export const limits = {
 
   inquiry: (ip: string) => takeToken(`inquiry-ip:${ip}`, 5, HOUR),
 
+  /**
+   * Adding or changing a Cart Line. Each add without the Cart cookie made
+   * a new guest Cart, so a script could fill the database (audit CK-01).
+   */
+  addToCart: (ip: string) => takeToken(`cart-ip:${ip}`, 60, FIFTEEN_MINUTES),
+
   eventSignup: (ip: string) => takeToken(`signup-ip:${ip}`, 10, HOUR),
 
   /** The provider retries a 429, so a burst only slows its own deliveries. */

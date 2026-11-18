@@ -16,11 +16,12 @@
 
 ## 1. Status today
 
-**Start with the ranked list of the audit you need:** [2026-11-17.md](2026-11-17.md) for the deep check, [2026-11-13.md](2026-11-13.md) for the November audit.
+**Start with the ranked list of the audit you need:** [2026-11-18.md](2026-11-18.md) for the latest deep check, [2026-11-17.md](2026-11-17.md) for the one before, [2026-11-13.md](2026-11-13.md) for the November audit.
 
 | Audit | What it found | Where it stands on 2026-11-17 |
 | --- | --- | --- |
 | **November 2026 audit** (2026-11-06 to 2026-11-14), ranked in [2026-11-13.md](2026-11-13.md) | 371 findings in 16 areas, merged into 205 open items: 2 P0, 18 P1, 142 P2, 43 P3 (another 48 were already fixed, 16 out of scope, 1 refuted) | **Done**, apart from ops:8 (P1, an owner check). The 43 P3 items were fixed or decided in Phase 11. Both P0 and 17 of the 18 P1 were fixed in batches 7.5 to 7.11. All 142 P2 are fixed: 17 in Phases 7 to 9, the other 125 in the 21 batches of Phase 10. |
+| **Deep check, 2026-11-18**, in [2026-11-18.md](2026-11-18.md) | 9 findings, numbered CK-01 to CK-09: 0 P0, 0 P1, 2 P2, 7 P3 | Being fixed in roadmap Phase 13 (the owner asked to fix all of them, 2026-11-18). |
 | **Deep check, 2026-11-17**, in [2026-11-17.md](2026-11-17.md) | 46 findings from six areas, numbered DC-01 to DC-46: 0 P0, 2 P1, 29 P2, 15 P3 | **Done** (2026-11-17): fixed in roadmap batches 11.2 to 11.6, pull requests #112 to #118. Two GitHub settings only the owner can change are in its section 5. |
 
 What is still open from November:
@@ -45,6 +46,7 @@ The November files also say high, medium, low and info for P0 to P3: that is the
 
 | File | What it holds |
 | --- | --- |
+| [2026-11-18.md](2026-11-18.md) | **The deep check of 2026-11-18**, in plain words: how it was checked, the 9 findings with the fix for each, and what was confirmed sound |
 | [2026-11-17.md](2026-11-17.md) | **The deep check of 2026-11-17**, in plain words: what was checked, the 46 findings grouped by fix batch with the fix for each, the settings only the owner can change, and what was confirmed sound |
 | [2026-11-13.md](2026-11-13.md) | **The November audit's ranked backlog**: the counts, the batches that fixed it (7.5 to 7.11 and 10.1 to 10.21), the open items, and every closed finding |
 | [2026-11-06-interim.md](2026-11-06-interim.md) | The 236 findings of 2026-11-06 from 9 areas, with full evidence. Kept as the record behind the backlog. |

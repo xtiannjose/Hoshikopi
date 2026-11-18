@@ -10,6 +10,7 @@ export {
   lockCart,
   /** Tests only (audit architecture:19). */
   mergeGuestCart,
+  MAX_CART_LINES,
   MAX_LINE_QUANTITY,
   removeLine,
   stepQuantity,

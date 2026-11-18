@@ -13,6 +13,8 @@ import {
 export type CartOwner = { guestTokenHash: string } | { memberId: string };
 
 export const MAX_LINE_QUANTITY = 20;
+/** The most Lines one Cart holds, so none grows without end (audit CK-01). */
+export const MAX_CART_LINES = 30;
 export const MAX_NOTE_LENGTH = 140;
 
 export type NewLine = {
@@ -61,7 +63,11 @@ export const choiceKey = (line: {
   [line.menuItemId, [...line.optionIds].sort().join(","), line.note].join("|");
 
 export type AddResult =
-  { ok: true } | { ok: false; reason: ChoiceRefusal["reason"] | "too_many" };
+  | { ok: true }
+  | {
+      ok: false;
+      reason: ChoiceRefusal["reason"] | "too_many" | "cart_full";
+    };
 
 /** A Line's choices as the Cart keeps them: sorted Options, a trimmed note. */
 function tidy(input: NewLine) {
@@ -112,6 +118,13 @@ export async function addLine(
     const existing = await tx.cartLine.findUnique({
       where: { cartId_choiceKey: { cartId: cart.id, choiceKey: key } },
     });
+    if (
+      !existing &&
+      (await tx.cartLine.count({ where: { cartId: cart.id } })) >=
+        MAX_CART_LINES
+    ) {
+      return { ok: false, reason: "cart_full" };
+    }
     const quantity = (existing?.quantity ?? 0) + input.quantity;
     if (quantity > MAX_LINE_QUANTITY) return { ok: false, reason: "too_many" };
     await tx.cartLine.upsert({

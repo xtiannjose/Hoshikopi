@@ -110,6 +110,15 @@ describe("limits (docs/03 section 13)", () => {
     expect(await allowed(11, () => limits.eventSignup("1.1.1.1"))).toBe(10);
   });
 
+  // Each add without a Cart cookie made a new guest Cart, so a script could
+  // fill the free database (audit CK-01).
+  it("Cart adds and changes: 60 every 15 minutes a connection", async () => {
+    expect(await allowed(61, () => limits.addToCart("1.1.1.1"))).toBe(60);
+    expect(await limits.addToCart("2.2.2.2")).toBe(true);
+    freezeClock("2026-11-02T01:15:00Z");
+    expect(await limits.addToCart("1.1.1.1")).toBe(true);
+  });
+
   it("payment webhooks: 120 a minute a connection", async () => {
     expect(await allowed(121, () => limits.webhook("1.1.1.1"))).toBe(120);
   });
