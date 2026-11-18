@@ -1,6 +1,6 @@
 # Assets
 
-> **In plain words:** This file lists every picture, font and graphic in the project that was not written as code, and says where each came from and who may use it. It also holds the shopping list for the pictures still to be made: five room photos and 19 menu photos, each with a ready prompt. None of those pictures exists yet, so the site shows plain stand-in panels, and the owner has put real photos on hold.
+> **In plain words:** This file lists every picture, font and graphic in the project that was not written as code. For each one it says where it came from and who may use it. It also holds the shopping list for the pictures still to be made: five room photos and 19 menu photos, each with a ready prompt. None of those pictures exists yet, so the site shows plain stand-in panels, and the owner has put real photos on hold.
 >
 > **Who should read it:** the owner or a designer who wants to add or replace a picture; a developer who adds a file and must record its source.
 > **Last checked:** 2026-11-17.
@@ -18,7 +18,7 @@ The table covers each file the site ships (sends to visitors) that is not code. 
 | `src/app/icon.svg` | The gold star mark (the site's small browser-tab icon) | Drawn for Hoshikopi | Ours |
 | `docs/screenshots/*.jpg` | Seven screenshots used by the README and [the case study](CASE-STUDY.md): Home in both palettes, the menu, a Menu Item, checkout, an Order page and the Bar Screen | Taken from a local production build in batch 9.2 | Ours |
 
-Fonts on pages (Fraunces, Plus Jakarta Sans, Courier Prime) are self-hosted by `next/font` (Next.js serves them from our own site) from Google Fonts, all under the SIL Open Font License 1.1, which allows free use and sharing.
+The fonts on the pages are Fraunces, Plus Jakarta Sans and Courier Prime, from Google Fonts. `next/font` serves them from our own site. All three are under the SIL Open Font License 1.1, which allows free use and sharing.
 
 ## 2. Concept images still to make
 
@@ -32,7 +32,14 @@ To add one:
 4. Add a row to the table in section 1 with the tool and date.
 5. For a menu picture, set the Menu Item's `photo_url` to the file's path in the seed (the starting data for a new database). For a room picture, fill in `ROOM_PHOTOS` in `src/modules/cafe/internal/room.ts`.
 
-**One style for all of them:** natural window light, warm and slightly grainy like film, close crops, shallow depth of field, cream and kopi-brown ceramics, dark walnut wood, hands but no faces, no text or logos except a small gold star where noted, no real brands.
+**One style for all of them:**
+
+- natural window light, warm and slightly grainy like film;
+- close crops and a shallow depth of field;
+- cream and kopi-brown ceramics on dark walnut wood;
+- hands, but no faces;
+- no text or logos, except a small gold star where noted;
+- no real brands.
 
 ### 2.1 Room (`public/room/<name>.webp`, 1600 by 1200, 4:3)
 
@@ -50,7 +57,7 @@ Five pictures of one consistent room, shown on the cafe page and Home. Each prom
 
 One picture per Menu Item. A slug is the short name in a Menu Item's web address.
 
-Not `public/menu/`: that folder is git-ignored (Git, the version-control tool, skips it) because a photo uploaded in `/manage/menu` on a local run lands there, so a file saved in it never reaches GitHub or Vercel. Set `photo_url` to `/menu-concept/<slug>.webp`.
+Not `public/menu/`: Git ignores that folder, so a file saved there never reaches GitHub or Vercel. Set `photo_url` to `/menu-concept/<slug>.webp`.
 
 The alt text for each (the description a screen reader reads aloud) is already in the seed (`prisma/seed-data.ts`, `PHOTO_ALT`); use it as the prompt, with the style line.
 
@@ -63,3 +70,9 @@ The alt text for each (the description a screen reader reads aloud) is already i
 | `ensaymada` | `butter-croissant` | `banana-bread` |
 | `tapa-rice-bowl` | `longganisa-pandesal` | `house-blend-250g` |
 | `hoshikopi-tumbler` | | |
+
+## Where to go next
+
+- How the photos and fonts are used on the pages: [docs/05-DESIGN-SYSTEM.md](05-DESIGN-SYSTEM.md).
+- Uploading a photo on the live site instead: [docs/STAFF-GUIDE.md](STAFF-GUIDE.md), section 8.2.
+- Every other document: the [docs map](README.md).

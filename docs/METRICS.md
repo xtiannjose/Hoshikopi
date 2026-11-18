@@ -26,7 +26,7 @@ This table has one row per target: what was promised, what was measured and whet
 
 This measures how fast a Guest can order and pay. The target is under 60 seconds; a slowed-down phone profile does it in about 9.
 
-`tests/e2e/quality.spec.ts`, "a Guest orders and pays end to end in under 60 s on a throttled phone". At 375 px with Chrome slowed like Lighthouse's mobile run (4x CPU, 150 ms round trip, 1.6 Mbps down, 750 kbps up), it goes from a Menu Item page to Add to order, checkout, GCash, the Test Mode checkout, and then waits for "Paid online (Test Mode)." on the Order page. It runs against the production build the e2e suite uses.
+`tests/e2e/quality.spec.ts`, "a Guest orders and pays end to end in under 60 s on a throttled phone". It runs at 375 px, with Chrome slowed like Lighthouse's mobile run (4x CPU, 150 ms round trip, 1.6 Mbps down, 750 kbps up). It goes from a Menu Item page to Add to order, checkout, GCash and the Test Mode checkout. Then it waits for "Paid online (Test Mode)." on the Order page. It runs against the production build the e2e suite uses.
 
 Three runs on their own took **8.7, 8.9 and 9.1 seconds**. Inside the full suite, with three other workers competing for the CPU, it took 16.5 s. A script types instantly, so a person takes longer. The test fails above 60 s, so it now guards the target in every run.
 
@@ -44,7 +44,7 @@ This measures how fast the pages load and how accessible they are, with two free
 
 - **Home is 1 point under 90 locally**, down from 93 on 2026-11-08 (7.6). Total blocking time is the part that moved (113 to 203 ms). Since then the site gained the focus helpers (7.8a) and the Bar Screen and checkout changes. Runs on one PC also swing a few points with background load (85 to 89 for Home here).
 - **LCP reads about 3 s locally on every page.** On localhost the scripts arrive before the first paint and Lighthouse's simulation charges them to it (7.6). The live site measured 1.7 to 2.5 s before 7.6, so LCP is judged there.
-- **The live site scores higher.** On 2026-11-14 PageSpeed Insights (pagespeed.web.dev, run by the owner) gave Home and `/menu` 100 for Performance, Accessibility and Best Practices, on mobile and on desktop. One Lighthouse 12.8.2 mobile run from the PC against the live site the same day gave Home 97 (LCP 2.3 s, total blocking time 120 ms) and `/menu` 94 (LCP 2.4 s, 200 ms), so LCP is under 2.5 s live.
+- **The live site scores higher.** On 2026-11-14 PageSpeed Insights (pagespeed.web.dev, run by the owner) gave Home and `/menu` 100 for Performance, Accessibility and Best Practices, on mobile and on desktop. One Lighthouse 12.8.2 mobile run from the PC against the live site, the same day, gave Home 97 (LCP 2.3 s, total blocking time 120 ms) and `/menu` 94 (LCP 2.4 s, 200 ms). So LCP is under 2.5 s live.
 - **SEO scores 60 on purpose.** Its one failing check is "Page is blocked from indexing": every page asks search engines not to list it (`robots: { index: false, follow: false }` in `src/app/layout.tsx`, since 8.2), so an invented cafe never shows up in search as a real one (ADR 0006). Every other SEO check passes.
 
 **axe** (`@axe-core/playwright`, WCAG 2.0, 2.1 and 2.2 A and AA tags) runs at 37 places in 17 specs, many in both palettes. Every spec runs at 375 and 1280 px. The last full run reported **0 violations**. Lighthouse's own accessibility score is 100 on all three pages.
@@ -81,3 +81,9 @@ The PRD's demo is: order as a Guest, pay in the Test Mode checkout, watch the Or
 - A visitor alone plays the barista (Demo Mode, ADR 0015): `order-status.spec.ts`.
 
 The hosted demo takes Orders all day (7.7b), so a reviewer in any time zone can run it. The written script is [`docs/DEMO-SCRIPT.md`](DEMO-SCRIPT.md) (9.3, done 2026-11-14); the spoken run on the live site is the owner's last check.
+
+## Where to go next
+
+- How the project was built and why: [docs/CASE-STUDY.md](CASE-STUDY.md).
+- Show it to someone: [docs/DEMO-SCRIPT.md](DEMO-SCRIPT.md).
+- Every other document: the [docs map](README.md).

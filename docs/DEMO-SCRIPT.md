@@ -5,7 +5,7 @@
 > **Who should read it:** the owner, or anyone presenting Hoshikopi to a reviewer or an interviewer; read it once and rehearse before showing it.
 > **Last checked:** 2026-11-17.
 
-This is the demo in [docs/01-PRD.md](01-PRD.md) section 8: order as a Guest (someone with no account), pay in the Test Mode checkout, watch the Order move through the bar, and collect a Star as a Member (someone signed in). The capitalised words are defined in the [Glossary](../GLOSSARY.md).
+This is the demo in [docs/01-PRD.md](01-PRD.md) section 8. You order as a Guest (someone with no account) and pay in the Test Mode checkout. You watch the Order move through the bar. Then you collect a Star as a Member (someone signed in). The capitalised words are defined in the [Glossary](../GLOSSARY.md).
 
 A few words the script uses:
 
@@ -16,7 +16,7 @@ A few words the script uses:
 
 The live demo takes Orders all day, so it works alone and from any time zone. One known gap: from 11:15 PM to midnight Manila time the demo takes no Orders, and checkout says so (audit DC-29 in [docs/audit/2026-11-17.md](audit/2026-11-17.md)).
 
-**Before you start:** open the site in one window. If you want to show Stars, sign in with Google first in a private window or a second browser, so you can switch to it at 1:30. (Two tabs of the same browser share one sign-in, so the first tab would no longer be a Guest.) On the live site, email sign-in links go only to the seeded demo accounts, so Continue with Google is the quick way in.
+**Before you start:** open the site in one window. If you want to show Stars, sign in with Google first in a private window or a second browser, so you can switch to it at 1:30. (Two tabs of the same browser share one sign-in, so the first tab would no longer be a Guest.) On the live site, email sign-in links go only to the seeded demo accounts. Continue with Google is the quick way in.
 
 | Time | Do | Say |
 | --- | --- | --- |
@@ -37,3 +37,9 @@ The live demo takes Orders all day, so it works alone and from any time zone. On
 ## Rehearsal
 
 Every step above has a passing end-to-end test, an automated test that clicks through the site in a real browser ([docs/METRICS.md](METRICS.md) section 4). A script runs the order and payment part in about 9 seconds on a throttled phone (a test browser slowed down to a phone's speed and network). A spoken run-through on the live site is the last check before showing it to someone. Time it, and trim the "Say" column if it runs past two minutes.
+
+## Where to go next
+
+- What the demo proves, and how: [docs/CASE-STUDY.md](CASE-STUDY.md).
+- The measured numbers behind it: [docs/METRICS.md](METRICS.md).
+- Every other document: the [docs map](README.md).

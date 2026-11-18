@@ -1,6 +1,6 @@
 # Hoshikopi
 
-> **In plain words:** This glossary fixes the words Hoshikopi uses, so the website, the code, the database and the docs all mean the same thing by "Order", "Star" or "Pickup Window". Hoshikopi is a concept cafe with a website where customers browse the menu, order ahead for pickup, collect Stars and follow events and news.
+> **In plain words:** This glossary fixes the words Hoshikopi uses. The website, the code, the database and the docs all mean the same thing by "Order", "Star" or "Pickup Window". Hoshikopi is a concept cafe with a website where customers browse the menu, order ahead for pickup, collect Stars and follow events and news.
 >
 > **Who should read it:** everyone, before writing copy, code or docs; a developer before naming anything new. Add a word here before using it in code.
 > **Last checked:** 2026-11-17.
@@ -283,3 +283,8 @@ _Avoid_: Stock photo, placeholder (in copy)
 **Palette**:
 One of the two colour sets, Day and Night. The browser picks one by the cafe's clock, Day from 6 AM to 6 PM Manila time, unless the visitor pinned one (ADR 0010).
 _Avoid_: Theme (in copy), dark mode, light mode
+
+## Where to go next
+
+- Coding words (database, branch, pull request...) are explained in the [docs map](docs/README.md#4-coding-words-you-will-meet).
+- How Staff use these words on the screens: [docs/STAFF-GUIDE.md](docs/STAFF-GUIDE.md).

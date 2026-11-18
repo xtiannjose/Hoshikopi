@@ -40,7 +40,7 @@ Hoshikopi is a portfolio project. The cafe, its address and its people are inven
   - Event Sign-ups are confirmed on the spot, since no confirmation link could be sent.
   - With an email service set up (Resend, `docs/06-SETUP.md` section 9), all of these go to real inboxes. On a developer's computer they go to the terminal and the `data/mail/` folder.
 - **Demo Mode.** On the hosted demo, a visitor can tap the bar's steps on their own Order page ("Be the barista"), because nobody is behind the bar ([ADR 0015](adr/0015-demo-mode-visitor-plays-the-barista.md)). So an Order on the demo's Bar Screen can move without a Barista. The site records those taps as `demo`, never as a Staff member.
-- **The hosted demo takes Orders all day**, from midnight to 11:15 PM Manila time, so visitors in any time zone can try it. From 11:15 PM to midnight it takes no Orders, and checkout says so (audit DC-29). The Manage pages and the Visit page still show the real Opening Hours, so the Ordering tile on Manage may say "Not taking orders" while the demo's checkout still takes them.
+- **The hosted demo takes Orders all day**, from midnight to 11:15 PM Manila time, so visitors in any time zone can try it. From 11:15 PM to midnight it takes no Orders, and checkout says so (audit DC-29). The Manage pages and the Visit page still show the real Opening Hours. So the Ordering tile on Manage may say "Not taking orders" while the demo's checkout still takes them.
 
 ## 2. Signing in
 
@@ -67,7 +67,7 @@ To sign out, tap **Sign out** on your account page or on the Manage home page. O
 
 ## 3. The Second Factor (your 6-digit code)
 
-The **Second Factor** is a 6-digit code from an authenticator app on your phone (an app such as Google Authenticator, Microsoft Authenticator or 1Password that shows a new code every 30 seconds). It proves it is really you, even if someone gets into your email ([ADR 0014](adr/0014-staff-second-factor-in-identity.md)).
+The **Second Factor** is a 6-digit code from an authenticator app on your phone. An authenticator app, such as Google Authenticator, Microsoft Authenticator or 1Password, shows a new code every 30 seconds. It proves it is really you, even if someone gets into your email ([ADR 0014](adr/0014-staff-second-factor-in-identity.md)).
 
 ### When the site asks for it
 
@@ -271,7 +271,7 @@ Below are the pages, grouped by job. A Barista sees only the Bar Screen and Menu
 - **Menu and stories:** Menu, Events, Posts, Inquiries.
 - **People and numbers:** Reports, Adjust Stars, Staff, Cafe details.
 
-Most forms under Manage work the same way. The button says **Saving...** while it saves, then the form says **Saved.** If something is wrong, it says **Some fields need a fix.** and a note under each field says what to change. Changes show on the public site right away. Each page has a back link at the top (for example **Manage** or **Menu**).
+Most forms under Manage work the same way. The button says **Saving...** while it saves, then the form says **Saved.** If something is wrong, it says **Some fields need a fix.** A note under each field says what to change. Changes show on the public site right away. Each page has a back link at the top (for example **Manage** or **Menu**).
 
 ## 7. Orders and Refunds
 
@@ -305,7 +305,7 @@ Tap the Order Code in the box to open its day, then refund it as below. Check th
 
 ### 7.5 Giving a Refund
 
-A Refund always returns the full amount. There are no part refunds. The **Refund K-042** link shows on an Order that was Picked Up (and cost more than PHP 0), on a cancelled Order that was paid but not refunded, and on an Order paid after it closed.
+A Refund always returns the full amount. There are no part refunds. The **Refund K-042** link shows on three kinds of Order: one that was Picked Up (and cost more than PHP 0), a cancelled one that was paid but not refunded, and one paid after it closed.
 
 1. Find the Order (choose its day).
 2. Tap **Refund K-042** in its row.
@@ -335,7 +335,7 @@ If you see "The refund for K-042 didn't go through. Try again in a minute.", wai
 - **Everyone** (with the code): each row shows the name, the price and a **Sold out** or **Back on** button, the same as on the Bar Screen (section 5.8). Pills say **Sold out today** and **Hidden**.
 - **Managers** also see **Add a Menu Item**, **Categories** and **Add an Option Group** at the top, and each name opens its editor.
 
-The row of buttons under the title shows one part of the menu at a time: **Everything**, one Category (for example **Coffee**), or **Option Groups**. The button you are on is filled. Each Menu Item shows its photo, or a plain stand-in until it has one. **List** and **Photos** at the right switch the view: Photos shows each Category as cards, as on the customer menu, with big photos and "No photo yet" on any item without one, so you can check the photos at a glance. The view you pick stays when you tap a Category.
+The row of buttons under the title shows one part of the menu at a time: **Everything**, one Category (for example **Coffee**), or **Option Groups**. The button you are on is filled. Each Menu Item shows its photo, or a plain stand-in until it has one. **List** and **Photos** at the right switch the view: Photos shows each Category as cards, as on the customer menu, with big photos. Any item without a photo says "No photo yet", so you can check the photos at a glance. The view you pick stays when you tap a Category.
 
 ### 8.1 Prices
 
@@ -365,7 +365,7 @@ Tap **Add a Menu Item**, or tap an item's name. The editor has five parts. Finis
 | Photo | **Photo** | JPEG, PNG or WebP, 4:3, under 2 MB. Choose a new file to replace the current one. |
 | | **Photo description (alt text)** | Describe the item as a menu would, for people who cannot see the photo. |
 
-After adding, you see "Added. It's on the menu now." (or "Added. It's hidden for now; untick Hidden when it's ready.") and a link **Add another**. On an existing item, **See it on the site** opens its public page, and pills show **Sold out today**, **Hidden**, **Promo until** a date and **On the menu until** a date.
+After adding, you see "Added. It's on the menu now." (or "Added. It's hidden for now; untick Hidden when it's ready.") and a link **Add another**. On an existing item, **See it on the site** opens its public page. Pills show **Sold out today**, **Hidden**, **Promo until** a date and **On the menu until** a date.
 
 **Barista Picks.** Each palette has three: the Day picks (Day Barista Pick) and the Night picks (Night Barista Pick). Home and the menu show the current palette's set. A fourth is refused with "Three Day Barista Picks already: A, B and C. Untick one of them first." Untick one on another item, then try again.
 
@@ -381,7 +381,7 @@ Menu Items cannot be deleted; hide them instead. Past Orders keep their own copy
 
 ### 8.4 Categories
 
-**Categories** (`/manage/menu/categories`) shows one small form per Category: **Name**, **Web address** (set when the Category is added and fixed after that, so links to it keep working), **Order** (lower numbers come first) and **Hidden** ("Takes the whole Category and its items off the menu."). Tap **Save** (with the Category's name) to keep a change. **See it on the site** opens its public page.
+**Categories** (`/manage/menu/categories`) shows one small form per Category: **Name**, **Web address**, **Order** and **Hidden**. The web address is set when the Category is added and stays fixed, so links to it keep working. In Order, lower numbers come first. Hidden "Takes the whole Category and its items off the menu." Tap **Save** (with the Category's name) to keep a change. **See it on the site** opens its public page.
 
 To add one, fill **Add a Category** and tap **Add Category**. You see "Added. It's in the list now." and a link **Add an item to it**.
 
@@ -428,7 +428,7 @@ It ends by itself, or tap **Resume ordering**. Busy Mode starts only from the Ba
 3. Tick **Closed all day**, or set **Opens**, **Last order** and **Closes** (in 15-minute steps).
 4. Tap **Add Special Hours**.
 
-The list shows the days coming up; **Remove** deletes one. Adding Special Hours for a day that has some replaces them. If a change leaves Orders booked after today's new closing (shortening or closing today in Special Hours or Opening Hours, or removing today's later Special Hours), the page says how many: cancel them with a reason on the Orders page (section 7.6).
+The list shows the days coming up; **Remove** deletes one. Adding Special Hours for a day that has some replaces them. A change can leave Orders booked after today's new closing: shortening or closing today in Special Hours or Opening Hours, or removing today's later Special Hours. Then the page says how many: cancel them with a reason on the Orders page (section 7.6).
 
 ### 9.3 Opening Hours
 
@@ -445,7 +445,7 @@ A **Pickup Window** is one 15-minute part of the day. **Capacity** is how much t
 
 Whole numbers from 0 to 200. When a window is full, checkout offers the next one.
 
-**Prep Time** is the site's estimate of the minutes from Accept to Ready. It is **Base minutes** plus **Minutes per drink ahead** for each drink already in the queue (accepted or being made, plus As Soon As Possible Orders waiting), plus any Busy Mode minutes, rounded up to the next 5 minutes. Use numbers from 0 to 60, like 4 or 1.5. The panel shows an example: "with 4 drinks ahead, about N minutes".
+**Prep Time** is the site's estimate of the minutes from Accept to Ready. It is **Base minutes**, plus **Minutes per drink ahead** for each drink already in the queue, plus any Busy Mode minutes, rounded up to the next 5 minutes. The queue counts drinks accepted or being made, and As Soon As Possible Orders waiting. Use numbers from 0 to 60, like 4 or 1.5. The panel shows an example: "with 4 drinks ahead, about N minutes".
 
 Tap **Save Capacity** to keep both.
 
@@ -552,7 +552,7 @@ If you see "No account has that email yet. Ask them to sign in once, with email 
 
 **The team** lists every Staff member, Managers first, with their email and role.
 
-- **Change a role:** choose Barista, Manager or **Member (no staff access)** on their row and tap **Save**. Lowering a role warns you first ("They lose staff access and are signed out now." or "They lose Manager access and are signed out now.") and signs them out at once. Choose Member to remove someone from the staff.
+- **Change a role:** choose Barista, Manager or **Member (no staff access)** on their row and tap **Save**. Lowering a role warns you first, then signs them out at once. The warning says "They lose staff access and are signed out now." or "They lose Manager access and are signed out now." Choose Member to remove someone from the staff.
 - **Sign out everywhere:** tap it, then **Yes, sign (name) out**. They are signed out on every phone and computer and can sign in again with their email. Use it for a lost tablet or phone.
 
 **One Manager always stays.** Nobody can change their own role (your row says "(you)" and "Another Manager can change your role."), so the last Manager can never remove themselves. Every change is logged.
@@ -602,7 +602,7 @@ On the concept site these are demo Orders.
 2. Manager: on Orders and Refunds, check **Pay at Pickup still to collect** matches the cash, and that **Needs a refund** is empty.
 3. Close the **Bar Screen** tab (section 5.11). On a shared device, tap **Sign out** on your account page.
 
-The site also tidies up by itself. Online Orders unpaid after 15 minutes expire. Each morning before opening, Orders from earlier days that the bar never accepted are cancelled: Pay at Pickup ones with the reason "The day ended before it was picked up", and paid online ones with the reason "The day ended before we made it", which also refunds the payment in full.
+The site also tidies up by itself. Online Orders unpaid after 15 minutes expire. Each morning before opening, Orders from earlier days that the bar never accepted are cancelled: Pay at Pickup ones get the reason "The day ended before it was picked up". Paid online ones get "The day ended before we made it", and their payment is refunded in full.
 
 ## 18. Common questions
 
@@ -621,3 +621,9 @@ The site also tidies up by itself. Online Orders unpaid after 15 minutes expire.
 ## 19. Known gaps that affect Staff
 
 None right now. The 2026-11-17 check of the whole app ([docs/audit/2026-11-17.md](audit/2026-11-17.md)) found several, and all of those that affect Staff are fixed. If something on the Bar Screen or in Manage does not work as this guide says, tell whoever runs the site.
+
+## Where to go next
+
+- A word you don't know: the [Glossary](../GLOSSARY.md).
+- Something broke on the live site: [docs/HANDOFF.md](HANDOFF.md), section 8.
+- Every other document: the [docs map](README.md).
