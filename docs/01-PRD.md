@@ -3,7 +3,7 @@
 > **In plain words:** This is the PRD (product requirements document): the list of what Hoshikopi must do, who it is for and what is left out. Every rule has an ID such as ORD-03, so a test, a commit or the roadmap can point at exactly one requirement. When someone asks "is X part of the product?", the answer is here.
 >
 > **Who should read it:** the owner and anyone planning a change, before changing scope; developers and testers, to find the rule behind a feature.
-> **Last checked:** 2026-11-17.
+> **Last checked:** 2026-11-18.
 
 Owner: project lead. Update this document before changing scope. Words follow the [Glossary](../GLOSSARY.md) (the list of product words, such as Menu Item, Order Code and Star, that the docs, the site and the code all use the same way).
 
@@ -23,20 +23,32 @@ Owner: project lead. Update this document before changing scope. Words follow th
 
 This section says what Hoshikopi is and what the project is judged by. Read the four goals first: every other section serves them.
 
-Hoshikopi is a concept cafe and the website that runs it. The site sells both the menu and the place: Customers see the room and plan a visit, browse the menu, customize drinks, order ahead and pick up at the counter, pay online (GCash, Maya, Card) or at pickup, collect Stars toward free drinks, and follow the cafe's Events and Posts. Baristas run live Orders from a Bar Screen (a page on a tablet behind the counter that lists the Orders to make); the Manager edits the menu, hours and content without a developer.
+Hoshikopi is a concept cafe and the website that runs it. The site sells both the menu and the place:
 
-It is a portfolio project: the cafe, its address and its people are invented and labelled as such (the Concept Notice, the visible note that says so), and online payments run in Test Mode only (practice payments that never move real money). Everything else is built as if the cafe were real, so the site could become a real cafe's site without a rebuild.
+- **Customers** see the room and plan a visit. They browse the menu, customize drinks, order ahead and pick up at the counter. They pay online (GCash, Maya, Card) or at pickup, collect Stars toward free drinks, and follow the cafe's Events and Posts.
+- **Baristas** run live Orders from a Bar Screen, a page on a tablet behind the counter that lists the Orders to make.
+- **The Manager** edits the menu, hours and content without a developer.
+
+It is a portfolio project. The cafe, its address and its people are invented, and the Concept Notice on every page says so. Online payments run in Test Mode only: practice payments that never move real money. Everything else is built as if the cafe were real, so the site could become a real cafe's site without a rebuild.
 
 **Goals**
 
 1. A Customer can order a customized drink for pickup in under 60 seconds on a mid-range phone.
 2. A new Order appears on the Bar Screen within 5 seconds, and a Barista moves it to Ready with one tap.
 3. The Manager can change a price, mark a Menu Item Sold Out, set Special Hours or publish an Event without a developer.
-4. The site is a portfolio piece: mobile Lighthouse performance 90 or more on the menu (Lighthouse is Google's free tool that scores a page's speed and quality out of 100), WCAG 2.2 AA (the international web accessibility standard, level AA: usable with a keyboard or screen reader, readable colours), clean code with tests for every money and Order Status rule.
+4. The site is a portfolio piece:
+   - mobile Lighthouse performance 90 or more on the menu (Lighthouse is Google's free tool that scores a page's speed and quality out of 100);
+   - WCAG 2.2 AA, the international web accessibility standard: usable with a keyboard or a screen reader, with readable colours;
+   - clean code, with tests for every money and Order Status rule.
 
 **Non-goals for the first release**: delivery, table reservations, more than one cafe, native mobile apps, real payments, ingredient stock tracking, a point-of-sale system, gift cards, third-party delivery apps.
 
-**Build status (2026-11-17).** The Must and Should requirements below were built in Phases 0 to 8 of [the roadmap](07-ROADMAP.md) (most in Phases 0 to 6) and kept working through the audit fixes of Phases 7 to 10. Phase 11 (handoff docs and the fixes from the 2026-11-17 deep check, [docs/audit/2026-11-17.md](audit/2026-11-17.md)) is next. Two things run in a reduced form because nothing outside the project is set up: online payments use the `fake` provider (no PayMongo account exists; the PayMongo adapter is built and unit-tested but has never run against PayMongo's test system), and the demo does not send email (Resend, the email service, has no verified domain). The photos are still stand-in panels; real photos are on hold. To take over the project, start with [HANDOFF.md](HANDOFF.md).
+**Build status (2026-11-18).** Every Must and Should requirement below is built and live: Phases 0 to 12 of [the roadmap](07-ROADMAP.md). Two things run in a reduced form, because a service outside the project is not set up:
+
+- **Online payments use the `fake` provider.** No PayMongo account exists. The PayMongo adapter is built and unit-tested, but has never run against PayMongo's test system.
+- **The demo sends no email.** Resend, the email service, has no verified domain.
+
+The menu has photos on the live site; real photos for the room and Events are on hold. To take over the project, start with [HANDOFF.md](HANDOFF.md).
 
 ## 2. Assumptions
 
@@ -86,7 +98,21 @@ This section says what ships in which release. MVP means minimum viable product:
 
 ## 5. Functional requirements
 
-A functional requirement is one thing the site must do. Each has an ID made of an area and a number (MENU for the menu, INFO for cafe information, ORD for ordering, PAY for payments, ACC for accounts, LOY for loyalty, EVT for Events, NEWS for Posts, STAFF for staff tools). Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs are stable; use them in commits and tests. "Research C-nn" points at an idea in [the cafe research](02-RESEARCH-CAFES.md); "audit" points at a finding in [docs/audit/](audit/README.md).
+A functional requirement is one thing the site must do. Each has an ID made of an area and a number, such as ORD-03. The areas are:
+
+| Area | Covers |
+| --- | --- |
+| MENU | The menu |
+| INFO | Cafe information |
+| ORD | Ordering |
+| PAY | Payments |
+| ACC | Accounts |
+| LOY | Loyalty (Stars) |
+| EVT | Events |
+| NEWS | Posts |
+| STAFF | Staff tools |
+
+Priority: **M** must (MVP), **S** should (V1), **C** could (later). IDs never change; use them in commits and tests. "Research C-nn" points at an idea in [the cafe research](02-RESEARCH-CAFES.md). "audit" points at a finding in [docs/audit/](audit/README.md).
 
 ### 5.1 Menu and cafe info
 
@@ -205,7 +231,7 @@ Five ideas set Hoshikopi apart from a template cafe site. Each one is a promise 
 2. **A menu that feels like the cafe.** A distinct visual identity (night sky and coffee: "star coffee") instead of a template, still fast on a phone. It follows the cafe's clock: cream paper by day, night sky from 6 PM (ADR 0010).
 3. **Stars that are simple.** One Star per drink, nine for a free one: a paper stamp card, online.
 4. **A Bar Screen built for wet hands.** Big targets, one tap per step, a clear "make next" order.
-5. **Portfolio-grade engineering.** Money as integer centavos (whole numbers, so nothing rounds wrong), server-side pricing (the server works out every price, never the browser), verified webhooks, tests for every rule, documented decisions.
+5. **Portfolio-grade engineering.** Money as integer centavos, whole numbers so nothing rounds wrong. The server works out every price, never the browser. Verified webhooks, tests for every rule, and documented decisions.
 
 ## 7. Non-functional requirements
 
@@ -226,7 +252,7 @@ These rules say how well the site must work, not what it does: speed, accessibil
 
 These five targets say how we know the project worked. They were measured on 2026-11-14 in the Phase 9 review; the results and the way each was measured are in [METRICS.md](METRICS.md).
 
-1. End-to-end order in under 60 seconds in a Playwright run (Playwright drives a real browser the way a person would) on a throttled phone profile (a test that slows the computer and the network down to a mid-range phone's speed).
+1. An order from end to end in under 60 seconds, in a Playwright run on a throttled phone profile. Playwright drives a real browser the way a person would. A throttled profile slows the computer and the network down to a mid-range phone's speed.
 2. Mobile Lighthouse performance 90 or more on Home and the menu; zero axe violations (axe is a free tool that finds accessibility mistakes in a page) on every page.
 3. Every price, Reward, Capacity and Order Status rule covered by a test that fails without it.
 4. A two-minute demo script ([DEMO-SCRIPT.md](DEMO-SCRIPT.md)): order as a Guest, pay in the Test Mode checkout, watch it move on the Bar Screen, collect a Star as a Member.
@@ -244,3 +270,9 @@ This section lists what could go wrong or is still undecided, with the plan for 
 | Email sender | Resend (the email service) is not set up: its test sender reaches only the owner's own address until a domain is verified | Resend is skipped until a domain exists; visitors sign in with Google (`docs/07-ROADMAP.md` section 4) |
 | Design direction | "Star coffee" could tip into a theme park | Direction chosen (ADR 0010) and built with native elements and CSS (ADR 0011) |
 | Becoming real | A real cafe would need a business, BIR receipts (the tax authority's official receipts), Internet Transactions Act duties, live PayMongo keys, real photos, the senior citizen and PWD discount (RA 9994, RA 10754, JMC 01-2022: 20% off plus VAT exemption, online orders included) a paid database plan with longer backups, Vercel Pro (Hobby is for non-commercial use; Pro adds finer cron and longer logs) and error monitoring (audit ops:19) | Out of scope; listed so nothing in the build blocks it. The discount needs an ADR beside ADR 0002 (VAT-exempt pricing) and real ID numbers, which a no-money concept should not collect (ADR 0006); the /cafe FAQ says how it would work at the counter |
+
+## Where to go next
+
+- How the code meets these requirements: [docs/03-ARCHITECTURE.md](03-ARCHITECTURE.md).
+- What is built and what is next: [docs/07-ROADMAP.md](07-ROADMAP.md).
+- Every other document: the [docs map](README.md).

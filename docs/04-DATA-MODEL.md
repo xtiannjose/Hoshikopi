@@ -3,7 +3,7 @@
 > **In plain words:** This document lists every table in Hoshikopi's database, what each column holds, and the rules the data must always follow. The database is PostgreSQL, reached through Prisma ([ADR 0004](adr/0004-postgres-prisma-neon.md)). Two things to know first: money is stored as whole centavos, and a placed Order keeps its own copy of names and prices, so menu edits never change it.
 >
 > **Who should read it:** developers before adding or changing a table, column or seed row; reviewers checking a migration; anyone asking "where is X stored?".
-> **Last checked:** 2026-11-17.
+> **Last checked:** 2026-11-18.
 
 The tables serve the design in [`docs/03-ARCHITECTURE.md`](03-ARCHITECTURE.md), with words from the [Glossary](../GLOSSARY.md). `prisma/schema.prisma` and the migrations in `prisma/migrations/` are the source of truth for tables; this document explains them. When they disagree, fix one in the same change.
 
@@ -155,7 +155,15 @@ Option Groups: Size (Regular +0, Large +30), Milk (Whole +0, Oat +35, Almond +35
 
 Barista Pick badge on Hoshi Latte, Tablea Tsokolate and Ube Pandesal; Night picks on Cafe Mocha, Tanglad Ginger Tea and Banana Bread slice. Allergens on every seeded Menu Item (for example Hoshi Latte: milk; Ube Pandesal: wheat, milk, egg). Every drink, pastry and food Menu Item has a Pairing (MENU-08): each drink with a bite, each bite with a drink. Beans and merch have none. A demo Promo (Matcha Latte at 155 for 30 days) and a Seasonal drink (Calamansi Honey Soda, 60 days) are dated from the day of seeding.
 
-Also seeded: Opening Hours 7:00 to 21:00 (last order 20:30) every day, Capacity 12 drinks and 8 food Lines per window, Prep Time settings 4 and 1.5 minutes, Order Code prefix `K`, the cafe's details and Amenities (invented, `area` Kapitolyo, Pasig, map pin on a public spot), two Events, three Recurring Events, three Posts, and one Manager (Christian, `seed-manager`), one Barista (Annika, `seed-barista`) and one Member (Hoshi, `seed-member`), on dev, test and the live demo. Their emails are in [`docs/06-SETUP.md`](06-SETUP.md) section 6.
+Also seeded, on dev, test and the live demo:
+
+- Opening Hours 7:00 to 21:00 every day, last order 20:30;
+- Capacity 12 drinks and 8 food Lines per window;
+- Prep Time settings 4 and 1.5 minutes;
+- Order Code prefix `K`;
+- the cafe's details and Amenities (invented: `area` Kapitolyo, Pasig, with the map pin on a public spot);
+- two Events, three Recurring Events and three Posts;
+- one Manager (Christian, `seed-manager`), one Barista (Annika, `seed-barista`) and one Member (Hoshi, `seed-member`). Their emails are in [`docs/06-SETUP.md`](06-SETUP.md) section 6.
 
 ## 6. Migration policy
 
@@ -166,3 +174,9 @@ A migration is a script that changes the database's shape, such as adding a tabl
 - Rules Prisma cannot express (CHECK constraints, partial unique indexes, the `order_events` trigger) are hand-written SQL in the migration files, for example `20261116000000_database_rules`.
 - Destructive changes (dropping or renaming a column with data) go in two steps: add and backfill, then drop in a later migration.
 - Seed data loads on dev and test databases. A remote database (the demo on Neon) is seeded once by hand with `ALLOW_REMOTE_SEED=1` (`docs/06-SETUP.md` section 9, step 4).
+
+## Where to go next
+
+- How the code uses these tables: [docs/03-ARCHITECTURE.md](03-ARCHITECTURE.md).
+- Changing the database safely: [docs/06-SETUP.md](06-SETUP.md), section 9.
+- Every other document, and the coding words explained: the [docs map](README.md).
