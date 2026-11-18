@@ -205,7 +205,8 @@ These are the commands you use day to day, defined in `package.json` (Phase 0). 
 | --- | --- |
 | `npm run dev` | Site at http://localhost:3000 |
 | `npm test` | Vitest once: unit and database tests against `hoshikopi_test` |
-| `npm run qa` | Lint, Prettier check, type check, unit tests, production build, `npm audit --omit=dev` |
+| `npm run qa` | Lint, Prettier check, type check, unit tests, production build, `npm run audit` |
+| `npm run audit` | `npm audit --omit=dev`: fails on a high or critical advisory, except the few in `scripts/audit.mjs` that reach only the test runner (each with its reason, removed once fixed) |
 | `npm run test:e2e` | Resets and seeds `hoshikopi_e2e`, builds, serves on port 3100, runs Playwright with axe at 375 and 1280 px |
 | `npm run qa:full` | `qa` plus the browser tests (they build their own copy against `hoshikopi_e2e`) |
 | `npm run format` | Prettier writes every file it checks (Markdown is left alone) |
@@ -250,7 +251,7 @@ When asked to publish a batch:
 
 To set up on another computer, clone it (section 3).
 
-**CI** (continuous integration: checks GitHub runs on every change; `.github/workflows/ci.yml`, batch 7.11a) runs on every pull request and on `main`: lint, formatting, the type check, Vitest against a Postgres 17 service, a production build (`npm run build`, which renders every prerendered page, audit DC-02), and `npm audit --omit=dev --audit-level=high`. Playwright stays local (`npm run test:e2e`): it builds and serves the app and depends on the Manila clock.
+**CI** (continuous integration: checks GitHub runs on every change; `.github/workflows/ci.yml`, batch 7.11a) runs on every pull request and on `main`: lint, formatting, the type check, Vitest against a Postgres 17 service, a production build (`npm run build`, which renders every prerendered page, audit DC-02), and the dependency audit (`npm run audit`, high and critical only; see the table above). Playwright stays local (`npm run test:e2e`): it builds and serves the app and depends on the Manila clock.
 
 **Dependabot** (`.github/dependabot.yml`), a GitHub robot that keeps libraries up to date, opens grouped weekly pull requests for npm packages and the GitHub Actions. Review and merge them like any other.
 
