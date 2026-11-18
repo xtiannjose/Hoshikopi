@@ -187,7 +187,7 @@ async function Editor({
         />
         <aside
           aria-label="At a glance"
-          className="hidden gap-4 xl:sticky xl:top-6 xl:grid"
+          className="xl:top-below-header hidden gap-4 xl:sticky xl:grid"
         >
           {photo}
           {pills}

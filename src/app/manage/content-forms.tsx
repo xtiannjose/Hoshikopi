@@ -169,7 +169,11 @@ export function EventForm({
             error={error}
           />
         </div>
-        {aside && <div className="grid gap-6 xl:sticky xl:top-6">{aside}</div>}
+        {aside && (
+          <div className="xl:top-below-header grid gap-6 xl:sticky">
+            {aside}
+          </div>
+        )}
       </div>
       <MarkdownField
         name="bodyMd"
@@ -262,7 +266,11 @@ export function PostForm({
             error={error}
           />
         </div>
-        {aside && <div className="grid gap-6 xl:sticky xl:top-6">{aside}</div>}
+        {aside && (
+          <div className="xl:top-below-header grid gap-6 xl:sticky">
+            {aside}
+          </div>
+        )}
       </div>
       <MarkdownField
         name="bodyMd"
