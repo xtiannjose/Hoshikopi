@@ -442,3 +442,9 @@ Proposed glossary words (not yet defined; add to `GLOSSARY.md` before any code u
 84. https://prnewswire.com/news-releases/survey-nearly-70-of-us-diners-say-a-restaurants-website-has-discouraged-them-from-visiting-300909229.html - MGH, a marketing agency (vendor survey), press release via PR Newswire, 2019-08-29, 1,101 US adults: website use before dining, food photos, what puts people off. MGH's own landing page (`mghus.com/lp/restaurant-survey`) not opened.
 85. https://www.touchbistro.com/wp-content/uploads/2021/01/How_Diners_Choose_Restaurants_Singles.pdf - TouchBistro (vendor survey), "How Diners Choose Restaurants", fielded June 2017 by an independent firm, 521 US adults who eat out weekly: online menu 59%, website 51%, type of food 63%.
 86. https://pos.toasttab.com/blog/on-the-line/restaurant-reviews-and-ratings-data - Toast diner survey. Blocked by a bot check; "32% always check websites" seen in search results only: UNVERIFIED.
+
+## Where to go next
+
+- What the site must do, drawn from this research: [docs/01-PRD.md](01-PRD.md).
+- How it looks: [docs/05-DESIGN-SYSTEM.md](05-DESIGN-SYSTEM.md).
+- Every other document: the [docs map](README.md).
