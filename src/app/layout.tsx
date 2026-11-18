@@ -31,8 +31,7 @@ const courier = Courier_Prime({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: "Hoshikopi", template: "%s | Hoshikopi" },
-  description:
-    "A concept cafe in Kapitolyo, Pasig. Order ahead for pickup and earn Stars.",
+  description: "A concept cafe. Order ahead for pickup and earn Stars.",
   // An invented cafe with a real neighbourhood: kept out of search until
   // the owner decides otherwise (ADR 0006). Crawlers may fetch pages, so
   // they see this; a robots.txt block would hide it from them.

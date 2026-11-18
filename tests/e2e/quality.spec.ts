@@ -258,6 +258,16 @@ test("public pages ask search engines to stay away (ADR 0006)", async ({
   }
 });
 
+// /robots.txt was the "Page not found" page. It lets crawlers in, so they
+// can read each page's noindex; a Disallow would hide it (audit CK-05).
+test("robots.txt lets crawlers in to read noindex", async ({ request }) => {
+  const robots = await request.get("/robots.txt");
+  expect(robots.status()).toBe(200);
+  const body = await robots.text();
+  expect(body).toContain("Allow: /");
+  expect(body).not.toContain("Disallow");
+});
+
 test("an unknown address keeps the site's frame and the Concept Notice (8.2)", async ({
   page,
 }) => {
