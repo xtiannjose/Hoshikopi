@@ -1137,6 +1137,7 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   - `docs/06-SETUP.md` section 9 has the steps to give previews their own database; on hold by the owner (2026-11-18), since the live site is itself the demo
 
   </details>
+- [x] **13.5 Launch readiness.** Requested 2026-11-18: how far Hoshikopi is from a real launch, kept for future planning. **Done 2026-11-18:** [docs/LAUNCH-READINESS.md](LAUNCH-READINESS.md), a scorecard, the tests a real launch needs, the setup and legal work before real money, and a suggested order.
 
 ## 13. After V1 (not scheduled)
 
@@ -1152,7 +1153,7 @@ Possible features:
 - Loyalty tiers.
 - Table QR ordering.
 
-Real launch requirements (Hoshikopi is a concept, so none of these is built):
+Real launch requirements (Hoshikopi is a concept, so none of these is built). The full checklist, with the testing a real launch needs and a suggested order, is [docs/LAUNCH-READINESS.md](LAUNCH-READINESS.md):
 
 - Business registration.
 - BIR receipts (official receipts from the Philippine tax office).

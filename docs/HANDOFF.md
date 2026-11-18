@@ -293,7 +293,7 @@ Ideas, not scheduled ([roadmap](07-ROADMAP.md) section 13):
 - loyalty tiers;
 - table QR ordering.
 
-A real cafe would also need ([PRD](01-PRD.md) section 9, "Becoming real"):
+How far the site is from a real launch, with a checklist and a suggested order: [docs/LAUNCH-READINESS.md](LAUNCH-READINESS.md). In short, a real cafe would also need ([PRD](01-PRD.md) section 9, "Becoming real"):
 
 - a business registration;
 - official receipts from the tax office (BIR);
