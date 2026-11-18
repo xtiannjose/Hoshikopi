@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh, updateTag } from "next/cache";
+import { refresh } from "next/cache";
 
 // Only changes to cached data expire the "hours" tag: Opening Hours, Special
 // Hours and the cafe's details. Pause, Busy Mode, Capacity and Prep Time are
@@ -8,6 +8,7 @@ import { refresh, updateTag } from "next/cache";
 
 import { redirect } from "next/navigation";
 
+import { refreshPublic } from "@/lib/refresh";
 import {
   BUSY_FOR_MINUTES,
   BUSY_MINUTES,
@@ -80,7 +81,7 @@ export async function saveWeeklyHoursAction(
     staff
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("hours");
+  refreshPublic("hours");
   const booked = await bookedAfterTodaysClosing();
   return booked > 0
     ? { status: "saved", saved: bookedNote("Saved.", booked) }
@@ -105,7 +106,7 @@ export async function saveSpecialHoursAction(
     staff
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("hours");
+  refreshPublic("hours");
   if (text(form, "day") === manila(now()).day) {
     const booked = await bookedAfterTodaysClosing();
     if (booked > 0) {
@@ -119,7 +120,7 @@ export async function deleteSpecialHoursAction(form: FormData) {
   const staff = await manager();
   const day = text(form, "day");
   await deleteSpecialHours(day, staff);
-  updateTag("hours");
+  refreshPublic("hours");
   // Removing today's later Special Hours brings back an earlier weekly
   // closing (audit DC-14).
   if (day === manila(now()).day) {

@@ -1,8 +1,8 @@
 "use server";
 
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { refreshPublic } from "@/lib/refresh";
 import {
   deletePost,
   removeSignup,
@@ -52,7 +52,7 @@ export async function saveEventAction(
     file(form)
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("content");
+  refreshPublic("content");
   // A new Event whose photo failed to store says so on its page (12.3).
   if (!id) {
     redirect(
@@ -90,7 +90,7 @@ export async function saveEventAction(
 /** A Manager removes a Sign-up (audit staff:10, SEC2-02). */
 export async function removeSignupAction(form: FormData) {
   const staff = await requireStaff("manager", "/manage/events");
-  if (await removeSignup(text(form, "id"), staff)) updateTag("events");
+  if (await removeSignup(text(form, "id"), staff)) refreshPublic("events");
 }
 
 export async function savePostAction(
@@ -113,7 +113,7 @@ export async function savePostAction(
     file(form)
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("content");
+  refreshPublic("content");
   if (!id) {
     redirect(
       `/manage/posts/${result.id}?added=1${result.photoError ? "&photo=failed" : ""}`
@@ -150,6 +150,6 @@ export async function saveRecurringAction(
     staff
   );
   if (!result.ok) return { status: "error", errors: result.errors };
-  updateTag("content");
+  refreshPublic("content");
   return { status: "saved" };
 }

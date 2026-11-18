@@ -47,6 +47,10 @@ test(
     await expect(page.getByRole("status")).toContainText("Saved.");
     await expectNoAxeViolations(page);
     await expectOnMenu(page, "/menu", "Spanish Latte", "PHP 170");
+    // Its own page too, on the next visit: pages with a slug in their
+    // address kept the old price for up to a minute (batch 12.8).
+    const item = await page.request.get("/menu/item/spanish-latte");
+    expect(await item.text()).toContain("PHP 170");
   }
 );
 

@@ -6,7 +6,7 @@ import { toMinutes } from "@/lib/hours";
 import { audit, type Staff } from "@/modules/identity";
 
 // Manager writes for hours, Capacity, Prep Time and Ordering Paused
-// (STAFF-05). Callers check the role and call updateTag("hours").
+// (STAFF-05). Callers check the role and call refreshPublic("hours").
 
 export type HoursResult =
   { ok: true } | { ok: false; errors: Partial<Record<string, string>> };

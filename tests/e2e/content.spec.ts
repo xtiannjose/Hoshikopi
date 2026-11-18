@@ -255,3 +255,33 @@ test("a signed-in Member's Sign-up with their own email is confirmed at once (8.
     "You're in! See you there."
   );
 });
+
+// A saved Post or Event showed on its own page only when that page's
+// one-minute timer ran out (53 s after a save, batch 12.8). The next visit
+// now shows it.
+test("a saved Post and Event show on their own pages on the next visit (12.8)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "desktop task");
+  test.setTimeout(120_000);
+  await signIn(page, "christian@hoshikopi.example", "/manage/posts");
+  await page.getByRole("link", { name: /Our beans from Benguet/ }).click();
+  const excerpt = `Grown slowly in cool Cordillera air (${Date.now()}).`;
+  await page.getByLabel(/One line for the news list/).fill(excerpt);
+  await page.getByRole("button", { name: "Save Post" }).click();
+  await expect(page.getByText("Saved.").first()).toBeVisible();
+  const post = await page.request.get("/news/our-beans-from-benguet");
+  expect(await post.text()).toContain(excerpt);
+
+  await page.goto("/manage/events");
+  await page
+    .getByRole("link", { name: /Latte art night/ })
+    .first()
+    .click();
+  const summary = `Pour a rosetta with our baristas (${Date.now()}).`;
+  await page.getByLabel("One line about it").fill(summary);
+  await page.getByRole("button", { name: "Save Event" }).click();
+  await expect(page.getByText(/^Saved/).first()).toBeVisible();
+  const event = await page.request.get("/events/latte-art-night");
+  expect(await event.text()).toContain(summary);
+});

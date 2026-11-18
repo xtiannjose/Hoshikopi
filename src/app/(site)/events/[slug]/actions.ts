@@ -1,8 +1,8 @@
 "use server";
 
-import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 
+import { refreshPublic } from "@/lib/refresh";
 import { botCheck } from "@/lib/bot-check";
 import { siteUrl } from "@/lib/env";
 import { limits } from "@/lib/limits";
@@ -111,7 +111,7 @@ export async function signUpAction(
     console.error("[signup] email not sent:", error);
   }
   // Seats left on the Event page.
-  updateTag("events");
+  refreshPublic("events");
   return { status: "done", email: result.signup.email, confirmed, emailed };
 }
 
@@ -133,7 +133,7 @@ export async function answerSignupAction(
       return { status: "error", message: "This Sign-up is already gone." };
     }
     // The Seats show as free again on the Event page.
-    updateTag("events");
+    refreshPublic("events");
     return { status: "cancelled" };
   }
   const result = await confirmSignup(id, token);

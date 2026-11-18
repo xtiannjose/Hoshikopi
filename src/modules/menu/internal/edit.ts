@@ -10,7 +10,7 @@ import { audit, type Staff } from "@/modules/identity";
 import { readPhoto, removePhoto, storePhoto } from "@/lib/photo";
 
 // Staff writes to the menu (STAFF-03, STAFF-04). Callers check the role and
-// call updateTag("menu") after a successful write.
+// call refreshPublic("menu") after a successful write.
 
 const BADGE_KEYS = BADGES.map(([key]) => key);
 const ALLERGEN_KEYS = ALLERGENS.map(([key]) => key);
