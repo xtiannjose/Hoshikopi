@@ -33,6 +33,12 @@ describe("formatPrice (menu)", () => {
   });
   it("groups thousands", () => {
     expect(formatPrice(125000)).toBe("PHP 1,250");
+    // Grouped by hand, not toLocaleString: that built a locale formatter on
+    // every call, 121 ms of a Menu Item page's load on a slow phone (CK-02).
+    expect(formatPrice(99900)).toBe("PHP 999");
+    expect(formatPrice(100_000_00)).toBe("PHP 100,000");
+    expect(formatReceipt(123_456_789)).toBe("PHP 1,234,567.89");
+    expect(formatReceipt(-100_000_00)).toBe("-PHP 100,000.00");
   });
 });
 
