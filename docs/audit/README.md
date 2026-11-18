@@ -93,3 +93,9 @@ The November checks ran against a production build on port 3300 and the seeded l
 3. **Run the quality checks first** (`npm run qa`, `npm run test:e2e`) and keep their output for the reviewers. Never run `next build` or the Playwright tests while reviewers use port 3300: both rebuild the `.next` folder that server reads.
 4. **Run reviewers and checkers in small waves,** up to 4 at a time, so a usage limit pauses one wave, not the whole audit. Give each a fresh brief with today's commit and test counts; the prompts in `workflow.md` are out of date.
 5. **Have a second reviewer check every finding** against the code before it is written down, then merge duplicates and rank what is left from P0 to P3.
+
+## Where to go next
+
+- What is left to do now: [docs/07-ROADMAP.md](../07-ROADMAP.md), section 0.
+- Taking over the project: [docs/HANDOFF.md](../HANDOFF.md).
+- Every other document: the [docs map](../README.md).

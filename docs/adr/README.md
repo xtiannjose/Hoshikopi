@@ -70,3 +70,9 @@ ADRs 0001 to 0010 were written in planning. ADRs 0011 to 0015 followed during th
 
 6. **Link the notes that relate** with relative links (for example `[ADR 0003](0003-payments-paymongo-test-mode.md)`), and add the new note to the table in section 2 of this page.
 7. **Record later changes as dated updates.** If the decision shifts a little later, add a `## Update YYYY-MM-DD` section at the bottom saying what changed and why. If it is reversed, write a new ADR and say which one it replaces.
+
+## Where to go next
+
+- What the site must do: [docs/01-PRD.md](../01-PRD.md).
+- How the decisions shape the code: [docs/03-ARCHITECTURE.md](../03-ARCHITECTURE.md).
+- Every other document, and the coding words explained: the [docs map](../README.md).
