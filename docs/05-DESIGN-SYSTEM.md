@@ -20,13 +20,13 @@
 11. [Performance budget](#11-performance-budget)
 12. [Tailwind v4 mapping](#12-tailwind-v4-mapping-phase-0)
 
-Terms used throughout: a **palette** is one full set of colours (Hoshikopi has two, Day and Night). A **design token** is a named design value, such as a colour called `--background`, stored once and used everywhere by its name, so changing it in one place changes the whole site. The product words (Menu Item, Order Code, Star, Bar Screen and the rest) are defined in the [Glossary](../GLOSSARY.md). Library parts (the old "Sample B") were not built.
+Terms used throughout: a **palette** is one full set of colours (Hoshikopi has two, Day and Night). A **design token** is a named design value, such as a colour called `--background`. It is stored once and used everywhere by its name, so changing it in one place changes the whole site. The product words (Menu Item, Order Code, Star, Bar Screen and the rest) are defined in the [Glossary](../GLOSSARY.md). Library parts (the old "Sample B") were not built.
 
 ## 1. Design read
 
 This section says what the site should feel like, which cafe websites we looked at for ideas and the rough page drawings made before building. If you read only one part of this document, read the first two paragraphs.
 
-**"Star coffee": a neighbourhood cafe that stays open into the evening.** Warm cream and espresso by day and deep night-sky ink by night, switching with the cafe's clock (section 3), and one small gold star used with restraint: the logo mark, the Star Card, the "ready" moment. It should feel like a real neighbourhood cafe with a point of view, not a template and not a theme park. Photos carry the warmth; the interface stays calm and quick to scan on a phone.
+**"Star coffee": a neighbourhood cafe that stays open into the evening.** Warm cream and espresso by day, and deep night-sky ink by night, switching with the cafe's clock (section 3). One small gold star is used with restraint: the logo mark, the Star Card, the "ready" moment. It should feel like a real neighbourhood cafe with a point of view, not a template and not a theme park. Photos carry the warmth; the interface stays calm and quick to scan on a phone.
 
 **Owner's brief (2026-10-30): very modern and aesthetic.** It should look like a design-led cafe people screenshot and share, not a small-business template: confident type, generous space, large photography, polished details. "Star coffee" stays; it is expressed in a modern way.
 
@@ -237,7 +237,15 @@ Updated 2026-11-07 (batch 8.9, Motion pass): the owner found the site too still,
 
 - **Quiet zones:** nothing moves on its own while the Customer chooses Options or pays (the Options on a Menu Item, the Cart, checkout, the fake payment page); there is only press feedback under the finger. The Pickup Time chips at checkout stay plain chips (batch 8.3, 2026-11-08, replaced the old row of 42 with the next 6 and a "Later today" list).
 - **Never animated:** the hero, because it holds the LCP (batch 7.6); loops of any kind; parallax and scroll-jacking.
-- **Reduced motion:** `prefers-reduced-motion: reduce` turns all of it off. Animations land on their final state at once and transitions are `0s` (a near-zero duration still started hundreds of real transitions on a Day and Night switch), View Transitions still swap the page but without animation (audit motion:10), and scroll reveals are not applied. One exception: the "Added" on Add to order holds still for its 1.6 s, since its last frame is invisible and on a phone it is the only sign of the add. Browser tests run this way (`playwright.config.ts`), so axe checks the settled page and never a frame mid-fade, except `tests/e2e/motion.spec.ts`, which turns motion on to check that a tap right after a page change lands within the fade budget and that a new Order arrives on the Bar Screen once.
+- **Reduced motion:** `prefers-reduced-motion: reduce` turns all of it off:
+  - Animations land on their final state at once.
+  - Transitions are `0s`. (A near-zero duration still started hundreds of real transitions on a Day and Night switch.)
+  - View Transitions still swap the page, but without animation (audit motion:10).
+  - Scroll reveals are not applied.
+
+  One exception: the "Added" on Add to order holds still for its 1.6 s. Its last frame is invisible, and on a phone it is the only sign of the add.
+
+  Browser tests run with reduced motion (`playwright.config.ts`), so axe checks the settled page, never a frame mid-fade. The exception is `tests/e2e/motion.spec.ts`, which turns motion on. It checks that a tap right after a page change lands within the fade budget, and that a new Order arrives on the Bar Screen once.
 
 ## 8. Imagery, icons, copy
 
@@ -294,5 +302,11 @@ Measure on the live site, or a local production build for the other numbers: on 
 
 Tailwind CSS is the styling toolkit the site uses: small ready-made class names such as `bg-background` set a colour or a size. This section says where the tokens live in it. It is for developers; a non-programmer can skip it.
 
-- Tokens live in `src/app/globals.css` under `@theme` (`--color-background`, `--color-primary`, `--color-night`, `--color-star`, `--font-display`, `--font-sans`, `--radius-card`), with the Night palette redefining them under `[data-theme="night"]` on `<html>`, set before first paint (section 3, ADR 0010).
+- Tokens live in `src/app/globals.css` under `@theme`: `--color-background`, `--color-primary`, `--color-night`, `--color-star`, `--font-display`, `--font-sans`, `--radius-card`. The Night palette redefines them under `[data-theme="night"]` on `<html>`, set before the page first shows (section 3, ADR 0010).
 - Use token classes (`bg-background`, `text-muted-foreground`, `bg-night`) everywhere; no raw hex values in components.
+
+## Where to go next
+
+- Where the fonts and images come from: [docs/ASSETS.md](ASSETS.md).
+- How the pages are built in code: [docs/03-ARCHITECTURE.md](03-ARCHITECTURE.md).
+- Every other document, and the coding words explained: the [docs map](README.md).
