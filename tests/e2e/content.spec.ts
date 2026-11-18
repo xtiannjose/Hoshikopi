@@ -68,6 +68,13 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
     page.getByRole("region", { name: "Preview" }).locator("strong")
   ).toHaveText("Free");
   await page.getByLabel("Published on the site").check();
+  // A photo, as Menu Items have (12.3).
+  await page
+    .getByLabel("Photo", { exact: true })
+    .setInputFiles("public/grain.png");
+  await page
+    .getByLabel("Photo description (alt text)")
+    .fill("Three cups lined up for a cupping");
   // A refused save keeps what was typed (React 19 resets forms by default).
   await page.getByLabel("Web address").fill("Cupping With Annika");
   await page.getByRole("button", { name: "Add Event" }).click();
@@ -82,6 +89,9 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Cupping with Annika"
   );
+  await expect(
+    page.getByRole("img", { name: "Three cups lined up for a cupping" })
+  ).toBeVisible();
   await expectNoAxeViolations(page);
   await expect(async () => {
     await page.goto("/events");
@@ -89,6 +99,14 @@ test("a Manager publishes an Event and it shows (STAFF-06)", async ({
       page.getByRole("heading", { name: "Cupping with Annika" })
     ).toBeVisible({ timeout: 1_000 });
   }).toPass({ timeout: 150_000 });
+  // The photo loads on the site, not only in the editor.
+  const photo = page.getByRole("img", {
+    name: "Three cups lined up for a cupping",
+  });
+  await photo.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
 });
 
 test("Recurring Events list weekly and an Event adds to a calendar (EVT-03, EVT-04)", async ({

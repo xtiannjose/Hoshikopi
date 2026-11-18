@@ -14,8 +14,12 @@ const CONTENT_TYPE = {
   webp: "image/webp",
 } as const;
 
+/** Where each kind of photo goes in the Blob store (12.3). */
+export type PhotoFolder = "menu" | "events" | "posts";
+
 /**
- * Without a Blob store, photos go here and /menu-photos/<name> serves them:
+ * Without a Blob store, every photo (Menu Items, Events, Posts) goes here
+ * and /menu-photos/<name> serves it:
  * `next start` lists public/ only when it starts, so a photo saved there was
  * a 404 until a restart (audit PERF-04).
  */
@@ -42,11 +46,11 @@ function imageType(bytes: Uint8Array): keyof typeof CONTENT_TYPE | null {
 export type CheckedPhoto = { bytes: Buffer; type: keyof typeof CONTENT_TYPE };
 
 /**
- * Checks a Menu Item photo's size and type, then re-encodes it upright and
+ * Checks a photo's size and type, then re-encodes it upright and
  * without its metadata: a phone photo's EXIF can say where it was taken
  * (audit ops:15). Nothing is stored yet.
  */
-export async function readMenuPhoto(
+export async function readPhoto(
   file: File
 ): Promise<({ ok: true } & CheckedPhoto) | { ok: false; error: string }> {
   if (file.size > MAX_BYTES) {
@@ -72,28 +76,29 @@ export type PhotoResult =
  * (batch 5.4): BLOB_STORE_ID with Vercel's OIDC token, or an older store's
  * BLOB_READ_WRITE_TOKEN. Without either, to data/menu-photos/ (local runs).
  */
-export async function storeMenuPhoto(
+export async function storePhoto(
   photo: CheckedPhoto,
+  folder: PhotoFolder,
   slug: string
 ): Promise<PhotoResult> {
-  // Only these characters reach the name: nothing can land outside menu/.
+  // Only these characters reach the name: nothing can land outside its folder.
   const safe =
     slug
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")
-      .slice(0, 60) || "menu-item";
+      .slice(0, 60) || "photo";
   const name = `${safe}-${now().getTime()}.${photo.type}`;
 
   if (process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN) {
     try {
-      const blob = await put(`menu/${name}`, photo.bytes, {
+      const blob = await put(`${folder}/${name}`, photo.bytes, {
         access: "public",
         contentType: CONTENT_TYPE[photo.type],
       });
       return { ok: true, url: blob.url };
     } catch (error) {
-      console.error("[menu] photo not saved to Blob:", error);
+      console.error(`[${folder}] photo not saved to Blob:`, error);
       return {
         ok: false,
         error: "We couldn't save the photo. Try again in a moment.",
@@ -110,7 +115,7 @@ export async function storeMenuPhoto(
  * Deletes a photo a save replaced, so it no longer sits in the public store
  * (audit ops:15). Anything else, such as a seeded image, is left alone.
  */
-export async function removeMenuPhoto(url: string): Promise<void> {
+export async function removePhoto(url: string): Promise<void> {
   try {
     if (/^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\//.test(url)) {
       await del(url);
@@ -119,7 +124,7 @@ export async function removeMenuPhoto(url: string): Promise<void> {
     }
   } catch (error) {
     // The new photo is saved; an old file left behind is only clutter.
-    console.error("[menu] old photo not deleted:", error);
+    console.error("[photo] old photo not deleted:", error);
   }
 }
 

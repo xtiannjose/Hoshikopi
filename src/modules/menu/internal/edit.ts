@@ -7,7 +7,7 @@ import { ALLERGENS, BADGES } from "@/lib/menu-labels";
 import { MAX_PRICE_CENTS, parsePesos } from "@/lib/money";
 import { audit, type Staff } from "@/modules/identity";
 
-import { readMenuPhoto, removeMenuPhoto, storeMenuPhoto } from "./photo";
+import { readPhoto, removePhoto, storePhoto } from "@/lib/photo";
 
 // Staff writes to the menu (STAFF-03, STAFF-04). Callers check the role and
 // call updateTag("menu") after a successful write.
@@ -310,13 +310,13 @@ export async function saveMenuItemWithPhoto(
   actor: Staff,
   photo?: File | null
 ): Promise<FormResult<{ id: string; photoError?: string }>> {
-  const checked = photo && photo.size > 0 ? await readMenuPhoto(photo) : null;
+  const checked = photo && photo.size > 0 ? await readPhoto(photo) : null;
   if (checked && !checked.ok) {
     return { ok: false, errors: { photo: checked.error } };
   }
   const result = await saveMenuItem(id, input, actor);
   if (!result.ok || !checked) return result;
-  const stored = await storeMenuPhoto(checked, input.slug);
+  const stored = await storePhoto(checked, "menu", input.slug);
   if (!stored.ok) return { ...result, photoError: stored.error };
   const before = await db.menuItem.findUniqueOrThrow({
     where: { id: result.id },
@@ -326,7 +326,7 @@ export async function saveMenuItemWithPhoto(
     where: { id: result.id },
     data: { photoUrl: stored.url },
   });
-  if (before.photoUrl) await removeMenuPhoto(before.photoUrl);
+  if (before.photoUrl) await removePhoto(before.photoUrl);
   return result;
 }
 

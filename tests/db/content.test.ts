@@ -1,4 +1,14 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import { del, put } from "@vercel/blob";
+import sharp from "sharp";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import {
@@ -12,6 +22,8 @@ import {
 
 import { createTestDb, resetToSeed } from "./helpers";
 
+vi.mock("@vercel/blob", () => ({ put: vi.fn(), del: vi.fn() }));
+
 const db = createTestDb();
 const christian = {
   id: "seed-manager",
@@ -23,7 +35,12 @@ beforeEach(async () => {
   await resetToSeed(db);
   freezeClock(new Date());
 });
-afterEach(unfreezeClock);
+afterEach(() => {
+  unfreezeClock();
+  vi.unstubAllEnvs();
+  vi.mocked(put).mockReset();
+  vi.mocked(del).mockReset();
+});
 afterAll(() => db.$disconnect());
 
 describe("Events (EVT-01)", () => {
@@ -163,5 +180,125 @@ describe("Posts (NEWS-01)", () => {
         where: { action: "content.post.delete", targetId: draft.id },
       })
     ).toBe(1);
+  });
+});
+
+// Managers could add a photo to a Menu Item, but not to an Event or Post
+// (12.3).
+describe("Event and Post photos (12.3)", () => {
+  const BLOB = "https://store.public.blob.vercel-storage.com/";
+  const png = async () =>
+    new File(
+      [
+        await sharp({
+          create: { width: 4, height: 3, channels: 3, background: "#e7a83f" },
+        })
+          .png()
+          .toBuffer(),
+      ],
+      "photo.png"
+    );
+  const useBlob = () => {
+    vi.stubEnv("BLOB_STORE_ID", "store_test");
+    vi.mocked(put).mockImplementation(
+      async (pathname) =>
+        ({ url: `${BLOB}${pathname}` }) as Awaited<ReturnType<typeof put>>
+    );
+  };
+
+  it("stores an Event photo once the save passes, and deletes the one it replaces", async () => {
+    useBlob();
+    const event = await db.event.findUniqueOrThrow({
+      where: { slug: "latte-art-night" },
+    });
+    const input = {
+      title: event.title,
+      slug: event.slug,
+      startsAt: "2026-12-04T19:00",
+      endsAt: "2026-12-04T21:00",
+      summary: event.summary,
+      bodyMd: event.bodyMd,
+      price: "",
+      signupUrl: "",
+      photoAlt: "Rosetta latte art in a blue cup",
+      isPublished: "on",
+    };
+    const notAPhoto = new File(["GIF89a"], "x.png");
+    expect(await saveEvent(event.id, input, christian, notAPhoto)).toEqual({
+      ok: false,
+      errors: { photo: "Choose a JPEG, PNG or WebP photo." },
+    });
+    expect(
+      await saveEvent(
+        event.id,
+        { ...input, endsAt: "" },
+        christian,
+        await png()
+      )
+    ).toMatchObject({ ok: false });
+    expect(put).not.toHaveBeenCalled();
+
+    const old = `${BLOB}events/old.png`;
+    await db.event.update({ where: { id: event.id }, data: { photoUrl: old } });
+    expect(await saveEvent(event.id, input, christian, await png())).toEqual({
+      ok: true,
+      id: event.id,
+    });
+    const saved = await db.event.findUniqueOrThrow({ where: { id: event.id } });
+    expect(saved.photoUrl).toMatch(/\/events\/latte-art-night-\d+\.png$/);
+    expect(saved.photoAlt).toBe("Rosetta latte art in a blue cup");
+    expect(del).toHaveBeenCalledWith(old);
+  });
+
+  it("gives a Post a cover photo, and deleting the draft deletes its cover", async () => {
+    useBlob();
+    const draft = await savePost(
+      null,
+      {
+        title: "Ube season",
+        slug: "ube-season",
+        excerpt: "The ube latte is back.",
+        bodyMd: "Purple!",
+        coverAlt: "",
+        isPublished: undefined,
+      },
+      christian,
+      await png()
+    );
+    if (!draft.ok) throw new Error("not saved");
+    const post = await db.post.findUniqueOrThrow({ where: { id: draft.id } });
+    expect(post.coverUrl).toMatch(/\/posts\/ube-season-\d+\.png$/);
+    expect(post.coverAlt).toBeNull();
+    expect(await deletePost(draft.id, christian)).toBe(true);
+    expect(del).toHaveBeenCalledWith(post.coverUrl);
+  });
+
+  it("keeps the save and says so when the photo store fails", async () => {
+    vi.stubEnv("BLOB_STORE_ID", "store_test");
+    vi.mocked(put).mockRejectedValue(new Error("Access denied"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const post = await db.post.findUniqueOrThrow({
+      where: { slug: "our-beans-from-benguet" },
+    });
+    const result = await savePost(
+      post.id,
+      {
+        title: post.title,
+        slug: post.slug,
+        excerpt: post.excerpt,
+        bodyMd: post.bodyMd,
+        isPublished: "on",
+      },
+      christian,
+      await png()
+    );
+    expect(result).toEqual({
+      ok: true,
+      id: post.id,
+      photoError: "We couldn't save the photo. Try again in a moment.",
+    });
+    expect(
+      (await db.post.findUniqueOrThrow({ where: { id: post.id } })).coverUrl
+    ).toBe(post.coverUrl);
   });
 });

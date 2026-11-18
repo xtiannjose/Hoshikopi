@@ -28,7 +28,6 @@ export {
   itemsOfferingGroup,
   soldOutStamp,
 } from "./internal/staff-queries";
-export { localPhotoFile } from "./internal/photo";
 export {
   priceChoices,
   type ChoiceRefusal,
