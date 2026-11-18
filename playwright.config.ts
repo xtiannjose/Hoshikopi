@@ -80,6 +80,8 @@ export default defineConfig({
       FORM_MIN_FILL_MS: "0",
       // One IP signs in 60+ times with no minute's pause (identity auth.ts).
       AUTH_RATE_LIMIT: "off",
+      // Every test adds to a Cart from this one address (src/lib/limits.ts).
+      CART_RATE_LIMIT: "off",
       BETTER_AUTH_SECRET: "e2e-secret-at-least-32-characters-long",
       PAYMENT_PROVIDER: "fake",
       CRON_SECRET: "e2e-cron-secret",

@@ -1096,6 +1096,23 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
 
   </details>
 
+### Phase 13: The 2026-11-18 deep check
+
+**In plain words:** a second deep check after Phase 12 found no P0 or P1, 2 P2 and 7 P3 items ([docs/audit/2026-11-18.md](audit/2026-11-18.md)). The owner asked to fix them all (2026-11-18). One small pull request each.
+
+- [x] **13.1 A limit on guest Carts** (CK-01). Adding or changing a Cart Line: 60 per 15 minutes per IP, and at most 30 Lines in a Cart. **Done 2026-11-18** (tests first).
+  <details><summary>How it was done</summary>
+
+  - `limits.addToCart` in `src/lib/limits.ts`, checked by `addToCartAction` and `changeLineAction` before the Cart is touched, so a refused add makes no guest Cart
+  - `addLine` refuses a new choice in a Cart with 30 Lines (`cart_full`); more of a choice already in it still works
+  - a Favourite added to a full Cart says so on `/cart`
+  - Tests: `tests/db/limits.test.ts`, `tests/limits-wired.test.ts` (both actions call the limit), `tests/db/cart.test.ts`
+
+  </details>
+- [ ] **13.2 Page speed** (CK-02). Bring total blocking time under 200 ms on Home, `/menu` and a Menu Item page.
+- [ ] **13.3 Photos** (CK-03, CK-04). Cap the pixels an upload may unpack to and shrink photos; a Remove photo choice.
+- [ ] **13.4 The small rest** (CK-05 to CK-08). `robots.txt`; the site's description; the e2e photo left behind; the steps for a preview database.
+
 ## 13. After V1 (not scheduled)
 
 These are ideas for later. Nothing here is planned, dated or promised, and new features are on hold (owner). The list is here so nobody has to wonder whether an idea was considered.

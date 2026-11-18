@@ -68,7 +68,7 @@ export async function addFavouriteAction(form: FormData) {
   // Its own words: a full Line is not "sold out or off the menu", and it
   // is not "from that order" (audit DC-34).
   redirect(
-    `/cart?favourite=${result.reason === "too_many" ? "full" : "unavailable"}`
+    `/cart?favourite=${result.reason === "too_many" ? "full" : result.reason === "cart_full" ? "cart-full" : "unavailable"}`
   );
 }
 

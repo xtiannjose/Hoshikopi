@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { freezeClock, unfreezeClock } from "@/lib/clock";
 import { limits, PAY_AT_PICKUP_A_DAY } from "@/lib/limits";
@@ -12,7 +20,10 @@ beforeEach(async () => {
   await db.rateLimit.deleteMany();
   freezeClock("2026-11-02T01:00:00Z");
 });
-afterEach(unfreezeClock);
+afterEach(() => {
+  unfreezeClock();
+  vi.unstubAllEnvs();
+});
 afterAll(() => db.$disconnect());
 
 /** How many of `tries` calls went ahead. */
@@ -108,6 +119,24 @@ describe("limits (docs/03 section 13)", () => {
 
   it("Event Sign-ups: 10 an hour a connection", async () => {
     expect(await allowed(11, () => limits.eventSignup("1.1.1.1"))).toBe(10);
+  });
+
+  // Each add without a Cart cookie made a new guest Cart, so a script could
+  // fill the free database (audit CK-01).
+  it("Cart adds and changes: 60 every 15 minutes a connection", async () => {
+    expect(await allowed(61, () => limits.addToCart("1.1.1.1"))).toBe(60);
+    expect(await limits.addToCart("2.2.2.2")).toBe(true);
+    freezeClock("2026-11-02T01:15:00Z");
+    expect(await limits.addToCart("1.1.1.1")).toBe(true);
+  });
+
+  // The browser tests add from one address all run long, so their server
+  // turns the limit off; on Vercel the switch does nothing.
+  it("Cart adds: CART_RATE_LIMIT=off lifts the limit, except on Vercel", async () => {
+    vi.stubEnv("CART_RATE_LIMIT", "off");
+    expect(await allowed(61, () => limits.addToCart("3.3.3.3"))).toBe(61);
+    vi.stubEnv("VERCEL", "1");
+    expect(await allowed(61, () => limits.addToCart("4.4.4.4"))).toBe(60);
   });
 
   it("payment webhooks: 120 a minute a connection", async () => {

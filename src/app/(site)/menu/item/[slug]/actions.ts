@@ -1,13 +1,18 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+
+import { limits } from "@/lib/limits";
+import { clientIp } from "@/lib/rate-limit";
 
 import {
   addLine,
   cartOwnerForWrite,
   changeLine,
   currentCartOwner,
+  MAX_CART_LINES,
   MAX_FAVOURITES,
   MAX_LINE_QUANTITY,
   saveFavourite,
@@ -26,7 +31,12 @@ const MESSAGES = {
   option_sold_out: "One of your choices is sold out today. Pick another.",
   invalid_options: "Choose one of each required option.",
   too_many: `That's more than ${MAX_LINE_QUANTITY} of one item. Send us an inquiry for big orders.`,
+  cart_full: `Your Cart is full: ${MAX_CART_LINES} different items is the most it holds. Check out or remove something first.`,
 };
+
+/** Too many adds or changes from one connection (audit CK-01). */
+const SLOW_DOWN =
+  "That's a lot of changes at once. Wait a few minutes, then try again.";
 
 const optionIdsOf = (form: FormData) =>
   [...form.entries()]
@@ -38,6 +48,11 @@ export async function addToCartAction(
   prev: AddState,
   form: FormData
 ): Promise<AddState> {
+  // Before the Cart: a refused add makes no guest Cart.
+  const ip = clientIp(await headers());
+  if (!(await limits.addToCart(ip))) {
+    return { status: "error", message: SLOW_DOWN };
+  }
   const quantity = Number(form.get("quantity"));
   const result = await addLine(await cartOwnerForWrite(), {
     menuItemId: String(form.get("menuItemId") ?? ""),
@@ -62,6 +77,10 @@ export async function changeLineAction(
   _prev: AddState,
   form: FormData
 ): Promise<AddState> {
+  const ip = clientIp(await headers());
+  if (!(await limits.addToCart(ip))) {
+    return { status: "error", message: SLOW_DOWN };
+  }
   const owner = await currentCartOwner();
   const quantity = Number(form.get("quantity"));
   const result = owner

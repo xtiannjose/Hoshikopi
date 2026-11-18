@@ -14,6 +14,8 @@ const WIRED: [file: string, call: string][] = [
   ["src/app/(site)/cafe/inquire/actions.ts", "limits.inquiry("],
   ["src/app/(site)/events/[slug]/actions.ts", "limits.eventSignup("],
   ["src/app/api/webhooks/[provider]/route.ts", "limits.webhook("],
+  // Adding and changing Cart Lines (audit CK-01): both calls in one file.
+  ["src/app/(site)/menu/item/[slug]/actions.ts", "limits.addToCart(ip)"],
 ];
 
 /** The only files that may call takeToken themselves. */
@@ -38,6 +40,14 @@ function sourceFiles(dir: string): string[] {
 describe("limits are wired", () => {
   it.each(WIRED)("%s calls %s", (file, call) => {
     expect(readFileSync(file, "utf8")).toContain(call);
+  });
+
+  it("limits both adding and changing a Cart Line (audit CK-01)", () => {
+    const source = readFileSync(
+      "src/app/(site)/menu/item/[slug]/actions.ts",
+      "utf8"
+    );
+    expect(source.match(/limits\.addToCart\(ip\)/g)).toHaveLength(2);
   });
 
   // It reads every source file, which can pass 5 s on a busy machine.

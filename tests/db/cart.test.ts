@@ -176,6 +176,28 @@ describe("hidden characters", () => {
   });
 });
 
+// A Cart had no cap, so a script could add Lines without end (audit CK-01).
+describe("a full Cart", () => {
+  it("holds 30 Lines: a new choice is refused, more of one already in it is not", async () => {
+    for (let n = 0; n < 30; n++) {
+      expect(
+        await addLine(hoshi, latte("Oat milk", { note: `cup ${n}` }))
+      ).toEqual({ ok: true });
+    }
+    expect(await addLine(hoshi, latte("Oat milk", { note: "cup 30" }))).toEqual(
+      {
+        ok: false,
+        reason: "cart_full",
+      }
+    );
+    expect(await addLine(hoshi, latte("Oat milk", { note: "cup 0" }))).toEqual({
+      ok: true,
+    });
+    const cart = await getCart(hoshi);
+    expect(cart.lines).toHaveLength(30);
+  });
+});
+
 describe("adding at once", () => {
   it("adds up six adds to one Line, with no error", async () => {
     const results = await Promise.all(

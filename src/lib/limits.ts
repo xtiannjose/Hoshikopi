@@ -9,6 +9,14 @@ const DAY = 24 * HOUR;
 export const PAY_AT_PICKUP_A_DAY = { guestIp: 10, member: 5 };
 
 /**
+ * The browser tests add to Carts from one address all run long, so their
+ * server sets CART_RATE_LIMIT=off. Vercel sets VERCEL=1 on every deployment,
+ * and there the switch does nothing, so it can never lift the live limit.
+ */
+const cartLimitOff = () =>
+  process.env.CART_RATE_LIMIT === "off" && process.env.VERCEL !== "1";
+
+/**
  * Every limit on what anyone can send without being Staff, in one place.
  * Each is true when the request may go ahead; a refused step spends nothing
  * after it. The numbers are the rate-limit table in docs/03 section 13, and
@@ -50,6 +58,13 @@ export const limits = {
       : takeToken(`pay-at-pickup-ip:${ip}`, PAY_AT_PICKUP_A_DAY.guestIp, DAY),
 
   inquiry: (ip: string) => takeToken(`inquiry-ip:${ip}`, 5, HOUR),
+
+  /**
+   * Adding or changing a Cart Line. Each add without the Cart cookie made
+   * a new guest Cart, so a script could fill the database (audit CK-01).
+   */
+  addToCart: async (ip: string) =>
+    cartLimitOff() || takeToken(`cart-ip:${ip}`, 60, FIFTEEN_MINUTES),
 
   eventSignup: (ip: string) => takeToken(`signup-ip:${ip}`, 10, HOUR),
 
