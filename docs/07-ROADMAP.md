@@ -1134,7 +1134,7 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   - `src/app/robots.ts` answers `/robots.txt` and lets crawlers in, so they read every page's `noindex` (blocking them would let a linked address show in search without its page)
   - The site's description and the share card no longer name Kapitolyo, Pasig: "A concept cafe. Order ahead for pickup and earn Stars." The Visit page still shows the neighbourhood
   - The e2e photo is removed by the test itself since 13.3
-  - `docs/06-SETUP.md` section 9 has the steps to give previews their own database; the owner decides
+  - `docs/06-SETUP.md` section 9 has the steps to give previews their own database; on hold by the owner (2026-11-18), since the live site is itself the demo
 
   </details>
 
