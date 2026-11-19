@@ -3,7 +3,7 @@
 > **In plain words:** This is the rulebook for how Hoshikopi looks and feels: colours, fonts, spacing, components, motion and accessibility. It keeps every page looking like one cafe, and it saves a new designer or developer from guessing. The idea is "Star coffee": warm cream by day, deep night-sky blue by night, and one small gold star. The site is built with the browser's own elements and plain CSS only ([ADR 0011](adr/0011-native-elements-and-css.md)); no component or animation library was added.
 >
 > **Who should read it:** designers and developers before any screen or style change; the owner when judging whether a page "feels right". If you are not a designer, read sections 1 and 2 and skip the tables.
-> **Last checked:** 2026-11-17 (the colour, radius, content-width and easing values were compared with `src/app/globals.css` and matched).
+> **Last checked:** 2026-11-19 (the colour, radius, content-width and easing values were compared with `src/app/globals.css` and matched).
 
 ## Contents
 
@@ -89,17 +89,17 @@ Six rules that settle design arguments. When two choices both look fine, the one
 
 This section lists every colour the site uses, by name, in both palettes. Each name is a design token (see the terms above), so a component asks for `--muted` and never for a raw colour. The Use column says what each one is for. In `globals.css` each name carries a `color-` prefix (`--color-background`); this document drops the prefix.
 
-Values match `src/app/globals.css` (checked 2026-11-17); they must pass the contrast checks in section 10 (contrast is how strongly text stands out from its background; "4.5:1" is the minimum ratio the accessibility standard asks for normal text). Two palettes share every token: **Day** (cream paper, kopi brown, paper grain) and **Night** (night ink, moonlight). The Day column comes from the Day wireframe, the Night column from the main wireframe.
+Values match `src/app/globals.css` (checked 2026-11-19); they must pass the contrast checks in section 10 (contrast is how strongly text stands out from its background; "4.5:1" is the minimum ratio the accessibility standard asks for normal text). Two palettes share every token: **Day** (cream paper, kopi brown, paper grain) and **Night** (night ink, moonlight). The Day column comes from the Day wireframe, with the paper, cards, hairlines and secondary text toned down a step by the owner on 2026-11-19 because the first cream read too bright; the Night column comes from the main wireframe.
 
 | Token | Day | Night | Use |
 | --- | --- | --- | --- |
-| `--background` | cream `#FBF6EE` | ink `#141B2E` | Page background; Day adds the paper grain |
+| `--background` | cream `#EFE6D8` | ink `#141B2E` | Page background; Day adds the paper grain |
 | `--foreground` | espresso `#2B1D14` | moonlight `#EEF0F7` | Body text |
-| `--muted` | latte `#EFE5D6` | `#1C2540` | Cards, inputs, Sold Out wash, the Star Card panel |
-| `--muted-foreground` | roast `#6E5A4B` | `#B9BFD3` | Secondary text (AA on `--background` and `--muted`) |
+| `--muted` | latte `#E4D8C5` | `#1C2540` | Cards, inputs, Sold Out wash, the Star Card panel |
+| `--muted-foreground` | roast `#69564A` | `#B9BFD3` | Secondary text (AA on `--background` and `--muted`) |
 | `--primary` | kopi `#5A3420` | moonlight `#EEF0F7` | Primary buttons, selected Options, the lit pickup line |
-| `--primary-foreground` | cream `#FBF6EE` | ink `#141B2E` | Text on primary |
-| `--border` | `#E2D6C4` | `#334068` | Hairlines |
+| `--primary-foreground` | cream `#EFE6D8` | ink `#141B2E` | Text on primary |
+| `--border` | `#D8C9B3` | `#334068` | Hairlines |
 | `--input` | `#8C7662` | `#6874A0` | Control borders, rings, dashed lines, hand-drawn dividers (3:1 on `--background` and on `--muted`) |
 | `--star` | gold `#E8B74A` | gold `#E8B74A` | Logo star, Star Card stars; never for text on cream |
 | `--star-edge` | kopi `#5A3420` | none | Thin outline that keeps gold stars visible on cream |
