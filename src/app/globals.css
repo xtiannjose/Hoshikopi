@@ -6,13 +6,13 @@
 @custom-variant night (&:where([data-theme="night"], [data-theme="night"] *));
 
 @theme {
-  --color-background: #fbf6ee;
+  --color-background: #efe6d8;
   --color-foreground: #2b1d14;
-  --color-muted: #efe5d6;
-  --color-muted-foreground: #6e5a4b;
+  --color-muted: #e4d8c5;
+  --color-muted-foreground: #69564a;
   --color-primary: #5a3420;
-  --color-primary-foreground: #fbf6ee;
-  --color-border: #e2d6c4;
+  --color-primary-foreground: #efe6d8;
+  --color-border: #d8c9b3;
   --color-input: #8c7662;
   --color-star: #e8b74a;
   --color-star-edge: #5a3420;
