@@ -1139,6 +1139,21 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   </details>
 - [x] **13.5 Launch readiness.** Requested 2026-11-18: how far Hoshikopi is from a real launch, kept for future planning. **Done 2026-11-18:** [docs/LAUNCH-READINESS.md](LAUNCH-READINESS.md), a scorecard, the tests a real launch needs, the setup and legal work before real money, and a suggested order.
 
+### Phase 14: An unslop pass (2026-11-23)
+
+**In plain words:** the owner asked for a full check of the site with the unslop skill, which looks for the marks of a template or AI-made design. It found a mostly designed site (light slop): no gradients, glows, emoji or bouncy motion, and its own signature (the star, the constellation, the two palettes). The owner chose the small fixes below, plus a dependency fix the check turned up. One small pull request each.
+
+- [x] **14.1 The dependency audit passes again.** **Done 2026-11-23.**
+  <details><summary>How it was done</summary>
+
+  - A new high advisory, GHSA-7589-6fvf-x4pw, hit `effect` up to 3.22.0, pulled in by Prisma's command-line config loader (`prisma` to `@prisma/config` to `effect`), not by the live site; every pull request failed CI, Dependabot's #143 too
+  - `package.json` overrides pin `effect` to `^3.22.5` under `@prisma/config` (same major); `prisma validate`, `prisma generate` and `prisma migrate status` all work
+  - picomatch shipped its fix, so `scripts/audit.mjs` has no exception left (CK-09)
+
+  </details>
+- [ ] **14.2 Polish.** Order Codes at weight 600; allergen and calorie text in the body face; "Nov" not "NOV" on date badges; the Events grid balanced; the demo Events on different evenings; one "Salamat!" kept where an Order is placed, the other exclamation marks made calm.
+- [ ] **14.3 Photos.** Quieter stand-ins until real photos exist, and one prompt set for a matching shoot (room, Events, drinks) in `docs/ASSETS.md`.
+
 ## 13. After V1 (not scheduled)
 
 These are ideas for later. Nothing here is planned, dated or promised, and new features are on hold (owner). The list is here so nobody has to wonder whether an idea was considered.
