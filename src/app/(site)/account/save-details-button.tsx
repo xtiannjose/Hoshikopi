@@ -23,7 +23,7 @@ export function SaveDetailsButton() {
       </button>
       {/* Always in the page, so screen readers hear the line when it lands. */}
       <p aria-live="polite" className="text-success font-semibold">
-        {saved && <span className="animate-rise block">Saved. Salamat!</span>}
+        {saved && <span className="animate-rise block">Saved. Salamat.</span>}
       </p>
     </div>
   );

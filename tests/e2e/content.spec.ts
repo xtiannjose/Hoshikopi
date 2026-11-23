@@ -170,7 +170,7 @@ test("a Customer sends an Inquiry and the Manager answers it (INFO-11)", async (
   await page.getByLabel("Guests or drinks (optional)").fill("20");
   await page.getByRole("button", { name: "Send inquiry" }).click();
   await expect(page.getByRole("status")).toContainText(
-    "Salamat! Your inquiry is with the cafe."
+    "Salamat. Your inquiry is with the cafe."
   );
 
   await signIn(page, "christian@hoshikopi.example", "/manage/inquiries");
@@ -199,7 +199,7 @@ test("a visitor signs up for an Event, confirms by email, the Manager sees it an
   await signup.getByLabel("Seats").selectOption("2");
   await signup.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("status")).toContainText(
-    `Almost there! We emailed ${email} a link.`
+    `Almost there. We emailed ${email} a link.`
   );
   let mail = "";
   await expect
@@ -240,11 +240,11 @@ test("a visitor signs up for an Event, confirms by email, the Manager sees it an
   await expectNoAxeViolations(page);
   await page.getByRole("button", { name: "Confirm my seats" }).click();
   await expect(page.getByRole("status")).toHaveText(
-    "You're in! See you there."
+    "You're in. See you there."
   );
   await page.reload();
   await expect(page.getByRole("status")).toHaveText(
-    "You're in! See you there."
+    "You're in. See you there."
   );
   await page.getByRole("button", { name: "Cancel my Sign-up" }).click();
   await expect(page.getByRole("status")).toContainText(
@@ -263,7 +263,7 @@ test("a signed-in Member's Sign-up with their own email is confirmed at once (8.
   await signup.getByLabel("Email").fill("hoshi@hoshikopi.example");
   await signup.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("status")).toContainText(
-    "You're in! See you there."
+    "You're in. See you there."
   );
 });
 

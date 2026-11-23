@@ -94,7 +94,7 @@ export function orderReadyEmail(order: OrderForEmail): Email {
     text: [
       `Your ${orderNoun(order.lines)} is ready at the counter. Show code ${order.code}.`,
       "",
-      "See you in a bit!",
+      "See you in a bit.",
       "",
       footer(order.area),
     ].join("\n"),
@@ -191,7 +191,7 @@ export function eventSignupEmail(signup: SignupForEmail): Email {
       : `Confirm your seats: ${signup.event.title}, ${date}`,
     text: (signup.confirmed
       ? [
-          `Salamat! You have ${seats} for ${signup.event.title} on ${when}.`,
+          `Salamat. You have ${seats} for ${signup.event.title} on ${when}.`,
           price,
           "",
           `Can't make it? Cancel here so someone else can have your seats: ${signup.link}`,
@@ -199,7 +199,7 @@ export function eventSignupEmail(signup: SignupForEmail): Email {
           footer,
         ]
       : [
-          `Salamat! Open this link within ${signup.holdMinutes} minutes to keep your ${seats} for ${signup.event.title} on ${when}:`,
+          `Salamat. Open this link within ${signup.holdMinutes} minutes to keep your ${seats} for ${signup.event.title} on ${when}:`,
           signup.link,
           "",
           price,

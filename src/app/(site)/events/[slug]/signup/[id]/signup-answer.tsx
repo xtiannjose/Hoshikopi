@@ -74,7 +74,7 @@ export function SignupAnswer({
       <input type="hidden" name="t" value={token} />
       <p role="status" className="text-lg">
         {status === "confirmed"
-          ? "You're in! See you there."
+          ? "You're in. See you there."
           : `One more step: confirm within ${holdMinutes} minutes to keep your seats.`}
       </p>
       <div className="flex flex-wrap gap-3">

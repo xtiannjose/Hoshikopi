@@ -55,10 +55,10 @@ export function SignupForm({
       <div role="status" className="bg-background rounded-card mt-4 p-4">
         <p className="text-lg">
           {!state.confirmed
-            ? `Almost there! We emailed ${state.email} a link. Open it within ${holdMinutes} minutes to keep your seats.`
+            ? `Almost there. We emailed ${state.email} a link. Open it within ${holdMinutes} minutes to keep your seats.`
             : state.emailed === false
-              ? "You're in! See you there. This demo sends no emails, so there's no cancel link to keep."
-              : "You're in! See you there. The link in your email cancels it if plans change."}
+              ? "You're in. See you there. This demo sends no emails, so there's no cancel link to keep."
+              : "You're in. See you there. The link in your email cancels it if plans change."}
         </p>
         <p className="mt-2 flex flex-wrap gap-x-6">
           <a

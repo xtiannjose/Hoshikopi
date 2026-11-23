@@ -170,7 +170,7 @@ async function Account() {
           className="bg-muted rounded-card flex items-center gap-3 p-4 text-lg"
         >
           <CakeIcon aria-hidden size={28} className="shrink-0" />
-          Happy birthday month! We added {STARS_PER_REWARD} Stars to your card,
+          Happy birthday month. We added {STARS_PER_REWARD} Stars to your card,
           so a drink is on us.
         </p>
       )}
@@ -471,7 +471,7 @@ function LiveOrder({ order }: { order: OrderSummary }) {
       <div className="min-w-0 flex-1 basis-48">
         <p className="font-semibold">
           {ready
-            ? "Your order is ready at the counter. See you!"
+            ? "Your order is ready at the counter. See you soon."
             : `Your order is ${ORDER_STATUS_LABEL[order.status]}.`}
         </p>
         {/* Not the summary: the list below shows it, and tests read it once. */}

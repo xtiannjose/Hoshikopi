@@ -1151,7 +1151,18 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   - picomatch shipped its fix, so `scripts/audit.mjs` has no exception left (CK-09)
 
   </details>
-- [ ] **14.2 Polish.** Order Codes at weight 600; allergen and calorie text in the body face; "Nov" not "NOV" on date badges; the Events grid balanced; the demo Events on different evenings; one "Salamat!" kept where an Order is placed, the other exclamation marks made calm.
+- [x] **14.2 Polish.** Order Codes at weight 600; allergen and calorie text in the body face; "Nov" not "NOV" on date badges; the Events grid balanced; the demo Events on different evenings; one "Salamat!" kept where an Order is placed, the other exclamation marks made calm. **Done 2026-11-23** (the demo dates tests first).
+  <details><summary>How it was done</summary>
+
+  - The Order Code on the Order page and the Bar Screen is weight 600, not 700
+  - The allergen and calorie sentences on a Menu Item page are in the body face; only the kcal figure stays in the typewriter face
+  - Date badges say "Nov": the month came from the date formatter and was only upper-cased by CSS
+  - `/events` gets a third column only when there are three Events, so two no longer leave the right third empty
+  - `rollDemoEvents` never moves a demo Event onto an evening the other one holds: seeded two weeks apart on the same weekday, both had rolled to Saturday Nov 28 at 7 PM. The live pair separates when they next roll
+  - 21 exclamation marks became calm statements, in pages, the Bar Screen, the ready alert, a staff default message and three emails; "Salamat! We got your order" stays. CLAUDE.md and the design system say so
+  - Tests: `tests/db/demo-dates.test.ts`, and the e2e tests that read the changed words
+
+  </details>
 - [ ] **14.3 Photos.** Quieter stand-ins until real photos exist, and one prompt set for a matching shoot (room, Events, drinks) in `docs/ASSETS.md`.
 
 ## 13. After V1 (not scheduled)

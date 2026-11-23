@@ -105,16 +105,19 @@ async function MenuItemDetails({
           <Badges labels={item.badges} picks={item.picks} />
         </div>
         <p className="mt-4 max-w-[60ch] text-lg">{item.description}</p>
-        <p className="text-muted-foreground mt-4 flex gap-2 font-mono text-sm">
+        {/* Sentences in the body face; the typewriter face is for figures
+            (unslop pass, 14.2). */}
+        <p className="text-muted-foreground mt-4 flex gap-2 text-sm">
           <InfoIcon aria-hidden size={18} className="mt-0.5 shrink-0" />
           <span>
             {item.allergenLine} {KITCHEN_NOTE}
           </span>
         </p>
         {item.calorieKcal !== null && (
-          <p className="text-muted-foreground mt-2 font-mono text-sm">
-            About {item.calorieKcal} kcal with the choices it starts with. A
-            concept estimate.
+          <p className="text-muted-foreground mt-2 text-sm">
+            About{" "}
+            <span className="font-mono tabular-nums">{item.calorieKcal}</span>{" "}
+            kcal with the choices it starts with. A concept estimate.
           </p>
         )}
         <div className="mt-4">
@@ -122,7 +125,7 @@ async function MenuItemDetails({
         </div>
         {item.soldOut ? (
           <p className="bg-muted rounded-card mt-8 p-4">
-            Sold out today. Back tomorrow, salamat for understanding!
+            Sold out today. Back tomorrow, salamat for understanding.
           </p>
         ) : (
           // Its own Suspense boundary: React hydrates it as a separate task,

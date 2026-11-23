@@ -205,7 +205,7 @@ async function Checkout() {
           {view.busy && first && (
             <p className="text-warning font-semibold">
               The bar is extra busy right now, so pickup times are a little
-              longer than usual. Salamat for your patience!
+              longer than usual. Salamat for your patience.
             </p>
           )}
           {demoAllDayOrdering() && (

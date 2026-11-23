@@ -83,7 +83,7 @@ Six rules that settle design arguments. When two choices both look fine, the one
 3. **Phone first, thumb first.** Primary actions sit in the bottom third; the Cart is reachable from every page.
 4. **Native where it works.** Native radio buttons, checkboxes, selects and date inputs, styled, before custom widgets ([ADR 0011](adr/0011-native-elements-and-css.md)).
 5. **Calm motion.** Short, meaningful transitions; nothing loops on screen while ordering; all motion respects reduced motion.
-6. **Words do the work.** Plain, warm, Filipino-English where natural ("Salamat! We're making your Hoshi Latte."). No em dashes in UI copy.
+6. **Words do the work.** Plain, warm, Filipino-English where natural ("Salamat. We're making your Hoshi Latte."). One exclamation mark on the whole site, "Salamat!" where an Order is placed; everywhere else a calm statement (unslop pass, 14.2). No em dashes in UI copy.
 
 ## 3. Colour tokens
 

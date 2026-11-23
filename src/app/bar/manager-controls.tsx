@@ -44,7 +44,7 @@ export function ManagerControls({
           <input
             type="hidden"
             name="message"
-            value="The bar is swamped. Back in 30 minutes, salamat!"
+            value="The bar is swamped. Back in 30 minutes, salamat."
           />
           <button
             type="submit"
