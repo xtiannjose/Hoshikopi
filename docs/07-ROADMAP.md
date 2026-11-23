@@ -1163,7 +1163,14 @@ On 2026-11-17 the whole app was checked again (security, QA and code review, six
   - Tests: `tests/db/demo-dates.test.ts`, and the e2e tests that read the changed words
 
   </details>
-- [ ] **14.3 Photos.** Quieter stand-ins until real photos exist, and one prompt set for a matching shoot (room, Events, drinks) in `docs/ASSETS.md`.
+- [x] **14.3 Photos.** Quieter stand-ins until real photos exist, and one prompt set for a matching shoot (room, Events, drinks) in `docs/ASSETS.md`. **Done 2026-11-23.**
+  <details><summary>How it was done</summary>
+
+  - With no room photo yet, the Visit page shows one low panel (3:1 on a phone, 4:1 wider) instead of a first screen of three empty boxes; the gallery returns with the first photo
+  - `docs/ASSETS.md`: one prompt recipe so the set reads as one shoot (subject, setting, light falling off into the Day cream `#efe6d8`, style, composition, exclusions, format), with a worked example; prompts for both Events and the three Posts; a plan to re-shoot all 19 menu photos together and replace them in `/manage/menu`; the style line no longer asks for film grain, which image models bake in as a checker pattern
+  - No image generator was connected in this session, so the pictures themselves wait for the owner
+
+  </details>
 
 ## 13. After V1 (not scheduled)
 
