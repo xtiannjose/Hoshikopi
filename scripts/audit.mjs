@@ -5,12 +5,9 @@
 // Those few are listed here with their reason, and only while no fix exists.
 import { execSync } from "node:child_process";
 
-const ALLOWED = {
-  // picomatch <= 4.0.7, ReDoS (published 2026-11-18, no fixed version yet):
-  // reached only through vitest and vite, which run the tests and never
-  // ship. Remove this line once picomatch publishes a fix.
-  "GHSA-fc5q-39xc-vjpf": "vitest and vite only",
-};
+// Empty now: picomatch shipped its fix (2026-11-23). An entry needs its
+// reason and comes out once the advisory is fixed upstream.
+const ALLOWED = {};
 
 let report;
 try {
