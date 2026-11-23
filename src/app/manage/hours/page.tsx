@@ -147,7 +147,7 @@ async function Editor({
                   name="message"
                   label="Message for Customers"
                   hint="Shown at checkout while ordering is paused."
-                  defaultValue="The bar is swamped. Back soon, salamat!"
+                  defaultValue="The bar is swamped. Back soon, salamat."
                   maxLength={160}
                 />
                 <button

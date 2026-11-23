@@ -120,7 +120,7 @@ function Tiles({ events, past }: { events: StaffEvent[]; past?: boolean }) {
             className="group rounded-card border-border hover:bg-muted relative flex gap-4 border p-4"
           >
             <p className="bg-muted group-hover:bg-background rounded-card grid w-16 shrink-0 content-center justify-items-center py-2 font-mono text-sm">
-              <span className="uppercase">{month}</span>
+              <span>{month}</span>
               <span className="font-display text-3xl leading-none">{day}</span>
               <span>{weekday}</span>
             </p>

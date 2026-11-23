@@ -35,7 +35,7 @@ export async function inquireAction(
   if (bot === "too_fast") {
     return {
       status: "error",
-      message: "That was quick! Check your details, then send again.",
+      message: "That was quick. Check your details, then send again.",
       values,
     };
   }

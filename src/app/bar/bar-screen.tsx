@@ -422,7 +422,7 @@ export function BarScreen({
       )}
 
       {board.orders.length === 0 && (
-        <p className="text-lg">All caught up. Salamat, team!</p>
+        <p className="text-lg">All caught up. Salamat, team.</p>
       )}
 
       <div className="grid gap-4 lg:grid-cols-3" aria-busy={pending}>
@@ -504,7 +504,7 @@ function Card({
           narrow card (audit staff:13). It is set in the UI sans with tabular
           figures, as docs/05 section 4 says (audit UI2-12). */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <p className="shrink-0 font-sans text-4xl font-bold whitespace-nowrap tabular-nums">
+        <p className="shrink-0 font-sans text-4xl font-semibold whitespace-nowrap tabular-nums">
           {order.code}
         </p>
         <p className="text-right">

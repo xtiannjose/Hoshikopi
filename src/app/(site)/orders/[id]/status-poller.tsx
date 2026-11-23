@@ -53,7 +53,7 @@ async function notify(code: string) {
     await navigator.serviceWorker.register("/sw.js");
     const registration = await navigator.serviceWorker.ready;
     await registration.showNotification("Your order is ready", {
-      body: `Salamat! Show code ${code} at the counter.`,
+      body: `Show code ${code} at the counter.`,
     });
   } catch {
     // Blocked or unsupported: the page itself still says Ready.
@@ -61,7 +61,7 @@ async function notify(code: string) {
 }
 
 function announceReady(code: string) {
-  document.title = `Ready! ${code} · Hoshikopi`;
+  document.title = `Ready: ${code} · Hoshikopi`;
   chime();
   navigator.vibrate?.([200, 100, 200]);
   void notify(code);

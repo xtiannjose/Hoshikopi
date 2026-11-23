@@ -94,7 +94,7 @@ function message(order: OrderView): string {
     case "ready":
       return `Ready at the counter. Show code ${order.code}.`;
     case "picked_up":
-      return "Enjoy! See you again soon.";
+      return "Enjoy, and see you again soon.";
     case "cancelled":
       return order.cancelReason
         ? `This order was cancelled: ${order.cancelReason}.`
@@ -191,7 +191,7 @@ async function Order({ params, searchParams }: PageProps<"/orders/[id]">) {
             <OrderStatusPill status={order.status} />
           </div>
           {/* The code in the UI sans with tabular figures, as docs/05 section 4 says (audit UI2-12). */}
-          <h1 className="font-sans text-6xl font-bold tabular-nums">
+          <h1 className="font-sans text-6xl font-semibold tabular-nums">
             {order.code}
           </h1>
           <p className="border-input mt-4 flex flex-wrap justify-between gap-x-4 border-t border-dashed pt-4 font-mono text-sm">

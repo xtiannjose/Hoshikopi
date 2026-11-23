@@ -1,3 +1,4 @@
+import { manila } from "@/lib/clock";
 import { db } from "@/lib/db";
 
 // The seeded demo Events (prisma/seed-data.ts); an Event a Manager makes is
@@ -12,12 +13,24 @@ const WEEK_MS = 7 * 86_400_000;
  * only. Returns how many moved.
  */
 export async function rollDemoEvents(at: Date): Promise<number> {
-  const ended = await db.event.findMany({
-    where: { slug: { in: DEMO_EVENTS }, endsAt: { lte: at } },
+  const demo = await db.event.findMany({
+    where: { slug: { in: DEMO_EVENTS } },
+    orderBy: { slug: "asc" },
   });
+  // The evenings a demo Event already holds: the two never share one. Seeded
+  // two weeks apart on the same weekday, both once rolled to the same
+  // Saturday at 7 PM (unslop pass, 14.2).
+  const taken = new Set(
+    demo.filter((event) => event.endsAt > at).map((e) => manila(e.startsAt).day)
+  );
+  const ended = demo.filter((event) => event.endsAt <= at);
   for (const event of ended) {
-    const weeks =
+    const dayAfter = (weeks: number) =>
+      manila(new Date(event.startsAt.getTime() + weeks * WEEK_MS)).day;
+    let weeks =
       Math.floor((at.getTime() - event.startsAt.getTime()) / WEEK_MS) + 1;
+    while (taken.has(dayAfter(weeks))) weeks++;
+    taken.add(dayAfter(weeks));
     const shift = weeks * WEEK_MS;
     await db.$transaction([
       db.eventSignup.deleteMany({ where: { eventId: event.id } }),

@@ -53,7 +53,7 @@ export async function signUpAction(
   if (bot === "too_fast") {
     return {
       status: "error",
-      message: "That was quick! Check your details, then sign up again.",
+      message: "That was quick. Check your details, then sign up again.",
       values,
     };
   }

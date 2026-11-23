@@ -42,7 +42,11 @@ export default async function EventsPage() {
           </Empty>
         </div>
       ) : (
-        <div className="mt-10 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+        // A third column only when there are three to fill it: two Events
+        // left the right third empty at desktop width (unslop pass, 14.2).
+        <div
+          className={`mt-10 grid gap-8 md:grid-cols-2 ${upcoming.length >= 3 ? "xl:grid-cols-3" : ""}`}
+        >
           {upcoming.map((event) => (
             <EventCard key={event.slug} event={event} />
           ))}

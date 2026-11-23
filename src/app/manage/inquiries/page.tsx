@@ -115,7 +115,7 @@ async function List({
         {fresh.length > 0 ? (
           cards(fresh)
         ) : (
-          <p className="text-muted-foreground">All caught up. Salamat!</p>
+          <p className="text-muted-foreground">All caught up. Salamat.</p>
         )}
       </section>
       {answered.length > 0 && (

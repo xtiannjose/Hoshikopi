@@ -123,7 +123,7 @@ test("a Member gets a Birthday Treat in their birthday month (LOY-04)", async ({
   await page.getByLabel("Birthday month").selectOption(String(month));
   await page.getByRole("button", { name: "Save my details" }).click();
   await expect(page.getByRole("status")).toContainText(
-    "Happy birthday month! We added 9 Stars to your card"
+    "Happy birthday month. We added 9 Stars to your card"
   );
   await expect(page.getByText("A free drink is ready.")).toBeVisible();
   await page.reload();

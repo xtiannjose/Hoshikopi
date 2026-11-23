@@ -70,6 +70,35 @@ describe("rollDemoEvents", () => {
       (await db.event.findUniqueOrThrow({ where: { id: later.id } })).startsAt
     ).toEqual(later.startsAt);
   });
+
+  // Seeded two weeks apart on the same weekday, both demo Events rolled to
+  // the same Saturday at 7 PM, which looks made up (unslop pass, 14.2).
+  it("never puts the two demo Events on the same evening", async () => {
+    for (const slug of ["latte-art-night", "open-mic-under-the-stars"]) {
+      await db.event.update({
+        where: { slug },
+        data: {
+          startsAt: at("2026-10-24", "19:00"),
+          endsAt: at("2026-10-24", "21:00"),
+        },
+      });
+    }
+    expect(await rollDemoEvents(MONDAY_9AM)).toBe(2);
+
+    const days = (
+      await db.event.findMany({
+        where: {
+          slug: { in: ["latte-art-night", "open-mic-under-the-stars"] },
+        },
+        orderBy: { startsAt: "asc" },
+      })
+    ).map((event) => event.startsAt);
+    // Both stay Saturdays at 7 PM, a week apart.
+    expect(days).toEqual([
+      at("2026-11-07", "19:00"),
+      at("2026-11-14", "19:00"),
+    ]);
+  });
 });
 
 describe("rollDemoMenu", () => {

@@ -52,4 +52,4 @@ Concept cafe website (Next.js 16 + TypeScript + Postgres): the cafe as a place t
 
 ## Voice
 
-Customer copy: plain, warm, concrete, Filipino-English where natural ("Salamat! We're making your Hoshi Latte."). No em dashes or en dashes in UI copy.
+Customer copy: plain, warm, concrete, Filipino-English where natural ("Salamat. We're making your Hoshi Latte."). One exclamation mark on the whole site, "Salamat!" where an Order is placed; elsewhere calm statements. No em dashes or en dashes in UI copy.

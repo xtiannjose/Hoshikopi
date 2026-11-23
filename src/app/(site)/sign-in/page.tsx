@@ -100,7 +100,7 @@ async function Form({ searchParams }: Search) {
     <div className="grid gap-6">
       {out === "1" && (
         <p aria-live="polite" className="bg-muted rounded-card p-4">
-          You&apos;re signed out. Salamat, see you at the counter!
+          You&apos;re signed out. Salamat, see you at the counter.
         </p>
       )}
       {link === "expired" && (

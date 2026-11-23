@@ -194,12 +194,10 @@ test("a Customer asks to be told, and Ready chimes in and notifies", async ({
     `Ready at the counter. Show code ${code}.`,
     { timeout: 10_000 }
   );
-  await expect(page).toHaveTitle(`Ready! ${code} · Hoshikopi`);
+  await expect(page).toHaveTitle(`Ready: ${code} · Hoshikopi`);
   expect(
     await page.evaluate(() => (window as unknown as { shown: string[] }).shown)
-  ).toEqual([
-    `Your order is ready: Salamat! Show code ${code} at the counter.`,
-  ]);
+  ).toEqual([`Your order is ready: Show code ${code} at the counter.`]);
 });
 
 test("in Demo Mode a visitor plays the barista on their own Order (8.1)", async ({
@@ -214,7 +212,7 @@ test("in Demo Mode a visitor plays the barista on their own Order (8.1)", async 
     ["Accept the order", "The bar has your order."],
     ["Start making it", "We're making your Kopi Hitam."],
     ["Mark it Ready", /^Ready at the counter\. Show code K-\d+\.$/],
-    ["Hand it over", "Enjoy! See you again soon."],
+    ["Hand it over", "Enjoy, and see you again soon."],
   ] as const) {
     await panel.getByRole("button", { name: tap }).click();
     await expect(page.getByRole("status").first()).toHaveText(message);
