@@ -22,7 +22,7 @@ The fonts on the pages are Fraunces, Plus Jakarta Sans and Courier Prime, from G
 
 ## 2. Concept images still to make
 
-Menu and room pictures are AI-generated concept images ([ADR 0012](adr/0012-concept-images-with-stand-ins.md)): pictures made for this concept, each captioned "Concept image". Until a file exists the site shows a stand-in panel, a plain placeholder with no caption. Status on 2026-11-17: no concept image has been made, so all five room slots and all 19 menu slots show stand-ins. Real photos are on hold (owner, 2026-11-07).
+Menu and room pictures are AI-generated concept images ([ADR 0012](adr/0012-concept-images-with-stand-ins.md)): pictures made for this concept, each captioned "Concept image". Until a file exists the site shows a stand-in panel, a plain placeholder with no caption. Status on 2026-11-23: the live site has 19 menu photos, uploaded in `/manage` on 2026-11-18, but from different shoots (cold studio white next to dark wood), so they do not read as one cafe. The five room slots, the Events and the Posts still show stand-ins. Real photos are on hold (owner, 2026-11-07); concept images from the prompts below are the plan (unslop pass, batch 14.3).
 
 To add one:
 
@@ -30,16 +30,30 @@ To add one:
 2. Export WebP (a small web image format) at the size given; menu pictures stay under 80 kB at card size.
 3. Save it at the path given.
 4. Add a row to the table in section 1 with the tool and date.
-5. For a menu picture, set the Menu Item's `photo_url` to the file's path in the seed (the starting data for a new database). For a room picture, fill in `ROOM_PHOTOS` in `src/modules/cafe/internal/room.ts`.
+5. **On the live site,** upload a menu, Event or Post picture in its editor in `/manage` (the Photo field), with its description. **For a new database,** set the Menu Item's `photo_url` to the file's path in the seed (the starting data). For a room picture, fill in `ROOM_PHOTOS` in `src/modules/cafe/internal/room.ts`.
 
 **One style for all of them:**
 
-- natural window light, warm and slightly grainy like film;
+- natural window light from the left, warm, late morning (or warm lamps after 6 PM where noted);
 - close crops and a shallow depth of field;
 - cream and kopi-brown ceramics on dark walnut wood;
 - hands, but no faces;
 - no text or logos, except a small gold star where noted;
 - no real brands.
+
+Do not ask for film grain or paper texture: image models bake a fine checker pattern into the picture. The page already has its own paper texture.
+
+**The recipe.** Build every prompt in this order, so the set reads as one shoot:
+
+1. **Subject:** the one thing, concrete and physical (from the tables below).
+2. **Setting:** a small Kapitolyo coffee bar, walnut counter, cream ceramics.
+3. **Light and palette:** the style line above; soft, warm, with a background that falls off into cream `#efe6d8` (the Day page) so the picture sits on the page without a hard edge.
+4. **Style:** editorial food photograph, natural, unstyled, like a cafe's own camera.
+5. **Composition:** the subject a little off centre, calm space around it, nothing cut at the edges.
+6. **Exclusions:** no text, no letters, no logos, no menus, no watermark, no faces.
+7. **Format:** the size given for the slot.
+
+An example, for the Hoshi Latte: *"An iced Hoshi Latte in a clear glass, sea-salt cream on top, a dark swirl of muscovado at the bottom, on a walnut counter in a small coffee bar with cream ceramics behind. Natural window light from the left, warm late morning, background softly out of focus and falling off into cream #efe6d8. Editorial food photograph, natural and unstyled. Glass a little left of centre, calm space around it. No text, no letters, no logos, no menus, no watermark, no faces. 4:3, 1200 by 900."*
 
 ### 2.1 Room (`public/room/<name>.webp`, 1600 by 1200, 4:3)
 
@@ -59,7 +73,9 @@ One picture per Menu Item. A slug is the short name in a Menu Item's web address
 
 Not `public/menu/`: Git ignores that folder, so a file saved there never reaches GitHub or Vercel. Set `photo_url` to `/menu-concept/<slug>.webp`.
 
-The alt text for each (the description a screen reader reads aloud) is already in the seed (`prisma/seed-data.ts`, `PHOTO_ALT`); use it as the prompt, with the style line.
+The alt text for each (the description a screen reader reads aloud) is already in the seed (`prisma/seed-data.ts`, `PHOTO_ALT`); use it as the subject in the recipe above.
+
+**Re-shoot all 19 together.** The live photos come from different shoots. Make the whole set from the recipe in one sitting, then replace each one in `/manage/menu` (open the item, choose the new Photo, save). A mixed set reads as stock; a matching one reads as the cafe's own.
 
 | Slug | Slug | Slug |
 | --- | --- | --- |
@@ -70,6 +86,25 @@ The alt text for each (the description a screen reader reads aloud) is already i
 | `ensaymada` | `butter-croissant` | `banana-bread` |
 | `tapa-rice-bowl` | `longganisa-pandesal` | `house-blend-250g` |
 | `hoshikopi-tumbler` | | |
+
+### 2.3 Events (upload in `/manage/events`, 1600 by 900, 16:9)
+
+Shown on the Event's tile and page. The light is evening: warm lamps inside, blue dusk at the window.
+
+| Event | Subject (use in the recipe) |
+| --- | --- |
+| Latte art night | A barista's hands pouring a rosetta into a cream cup on the walnut counter, three finished cups lined up beside it, warm lamps |
+| Open mic under the stars | A microphone on a stand by the cafe window at dusk, a stool and an acoustic guitar leaning on it, small gold stars painted on the ceiling above |
+
+### 2.4 Posts (upload in `/manage/posts`, 1600 by 900, 16:9)
+
+Shown on the News list and at the top of the Post.
+
+| Post | Subject (use in the recipe) |
+| --- | --- |
+| How we make the Hoshi Latte | Three steps side by side on the walnut counter: dark muscovado in a small dish, an espresso shot in a cream cup, sea-salt cream being spooned onto an iced latte |
+| Our beans from Benguet | Roasted coffee beans spilling from a burlap sack with a wooden scoop, a few green unroasted beans beside them, morning light |
+| Order ahead and skip the line | A takeaway cup with a plain kraft sleeve waiting alone on the pickup counter, the cafe softly out of focus behind |
 
 ## Where to go next
 

@@ -183,14 +183,27 @@ export default async function CafePage() {
         <h2 id="space" className="sr-only">
           The space
         </h2>
-        <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-          <RoomPhoto photo={hero} large />
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
-            {more.slice(0, 2).map((photo) => (
-              <RoomPhoto key={photo.name} photo={photo} />
-            ))}
+        {ROOM_PHOTOS.some((photo) => photo.src) ? (
+          <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
+            <RoomPhoto photo={hero} large />
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
+              {more.slice(0, 2).map((photo) => (
+                <RoomPhoto key={photo.name} photo={photo} />
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          // No room photo yet: one low panel, not a first screen of three
+          // empty boxes (unslop pass, 14.3). The gallery returns with the
+          // first photo (docs/ASSETS.md section 2.1).
+          <Photo
+            src={null}
+            alt=""
+            kind="room"
+            sizes="100vw"
+            className="rounded-card aspect-[3/1] md:aspect-[4/1]"
+          />
+        )}
         <div className="mt-6 text-lg">
           <Markdown>{cafe.spaceMd}</Markdown>
         </div>
